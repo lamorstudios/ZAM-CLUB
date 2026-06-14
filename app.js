@@ -1,19 +1,59 @@
 /**
- * ZAM Club - Application Logic
- * SPA navigation, rendering, interactions
- * Supabase-ready: all data access via ZAMData namespace
+ * ZAM Club — App Logic v2
+ * SPA navigation · localStorage persistence · Demo interactions
+ * Supabase-ready: replace Storage.* calls with API calls
  */
 
 'use strict';
 
 // =============================================
-// State
+// localStorage Abstraction (Supabase-ready)
+// =============================================
+const Storage = {
+  KEY: 'zamclub_v1',
+
+  load() {
+    try {
+      return JSON.parse(localStorage.getItem(this.KEY) || 'null') || {};
+    } catch {
+      return {};
+    }
+  },
+
+  save(data) {
+    try {
+      localStorage.setItem(this.KEY, JSON.stringify(data));
+    } catch {
+      // Quota exceeded or private mode — silent fail
+    }
+  },
+
+  get(key, fallback = null) {
+    return this.load()[key] ?? fallback;
+  },
+
+  set(key, value) {
+    const data = this.load();
+    data[key] = value;
+    this.save(data);
+  },
+
+  // Date helpers
+  todayKey() {
+    return new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+  },
+
+  isToday(dateStr) {
+    return dateStr === this.todayKey();
+  },
+};
+
+// =============================================
+// State (loaded from localStorage on init)
 // =============================================
 const state = {
   currentPage: 'home',
   eventFilter: 'all',
-  spinUsed: false,
-  // Mutable copies of data
   posts: [],
   events: [],
   deals: [],
@@ -55,8 +95,53 @@ function showToast(message, type = '') {
   clearTimeout(toastTimer);
   requestAnimationFrame(() => {
     toast.classList.add('show');
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
   });
+}
+
+// =============================================
+// Points System
+// =============================================
+function addPoints(amount, reason = '') {
+  ZAMData.currentUser.points += amount;
+  Storage.set('points', ZAMData.currentUser.points);
+
+  // Update stats
+  const stats = Storage.get('stats', { visits: ZAMData.currentUser.stats.visits, eventsAttended: ZAMData.currentUser.stats.eventsAttended, dealsUsed: ZAMData.currentUser.stats.dealsUsed });
+  Storage.set('stats', stats);
+
+  updatePointsDisplay(true);
+
+  if (reason) showToast(`+${amount} Punkte${reason ? ' · ' + reason : ''}`, 'success');
+}
+
+function updatePointsDisplay(animate = false) {
+  const pts = ZAMData.currentUser.points;
+  const homeEl = $('#home-points-value');
+  const profileEl = $('#profile-points-value');
+  const progressLabel = $('.points-progress-label');
+
+  if (homeEl) {
+    if (animate) {
+      homeEl.classList.add('points-pop');
+      homeEl.addEventListener('animationend', () => homeEl.classList.remove('points-pop'), { once: true });
+    }
+    homeEl.textContent = pts.toLocaleString('de-DE');
+  }
+  if (profileEl) profileEl.textContent = pts.toLocaleString('de-DE');
+
+  // Progress bar update (Gold: 0–2000, Platin: 2000+)
+  const progressFill = $('.points-progress-fill');
+  if (progressFill) {
+    const pct = Math.min((pts / 2000) * 100, 100);
+    progressFill.style.width = pct + '%';
+  }
+  if (progressLabel) {
+    const remaining = Math.max(0, 2000 - pts);
+    progressLabel.textContent = remaining > 0
+      ? `${pts.toLocaleString('de-DE')} / 2.000 Pkt. bis Platin`
+      : '🎉 Platin erreicht!';
+  }
 }
 
 // =============================================
@@ -65,23 +150,17 @@ function showToast(message, type = '') {
 function navigateTo(pageId) {
   if (state.currentPage === pageId) return;
 
-  // Hide current page
   const currentEl = $(`#page-${state.currentPage}`);
-  if (currentEl) {
-    currentEl.classList.remove('active');
-  }
+  if (currentEl) currentEl.classList.remove('active');
 
   state.currentPage = pageId;
 
-  // Show new page
   const nextEl = $(`#page-${pageId}`);
   if (nextEl) {
     nextEl.classList.add('active');
-    // Scroll to top
     nextEl.scrollTop = 0;
   }
 
-  // Update nav tabs
   $$('.nav-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.page === pageId);
   });
@@ -98,8 +177,6 @@ function initNavigation() {
 // =============================================
 function renderHome() {
   const { currentUser } = ZAMData;
-
-  // Greeting
   const hour = new Date().getHours();
   let greeting = 'Guten Tag';
   if (hour < 12) greeting = 'Guten Morgen';
@@ -114,9 +191,8 @@ function renderHome() {
   const pointsEl = $('#home-points-value');
   if (pointsEl) animateNumber(pointsEl, 0, currentUser.points, 1200);
 
-  // Events horizontal scroll
+  updatePointsDisplay();
   renderHomeEvents();
-  // Deals horizontal scroll
   renderHomeDeals();
 }
 
@@ -124,7 +200,7 @@ function animateNumber(el, from, to, duration) {
   const start = performance.now();
   function step(now) {
     const p = Math.min((now - start) / duration, 1);
-    const ease = 1 - Math.pow(1 - p, 3); // ease out cubic
+    const ease = 1 - Math.pow(1 - p, 3);
     el.textContent = Math.round(from + (to - from) * ease).toLocaleString('de-DE');
     if (p < 1) requestAnimationFrame(step);
   }
@@ -137,9 +213,15 @@ function renderHomeEvents() {
   container.innerHTML = '';
 
   ZAMData.events.forEach(evt => {
+    const saved = isSaved('event', evt.id);
     const card = el('div', 'event-card-mini card-dark');
     card.innerHTML = `
-      <div class="category-tag" style="background:${evt.categoryColor}22;color:${evt.categoryColor}">${evt.category}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="category-tag" style="background:${evt.categoryColor}22;color:${evt.categoryColor}">${evt.category}</div>
+        <button class="bookmark-btn ${saved ? 'saved' : ''}" data-id="${evt.id}" data-type="event" aria-label="Merken">
+          ${saved ? '🔖' : '🏷️'}
+        </button>
+      </div>
       <h3>${evt.title}</h3>
       <div class="event-meta">
         <span>📅 ${evt.dateFormatted}</span>
@@ -148,6 +230,10 @@ function renderHomeEvents() {
       </div>
       <div class="event-points-badge">+${evt.pointsReward} Punkte</div>
     `;
+    card.querySelector('.bookmark-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSave('event', evt.id, e.currentTarget);
+    });
     card.addEventListener('click', () => navigateTo('events'));
     container.appendChild(card);
   });
@@ -159,6 +245,7 @@ function renderHomeDeals() {
   container.innerHTML = '';
 
   ZAMData.deals.forEach(deal => {
+    const saved = isSaved('deal', deal.id);
     const card = el('div', 'deal-card-mini card-dark');
     card.innerHTML = `
       ${deal.isHot ? '<div class="hot-badge">🔥 Hot</div>' : ''}
@@ -166,10 +253,52 @@ function renderHomeDeals() {
       <div class="discount-badge">${deal.discount}</div>
       <div class="store-name">${deal.storeName}</div>
       <div class="deal-title">${deal.title}</div>
+      <button class="bookmark-btn ${saved ? 'saved' : ''}" data-id="${deal.id}" data-type="deal" style="margin-top:8px" aria-label="Merken">
+        ${saved ? '🔖 Gespeichert' : '🏷️ Merken'}
+      </button>
     `;
+    card.querySelector('.bookmark-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSave('deal', deal.id, e.currentTarget);
+    });
     card.addEventListener('click', () => navigateTo('deals'));
     container.appendChild(card);
   });
+}
+
+// =============================================
+// Save / Bookmark System
+// =============================================
+function isSaved(type, id) {
+  const saved = Storage.get(`saved_${type}s`, []);
+  return saved.includes(id);
+}
+
+function toggleSave(type, id, btnEl) {
+  const key = `saved_${type}s`;
+  let saved = Storage.get(key, []);
+  const wasSaved = saved.includes(id);
+
+  if (wasSaved) {
+    saved = saved.filter(x => x !== id);
+    if (btnEl) {
+      btnEl.textContent = type === 'deal' ? '🏷️ Merken' : '🏷️';
+      btnEl.classList.remove('saved');
+    }
+    showToast(type === 'event' ? 'Event entfernt' : 'Deal entfernt');
+  } else {
+    saved.push(id);
+    if (btnEl) {
+      btnEl.textContent = type === 'deal' ? '🔖 Gespeichert' : '🔖';
+      btnEl.classList.add('saved');
+      // Spring animation
+      btnEl.style.transform = 'scale(1.3)';
+      setTimeout(() => { btnEl.style.transform = ''; }, 250);
+    }
+    showToast(type === 'event' ? '🔖 Event gespeichert!' : '🔖 Deal gespeichert!', 'success');
+  }
+
+  Storage.set(key, saved);
 }
 
 // =============================================
@@ -184,32 +313,43 @@ function initDailySpin() {
 function openSpinModal() {
   const overlay = $('#modal-spin');
   if (!overlay) return;
-  overlay.classList.add('open');
-  // Reset state
+
+  const lastSpin = Storage.get('last_spin_date', null);
+  const alreadySpun = Storage.isToday(lastSpin);
+
   const wheel = $('#spin-wheel');
   const result = $('#spin-result');
   const spinBtn = $('#btn-spin-go');
+
   if (wheel) wheel.style.transform = '';
   if (result) result.classList.remove('show');
+
   if (spinBtn) {
-    spinBtn.disabled = state.spinUsed;
-    spinBtn.textContent = state.spinUsed ? 'Bereits gedreht!' : 'Drehen!';
-    if (state.spinUsed) spinBtn.classList.add('claimed');
-    else spinBtn.classList.remove('claimed');
+    spinBtn.disabled = alreadySpun;
+    spinBtn.textContent = alreadySpun ? '✓ Heute bereits gedreht' : '🎰 Jetzt drehen!';
+    spinBtn.className = alreadySpun ? 'btn btn-full claimed' : 'btn btn-primary btn-full';
   }
+
+  // Show next available time if already spun
+  const nextSpin = $('#spin-next-info');
+  if (nextSpin) {
+    nextSpin.textContent = alreadySpun ? '⏰ Nächste Drehung ab Mitternacht' : '';
+  }
+
+  overlay.classList.add('open');
 }
 
 function doSpin() {
-  if (state.spinUsed) return;
-  state.spinUsed = true;
+  const alreadySpun = Storage.isToday(Storage.get('last_spin_date', null));
+  if (alreadySpun) return;
 
   const spinBtn = $('#btn-spin-go');
   if (spinBtn) {
     spinBtn.disabled = true;
-    spinBtn.textContent = 'Dreht…';
+    spinBtn.textContent = '⏳ Dreht…';
   }
 
-  // Pick reward
+  // Weighted random reward
   const rand = Math.random();
   let cumulative = 0;
   let reward = ZAMData.spinRewards[0];
@@ -233,26 +373,20 @@ function doSpin() {
     const resultLabel = $('#spin-result-label');
     if (resultEl) resultEl.classList.add('show');
     if (resultPoints) resultPoints.textContent = '+' + reward.points;
-    if (resultLabel) resultLabel.textContent = reward.label + ' gewonnen!';
+    if (resultLabel) resultLabel.textContent = reward.label + ' gewonnen! 🎉';
 
-    // Update user points (local state)
-    ZAMData.currentUser.points += reward.points;
-
-    // Update display
-    const homePoints = $('#home-points-value');
-    if (homePoints) homePoints.textContent = ZAMData.currentUser.points.toLocaleString('de-DE');
-    const profilePoints = $('#profile-points-value');
-    if (profilePoints) profilePoints.textContent = ZAMData.currentUser.points.toLocaleString('de-DE');
+    // Award points + persist
+    addPoints(reward.points, 'Daily Spin');
+    Storage.set('last_spin_date', Storage.todayKey());
 
     if (spinBtn) {
-      spinBtn.textContent = 'Morgen wieder!';
+      spinBtn.textContent = '✓ Punkte gutgeschrieben';
     }
-  }, 2600);
-}
 
-function closeModal(modalId) {
-  const overlay = $(`#${modalId}`);
-  if (overlay) overlay.classList.remove('open');
+    // Update next-spin info
+    const nextSpin = $('#spin-next-info');
+    if (nextSpin) nextSpin.textContent = '⏰ Nächste Drehung ab Mitternacht';
+  }, 2600);
 }
 
 // =============================================
@@ -261,10 +395,70 @@ function closeModal(modalId) {
 function initQRCheckin() {
   const btn = $('#btn-qr-checkin');
   if (!btn) return;
-  btn.addEventListener('click', () => {
-    const overlay = $('#modal-qr');
-    if (overlay) overlay.classList.add('open');
-  });
+  btn.addEventListener('click', openQRModal);
+}
+
+function openQRModal() {
+  const overlay = $('#modal-qr');
+  if (!overlay) return;
+
+  const lastCheckin = Storage.get('last_checkin_date', null);
+  const alreadyCheckedIn = Storage.isToday(lastCheckin);
+
+  // Update the checkin button in the modal
+  const checkinBtn = $('#btn-qr-confirm');
+  const checkinStatus = $('#qr-checkin-status');
+
+  generateQRGrid();
+
+  if (checkinBtn) {
+    checkinBtn.disabled = alreadyCheckedIn;
+    checkinBtn.textContent = alreadyCheckedIn ? '✓ Heute bereits eingecheckt' : '✅ Jetzt einchecken (+25 Punkte)';
+    checkinBtn.className = alreadyCheckedIn
+      ? 'btn btn-full claimed'
+      : 'btn btn-primary btn-full btn-pulse';
+  }
+
+  if (checkinStatus) {
+    checkinStatus.textContent = alreadyCheckedIn
+      ? '⏰ Nächster Check-in morgen möglich'
+      : '📍 Zeige diesen Code an der Info-Theke';
+  }
+
+  overlay.classList.add('open');
+}
+
+function doCheckin() {
+  const alreadyCheckedIn = Storage.isToday(Storage.get('last_checkin_date', null));
+  if (alreadyCheckedIn) return;
+
+  Storage.set('last_checkin_date', Storage.todayKey());
+
+  // Increment visit count
+  const stats = Storage.get('stats', { ...ZAMData.currentUser.stats });
+  stats.visits = (stats.visits || 0) + 1;
+  Storage.set('stats', stats);
+  ZAMData.currentUser.stats.visits = stats.visits;
+
+  addPoints(25, 'QR Check-in');
+
+  // Update modal
+  const checkinBtn = $('#btn-qr-confirm');
+  const checkinStatus = $('#qr-checkin-status');
+  if (checkinBtn) {
+    checkinBtn.disabled = true;
+    checkinBtn.textContent = '✓ Eingecheckt!';
+    checkinBtn.className = 'btn btn-full claimed';
+  }
+  if (checkinStatus) {
+    checkinStatus.textContent = '🎉 +25 Punkte wurden gutgeschrieben!';
+  }
+
+  // Update profile stats
+  const visitsEl = $('#profile-stat-visits');
+  if (visitsEl) visitsEl.textContent = stats.visits;
+
+  showToast('📍 Eingecheckt! +25 Punkte', 'success');
 }
 
 function generateQRGrid() {
@@ -274,7 +468,6 @@ function generateQRGrid() {
   const size = 8;
   for (let i = 0; i < size * size; i++) {
     const cell = el('div', 'qr-cell');
-    // Deterministic pseudo-random from user id
     const filled = ((i * 13 + 7) % 3 !== 0);
     cell.style.background = filled ? '#1a1a2e' : 'white';
     container.appendChild(cell);
@@ -289,21 +482,23 @@ function renderCommunity() {
   if (!container) return;
   container.innerHTML = '';
 
-  state.posts = ZAMData.communityPosts.map(p => ({ ...p }));
+  const likedPosts = Storage.get('liked_posts', []);
+  state.posts = ZAMData.communityPosts.map(p => ({
+    ...p,
+    isLiked: likedPosts.includes(p.id),
+    likes: p.likes + (likedPosts.includes(p.id) && !p.isLiked ? 1 : 0),
+  }));
 
   state.posts.forEach((post, idx) => {
-    const card = renderPostCard(post, idx);
-    container.appendChild(card);
+    container.appendChild(renderPostCard(post, idx));
   });
 }
 
 function renderPostCard(post, idx) {
-  const div = el('div', 'community-post');
+  const div = el('div', 'community-post card-dark');
   div.dataset.postId = post.id;
 
   const tagsHtml = post.tags.map(t => `<span class="post-tag">${t}</span>`).join('');
-  const likeClass = post.isLiked ? 'post-action-btn liked' : 'post-action-btn';
-  const likeIcon = post.isLiked ? '❤️' : '🤍';
 
   div.innerHTML = `
     <div class="post-header">
@@ -317,13 +512,13 @@ function renderPostCard(post, idx) {
     <div class="post-content">${post.content}</div>
     <div class="post-tags">${tagsHtml}</div>
     <div class="post-actions">
-      <button class="${likeClass}" data-idx="${idx}">
-        <span class="action-icon">${likeIcon}</span>
+      <button class="post-action-btn ${post.isLiked ? 'liked' : ''}" data-idx="${idx}">
+        <span class="action-icon">${post.isLiked ? '❤️' : '🤍'}</span>
         <span class="like-count">${post.likes}</span>
       </button>
       <button class="post-action-btn">
         <span class="action-icon">💬</span>
-        <span>${post.comments} Kommentare</span>
+        <span>${post.comments}</span>
       </button>
       <button class="post-action-btn" style="margin-left:auto">
         <span class="action-icon">↗️</span>
@@ -332,10 +527,7 @@ function renderPostCard(post, idx) {
     </div>
   `;
 
-  // Like button
-  const likeBtn = div.querySelector('.post-action-btn');
-  likeBtn.addEventListener('click', () => toggleLike(idx, div));
-
+  div.querySelector('.post-action-btn').addEventListener('click', () => toggleLike(idx, div));
   return div;
 }
 
@@ -343,6 +535,12 @@ function toggleLike(idx, cardEl) {
   const post = state.posts[idx];
   post.isLiked = !post.isLiked;
   post.likes += post.isLiked ? 1 : -1;
+
+  // Persist
+  let liked = Storage.get('liked_posts', []);
+  if (post.isLiked) liked.push(post.id);
+  else liked = liked.filter(id => id !== post.id);
+  Storage.set('liked_posts', liked);
 
   const likeBtn = cardEl.querySelector('.post-action-btn');
   const icon = likeBtn.querySelector('.action-icon');
@@ -352,9 +550,8 @@ function toggleLike(idx, cardEl) {
   icon.textContent = post.isLiked ? '❤️' : '🤍';
   count.textContent = post.likes;
 
-  // Bounce animation
-  likeBtn.style.transform = 'scale(1.3)';
-  setTimeout(() => { likeBtn.style.transform = ''; }, 200);
+  likeBtn.style.transform = 'scale(1.4)';
+  setTimeout(() => { likeBtn.style.transform = ''; }, 220);
 }
 
 // =============================================
@@ -362,39 +559,45 @@ function toggleLike(idx, cardEl) {
 // =============================================
 function renderEvents(filter = 'all') {
   state.eventFilter = filter;
-  state.events = ZAMData.events.map(e => ({ ...e }));
+
+  const joinedEvents = Storage.get('joined_events', []);
+  const savedEvents = Storage.get('saved_events', []);
+
+  state.events = ZAMData.events.map(e => ({
+    ...e,
+    isJoined: joinedEvents.includes(e.id),
+    isSaved: savedEvents.includes(e.id),
+  }));
 
   const container = $('#events-list');
   if (!container) return;
   container.innerHTML = '';
 
-  // Update filter tabs
   $$('.filter-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.filter === filter);
   });
 
   let filtered = state.events;
-  // For demo, "week" shows first 2, "month" shows all
   if (filter === 'week') filtered = state.events.slice(0, 2);
-  if (filter === 'month') filtered = state.events;
 
   filtered.forEach((evt, idx) => {
-    const card = renderEventCard(evt, idx);
-    container.appendChild(card);
+    container.appendChild(renderEventCard(evt, idx));
   });
 }
 
 function renderEventCard(evt, idx) {
-  const div = el('div', 'event-card-full');
-
+  const div = el('div', 'event-card-full card-dark');
   const spotsLow = evt.spotsLeft <= 10;
-  const joinedClass = evt.isJoined ? 'btn btn-sm joined' : 'btn btn-primary btn-sm';
-  const joinText = evt.isJoined ? '✓ Angemeldet' : 'Teilnehmen';
 
   div.innerHTML = `
     <div class="event-card-top">
       <div class="category-tag tag" style="background:${evt.categoryColor}22;color:${evt.categoryColor}">${evt.category}</div>
-      <div class="event-points-badge">+${evt.pointsReward}P</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="bookmark-btn ${evt.isSaved ? 'saved' : ''}" data-type="event" data-id="${evt.id}" aria-label="${evt.isSaved ? 'Gespeichert' : 'Merken'}">
+          ${evt.isSaved ? '🔖' : '🏷️'}
+        </button>
+        <div class="event-points-badge">+${evt.pointsReward}P</div>
+      </div>
     </div>
     <h3>${evt.title}</h3>
     <div class="event-details">
@@ -409,13 +612,19 @@ function renderEventCard(evt, idx) {
           ? `<strong>Nur noch ${evt.spotsLeft} Plätze!</strong>`
           : `${evt.spotsLeft} Plätze frei`}
       </div>
-      <button class="${joinedClass}" data-idx="${idx}">${joinText}</button>
+      <button class="${evt.isJoined ? 'btn btn-sm joined' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
+        ${evt.isJoined ? '✓ Angemeldet' : 'Teilnehmen'}
+      </button>
     </div>
   `;
 
-  const joinBtn = div.querySelector('button');
-  joinBtn.addEventListener('click', () => joinEvent(idx, div));
+  div.querySelector('.bookmark-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleSave('event', evt.id, e.currentTarget);
+    evt.isSaved = isSaved('event', evt.id);
+  });
 
+  div.querySelector('.btn').addEventListener('click', () => joinEvent(idx, div));
   return div;
 }
 
@@ -426,34 +635,54 @@ function joinEvent(idx, cardEl) {
   evt.isJoined = true;
   evt.spotsLeft = Math.max(0, evt.spotsLeft - 1);
 
-  const btn = cardEl.querySelector('button');
+  // Persist
+  const joined = Storage.get('joined_events', []);
+  if (!joined.includes(evt.id)) joined.push(evt.id);
+  Storage.set('joined_events', joined);
+
+  // Update stats
+  const stats = Storage.get('stats', { ...ZAMData.currentUser.stats });
+  stats.eventsAttended = (stats.eventsAttended || 0) + 1;
+  Storage.set('stats', stats);
+  ZAMData.currentUser.stats.eventsAttended = stats.eventsAttended;
+
+  const btn = cardEl.querySelector('.btn');
   btn.className = 'btn btn-sm joined';
   btn.textContent = '✓ Angemeldet';
 
-  // Update points
-  ZAMData.currentUser.points += evt.pointsReward;
-  updatePointsDisplay();
+  addPoints(evt.pointsReward, evt.title);
 
-  showToast(`🎉 Angemeldet! +${evt.pointsReward} Punkte gutgeschrieben`, 'success');
+  // Update profile
+  const eventsEl = $('#profile-stat-events');
+  if (eventsEl) eventsEl.textContent = stats.eventsAttended;
+
+  showToast(`🎉 Angemeldet! +${evt.pointsReward} Punkte`, 'success');
 }
 
 // =============================================
 // Deals Page
 // =============================================
 function renderDeals() {
-  state.deals = ZAMData.deals.map(d => ({ ...d }));
+  const claimedDeals = Storage.get('claimed_deals', []);
+  const savedDeals = Storage.get('saved_deals', []);
+
+  state.deals = ZAMData.deals.map(d => ({
+    ...d,
+    isClaimed: claimedDeals.includes(d.id),
+    isSaved: savedDeals.includes(d.id),
+  }));
+
   const container = $('#deals-list');
   if (!container) return;
   container.innerHTML = '';
 
   state.deals.forEach((deal, idx) => {
-    const card = renderDealCard(deal, idx);
-    container.appendChild(card);
+    container.appendChild(renderDealCard(deal, idx));
   });
 }
 
 function renderDealCard(deal, idx) {
-  const div = el('div', 'deal-card-full');
+  const div = el('div', 'deal-card-full card-dark');
 
   div.innerHTML = `
     ${deal.isHot ? '<div class="hot-badge" style="margin-bottom:10px">🔥 Beliebt</div>' : ''}
@@ -463,19 +692,32 @@ function renderDealCard(deal, idx) {
         <div class="deal-store-name">${deal.storeName}</div>
         <div class="deal-discount-big">${deal.discount}</div>
       </div>
-      <div class="category-tag tag" style="background:${deal.categoryColor}22;color:${deal.categoryColor}">${deal.category}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <div class="category-tag tag" style="background:${deal.categoryColor}22;color:${deal.categoryColor}">${deal.category}</div>
+        <button class="bookmark-btn ${deal.isSaved ? 'saved' : ''}" data-type="deal" data-id="${deal.id}" aria-label="Merken">
+          ${deal.isSaved ? '🔖' : '🏷️'}
+        </button>
+      </div>
     </div>
     <div class="deal-title">${deal.title}</div>
     <p class="deal-description">${deal.description}</p>
     <div class="deal-card-footer">
       <div class="deal-expiry">🗓 ${deal.expiryFormatted}</div>
-      <button class="${deal.isClaimed ? 'btn btn-sm claimed' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
-        ${deal.isClaimed ? '✓ Eingelöst' : 'Gutschein sichern'}
-      </button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="${deal.isClaimed ? 'btn btn-sm claimed' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
+          ${deal.isClaimed ? '✓ Eingelöst' : 'Gutschein sichern'}
+        </button>
+      </div>
     </div>
   `;
 
-  const claimBtn = div.querySelector('button');
+  div.querySelector('.bookmark-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleSave('deal', deal.id, e.currentTarget);
+    deal.isSaved = isSaved('deal', deal.id);
+  });
+
+  const claimBtn = div.querySelector('.btn');
   if (!deal.isClaimed) {
     claimBtn.addEventListener('click', () => claimDeal(idx, div, deal));
   }
@@ -484,7 +726,6 @@ function renderDealCard(deal, idx) {
 }
 
 function claimDeal(idx, cardEl, deal) {
-  // Open barcode modal
   const overlay = $('#modal-barcode');
   if (!overlay) return;
 
@@ -496,36 +737,42 @@ function claimDeal(idx, cardEl, deal) {
   if (subtitle) subtitle.textContent = deal.storeName + ' · ' + deal.expiryFormatted;
   if (barcodeNum) barcodeNum.textContent = deal.barcode;
 
-  // Generate random-looking barcode lines
   generateBarcode();
-
   overlay.classList.add('open');
 
-  // Mark as claimed after modal opens
+  // Persist
+  const claimed = Storage.get('claimed_deals', []);
+  if (!claimed.includes(deal.id)) claimed.push(deal.id);
+  Storage.set('claimed_deals', claimed);
+
+  // Update stats
+  const stats = Storage.get('stats', { ...ZAMData.currentUser.stats });
+  stats.dealsUsed = (stats.dealsUsed || 0) + 1;
+  Storage.set('stats', stats);
+  ZAMData.currentUser.stats.dealsUsed = stats.dealsUsed;
+
   state.deals[idx].isClaimed = true;
-  const btn = cardEl.querySelector('button');
+  const btn = cardEl.querySelector('.btn');
   if (btn) {
     btn.className = 'btn btn-sm claimed';
     btn.textContent = '✓ Eingelöst';
     btn.disabled = true;
   }
 
-  // Award points
-  ZAMData.currentUser.points += deal.pointsReward;
-  updatePointsDisplay();
-  showToast(`+${deal.pointsReward} Punkte für diesen Deal!`, 'success');
+  addPoints(deal.pointsReward, deal.storeName);
+
+  // Update profile
+  const dealsEl = $('#profile-stat-deals');
+  if (dealsEl) dealsEl.textContent = stats.dealsUsed;
 }
 
 function generateBarcode() {
   const container = $('#barcode-lines');
   if (!container) return;
   container.innerHTML = '';
-
-  const lineCount = 48;
-  for (let i = 0; i < lineCount; i++) {
+  for (let i = 0; i < 48; i++) {
     const line = el('div', 'barcode-line');
-    const width = Math.random() < 0.3 ? 4 : Math.random() < 0.5 ? 2 : 3;
-    line.style.width = width + 'px';
+    line.style.width = (Math.random() < 0.3 ? 4 : Math.random() < 0.5 ? 2 : 3) + 'px';
     line.style.flex = 'none';
     container.appendChild(line);
   }
@@ -539,17 +786,13 @@ function renderMerchants() {
   const container = $('#merchants-list');
   if (!container) return;
   container.innerHTML = '';
-
   state.merchants.forEach((merchant, idx) => {
-    const card = renderMerchantCard(merchant, idx);
-    container.appendChild(card);
+    container.appendChild(renderMerchantCard(merchant, idx));
   });
 }
 
 function renderMerchantCard(merchant, idx) {
   const div = el('div', 'merchant-card');
-  div.dataset.idx = idx;
-
   div.innerHTML = `
     <div class="merchant-card-header">
       <div class="merchant-icon">${merchant.icon}</div>
@@ -557,7 +800,9 @@ function renderMerchantCard(merchant, idx) {
         <div class="merchant-name">${merchant.name}</div>
         <div class="merchant-category">${merchant.category}</div>
         <div class="merchant-meta">
-          ${merchant.isOpen ? '<span class="open-badge">Geöffnet</span>' : '<span class="open-badge" style="background:rgba(239,68,68,0.1);color:#ef4444;border-color:rgba(239,68,68,0.25)">Geschlossen</span>'}
+          ${merchant.isOpen
+            ? '<span class="open-badge">Geöffnet</span>'
+            : '<span class="open-badge" style="background:rgba(239,68,68,0.1);color:#ef4444;border-color:rgba(239,68,68,0.25)">Geschlossen</span>'}
           <span class="merchant-rating">⭐ ${merchant.rating} (${merchant.reviewCount})</span>
         </div>
       </div>
@@ -566,18 +811,9 @@ function renderMerchantCard(merchant, idx) {
     <div class="merchant-details">
       <div class="merchant-details-inner">
         <p class="merchant-description">${merchant.description}</p>
-        <div class="merchant-detail-row">
-          <span class="detail-icon">⏰</span>
-          <span>${merchant.hours}</span>
-        </div>
-        <div class="merchant-detail-row">
-          <span class="detail-icon">📍</span>
-          <span>${merchant.location}</span>
-        </div>
-        <div class="merchant-detail-row">
-          <span class="detail-icon">📞</span>
-          <span>${merchant.phone}</span>
-        </div>
+        <div class="merchant-detail-row"><span class="detail-icon">⏰</span><span>${merchant.hours}</span></div>
+        <div class="merchant-detail-row"><span class="detail-icon">📍</span><span>${merchant.location}</span></div>
+        <div class="merchant-detail-row"><span class="detail-icon">📞</span><span>${merchant.phone}</span></div>
         <div class="merchant-promo-badge" style="background:${merchant.promoColor}22;color:${merchant.promoColor};border:1px solid ${merchant.promoColor}44">
           🎁 ${merchant.currentPromo}
         </div>
@@ -585,23 +821,13 @@ function renderMerchantCard(merchant, idx) {
     </div>
   `;
 
-  const header = div.querySelector('.merchant-card-header');
-  header.addEventListener('click', () => toggleMerchant(div, idx));
+  div.querySelector('.merchant-card-header').addEventListener('click', () => {
+    const isExpanded = div.classList.contains('expanded');
+    $$('.merchant-card').forEach(c => c.classList.remove('expanded'));
+    if (!isExpanded) div.classList.add('expanded');
+  });
 
   return div;
-}
-
-function toggleMerchant(cardEl, idx) {
-  const isExpanded = cardEl.classList.contains('expanded');
-
-  // Collapse all
-  $$('.merchant-card').forEach(c => c.classList.remove('expanded'));
-  state.merchants.forEach(m => { m.isExpanded = false; });
-
-  if (!isExpanded) {
-    cardEl.classList.add('expanded');
-    state.merchants[idx].isExpanded = true;
-  }
 }
 
 // =============================================
@@ -609,6 +835,10 @@ function toggleMerchant(cardEl, idx) {
 // =============================================
 function renderProfile() {
   const { currentUser } = ZAMData;
+
+  // Load persisted stats
+  const stats = Storage.get('stats', currentUser.stats);
+  currentUser.stats = stats;
 
   const nameEl = $('#profile-name');
   const usernameEl = $('#profile-username');
@@ -619,16 +849,34 @@ function renderProfile() {
   const eventsEl = $('#profile-stat-events');
   const dealsEl = $('#profile-stat-deals');
 
-  if (nameEl) nameEl.textContent = currentUser.name;
+  if (nameEl)    nameEl.textContent    = currentUser.name;
   if (usernameEl) usernameEl.textContent = currentUser.username;
-  if (memberEl) memberEl.textContent = currentUser.memberSinceFormatted;
-  if (pointsEl) pointsEl.textContent = currentUser.points.toLocaleString('de-DE');
-  if (avatarEl) avatarEl.textContent = currentUser.initials;
-  if (visitsEl) visitsEl.textContent = currentUser.stats.visits;
-  if (eventsEl) eventsEl.textContent = currentUser.stats.eventsAttended;
-  if (dealsEl) dealsEl.textContent = currentUser.stats.dealsUsed;
+  if (memberEl)  memberEl.textContent  = currentUser.memberSinceFormatted;
+  if (pointsEl)  pointsEl.textContent  = currentUser.points.toLocaleString('de-DE');
+  if (avatarEl)  avatarEl.textContent  = currentUser.initials;
+  if (visitsEl)  visitsEl.textContent  = stats.visits;
+  if (eventsEl)  eventsEl.textContent  = stats.eventsAttended;
+  if (dealsEl)   dealsEl.textContent   = stats.dealsUsed;
 
   renderBadges();
+  renderSavedSummary();
+}
+
+function renderSavedSummary() {
+  const savedEvents = Storage.get('saved_events', []);
+  const savedDeals  = Storage.get('saved_deals', []);
+
+  const el = $('#profile-saved-summary');
+  if (!el) return;
+
+  el.innerHTML = `
+    <div class="saved-chip" onclick="navigateTo('events')">
+      🔖 ${savedEvents.length} Events gemerkt
+    </div>
+    <div class="saved-chip" onclick="navigateTo('deals')">
+      🏷️ ${savedDeals.length} Deals gemerkt
+    </div>
+  `;
 }
 
 function renderBadges() {
@@ -638,7 +886,6 @@ function renderBadges() {
 
   ZAMData.badges.forEach(badge => {
     const item = el('div', badge.earned ? 'badge-item' : 'badge-item locked');
-
     const wrap = el('div', 'badge-icon-wrap');
     wrap.style.background = badge.earned ? badge.color + '22' : 'rgba(255,255,255,0.05)';
     wrap.style.border = badge.earned ? `1px solid ${badge.color}44` : '1px solid rgba(255,255,255,0.1)';
@@ -648,55 +895,41 @@ function renderBadges() {
 
     item.appendChild(wrap);
     item.appendChild(name);
-
-    // Tooltip-like description on tap
     if (badge.earned) {
       item.addEventListener('click', () => showToast(badge.description));
     }
-
     container.appendChild(item);
   });
 }
 
 // =============================================
-// Shared: update points everywhere
+// Modals
 // =============================================
-function updatePointsDisplay() {
-  const pts = ZAMData.currentUser.points;
-  const homeEl = $('#home-points-value');
-  const profileEl = $('#profile-points-value');
-  if (homeEl) homeEl.textContent = pts.toLocaleString('de-DE');
-  if (profileEl) profileEl.textContent = pts.toLocaleString('de-DE');
+function closeModal(modalId) {
+  const overlay = $(`#${modalId}`);
+  if (overlay) overlay.classList.remove('open');
 }
 
-// =============================================
-// Modal close handlers
-// =============================================
 function initModals() {
-  // Close on overlay click
   $$('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        overlay.classList.remove('open');
-      }
+      if (e.target === overlay) overlay.classList.remove('open');
     });
   });
 
-  // Close buttons
   $$('[data-close-modal]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const modalId = btn.dataset.closeModal;
-      closeModal(modalId);
-    });
+    btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
   });
 
-  // Spin button
   const spinGoBtn = $('#btn-spin-go');
   if (spinGoBtn) spinGoBtn.addEventListener('click', doSpin);
+
+  const checkinBtn = $('#btn-qr-confirm');
+  if (checkinBtn) checkinBtn.addEventListener('click', doCheckin);
 }
 
 // =============================================
-// Event filter tabs
+// Event Filter Tabs
 // =============================================
 function initEventFilters() {
   $$('.filter-tab').forEach(tab => {
@@ -705,12 +938,12 @@ function initEventFilters() {
 }
 
 // =============================================
-// Pulse animation on CTA buttons
+// Pulse animation on CTA
 // =============================================
 function initButtonAnimations() {
   setTimeout(() => {
     const spinBtn = $('#btn-daily-spin');
-    if (spinBtn) {
+    if (spinBtn && !Storage.isToday(Storage.get('last_spin_date', null))) {
       spinBtn.classList.add('btn-pulse');
       spinBtn.addEventListener('animationend', () => spinBtn.classList.remove('btn-pulse'));
     }
@@ -721,11 +954,9 @@ function initButtonAnimations() {
 // Init
 // =============================================
 function init() {
-  // Deep-copy mutable data
-  state.posts = ZAMData.communityPosts.map(p => ({ ...p }));
-  state.events = ZAMData.events.map(e => ({ ...e }));
-  state.deals = ZAMData.deals.map(d => ({ ...d }));
-  state.merchants = ZAMData.merchants.map(m => ({ ...m }));
+  // Load persisted points
+  const savedPoints = Storage.get('points', null);
+  if (savedPoints !== null) ZAMData.currentUser.points = savedPoints;
 
   // Render all pages
   renderHome();
@@ -734,8 +965,6 @@ function init() {
   renderDeals();
   renderMerchants();
   renderProfile();
-
-  // Generate QR grid
   generateQRGrid();
 
   // Init interactions
@@ -746,19 +975,11 @@ function init() {
   initEventFilters();
   initButtonAnimations();
 
-  // Show home page
+  // Show home
+  state.currentPage = '';
   navigateTo('home');
-  // Force active since navigateTo guards against same-page
-  const homePage = $('#page-home');
-  if (homePage) homePage.classList.add('active');
-  $$('.nav-tab').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.page === 'home');
-  });
 }
 
-// Wait for DOM
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
+document.readyState === 'loading'
+  ? document.addEventListener('DOMContentLoaded', init)
+  : init();

@@ -193,6 +193,12 @@
         </div>
       </div>
 
+      <!-- Saved Items Summary -->
+      <div style="padding:16px 20px 0;border-top:1px solid var(--color-border)">
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-muted);margin-bottom:12px">Gemerkte Inhalte</div>
+        <div id="profile-saved-summary" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+      </div>
+
       <!-- Badges -->
       <div class="badges-section">
         <div class="badges-section-title">Meine Abzeichen</div>
@@ -270,8 +276,9 @@
       </div>
     </div>
 
-    <button class="btn btn-primary btn-full" id="btn-spin-go">Drehen!</button>
-    <button class="btn btn-ghost btn-full mt-8" data-close-modal="modal-spin" style="margin-top:10px">Schließen</button>
+    <button class="btn btn-primary btn-full" id="btn-spin-go">🎰 Jetzt drehen!</button>
+    <div id="spin-next-info" style="text-align:center;font-size:0.75rem;color:var(--color-text-muted);margin-top:10px;min-height:18px"></div>
+    <button class="btn btn-ghost btn-full" data-close-modal="modal-spin" style="margin-top:10px">Schließen</button>
   </div>
 </div>
 
@@ -291,8 +298,12 @@
       <div style="font-family:monospace;font-size:1rem;font-weight:700;letter-spacing:0.15em;margin-top:4px">ZAM-MM-001247</div>
     </div>
 
-    <button class="btn btn-primary btn-full" onclick="showToast('Check-in erfolgreich! +5 Punkte');closeModal('modal-qr')">
-      ✓ Check-in bestätigen
+    <div id="qr-checkin-status" style="text-align:center;font-size:0.78rem;color:var(--color-text-muted);margin-bottom:14px">
+      📍 Zeige diesen Code an der Info-Theke
+    </div>
+
+    <button class="btn btn-primary btn-full btn-pulse" id="btn-qr-confirm">
+      ✅ Jetzt einchecken (+25 Punkte)
     </button>
     <button class="btn btn-ghost btn-full" data-close-modal="modal-qr" style="margin-top:10px">Schließen</button>
   </div>
