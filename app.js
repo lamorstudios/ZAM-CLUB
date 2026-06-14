@@ -958,6 +958,11 @@ function init() {
   const savedPoints = Storage.get('points', null);
   if (savedPoints !== null) ZAMData.currentUser.points = savedPoints;
 
+  // Merge admin-created items with mock data
+  const adminData = JSON.parse(localStorage.getItem('zamclub_admin') || '{}');
+  if (adminData.events?.length)  ZAMData.events  = [...ZAMData.events,  ...adminData.events];
+  if (adminData.deals?.length)   ZAMData.deals   = [...ZAMData.deals,   ...adminData.deals];
+
   // Render all pages
   renderHome();
   renderCommunity();

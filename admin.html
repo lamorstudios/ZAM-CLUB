@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>ZAM Club Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0a0a10;
+      --surface:    #13131c;
+      --surface2:   #1c1c28;
+      --border:     rgba(255,255,255,0.07);
+      --text:       #f0f0f8;
+      --text-muted: #8b8ba0;
+      --primary:    #6d28d9;
+      --primary2:   #a855f7;
+      --grad:       linear-gradient(135deg, #6d28d9, #a855f7);
+      --success:    #10b981;
+      --danger:     #ef4444;
+      --radius:     16px;
+      --radius-sm:  10px;
+    }
+
+    body {
+      font-family: 'Poppins', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* ── Header ── */
+    .admin-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .admin-header-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .admin-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .admin-logo-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--grad);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .admin-logo-text {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .admin-logo-text span {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      display: block;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .demo-badge {
+      background: rgba(107,114,128,0.2);
+      border: 1px solid rgba(107,114,128,0.3);
+      color: #9ca3af;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary2);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(168,85,247,0.3);
+      transition: background 0.2s;
+    }
+    .back-link:hover { background: rgba(168,85,247,0.1); }
+
+    /* ── Main container ── */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 28px 20px 0;
+    }
+
+    /* ── Tab Navigation ── */
+    .tab-nav {
+      display: flex;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 8px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .tab-btn.active {
+      background: var(--grad);
+      color: #fff;
+    }
+    .tab-btn .count {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 1px 7px;
+      font-size: 11px;
+      margin-left: 5px;
+    }
+    .tab-btn:not(.active) .count {
+      background: rgba(255,255,255,0.08);
+      color: var(--text-muted);
+    }
+
+    /* ── Tab Panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Form ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--primary2);
+    }
+    .form-group input.error,
+    .form-group select.error,
+    .form-group textarea.error {
+      border-color: var(--danger);
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-group select option { background: var(--surface2); }
+    .form-group input[type="color"] {
+      padding: 4px 6px;
+      height: 42px;
+      cursor: pointer;
+    }
+
+    /* Checkbox row */
+    .check-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+    }
+    .check-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary2);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .check-group label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    /* ── Buttons ── */
+    .btn-submit {
+      background: var(--grad);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px 28px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-submit:active { transform: translateY(0); }
+
+    .btn-delete {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      color: var(--danger);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-delete:hover { background: rgba(239,68,68,0.2); }
+
+    /* ── Success message ── */
+    .success-msg {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: rgba(16,185,129,0.12);
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: var(--radius-sm);
+      color: var(--success);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 16px;
+      margin-top: 16px;
+    }
+    .success-msg.show { display: flex; animation: fadeSlide 0.3s ease; }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Item list ── */
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    .item-list { display: flex; flex-direction: column; gap: 10px; }
+    .item-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .item-card-info { flex: 1; min-width: 0; }
+    .item-card-name {
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-card-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .item-card-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Badges */
+    .badge {
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+    }
+    .badge-mock {
+      background: rgba(107,114,128,0.15);
+      border: 1px solid rgba(107,114,128,0.25);
+      color: #9ca3af;
+    }
+    .badge-new {
+      background: rgba(16,185,129,0.15);
+      border: 1px solid rgba(16,185,129,0.3);
+      color: var(--success);
+    }
+
+    /* ── Category colors ── */
+    .cat-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 5px;
+      flex-shrink: 0;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .full { grid-column: 1; }
+      .tab-btn { font-size: 12px; }
+      .admin-header-inner { gap: 8px; }
+      .card { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="admin-header">
+  <div class="admin-header-inner">
+    <div class="admin-logo">
+      <div class="admin-logo-icon">⚙️</div>
+      <div class="admin-logo-text">
+        ZAM Club Admin
+        <span>Verwaltungs-Oberfläche</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="demo-badge">Demo – Kein Login erforderlich</span>
+      <a href="index.html" class="back-link">← Zurück zur App</a>
+    </div>
+  </div>
+</header>
+
+<!-- ── Main ── -->
+<main class="container">
+
+  <!-- Tab Navigation -->
+  <nav class="tab-nav" role="tablist">
+    <button class="tab-btn active" data-tab="events" role="tab">
+      📅 Events
+      <span class="count" id="count-events">0</span>
+    </button>
+    <button class="tab-btn" data-tab="deals" role="tab">
+      🏷️ Deals
+      <span class="count" id="count-deals">0</span>
+    </button>
+    <button class="tab-btn" data-tab="promos" role="tab">
+      🏪 Händler-Aktionen
+      <span class="count" id="count-promos">0</span>
+    </button>
+  </nav>
+
+  <!-- ══════════════════════════════════════════
+       TAB 1: EVENTS
+  ══════════════════════════════════════════ -->
+  <div class="tab-panel active" id="tab-events">
+
+    <div class="card">
+      <div class="card-title">📅 Neues Event erstellen</div>
+      <form id="form-events" novalidate>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label for="evt-title">Titel *</label>
+            <input type="text" id="evt-title" placeholder="z.B. Sommerfest im Atrium" />
+          </div>
+          <div class="form-group">
+            <label for="evt-category">Kategorie *</label>
+            <select id="evt-category">
+              <option value="Sport">Sport</option>
+              <option value="Food & Drinks">Food &amp; Drinks</option>
+              <option value="Familie">Familie</option>
+              <option value="Musik">Musik</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Sonstiges">Sonstiges</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="evt-date">Datum *</label>
+            <input type="date" id="evt-date" />
+          </div>
+          <div class="form-group">
+            <label for="evt-time-from">Uhrzeit von</label>
+            <input type="time" id="evt-time-from" value="10:00" />
+          </div>
+          <div class="form-group">
+            <label for="evt-time-to">Uhrzeit bis</label>
+            <input type="time" id="evt-time-to" value="12:00" />
+          </div>
+          <div class="form-group full">
+            <label for="evt-location">Ort</label>
+            <input type="text" id="evt-location" placeholder="z.B. Atrium, EG" />
+          </div>
+          <div class="form-group full">
+            <label for="evt-description">Beschreibung</label>
+            <textarea id="evt-description" placeholder="Kurze Beschreibung des Events…"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="evt-spots">Verfügbare Plätze</label>
+            <input type="number" id="evt-spots" value="50" min="1" />
+          </div>
+          <div class="form-group">
+            <label for="evt-points">Punkte-Belohnung</label>
+            <input type="number" id="evt-points" value="50" min="0" />
+          </div>
+          <div class="form-group full">
+            <div class="check-group">
+              <input type="checkbox" id="evt-featured" />
+              <label for="evt-featured">⭐ Featured Event (wird auf der Startseite hervorgehoben)</label>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <button type="submit" class="btn-submit">+ Event hinzufügen</button>
+        </div>
+        <div class="success-msg" id="success-events">✅ Event erfolgreich hinzugefügt!</div>
+      </form>
+    </div>
+
+    <!-- List -->
+    <div class="card">
+      <div class="card-title">📋 Alle Events</div>
+      <div class="section-title" id="evt-list-label">Lädt…</div>
+      <div class="item-list" id="events-list"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       TAB 2: DEALS
+  ══════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-deals">
+
+    <div class="card">
+      <div class="card-title">🏷️ Neuen Deal erstellen</div>
+      <form id="form-deals" novalidate>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="deal-store">Händler-Name *</label>
+            <input type="text" id="deal-store" placeholder="z.B. Café Aroma" />
+          </div>
+          <div class="form-group">
+            <label for="deal-icon">Händler-Icon (Emoji)</label>
+            <input type="text" id="deal-icon" value="☕" maxlength="4" placeholder="☕" />
+          </div>
+          <div class="form-group">
+            <label for="deal-category">Kategorie</label>
+            <select id="deal-category">
+              <option value="Food & Drinks">Food &amp; Drinks</option>
+              <option value="Mode">Mode</option>
+              <option value="Restaurant">Restaurant</option>
+              <option value="Sport & Fitness">Sport &amp; Fitness</option>
+              <option value="Bücher">Bücher</option>
+              <option value="Sonstiges">Sonstiges</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="deal-discount">Rabatt-Bezeichnung *</label>
+            <input type="text" id="deal-discount" placeholder='z.B. "20%" oder "2+1"' />
+          </div>
+          <div class="form-group full">
+            <label for="deal-title">Titel *</label>
+            <input type="text" id="deal-title" placeholder="z.B. 20% auf alle Heißgetränke" />
+          </div>
+          <div class="form-group full">
+            <label for="deal-description">Beschreibung</label>
+            <textarea id="deal-description" placeholder="Bedingungen, Details…"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="deal-expiry">Gültig bis *</label>
+            <input type="date" id="deal-expiry" />
+          </div>
+          <div class="form-group">
+            <label for="deal-points">Punkte-Belohnung</label>
+            <input type="number" id="deal-points" value="15" min="0" />
+          </div>
+          <div class="form-group full">
+            <div class="check-group">
+              <input type="checkbox" id="deal-hot" />
+              <label for="deal-hot">🔥 Hot Deal (wird mit Feuer-Badge hervorgehoben)</label>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:20px">
+          <button type="submit" class="btn-submit">+ Deal hinzufügen</button>
+        </div>
+        <div class="success-msg" id="success-deals">✅ Deal erfolgreich hinzugefügt!</div>
+      </form>
+    </div>
+
+    <!-- List -->
+    <div class="card">
+      <div class="card-title">📋 Alle Deals</div>
+      <div class="section-title" id="deal-list-label">Lädt…</div>
+      <div class="item-list" id="deals-list"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       TAB 3: HÄNDLER-AKTIONEN
+  ══════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-promos">
+
+    <div class="card">
+      <div class="card-title">🏪 Neue Händler-Aktion erstellen</div>
+      <form id="form-promos" novalidate>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="promo-merchant">Händler auswählen *</label>
+            <select id="promo-merchant">
+              <option value="">— Händler wählen —</option>
+              <option value="mer_001">☕ Café Aroma</option>
+              <option value="mer_002">👗 FashionHub</option>
+              <option value="mer_003">🍕 Trattoria Bella</option>
+              <option value="mer_004">💪 FitZone</option>
+              <option value="mer_005">📚 Buchreich</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="promo-color">Aktions-Farbe</label>
+            <input type="color" id="promo-color" value="#f59e0b" />
+          </div>
+          <div class="form-group full">
+            <label for="promo-text">Aktions-Text *</label>
+            <input type="text" id="promo-text" placeholder='z.B. "20% auf alle Heißgetränke"' />
+          </div>
+        </div>
+        <div style="margin-top:20px">
+          <button type="submit" class="btn-submit">+ Aktion hinzufügen</button>
+        </div>
+        <div class="success-msg" id="success-promos">✅ Händler-Aktion erfolgreich hinzugefügt!</div>
+      </form>
+    </div>
+
+    <!-- List -->
+    <div class="card">
+      <div class="card-title">📋 Aktive Händler-Aktionen</div>
+      <div class="section-title" id="promo-list-label">Lädt…</div>
+      <div class="item-list" id="promos-list"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════
+const ADMIN_KEY = 'zamclub_admin';
+
+const CAT_COLORS = {
+  'Sport':         '#10b981',
+  'Food & Drinks': '#f59e0b',
+  'Familie':       '#3b82f6',
+  'Musik':         '#ec4899',
+  'Shopping':      '#8b5cf6',
+  'Sonstiges':     '#6b7280',
+  'Mode':          '#ec4899',
+  'Restaurant':    '#ef4444',
+  'Sport & Fitness': '#10b981',
+  'Bücher':        '#3b82f6',
+};
+
+const MERCHANT_NAMES = {
+  mer_001: 'Café Aroma',
+  mer_002: 'FashionHub',
+  mer_003: 'Trattoria Bella',
+  mer_004: 'FitZone',
+  mer_005: 'Buchreich',
+};
+
+// ═══════════════════════════════════════════════
+// MOCK DATA (mirrors data.js for display)
+// ═══════════════════════════════════════════════
+const MOCK_EVENTS = [
+  { id: 'evt_001', title: 'Fitness Morning – Yoga im Atrium', category: 'Sport', date_formatted: 'Mi, 18. Juni 2026', time: '09:00 – 10:30 Uhr', location: 'Atrium, EG', points_reward: 50 },
+  { id: 'evt_002', title: 'Street Food Festival', category: 'Food & Drinks', date_formatted: 'Sa, 21. Juni 2026', time: '11:00 – 20:00 Uhr', location: 'Außenbereich West', points_reward: 75 },
+  { id: 'evt_003', title: 'Kids Workshop: Basteln & Malen', category: 'Familie', date_formatted: 'Do, 25. Juni 2026', time: '14:00 – 16:00 Uhr', location: 'Kinderparadies, OG 1', points_reward: 30 },
+  { id: 'evt_004', title: 'Live Musik: Summer Vibes', category: 'Musik', date_formatted: 'So, 28. Juni 2026', time: '15:00 – 18:00 Uhr', location: 'Hauptbühne, EG', points_reward: 40 },
+];
+
+const MOCK_DEALS = [
+  { id: 'deal_001', store_name: 'Café Aroma', store_icon: '☕', category: 'Food & Drinks', discount: '20%', title: '20% auf alle Heißgetränke', expiry_formatted: 'Gültig bis 30. Juni 2026' },
+  { id: 'deal_002', store_name: 'FashionHub', store_icon: '👗', category: 'Mode', discount: '15%', title: '15% Rabatt auf Sommerkollektion', expiry_formatted: 'Gültig bis 15. Juli 2026' },
+  { id: 'deal_003', store_name: 'Trattoria Bella', store_icon: '🍕', category: 'Restaurant', discount: '2+1', title: '2 Pizzen kaufen, 1 gratis', expiry_formatted: 'Gültig bis 22. Juni 2026' },
+  { id: 'deal_004', store_name: 'Buchreich', store_icon: '📚', category: 'Bücher', discount: '10%', title: '10% auf Bestseller', expiry_formatted: 'Gültig bis 30. Juni 2026' },
+  { id: 'deal_005', store_name: 'FitZone', store_icon: '💪', category: 'Sport & Fitness', discount: '1 Monat', title: '1 Monat gratis Probetraining', expiry_formatted: 'Gültig bis 31. Juli 2026' },
+];
+
+const MOCK_PROMOS = [
+  { merchant_id: 'mer_001', merchant_name: 'Café Aroma', promo_text: '20% auf alle Heißgetränke', promo_color: '#f59e0b' },
+  { merchant_id: 'mer_002', merchant_name: 'FashionHub', promo_text: '15% Sommerrabatt', promo_color: '#ec4899' },
+  { merchant_id: 'mer_003', merchant_name: 'Trattoria Bella', promo_text: '2+1 Pizza-Aktion', promo_color: '#ef4444' },
+  { merchant_id: 'mer_004', merchant_name: 'FitZone', promo_text: '1 Monat gratis testen', promo_color: '#10b981' },
+  { merchant_id: 'mer_005', merchant_name: 'Buchreich', promo_text: '10% auf alle Bestseller', promo_color: '#3b82f6' },
+];
+
+// ═══════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════
+function loadAdmin() {
+  try {
+    return JSON.parse(localStorage.getItem(ADMIN_KEY) || '{}');
+  } catch { return {}; }
+}
+
+function saveAdmin(data) {
+  try { localStorage.setItem(ADMIN_KEY, JSON.stringify(data)); } catch {}
+}
+
+function getAdminEvents()  { return loadAdmin().events          || []; }
+function getAdminDeals()   { return loadAdmin().deals           || []; }
+function getAdminPromos()  { return loadAdmin().merchant_promos || []; }
+
+function setAdminEvents(arr)  { const d = loadAdmin(); d.events          = arr; saveAdmin(d); }
+function setAdminDeals(arr)   { const d = loadAdmin(); d.deals            = arr; saveAdmin(d); }
+function setAdminPromos(arr)  { const d = loadAdmin(); d.merchant_promos  = arr; saveAdmin(d); }
+
+// ═══════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T12:00:00');
+  return d.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function showSuccess(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function validateRequired(fields) {
+  let ok = true;
+  fields.forEach(({ el, val }) => {
+    if (!val || !val.trim()) {
+      el.classList.add('error');
+      el.addEventListener('input', () => el.classList.remove('error'), { once: true });
+      ok = false;
+    }
+  });
+  return ok;
+}
+
+function updateCounts() {
+  const adminEvts   = getAdminEvents();
+  const adminDeals  = getAdminDeals();
+  const adminPromos = getAdminPromos();
+
+  const totalEvts   = MOCK_EVENTS.length + adminEvts.length;
+  const totalDeals  = MOCK_DEALS.length  + adminDeals.length;
+  const totalPromos = MOCK_PROMOS.length + adminPromos.length;
+
+  const cEvt   = document.getElementById('count-events');
+  const cDeal  = document.getElementById('count-deals');
+  const cPromo = document.getElementById('count-promos');
+
+  if (cEvt)   cEvt.textContent   = `${totalEvts} (${adminEvts.length} neu)`;
+  if (cDeal)  cDeal.textContent  = `${totalDeals} (${adminDeals.length} neu)`;
+  if (cPromo) cPromo.textContent = `${totalPromos} (${adminPromos.length} neu)`;
+}
+
+// ═══════════════════════════════════════════════
+// RENDER: EVENTS LIST
+// ═══════════════════════════════════════════════
+function renderEventsList() {
+  const container = document.getElementById('events-list');
+  const label     = document.getElementById('evt-list-label');
+  const adminEvts = getAdminEvents();
+  const all       = [...MOCK_EVENTS, ...adminEvts];
+
+  label.textContent = `${all.length} Events gesamt · ${adminEvts.length} neu hinzugefügt`;
+
+  if (!all.length) {
+    container.innerHTML = '<div class="empty-state">Noch keine Events vorhanden.</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  all.forEach(evt => {
+    const isAdmin = evt.id && evt.id.startsWith('adm_');
+    const color   = CAT_COLORS[evt.category] || '#6b7280';
+    const card    = document.createElement('div');
+    card.className = 'item-card';
+    card.innerHTML = `
+      <div class="item-card-info">
+        <div class="item-card-name">
+          <span class="cat-dot" style="background:${color}"></span>${evt.title}
+        </div>
+        <div class="item-card-meta">
+          ${evt.category} · ${evt.date_formatted || formatDate(evt.date_iso)} · ${evt.time || ''} · +${evt.points_reward} Pkt.
+        </div>
+      </div>
+      <div class="item-card-right">
+        <span class="badge ${isAdmin ? 'badge-new' : 'badge-mock'}">${isAdmin ? 'Neu' : 'Beispiel-Daten'}</span>
+        ${isAdmin ? `<button class="btn-delete" data-id="${evt.id}" data-type="event">Löschen</button>` : ''}
+      </div>
+    `;
+    if (isAdmin) {
+      card.querySelector('.btn-delete').addEventListener('click', () => deleteItem('event', evt.id));
+    }
+    container.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// RENDER: DEALS LIST
+// ═══════════════════════════════════════════════
+function renderDealsList() {
+  const container  = document.getElementById('deals-list');
+  const label      = document.getElementById('deal-list-label');
+  const adminDeals = getAdminDeals();
+  const all        = [...MOCK_DEALS, ...adminDeals];
+
+  label.textContent = `${all.length} Deals gesamt · ${adminDeals.length} neu hinzugefügt`;
+
+  if (!all.length) {
+    container.innerHTML = '<div class="empty-state">Noch keine Deals vorhanden.</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  all.forEach(deal => {
+    const isAdmin = deal.id && deal.id.startsWith('adm_');
+    const color   = CAT_COLORS[deal.category] || '#6b7280';
+    const card    = document.createElement('div');
+    card.className = 'item-card';
+    card.innerHTML = `
+      <div class="item-card-info">
+        <div class="item-card-name">
+          ${deal.store_icon || ''} ${deal.store_name} · <span style="color:${color}">${deal.discount}</span>
+        </div>
+        <div class="item-card-meta">
+          ${deal.title} · ${deal.expiry_formatted || ''}
+        </div>
+      </div>
+      <div class="item-card-right">
+        <span class="badge ${isAdmin ? 'badge-new' : 'badge-mock'}">${isAdmin ? 'Neu' : 'Beispiel-Daten'}</span>
+        ${isAdmin ? `<button class="btn-delete" data-id="${deal.id}" data-type="deal">Löschen</button>` : ''}
+      </div>
+    `;
+    if (isAdmin) {
+      card.querySelector('.btn-delete').addEventListener('click', () => deleteItem('deal', deal.id));
+    }
+    container.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// RENDER: PROMOS LIST
+// ═══════════════════════════════════════════════
+function renderPromosList() {
+  const container   = document.getElementById('promos-list');
+  const label       = document.getElementById('promo-list-label');
+  const adminPromos = getAdminPromos();
+  const all         = [...MOCK_PROMOS, ...adminPromos];
+
+  label.textContent = `${all.length} Aktionen gesamt · ${adminPromos.length} neu hinzugefügt`;
+
+  if (!all.length) {
+    container.innerHTML = '<div class="empty-state">Noch keine Aktionen vorhanden.</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  all.forEach(promo => {
+    const isAdmin = promo.id && promo.id.startsWith('adm_');
+    const color   = promo.promo_color || '#f59e0b';
+    const card    = document.createElement('div');
+    card.className = 'item-card';
+    card.innerHTML = `
+      <div class="item-card-info">
+        <div class="item-card-name">${promo.merchant_name || MERCHANT_NAMES[promo.merchant_id] || '—'}</div>
+        <div class="item-card-meta" style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></span>
+          🎁 ${promo.promo_text}
+        </div>
+      </div>
+      <div class="item-card-right">
+        <span class="badge ${isAdmin ? 'badge-new' : 'badge-mock'}">${isAdmin ? 'Neu' : 'Beispiel-Daten'}</span>
+        ${isAdmin ? `<button class="btn-delete" data-id="${promo.id}" data-type="promo">Löschen</button>` : ''}
+      </div>
+    `;
+    if (isAdmin) {
+      card.querySelector('.btn-delete').addEventListener('click', () => deleteItem('promo', promo.id));
+    }
+    container.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// DELETE
+// ═══════════════════════════════════════════════
+function deleteItem(type, id) {
+  if (type === 'event') {
+    setAdminEvents(getAdminEvents().filter(e => e.id !== id));
+    renderEventsList();
+  } else if (type === 'deal') {
+    setAdminDeals(getAdminDeals().filter(d => d.id !== id));
+    renderDealsList();
+  } else if (type === 'promo') {
+    setAdminPromos(getAdminPromos().filter(p => p.id !== id));
+    renderPromosList();
+  }
+  updateCounts();
+}
+
+// ═══════════════════════════════════════════════
+// FORM: EVENTS
+// ═══════════════════════════════════════════════
+document.getElementById('form-events').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const titleEl    = document.getElementById('evt-title');
+  const dateEl     = document.getElementById('evt-date');
+  const catEl      = document.getElementById('evt-category');
+  const timeFromEl = document.getElementById('evt-time-from');
+  const timeToEl   = document.getElementById('evt-time-to');
+  const locationEl = document.getElementById('evt-location');
+  const descEl     = document.getElementById('evt-description');
+  const spotsEl    = document.getElementById('evt-spots');
+  const pointsEl   = document.getElementById('evt-points');
+  const featuredEl = document.getElementById('evt-featured');
+
+  if (!validateRequired([
+    { el: titleEl, val: titleEl.value },
+    { el: dateEl,  val: dateEl.value },
+  ])) return;
+
+  const ts       = Date.now();
+  const category = catEl.value;
+  const timeFrom = timeFromEl.value || '10:00';
+  const timeTo   = timeToEl.value   || '12:00';
+
+  const newEvt = {
+    id:             `adm_evt_${ts}`,
+    title:          titleEl.value.trim(),
+    category:       category,
+    category_color: CAT_COLORS[category] || '#6b7280',
+    date_iso:       dateEl.value,
+    date_formatted: formatDate(dateEl.value),
+    time_start:     timeFrom,
+    time_end:       timeTo,
+    time:           `${timeFrom} – ${timeTo} Uhr`,
+    location:       locationEl.value.trim() || 'ZAM',
+    description:    descEl.value.trim(),
+    spots_total:    parseInt(spotsEl.value) || 50,
+    spots_left:     parseInt(spotsEl.value) || 50,
+    points_reward:  parseInt(pointsEl.value) || 50,
+    is_featured:    featuredEl.checked,
+    merchant_id:    null,
+    image_url:      null,
+  };
+
+  const evts = getAdminEvents();
+  evts.push(newEvt);
+  setAdminEvents(evts);
+
+  this.reset();
+  spotsEl.value  = 50;
+  pointsEl.value = 50;
+
+  showSuccess('success-events');
+  renderEventsList();
+  updateCounts();
+});
+
+// ═══════════════════════════════════════════════
+// FORM: DEALS
+// ═══════════════════════════════════════════════
+document.getElementById('form-deals').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const storeEl    = document.getElementById('deal-store');
+  const iconEl     = document.getElementById('deal-icon');
+  const catEl      = document.getElementById('deal-category');
+  const discountEl = document.getElementById('deal-discount');
+  const titleEl    = document.getElementById('deal-title');
+  const descEl     = document.getElementById('deal-description');
+  const expiryEl   = document.getElementById('deal-expiry');
+  const pointsEl   = document.getElementById('deal-points');
+  const hotEl      = document.getElementById('deal-hot');
+
+  if (!validateRequired([
+    { el: storeEl,    val: storeEl.value },
+    { el: discountEl, val: discountEl.value },
+    { el: titleEl,    val: titleEl.value },
+    { el: expiryEl,   val: expiryEl.value },
+  ])) return;
+
+  const ts       = Date.now();
+  const category = catEl.value;
+  const expDate  = expiryEl.value;
+
+  const newDeal = {
+    id:               `adm_deal_${ts}`,
+    merchant_id:      null,
+    store_name:       storeEl.value.trim(),
+    store_icon:       iconEl.value.trim() || '🏪',
+    category:         category,
+    category_color:   CAT_COLORS[category] || '#6b7280',
+    discount:         discountEl.value.trim(),
+    title:            titleEl.value.trim(),
+    description:      descEl.value.trim(),
+    expiry_date:      expDate,
+    expiry_formatted: expDate ? `Gültig bis ${new Date(expDate + 'T12:00:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}` : '',
+    points_reward:    parseInt(pointsEl.value) || 15,
+    is_hot:           hotEl.checked,
+    barcode:          `${ts}`.slice(-12),
+    image_url:        null,
+  };
+
+  const deals = getAdminDeals();
+  deals.push(newDeal);
+  setAdminDeals(deals);
+
+  this.reset();
+  iconEl.value   = '☕';
+  pointsEl.value = 15;
+
+  showSuccess('success-deals');
+  renderDealsList();
+  updateCounts();
+});
+
+// ═══════════════════════════════════════════════
+// FORM: PROMOS
+// ═══════════════════════════════════════════════
+document.getElementById('form-promos').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const merchantEl = document.getElementById('promo-merchant');
+  const textEl     = document.getElementById('promo-text');
+  const colorEl    = document.getElementById('promo-color');
+
+  if (!validateRequired([
+    { el: merchantEl, val: merchantEl.value },
+    { el: textEl,     val: textEl.value },
+  ])) return;
+
+  const ts         = Date.now();
+  const merchantId = merchantEl.value;
+
+  const newPromo = {
+    id:            `adm_promo_${ts}`,
+    merchant_id:   merchantId,
+    merchant_name: MERCHANT_NAMES[merchantId] || 'Unbekannt',
+    promo_text:    textEl.value.trim(),
+    promo_color:   colorEl.value,
+  };
+
+  const promos = getAdminPromos();
+  promos.push(newPromo);
+  setAdminPromos(promos);
+
+  this.reset();
+  colorEl.value = '#f59e0b';
+
+  showSuccess('success-promos');
+  renderPromosList();
+  updateCounts();
+});
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+renderEventsList();
+renderDealsList();
+renderPromosList();
+updateCounts();
+</script>
+</body>
+</html>
