@@ -107,7 +107,7 @@ function addPoints(amount, reason = '') {
   Storage.set('points', ZAMData.currentUser.points);
 
   // Update stats
-  const stats = Storage.get('stats', { visits: ZAMData.currentUser.stats.visits, eventsAttended: ZAMData.currentUser.stats.eventsAttended, dealsUsed: ZAMData.currentUser.stats.dealsUsed });
+  const stats = Storage.get('stats', { visits: ZAMData.currentUser.stats.visits, events_attended: ZAMData.currentUser.stats.events_attended, deals_used: ZAMData.currentUser.stats.deals_used });
   Storage.set('stats', stats);
 
   updatePointsDisplay(true);
@@ -186,7 +186,7 @@ function renderHome() {
   if (greetingEl) greetingEl.textContent = greeting + ',';
 
   const nameEl = $('#home-username');
-  if (nameEl) nameEl.textContent = currentUser.name.split(' ')[0] + '! 👋';
+  if (nameEl) nameEl.textContent = currentUser.display_name.split(' ')[0] + '! 👋';
 
   const pointsEl = $('#home-points-value');
   if (pointsEl) animateNumber(pointsEl, 0, currentUser.points, 1200);
@@ -217,18 +217,18 @@ function renderHomeEvents() {
     const card = el('div', 'event-card-mini card-dark');
     card.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div class="category-tag" style="background:${evt.categoryColor}22;color:${evt.categoryColor}">${evt.category}</div>
+        <div class="category-tag" style="background:${evt.category_color}22;color:${evt.category_color}">${evt.category}</div>
         <button class="bookmark-btn ${saved ? 'saved' : ''}" data-id="${evt.id}" data-type="event" aria-label="Merken">
           ${saved ? '🔖' : '🏷️'}
         </button>
       </div>
       <h3>${evt.title}</h3>
       <div class="event-meta">
-        <span>📅 ${evt.dateFormatted}</span>
+        <span>📅 ${evt.date_formatted}</span>
         <span>⏰ ${evt.time}</span>
         <span>📍 ${evt.location}</span>
       </div>
-      <div class="event-points-badge">+${evt.pointsReward} Punkte</div>
+      <div class="event-points-badge">+${evt.points_reward} Punkte</div>
     `;
     card.querySelector('.bookmark-btn').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -248,10 +248,10 @@ function renderHomeDeals() {
     const saved = isSaved('deal', deal.id);
     const card = el('div', 'deal-card-mini card-dark');
     card.innerHTML = `
-      ${deal.isHot ? '<div class="hot-badge">🔥 Hot</div>' : ''}
-      <div class="store-icon">${deal.storeIcon}</div>
+      ${deal.is_hot ? '<div class="hot-badge">🔥 Hot</div>' : ''}
+      <div class="store-icon">${deal.store_icon}</div>
       <div class="discount-badge">${deal.discount}</div>
-      <div class="store-name">${deal.storeName}</div>
+      <div class="store-name">${deal.store_name}</div>
       <div class="deal-title">${deal.title}</div>
       <button class="bookmark-btn ${saved ? 'saved' : ''}" data-id="${deal.id}" data-type="deal" style="margin-top:8px" aria-label="Merken">
         ${saved ? '🔖 Gespeichert' : '🏷️ Merken'}
@@ -486,7 +486,7 @@ function renderCommunity() {
   state.posts = ZAMData.communityPosts.map(p => ({
     ...p,
     isLiked: likedPosts.includes(p.id),
-    likes: p.likes + (likedPosts.includes(p.id) && !p.isLiked ? 1 : 0),
+    likes: p.likes + (likedPosts.includes(p.id) && !p.is_liked ? 1 : 0),
   }));
 
   state.posts.forEach((post, idx) => {
@@ -502,7 +502,7 @@ function renderPostCard(post, idx) {
 
   div.innerHTML = `
     <div class="post-header">
-      <div class="post-avatar" style="background:${post.author.avatarColor}">${post.author.initials}</div>
+      <div class="post-avatar" style="background:${post.author.avatar_color}">${post.author.initials}</div>
       <div class="post-author-info">
         <div class="post-author-name">${post.author.name}</div>
         <div class="post-author-level">${post.author.level}</div>
@@ -512,8 +512,8 @@ function renderPostCard(post, idx) {
     <div class="post-content">${post.content}</div>
     <div class="post-tags">${tagsHtml}</div>
     <div class="post-actions">
-      <button class="post-action-btn ${post.isLiked ? 'liked' : ''}" data-idx="${idx}">
-        <span class="action-icon">${post.isLiked ? '❤️' : '🤍'}</span>
+      <button class="post-action-btn ${post.is_liked ? 'liked' : ''}" data-idx="${idx}">
+        <span class="action-icon">${post.is_liked ? '❤️' : '🤍'}</span>
         <span class="like-count">${post.likes}</span>
       </button>
       <button class="post-action-btn">
@@ -533,12 +533,12 @@ function renderPostCard(post, idx) {
 
 function toggleLike(idx, cardEl) {
   const post = state.posts[idx];
-  post.isLiked = !post.isLiked;
-  post.likes += post.isLiked ? 1 : -1;
+  post.is_liked = !post.is_liked;
+  post.likes += post.is_liked ? 1 : -1;
 
   // Persist
   let liked = Storage.get('liked_posts', []);
-  if (post.isLiked) liked.push(post.id);
+  if (post.is_liked) liked.push(post.id);
   else liked = liked.filter(id => id !== post.id);
   Storage.set('liked_posts', liked);
 
@@ -546,8 +546,8 @@ function toggleLike(idx, cardEl) {
   const icon = likeBtn.querySelector('.action-icon');
   const count = likeBtn.querySelector('.like-count');
 
-  likeBtn.classList.toggle('liked', post.isLiked);
-  icon.textContent = post.isLiked ? '❤️' : '🤍';
+  likeBtn.classList.toggle('liked', post.is_liked);
+  icon.textContent = post.is_liked ? '❤️' : '🤍';
   count.textContent = post.likes;
 
   likeBtn.style.transform = 'scale(1.4)';
@@ -591,17 +591,17 @@ function renderEventCard(evt, idx) {
 
   div.innerHTML = `
     <div class="event-card-top">
-      <div class="category-tag tag" style="background:${evt.categoryColor}22;color:${evt.categoryColor}">${evt.category}</div>
+      <div class="category-tag tag" style="background:${evt.category_color}22;color:${evt.category_color}">${evt.category}</div>
       <div style="display:flex;align-items:center;gap:8px">
-        <button class="bookmark-btn ${evt.isSaved ? 'saved' : ''}" data-type="event" data-id="${evt.id}" aria-label="${evt.isSaved ? 'Gespeichert' : 'Merken'}">
-          ${evt.isSaved ? '🔖' : '🏷️'}
+        <button class="bookmark-btn ${evt.is_saved ? 'saved' : ''}" data-type="event" data-id="${evt.id}" aria-label="${evt.is_saved ? 'Gespeichert' : 'Merken'}">
+          ${evt.is_saved ? '🔖' : '🏷️'}
         </button>
-        <div class="event-points-badge">+${evt.pointsReward}P</div>
+        <div class="event-points-badge">+${evt.points_reward}P</div>
       </div>
     </div>
     <h3>${evt.title}</h3>
     <div class="event-details">
-      <div class="event-detail-row"><span>📅</span><span>${evt.dateFormatted}</span></div>
+      <div class="event-detail-row"><span>📅</span><span>${evt.date_formatted}</span></div>
       <div class="event-detail-row"><span>⏰</span><span>${evt.time}</span></div>
       <div class="event-detail-row"><span>📍</span><span>${evt.location}</span></div>
     </div>
@@ -612,8 +612,8 @@ function renderEventCard(evt, idx) {
           ? `<strong>Nur noch ${evt.spotsLeft} Plätze!</strong>`
           : `${evt.spotsLeft} Plätze frei`}
       </div>
-      <button class="${evt.isJoined ? 'btn btn-sm joined' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
-        ${evt.isJoined ? '✓ Angemeldet' : 'Teilnehmen'}
+      <button class="${evt.is_joined ? 'btn btn-sm joined' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
+        ${evt.is_joined ? '✓ Angemeldet' : 'Teilnehmen'}
       </button>
     </div>
   `;
@@ -621,7 +621,7 @@ function renderEventCard(evt, idx) {
   div.querySelector('.bookmark-btn').addEventListener('click', (e) => {
     e.stopPropagation();
     toggleSave('event', evt.id, e.currentTarget);
-    evt.isSaved = isSaved('event', evt.id);
+    evt.is_saved = isSaved('event', evt.id);
   });
 
   div.querySelector('.btn').addEventListener('click', () => joinEvent(idx, div));
@@ -630,9 +630,9 @@ function renderEventCard(evt, idx) {
 
 function joinEvent(idx, cardEl) {
   const evt = state.events[idx];
-  if (evt.isJoined) return;
+  if (evt.is_joined) return;
 
-  evt.isJoined = true;
+  evt.is_joined = true;
   evt.spotsLeft = Math.max(0, evt.spotsLeft - 1);
 
   // Persist
@@ -642,21 +642,21 @@ function joinEvent(idx, cardEl) {
 
   // Update stats
   const stats = Storage.get('stats', { ...ZAMData.currentUser.stats });
-  stats.eventsAttended = (stats.eventsAttended || 0) + 1;
+  stats.events_attended = (stats.events_attended || 0) + 1;
   Storage.set('stats', stats);
-  ZAMData.currentUser.stats.eventsAttended = stats.eventsAttended;
+  ZAMData.currentUser.stats.events_attended = stats.events_attended;
 
   const btn = cardEl.querySelector('.btn');
   btn.className = 'btn btn-sm joined';
   btn.textContent = '✓ Angemeldet';
 
-  addPoints(evt.pointsReward, evt.title);
+  addPoints(evt.points_reward, evt.title);
 
   // Update profile
   const eventsEl = $('#profile-stat-events');
-  if (eventsEl) eventsEl.textContent = stats.eventsAttended;
+  if (eventsEl) eventsEl.textContent = stats.events_attended;
 
-  showToast(`🎉 Angemeldet! +${evt.pointsReward} Punkte`, 'success');
+  showToast(`🎉 Angemeldet! +${evt.points_reward} Punkte`, 'success');
 }
 
 // =============================================
@@ -685,27 +685,27 @@ function renderDealCard(deal, idx) {
   const div = el('div', 'deal-card-full card-dark');
 
   div.innerHTML = `
-    ${deal.isHot ? '<div class="hot-badge" style="margin-bottom:10px">🔥 Beliebt</div>' : ''}
+    ${deal.is_hot ? '<div class="hot-badge" style="margin-bottom:10px">🔥 Beliebt</div>' : ''}
     <div class="deal-card-header">
-      <div class="deal-store-icon">${deal.storeIcon}</div>
+      <div class="deal-store-icon">${deal.store_icon}</div>
       <div class="deal-info">
-        <div class="deal-store-name">${deal.storeName}</div>
+        <div class="deal-store-name">${deal.store_name}</div>
         <div class="deal-discount-big">${deal.discount}</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-        <div class="category-tag tag" style="background:${deal.categoryColor}22;color:${deal.categoryColor}">${deal.category}</div>
-        <button class="bookmark-btn ${deal.isSaved ? 'saved' : ''}" data-type="deal" data-id="${deal.id}" aria-label="Merken">
-          ${deal.isSaved ? '🔖' : '🏷️'}
+        <div class="category-tag tag" style="background:${deal.category_color}22;color:${deal.category_color}">${deal.category}</div>
+        <button class="bookmark-btn ${deal.is_saved ? 'saved' : ''}" data-type="deal" data-id="${deal.id}" aria-label="Merken">
+          ${deal.is_saved ? '🔖' : '🏷️'}
         </button>
       </div>
     </div>
     <div class="deal-title">${deal.title}</div>
     <p class="deal-description">${deal.description}</p>
     <div class="deal-card-footer">
-      <div class="deal-expiry">🗓 ${deal.expiryFormatted}</div>
+      <div class="deal-expiry">🗓 ${deal.expiry_formatted}</div>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="${deal.isClaimed ? 'btn btn-sm claimed' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
-          ${deal.isClaimed ? '✓ Eingelöst' : 'Gutschein sichern'}
+        <button class="${deal.is_claimed ? 'btn btn-sm claimed' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
+          ${deal.is_claimed ? '✓ Eingelöst' : 'Gutschein sichern'}
         </button>
       </div>
     </div>
@@ -714,11 +714,11 @@ function renderDealCard(deal, idx) {
   div.querySelector('.bookmark-btn').addEventListener('click', (e) => {
     e.stopPropagation();
     toggleSave('deal', deal.id, e.currentTarget);
-    deal.isSaved = isSaved('deal', deal.id);
+    deal.is_saved = isSaved('deal', deal.id);
   });
 
   const claimBtn = div.querySelector('.btn');
-  if (!deal.isClaimed) {
+  if (!deal.is_claimed) {
     claimBtn.addEventListener('click', () => claimDeal(idx, div, deal));
   }
 
@@ -734,7 +734,7 @@ function claimDeal(idx, cardEl, deal) {
   const barcodeNum = $('#barcode-number');
 
   if (title) title.textContent = deal.title;
-  if (subtitle) subtitle.textContent = deal.storeName + ' · ' + deal.expiryFormatted;
+  if (subtitle) subtitle.textContent = deal.store_name + ' · ' + deal.expiry_formatted;
   if (barcodeNum) barcodeNum.textContent = deal.barcode;
 
   generateBarcode();
@@ -747,9 +747,9 @@ function claimDeal(idx, cardEl, deal) {
 
   // Update stats
   const stats = Storage.get('stats', { ...ZAMData.currentUser.stats });
-  stats.dealsUsed = (stats.dealsUsed || 0) + 1;
+  stats.deals_used = (stats.deals_used || 0) + 1;
   Storage.set('stats', stats);
-  ZAMData.currentUser.stats.dealsUsed = stats.dealsUsed;
+  ZAMData.currentUser.stats.deals_used = stats.deals_used;
 
   state.deals[idx].isClaimed = true;
   const btn = cardEl.querySelector('.btn');
@@ -759,11 +759,11 @@ function claimDeal(idx, cardEl, deal) {
     btn.disabled = true;
   }
 
-  addPoints(deal.pointsReward, deal.storeName);
+  addPoints(deal.points_reward, deal.store_name);
 
   // Update profile
   const dealsEl = $('#profile-stat-deals');
-  if (dealsEl) dealsEl.textContent = stats.dealsUsed;
+  if (dealsEl) dealsEl.textContent = stats.deals_used;
 }
 
 function generateBarcode() {
@@ -800,10 +800,10 @@ function renderMerchantCard(merchant, idx) {
         <div class="merchant-name">${merchant.name}</div>
         <div class="merchant-category">${merchant.category}</div>
         <div class="merchant-meta">
-          ${merchant.isOpen
+          ${merchant.is_open
             ? '<span class="open-badge">Geöffnet</span>'
             : '<span class="open-badge" style="background:rgba(239,68,68,0.1);color:#ef4444;border-color:rgba(239,68,68,0.25)">Geschlossen</span>'}
-          <span class="merchant-rating">⭐ ${merchant.rating} (${merchant.reviewCount})</span>
+          <span class="merchant-rating">⭐ ${merchant.rating} (${merchant.review_count})</span>
         </div>
       </div>
       <span class="merchant-expand-icon">▼</span>
@@ -814,8 +814,8 @@ function renderMerchantCard(merchant, idx) {
         <div class="merchant-detail-row"><span class="detail-icon">⏰</span><span>${merchant.hours}</span></div>
         <div class="merchant-detail-row"><span class="detail-icon">📍</span><span>${merchant.location}</span></div>
         <div class="merchant-detail-row"><span class="detail-icon">📞</span><span>${merchant.phone}</span></div>
-        <div class="merchant-promo-badge" style="background:${merchant.promoColor}22;color:${merchant.promoColor};border:1px solid ${merchant.promoColor}44">
-          🎁 ${merchant.currentPromo}
+        <div class="merchant-promo-badge" style="background:${merchant.promo_color}22;color:${merchant.promo_color};border:1px solid ${merchant.promo_color}44">
+          🎁 ${merchant.current_promo}
         </div>
       </div>
     </div>
@@ -849,14 +849,14 @@ function renderProfile() {
   const eventsEl = $('#profile-stat-events');
   const dealsEl = $('#profile-stat-deals');
 
-  if (nameEl)    nameEl.textContent    = currentUser.name;
+  if (nameEl)    nameEl.textContent    = currentUser.display_name;
   if (usernameEl) usernameEl.textContent = currentUser.username;
-  if (memberEl)  memberEl.textContent  = currentUser.memberSinceFormatted;
+  if (memberEl)  memberEl.textContent  = currentUser.member_since_formatted;
   if (pointsEl)  pointsEl.textContent  = currentUser.points.toLocaleString('de-DE');
   if (avatarEl)  avatarEl.textContent  = currentUser.initials;
   if (visitsEl)  visitsEl.textContent  = stats.visits;
-  if (eventsEl)  eventsEl.textContent  = stats.eventsAttended;
-  if (dealsEl)   dealsEl.textContent   = stats.dealsUsed;
+  if (eventsEl)  eventsEl.textContent  = stats.events_attended;
+  if (dealsEl)   dealsEl.textContent   = stats.deals_used;
 
   renderBadges();
   renderSavedSummary();
