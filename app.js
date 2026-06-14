@@ -1,403 +1,764 @@
 /**
- * ZAM Club – app.js
- * SPA navigation, rendering, and interactions.
- * Structured to later swap mock data for Supabase API calls.
+ * ZAM Club - Application Logic
+ * SPA navigation, rendering, interactions
+ * Supabase-ready: all data access via ZAMData namespace
  */
 
-// ── State ─────────────────────────────────────────────────────
+'use strict';
+
+// =============================================
+// State
+// =============================================
 const state = {
-  activePage: 'home',
+  currentPage: 'home',
   eventFilter: 'all',
-  likedPosts: new Set(communityPosts.filter(p => p.liked).map(p => p.id)),
-  spinUsedToday: false,
+  spinUsed: false,
+  // Mutable copies of data
+  posts: [],
+  events: [],
+  deals: [],
+  merchants: [],
 };
 
-// ── Init ──────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  updateStatusTime();
-  setInterval(updateStatusTime, 60000);
-  renderHome();
-  renderCommunity();
-  renderEvents('all');
-  renderDeals();
-  renderProfile();
-  setupEventFilter();
-});
+// =============================================
+// DOM Helpers
+// =============================================
+const $ = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
-// ── Navigation ────────────────────────────────────────────────
-function navigateTo(page) {
-  if (state.activePage === page) return;
+function el(tag, cls, attrs = {}) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  Object.entries(attrs).forEach(([k, v]) => {
+    if (k === 'innerHTML') e.innerHTML = v;
+    else if (k === 'textContent') e.textContent = v;
+    else e.setAttribute(k, v);
+  });
+  return e;
+}
 
-  // Deactivate current page
-  document.getElementById(`page-${state.activePage}`)?.classList.remove('active');
+// =============================================
+// Toast Notifications
+// =============================================
+let toastTimer = null;
 
-  // Activate new page
-  const next = document.getElementById(`page-${page}`);
-  if (next) {
-    next.classList.add('active');
-    state.activePage = page;
+function showToast(message, type = '') {
+  let toast = $('#zam-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'zam-toast';
+    toast.className = 'toast';
+    document.body.appendChild(toast);
   }
-
-  // Update nav items
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.page === page);
+  toast.textContent = message;
+  toast.className = 'toast' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  requestAnimationFrame(() => {
+    toast.classList.add('show');
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
   });
 }
 
-// ── Status Bar Time ───────────────────────────────────────────
-function updateStatusTime() {
-  const el = document.getElementById('statusTime');
-  if (!el) return;
-  const now = new Date();
-  el.textContent = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+// =============================================
+// Navigation
+// =============================================
+function navigateTo(pageId) {
+  if (state.currentPage === pageId) return;
+
+  // Hide current page
+  const currentEl = $(`#page-${state.currentPage}`);
+  if (currentEl) {
+    currentEl.classList.remove('active');
+  }
+
+  state.currentPage = pageId;
+
+  // Show new page
+  const nextEl = $(`#page-${pageId}`);
+  if (nextEl) {
+    nextEl.classList.add('active');
+    // Scroll to top
+    nextEl.scrollTop = 0;
+  }
+
+  // Update nav tabs
+  $$('.nav-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.page === pageId);
+  });
 }
 
-// ── HOME Render ───────────────────────────────────────────────
+function initNavigation() {
+  $$('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => navigateTo(tab.dataset.page));
+  });
+}
+
+// =============================================
+// Home Page
+// =============================================
 function renderHome() {
-  document.getElementById('homeGreeting').textContent = `${currentUser.name.split(' ')[0]} 👋`;
-  document.getElementById('homeAvatar').textContent = currentUser.initials;
-  document.getElementById('homePoints').textContent = currentUser.points.toLocaleString('de-DE');
-  document.getElementById('homeTier').textContent = `🥇 ${currentUser.tier}`;
+  const { currentUser } = ZAMData;
 
-  // Horizontal event cards
-  const eventsEl = document.getElementById('homeEvents');
-  eventsEl.innerHTML = events.slice(0, 4).map(ev => `
-    <div class="mini-event-card" onclick="navigateTo('events')">
-      <span class="category-badge" style="background:${ev.categoryColor}22;color:${ev.categoryColor}">
-        ${ev.category}
-      </span>
-      <p class="mini-event-date">${ev.dateDisplay}</p>
-      <p class="mini-event-title">${ev.title}</p>
-      <p class="mini-event-location">📍 ${ev.location}</p>
-    </div>
-  `).join('');
+  // Greeting
+  const hour = new Date().getHours();
+  let greeting = 'Guten Tag';
+  if (hour < 12) greeting = 'Guten Morgen';
+  else if (hour >= 18) greeting = 'Guten Abend';
 
-  // Horizontal deal cards
-  const dealsEl = document.getElementById('homeDeals');
-  dealsEl.innerHTML = homeStats.featuredDeals.map(deal => `
-    <div class="mini-deal-card" onclick="navigateTo('deals')">
-      <div class="mini-deal-store-icon">${deal.storeLogo}</div>
-      <div class="mini-deal-discount">${deal.discount}</div>
-      <div class="mini-deal-store">${deal.store}</div>
-    </div>
-  `).join('');
+  const greetingEl = $('#home-greeting');
+  if (greetingEl) greetingEl.textContent = greeting + ',';
+
+  const nameEl = $('#home-username');
+  if (nameEl) nameEl.textContent = currentUser.name.split(' ')[0] + '! 👋';
+
+  const pointsEl = $('#home-points-value');
+  if (pointsEl) animateNumber(pointsEl, 0, currentUser.points, 1200);
+
+  // Events horizontal scroll
+  renderHomeEvents();
+  // Deals horizontal scroll
+  renderHomeDeals();
 }
 
-// ── COMMUNITY Render ──────────────────────────────────────────
-function renderCommunity() {
-  const feed = document.getElementById('communityFeed');
-  feed.innerHTML = communityPosts.map(post => `
-    <div class="post-card">
-      <div class="post-header">
-        <div class="post-avatar" style="background:${post.authorColor}">${post.authorInitials}</div>
-        <div>
-          <div class="post-author-name">${post.author}</div>
-          <div class="post-time">${post.timeAgo}</div>
-        </div>
-      </div>
-      <p class="post-text">${post.text}</p>
-      ${post.hasImage ? `<div class="post-image-placeholder">${post.imagePlaceholder}</div>` : ''}
-      <div class="post-actions">
-        <button class="post-action-btn ${post.liked ? 'liked' : ''}" id="like-${post.id}" onclick="toggleLike('${post.id}')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="${post.liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
-            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-          </svg>
-          <span id="likes-${post.id}">${post.likes}</span>
-        </button>
-        <button class="post-action-btn" onclick="showToast('Kommentare kommen bald!')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-          </svg>
-          <span>${post.comments}</span>
-        </button>
-      </div>
-    </div>
-  `).join('') + '<div style="height:24px"></div>';
-}
-
-function toggleLike(postId) {
-  const post = communityPosts.find(p => p.id === postId);
-  if (!post) return;
-
-  const btn = document.getElementById(`like-${postId}`);
-  const likesEl = document.getElementById(`likes-${postId}`);
-  const svg = btn.querySelector('svg');
-
-  if (state.likedPosts.has(postId)) {
-    state.likedPosts.delete(postId);
-    post.likes--;
-    post.liked = false;
-    btn.classList.remove('liked');
-    svg.setAttribute('fill', 'none');
-  } else {
-    state.likedPosts.add(postId);
-    post.likes++;
-    post.liked = true;
-    btn.classList.add('liked');
-    svg.setAttribute('fill', 'currentColor');
+function animateNumber(el, from, to, duration) {
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3); // ease out cubic
+    el.textContent = Math.round(from + (to - from) * ease).toLocaleString('de-DE');
+    if (p < 1) requestAnimationFrame(step);
   }
-
-  likesEl.textContent = post.likes;
+  requestAnimationFrame(step);
 }
 
-// ── EVENTS Render ─────────────────────────────────────────────
-function renderEvents(filter) {
-  state.eventFilter = filter;
-  const filtered = filter === 'all' ? events : events.filter(e => e.filter === filter);
-  const list = document.getElementById('eventsList');
+function renderHomeEvents() {
+  const container = $('#home-events-scroll');
+  if (!container) return;
+  container.innerHTML = '';
 
-  if (filtered.length === 0) {
-    list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px 0">Keine Events gefunden.</p>';
-    return;
-  }
-
-  list.innerHTML = filtered.map(ev => `
-    <div class="event-card">
-      <div class="event-card-top">
-        <h3 class="event-title">${ev.title}</h3>
-        <span class="category-badge" style="background:${ev.categoryColor}22;color:${ev.categoryColor};flex-shrink:0">
-          ${ev.category}
-        </span>
-      </div>
+  ZAMData.events.forEach(evt => {
+    const card = el('div', 'event-card-mini card-dark');
+    card.innerHTML = `
+      <div class="category-tag" style="background:${evt.categoryColor}22;color:${evt.categoryColor}">${evt.category}</div>
+      <h3>${evt.title}</h3>
       <div class="event-meta">
-        <div class="event-meta-row"><span class="event-meta-icon">📅</span> ${ev.dateDisplay}</div>
-        <div class="event-meta-row"><span class="event-meta-icon">🕐</span> ${ev.time}</div>
-        <div class="event-meta-row"><span class="event-meta-icon">📍</span> ${ev.location}</div>
+        <span>📅 ${evt.dateFormatted}</span>
+        <span>⏰ ${evt.time}</span>
+        <span>📍 ${evt.location}</span>
       </div>
-      <p class="event-desc">${ev.description}</p>
-      <div class="event-footer">
-        <div>
-          ${ev.spotsLeft !== null
-            ? `<p class="event-spots">🟢 Noch ${ev.spotsLeft} Plätze frei</p>`
-            : `<p class="event-spots">🎟️ Freier Eintritt</p>`
-          }
-          <p class="event-points">+${ev.pointsReward} Punkte</p>
-        </div>
-        <button class="btn-primary" onclick="handleJoinEvent('${ev.id}', this)">Teilnehmen</button>
-      </div>
-    </div>
-  `).join('') + '<div style="height:24px"></div>';
-}
-
-function setupEventFilter() {
-  document.querySelectorAll('.filter-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      renderEvents(tab.dataset.filter);
-    });
+      <div class="event-points-badge">+${evt.pointsReward} Punkte</div>
+    `;
+    card.addEventListener('click', () => navigateTo('events'));
+    container.appendChild(card);
   });
 }
 
-function handleJoinEvent(eventId, btn) {
-  const ev = events.find(e => e.id === eventId);
-  if (!ev) return;
-  btn.textContent = '✓ Angemeldet';
-  btn.style.background = '#10b981';
-  btn.style.boxShadow = '0 4px 16px rgba(16,185,129,0.35)';
-  btn.disabled = true;
-  showToast(`Angemeldet: ${ev.title} 🎉`);
+function renderHomeDeals() {
+  const container = $('#home-deals-scroll');
+  if (!container) return;
+  container.innerHTML = '';
+
+  ZAMData.deals.forEach(deal => {
+    const card = el('div', 'deal-card-mini card-dark');
+    card.innerHTML = `
+      ${deal.isHot ? '<div class="hot-badge">🔥 Hot</div>' : ''}
+      <div class="store-icon">${deal.storeIcon}</div>
+      <div class="discount-badge">${deal.discount}</div>
+      <div class="store-name">${deal.storeName}</div>
+      <div class="deal-title">${deal.title}</div>
+    `;
+    card.addEventListener('click', () => navigateTo('deals'));
+    container.appendChild(card);
+  });
 }
 
-// ── DEALS Render ──────────────────────────────────────────────
-function renderDeals() {
-  const list = document.getElementById('dealsList');
-  list.innerHTML = deals.map(deal => `
-    <div class="deal-card">
-      <div class="deal-icon-wrap">${deal.storeLogo}</div>
-      <div class="deal-info">
-        <p class="deal-store">${deal.store}</p>
-        <p class="deal-discount-title">${deal.discount}</p>
-        <p class="deal-title-text">${deal.title}</p>
-        <p class="deal-desc">${deal.description}</p>
-        <div class="deal-footer">
-          <span class="deal-expiry">Bis ${deal.expiryDate}</span>
-          <button class="btn-outline" onclick="handleCoupon('${deal.id}')">Sichern</button>
-        </div>
-      </div>
-    </div>
-  `).join('') + '<div style="height:24px"></div>';
+// =============================================
+// Daily Spin
+// =============================================
+function initDailySpin() {
+  const btn = $('#btn-daily-spin');
+  if (!btn) return;
+  btn.addEventListener('click', openSpinModal);
 }
 
-function handleCoupon(dealId) {
-  const deal = deals.find(d => d.id === dealId);
-  if (!deal) return;
-
-  const code = 'ZAM' + Math.random().toString(36).substring(2, 7).toUpperCase();
-  const body = document.getElementById('couponModalBody');
-  body.innerHTML = `
-    <div class="mini-deal-store-icon" style="font-size:40px;margin-bottom:8px">${deal.storeLogo}</div>
-    <p style="font-size:18px;font-weight:700;margin-bottom:4px">${deal.store}</p>
-    <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">${deal.title}</p>
-    <div class="barcode"></div>
-    <p class="coupon-code">${code}</p>
-    <p class="modal-text">Zeige diesen Code an der Kasse um deinen Rabatt zu erhalten.</p>
-    <p class="deal-expiry" style="margin-top:8px">Gültig bis: ${deal.expiryDate}</p>
-  `;
-  openModal('couponModal');
-}
-
-// ── PROFILE Render ────────────────────────────────────────────
-function renderProfile() {
-  const content = document.getElementById('profileContent');
-  const earnedBadges = badges.filter(b => b.earned);
-  const lockedBadges = badges.filter(b => !b.earned);
-
-  content.innerHTML = `
-    <div class="profile-hero">
-      <div class="profile-avatar">${currentUser.initials}</div>
-      <p class="profile-name">${currentUser.name}</p>
-      <p class="profile-username">${currentUser.username}</p>
-      <span class="profile-tier-badge">🥇 ${currentUser.tier}</span>
-    </div>
-
-    <div class="profile-points-card">
-      <p class="profile-points-num">${currentUser.points.toLocaleString('de-DE')}</p>
-      <p class="profile-points-lbl">Punkte</p>
-    </div>
-
-    <div class="stats-row">
-      <div class="stat-item">
-        <p class="stat-value">${currentUser.stats.visits}</p>
-        <p class="stat-label">Besuche</p>
-      </div>
-      <div class="stat-item">
-        <p class="stat-value">${currentUser.stats.eventsAttended}</p>
-        <p class="stat-label">Events</p>
-      </div>
-      <div class="stat-item">
-        <p class="stat-value">${currentUser.stats.dealsUsed}</p>
-        <p class="stat-label">Deals</p>
-      </div>
-    </div>
-
-    <div class="section-header">
-      <h2 class="section-title">Meine Badges</h2>
-      <span style="font-size:13px;color:var(--text-muted)">${earnedBadges.length}/${badges.length}</span>
-    </div>
-
-    <div class="badges-grid">
-      ${[...earnedBadges, ...lockedBadges].map(badge => `
-        <div class="badge-item ${badge.earned ? '' : 'locked'}">
-          <div class="badge-icon-wrap" style="background:${badge.color}22">${badge.icon}</div>
-          <div>
-            <p class="badge-name">${badge.name}</p>
-            <p class="badge-desc">${badge.description}</p>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-
-    <div class="section-header">
-      <h2 class="section-title">Händler</h2>
-    </div>
-    ${merchants.map(m => `
-      <div class="merchant-card" id="merchant-card-${m.id}">
-        <div class="merchant-header" onclick="toggleMerchant('${m.id}')">
-          <div class="merchant-icon">${m.icon}</div>
-          <div>
-            <p class="merchant-name">${m.name}</p>
-            <p class="merchant-category">${m.category}</p>
-            <div class="rating">★ ${m.rating} <span style="color:var(--text-dim);font-weight:400">(${m.reviewCount})</span></div>
-          </div>
-          <span class="merchant-arrow" id="arrow-${m.id}">›</span>
-        </div>
-        <div class="merchant-body" id="body-${m.id}">
-          <div class="merchant-details">
-            <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px;line-height:1.5">${m.description}</p>
-            <div class="merchant-detail-row"><span class="merchant-detail-icon">🕐</span><span>${m.hours}</span></div>
-            <div class="merchant-detail-row"><span class="merchant-detail-icon">📍</span><span>${m.floor}</span></div>
-            <div class="merchant-detail-row"><span class="merchant-detail-icon">📞</span><span>${m.phone}</span></div>
-            <div class="merchant-promo">🎉 ${m.currentPromo}</div>
-          </div>
-        </div>
-      </div>
-    `).join('')}
-    <div style="height:24px"></div>
-  `;
-}
-
-function toggleMerchant(id) {
-  const body = document.getElementById(`body-${id}`);
-  const arrow = document.getElementById(`arrow-${id}`);
-  const isOpen = body.classList.contains('open');
-  body.classList.toggle('open', !isOpen);
-  arrow.classList.toggle('open', !isOpen);
-}
-
-// ── Modal Helpers ─────────────────────────────────────────────
-function openModal(id) {
-  document.getElementById(id)?.classList.add('open');
-}
-
-function closeModal(id) {
-  document.getElementById(id)?.classList.remove('open');
-}
-
-// ── QR Check-in ───────────────────────────────────────────────
-function handleQR() {
-  openModal('qrModal');
-}
-
-// ── Daily Spin ────────────────────────────────────────────────
-const spinPrizes = [
-  { emoji: '🎉', label: '+50 Punkte', points: 50 },
-  { emoji: '☕', label: 'Café Crema Gutschein!', points: 0 },
-  { emoji: '💎', label: '+100 Punkte', points: 100 },
-  { emoji: '🎫', label: 'Event-Ticket', points: 0 },
-  { emoji: '⭐', label: '+25 Punkte', points: 25 },
-  { emoji: '🛍️', label: '5% Rabatt-Code', points: 0 },
-];
-
-function handleSpin() {
-  // Reset spin modal state
-  const wheel = document.getElementById('spinWheel');
-  const result = document.getElementById('spinResult');
-  const btn = document.getElementById('spinActionBtn');
-  wheel.textContent = '🎰';
-  result.textContent = 'Drücke Spin um dein Glück zu versuchen!';
-  btn.textContent = 'Spin!';
-  btn.disabled = state.spinUsedToday;
-  if (state.spinUsedToday) {
-    result.textContent = 'Du hast heute bereits gespinnt. Komm morgen wieder!';
+function openSpinModal() {
+  const overlay = $('#modal-spin');
+  if (!overlay) return;
+  overlay.classList.add('open');
+  // Reset state
+  const wheel = $('#spin-wheel');
+  const result = $('#spin-result');
+  const spinBtn = $('#btn-spin-go');
+  if (wheel) wheel.style.transform = '';
+  if (result) result.classList.remove('show');
+  if (spinBtn) {
+    spinBtn.disabled = state.spinUsed;
+    spinBtn.textContent = state.spinUsed ? 'Bereits gedreht!' : 'Drehen!';
+    if (state.spinUsed) spinBtn.classList.add('claimed');
+    else spinBtn.classList.remove('claimed');
   }
-  openModal('spinModal');
 }
 
 function doSpin() {
-  if (state.spinUsedToday) return;
+  if (state.spinUsed) return;
+  state.spinUsed = true;
 
-  const wheel = document.getElementById('spinWheel');
-  const result = document.getElementById('spinResult');
-  const btn = document.getElementById('spinActionBtn');
+  const spinBtn = $('#btn-spin-go');
+  if (spinBtn) {
+    spinBtn.disabled = true;
+    spinBtn.textContent = 'Dreht…';
+  }
 
-  btn.disabled = true;
-  wheel.classList.add('spinning');
+  // Pick reward
+  const rand = Math.random();
+  let cumulative = 0;
+  let reward = ZAMData.spinRewards[0];
+  for (const r of ZAMData.spinRewards) {
+    cumulative += r.probability;
+    if (rand <= cumulative) { reward = r; break; }
+  }
+
+  // Animate wheel
+  const wheel = $('#spin-wheel');
+  if (wheel) {
+    const deg = 1440 + Math.floor(Math.random() * 360);
+    wheel.style.transition = 'transform 2.5s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+    wheel.style.transform = `rotate(${deg}deg)`;
+  }
 
   setTimeout(() => {
-    wheel.classList.remove('spinning');
-    const prize = spinPrizes[Math.floor(Math.random() * spinPrizes.length)];
-    wheel.textContent = prize.emoji;
-    result.textContent = `Glückwunsch! Du gewinnst: ${prize.label}`;
-    result.style.color = 'var(--accent-light)';
-    result.style.fontWeight = '700';
-    state.spinUsedToday = true;
-    btn.textContent = 'Morgen wieder!';
-    if (prize.points > 0) {
-      currentUser.points += prize.points;
-      document.getElementById('homePoints').textContent = currentUser.points.toLocaleString('de-DE');
+    // Show result
+    const resultEl = $('#spin-result');
+    const resultPoints = $('#spin-result-points');
+    const resultLabel = $('#spin-result-label');
+    if (resultEl) resultEl.classList.add('show');
+    if (resultPoints) resultPoints.textContent = '+' + reward.points;
+    if (resultLabel) resultLabel.textContent = reward.label + ' gewonnen!';
+
+    // Update user points (local state)
+    ZAMData.currentUser.points += reward.points;
+
+    // Update display
+    const homePoints = $('#home-points-value');
+    if (homePoints) homePoints.textContent = ZAMData.currentUser.points.toLocaleString('de-DE');
+    const profilePoints = $('#profile-points-value');
+    if (profilePoints) profilePoints.textContent = ZAMData.currentUser.points.toLocaleString('de-DE');
+
+    if (spinBtn) {
+      spinBtn.textContent = 'Morgen wieder!';
     }
-    showToast(`${prize.emoji} ${prize.label}`);
-  }, 1600);
+  }, 2600);
 }
 
-// ── Toast ─────────────────────────────────────────────────────
-let toastTimer = null;
+function closeModal(modalId) {
+  const overlay = $(`#${modalId}`);
+  if (overlay) overlay.classList.remove('open');
+}
 
-function showToast(message) {
-  const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.classList.add('show');
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+// =============================================
+// QR Check-in
+// =============================================
+function initQRCheckin() {
+  const btn = $('#btn-qr-checkin');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const overlay = $('#modal-qr');
+    if (overlay) overlay.classList.add('open');
+  });
+}
+
+function generateQRGrid() {
+  const container = $('#qr-grid');
+  if (!container) return;
+  container.innerHTML = '';
+  const size = 8;
+  for (let i = 0; i < size * size; i++) {
+    const cell = el('div', 'qr-cell');
+    // Deterministic pseudo-random from user id
+    const filled = ((i * 13 + 7) % 3 !== 0);
+    cell.style.background = filled ? '#1a1a2e' : 'white';
+    container.appendChild(cell);
+  }
+}
+
+// =============================================
+// Community Page
+// =============================================
+function renderCommunity() {
+  const container = $('#community-feed');
+  if (!container) return;
+  container.innerHTML = '';
+
+  state.posts = ZAMData.communityPosts.map(p => ({ ...p }));
+
+  state.posts.forEach((post, idx) => {
+    const card = renderPostCard(post, idx);
+    container.appendChild(card);
+  });
+}
+
+function renderPostCard(post, idx) {
+  const div = el('div', 'community-post');
+  div.dataset.postId = post.id;
+
+  const tagsHtml = post.tags.map(t => `<span class="post-tag">${t}</span>`).join('');
+  const likeClass = post.isLiked ? 'post-action-btn liked' : 'post-action-btn';
+  const likeIcon = post.isLiked ? '❤️' : '🤍';
+
+  div.innerHTML = `
+    <div class="post-header">
+      <div class="post-avatar" style="background:${post.author.avatarColor}">${post.author.initials}</div>
+      <div class="post-author-info">
+        <div class="post-author-name">${post.author.name}</div>
+        <div class="post-author-level">${post.author.level}</div>
+      </div>
+      <div class="post-time">${post.timeAgo}</div>
+    </div>
+    <div class="post-content">${post.content}</div>
+    <div class="post-tags">${tagsHtml}</div>
+    <div class="post-actions">
+      <button class="${likeClass}" data-idx="${idx}">
+        <span class="action-icon">${likeIcon}</span>
+        <span class="like-count">${post.likes}</span>
+      </button>
+      <button class="post-action-btn">
+        <span class="action-icon">💬</span>
+        <span>${post.comments} Kommentare</span>
+      </button>
+      <button class="post-action-btn" style="margin-left:auto">
+        <span class="action-icon">↗️</span>
+        Teilen
+      </button>
+    </div>
+  `;
+
+  // Like button
+  const likeBtn = div.querySelector('.post-action-btn');
+  likeBtn.addEventListener('click', () => toggleLike(idx, div));
+
+  return div;
+}
+
+function toggleLike(idx, cardEl) {
+  const post = state.posts[idx];
+  post.isLiked = !post.isLiked;
+  post.likes += post.isLiked ? 1 : -1;
+
+  const likeBtn = cardEl.querySelector('.post-action-btn');
+  const icon = likeBtn.querySelector('.action-icon');
+  const count = likeBtn.querySelector('.like-count');
+
+  likeBtn.classList.toggle('liked', post.isLiked);
+  icon.textContent = post.isLiked ? '❤️' : '🤍';
+  count.textContent = post.likes;
+
+  // Bounce animation
+  likeBtn.style.transform = 'scale(1.3)';
+  setTimeout(() => { likeBtn.style.transform = ''; }, 200);
+}
+
+// =============================================
+// Events Page
+// =============================================
+function renderEvents(filter = 'all') {
+  state.eventFilter = filter;
+  state.events = ZAMData.events.map(e => ({ ...e }));
+
+  const container = $('#events-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // Update filter tabs
+  $$('.filter-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.filter === filter);
+  });
+
+  let filtered = state.events;
+  // For demo, "week" shows first 2, "month" shows all
+  if (filter === 'week') filtered = state.events.slice(0, 2);
+  if (filter === 'month') filtered = state.events;
+
+  filtered.forEach((evt, idx) => {
+    const card = renderEventCard(evt, idx);
+    container.appendChild(card);
+  });
+}
+
+function renderEventCard(evt, idx) {
+  const div = el('div', 'event-card-full');
+
+  const spotsLow = evt.spotsLeft <= 10;
+  const joinedClass = evt.isJoined ? 'btn btn-sm joined' : 'btn btn-primary btn-sm';
+  const joinText = evt.isJoined ? '✓ Angemeldet' : 'Teilnehmen';
+
+  div.innerHTML = `
+    <div class="event-card-top">
+      <div class="category-tag tag" style="background:${evt.categoryColor}22;color:${evt.categoryColor}">${evt.category}</div>
+      <div class="event-points-badge">+${evt.pointsReward}P</div>
+    </div>
+    <h3>${evt.title}</h3>
+    <div class="event-details">
+      <div class="event-detail-row"><span>📅</span><span>${evt.dateFormatted}</span></div>
+      <div class="event-detail-row"><span>⏰</span><span>${evt.time}</span></div>
+      <div class="event-detail-row"><span>📍</span><span>${evt.location}</span></div>
+    </div>
+    <p class="event-description">${evt.description}</p>
+    <div class="event-card-footer">
+      <div class="spots-info">
+        ${spotsLow
+          ? `<strong>Nur noch ${evt.spotsLeft} Plätze!</strong>`
+          : `${evt.spotsLeft} Plätze frei`}
+      </div>
+      <button class="${joinedClass}" data-idx="${idx}">${joinText}</button>
+    </div>
+  `;
+
+  const joinBtn = div.querySelector('button');
+  joinBtn.addEventListener('click', () => joinEvent(idx, div));
+
+  return div;
+}
+
+function joinEvent(idx, cardEl) {
+  const evt = state.events[idx];
+  if (evt.isJoined) return;
+
+  evt.isJoined = true;
+  evt.spotsLeft = Math.max(0, evt.spotsLeft - 1);
+
+  const btn = cardEl.querySelector('button');
+  btn.className = 'btn btn-sm joined';
+  btn.textContent = '✓ Angemeldet';
+
+  // Update points
+  ZAMData.currentUser.points += evt.pointsReward;
+  updatePointsDisplay();
+
+  showToast(`🎉 Angemeldet! +${evt.pointsReward} Punkte gutgeschrieben`, 'success');
+}
+
+// =============================================
+// Deals Page
+// =============================================
+function renderDeals() {
+  state.deals = ZAMData.deals.map(d => ({ ...d }));
+  const container = $('#deals-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  state.deals.forEach((deal, idx) => {
+    const card = renderDealCard(deal, idx);
+    container.appendChild(card);
+  });
+}
+
+function renderDealCard(deal, idx) {
+  const div = el('div', 'deal-card-full');
+
+  div.innerHTML = `
+    ${deal.isHot ? '<div class="hot-badge" style="margin-bottom:10px">🔥 Beliebt</div>' : ''}
+    <div class="deal-card-header">
+      <div class="deal-store-icon">${deal.storeIcon}</div>
+      <div class="deal-info">
+        <div class="deal-store-name">${deal.storeName}</div>
+        <div class="deal-discount-big">${deal.discount}</div>
+      </div>
+      <div class="category-tag tag" style="background:${deal.categoryColor}22;color:${deal.categoryColor}">${deal.category}</div>
+    </div>
+    <div class="deal-title">${deal.title}</div>
+    <p class="deal-description">${deal.description}</p>
+    <div class="deal-card-footer">
+      <div class="deal-expiry">🗓 ${deal.expiryFormatted}</div>
+      <button class="${deal.isClaimed ? 'btn btn-sm claimed' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
+        ${deal.isClaimed ? '✓ Eingelöst' : 'Gutschein sichern'}
+      </button>
+    </div>
+  `;
+
+  const claimBtn = div.querySelector('button');
+  if (!deal.isClaimed) {
+    claimBtn.addEventListener('click', () => claimDeal(idx, div, deal));
+  }
+
+  return div;
+}
+
+function claimDeal(idx, cardEl, deal) {
+  // Open barcode modal
+  const overlay = $('#modal-barcode');
+  if (!overlay) return;
+
+  const title = $('#modal-barcode-title');
+  const subtitle = $('#modal-barcode-subtitle');
+  const barcodeNum = $('#barcode-number');
+
+  if (title) title.textContent = deal.title;
+  if (subtitle) subtitle.textContent = deal.storeName + ' · ' + deal.expiryFormatted;
+  if (barcodeNum) barcodeNum.textContent = deal.barcode;
+
+  // Generate random-looking barcode lines
+  generateBarcode();
+
+  overlay.classList.add('open');
+
+  // Mark as claimed after modal opens
+  state.deals[idx].isClaimed = true;
+  const btn = cardEl.querySelector('button');
+  if (btn) {
+    btn.className = 'btn btn-sm claimed';
+    btn.textContent = '✓ Eingelöst';
+    btn.disabled = true;
+  }
+
+  // Award points
+  ZAMData.currentUser.points += deal.pointsReward;
+  updatePointsDisplay();
+  showToast(`+${deal.pointsReward} Punkte für diesen Deal!`, 'success');
+}
+
+function generateBarcode() {
+  const container = $('#barcode-lines');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const lineCount = 48;
+  for (let i = 0; i < lineCount; i++) {
+    const line = el('div', 'barcode-line');
+    const width = Math.random() < 0.3 ? 4 : Math.random() < 0.5 ? 2 : 3;
+    line.style.width = width + 'px';
+    line.style.flex = 'none';
+    container.appendChild(line);
+  }
+}
+
+// =============================================
+// Merchants Page
+// =============================================
+function renderMerchants() {
+  state.merchants = ZAMData.merchants.map(m => ({ ...m }));
+  const container = $('#merchants-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  state.merchants.forEach((merchant, idx) => {
+    const card = renderMerchantCard(merchant, idx);
+    container.appendChild(card);
+  });
+}
+
+function renderMerchantCard(merchant, idx) {
+  const div = el('div', 'merchant-card');
+  div.dataset.idx = idx;
+
+  div.innerHTML = `
+    <div class="merchant-card-header">
+      <div class="merchant-icon">${merchant.icon}</div>
+      <div class="merchant-info">
+        <div class="merchant-name">${merchant.name}</div>
+        <div class="merchant-category">${merchant.category}</div>
+        <div class="merchant-meta">
+          ${merchant.isOpen ? '<span class="open-badge">Geöffnet</span>' : '<span class="open-badge" style="background:rgba(239,68,68,0.1);color:#ef4444;border-color:rgba(239,68,68,0.25)">Geschlossen</span>'}
+          <span class="merchant-rating">⭐ ${merchant.rating} (${merchant.reviewCount})</span>
+        </div>
+      </div>
+      <span class="merchant-expand-icon">▼</span>
+    </div>
+    <div class="merchant-details">
+      <div class="merchant-details-inner">
+        <p class="merchant-description">${merchant.description}</p>
+        <div class="merchant-detail-row">
+          <span class="detail-icon">⏰</span>
+          <span>${merchant.hours}</span>
+        </div>
+        <div class="merchant-detail-row">
+          <span class="detail-icon">📍</span>
+          <span>${merchant.location}</span>
+        </div>
+        <div class="merchant-detail-row">
+          <span class="detail-icon">📞</span>
+          <span>${merchant.phone}</span>
+        </div>
+        <div class="merchant-promo-badge" style="background:${merchant.promoColor}22;color:${merchant.promoColor};border:1px solid ${merchant.promoColor}44">
+          🎁 ${merchant.currentPromo}
+        </div>
+      </div>
+    </div>
+  `;
+
+  const header = div.querySelector('.merchant-card-header');
+  header.addEventListener('click', () => toggleMerchant(div, idx));
+
+  return div;
+}
+
+function toggleMerchant(cardEl, idx) {
+  const isExpanded = cardEl.classList.contains('expanded');
+
+  // Collapse all
+  $$('.merchant-card').forEach(c => c.classList.remove('expanded'));
+  state.merchants.forEach(m => { m.isExpanded = false; });
+
+  if (!isExpanded) {
+    cardEl.classList.add('expanded');
+    state.merchants[idx].isExpanded = true;
+  }
+}
+
+// =============================================
+// Profile Page
+// =============================================
+function renderProfile() {
+  const { currentUser } = ZAMData;
+
+  const nameEl = $('#profile-name');
+  const usernameEl = $('#profile-username');
+  const memberEl = $('#profile-member');
+  const pointsEl = $('#profile-points-value');
+  const avatarEl = $('#profile-avatar');
+  const visitsEl = $('#profile-stat-visits');
+  const eventsEl = $('#profile-stat-events');
+  const dealsEl = $('#profile-stat-deals');
+
+  if (nameEl) nameEl.textContent = currentUser.name;
+  if (usernameEl) usernameEl.textContent = currentUser.username;
+  if (memberEl) memberEl.textContent = currentUser.memberSinceFormatted;
+  if (pointsEl) pointsEl.textContent = currentUser.points.toLocaleString('de-DE');
+  if (avatarEl) avatarEl.textContent = currentUser.initials;
+  if (visitsEl) visitsEl.textContent = currentUser.stats.visits;
+  if (eventsEl) eventsEl.textContent = currentUser.stats.eventsAttended;
+  if (dealsEl) dealsEl.textContent = currentUser.stats.dealsUsed;
+
+  renderBadges();
+}
+
+function renderBadges() {
+  const container = $('#badges-grid');
+  if (!container) return;
+  container.innerHTML = '';
+
+  ZAMData.badges.forEach(badge => {
+    const item = el('div', badge.earned ? 'badge-item' : 'badge-item locked');
+
+    const wrap = el('div', 'badge-icon-wrap');
+    wrap.style.background = badge.earned ? badge.color + '22' : 'rgba(255,255,255,0.05)';
+    wrap.style.border = badge.earned ? `1px solid ${badge.color}44` : '1px solid rgba(255,255,255,0.1)';
+    wrap.textContent = badge.icon;
+
+    const name = el('div', 'badge-name', { textContent: badge.name });
+
+    item.appendChild(wrap);
+    item.appendChild(name);
+
+    // Tooltip-like description on tap
+    if (badge.earned) {
+      item.addEventListener('click', () => showToast(badge.description));
+    }
+
+    container.appendChild(item);
+  });
+}
+
+// =============================================
+// Shared: update points everywhere
+// =============================================
+function updatePointsDisplay() {
+  const pts = ZAMData.currentUser.points;
+  const homeEl = $('#home-points-value');
+  const profileEl = $('#profile-points-value');
+  if (homeEl) homeEl.textContent = pts.toLocaleString('de-DE');
+  if (profileEl) profileEl.textContent = pts.toLocaleString('de-DE');
+}
+
+// =============================================
+// Modal close handlers
+// =============================================
+function initModals() {
+  // Close on overlay click
+  $$('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.classList.remove('open');
+      }
+    });
+  });
+
+  // Close buttons
+  $$('[data-close-modal]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modalId = btn.dataset.closeModal;
+      closeModal(modalId);
+    });
+  });
+
+  // Spin button
+  const spinGoBtn = $('#btn-spin-go');
+  if (spinGoBtn) spinGoBtn.addEventListener('click', doSpin);
+}
+
+// =============================================
+// Event filter tabs
+// =============================================
+function initEventFilters() {
+  $$('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => renderEvents(tab.dataset.filter));
+  });
+}
+
+// =============================================
+// Pulse animation on CTA buttons
+// =============================================
+function initButtonAnimations() {
+  setTimeout(() => {
+    const spinBtn = $('#btn-daily-spin');
+    if (spinBtn) {
+      spinBtn.classList.add('btn-pulse');
+      spinBtn.addEventListener('animationend', () => spinBtn.classList.remove('btn-pulse'));
+    }
+  }, 1500);
+}
+
+// =============================================
+// Init
+// =============================================
+function init() {
+  // Deep-copy mutable data
+  state.posts = ZAMData.communityPosts.map(p => ({ ...p }));
+  state.events = ZAMData.events.map(e => ({ ...e }));
+  state.deals = ZAMData.deals.map(d => ({ ...d }));
+  state.merchants = ZAMData.merchants.map(m => ({ ...m }));
+
+  // Render all pages
+  renderHome();
+  renderCommunity();
+  renderEvents();
+  renderDeals();
+  renderMerchants();
+  renderProfile();
+
+  // Generate QR grid
+  generateQRGrid();
+
+  // Init interactions
+  initNavigation();
+  initModals();
+  initDailySpin();
+  initQRCheckin();
+  initEventFilters();
+  initButtonAnimations();
+
+  // Show home page
+  navigateTo('home');
+  // Force active since navigateTo guards against same-page
+  const homePage = $('#page-home');
+  if (homePage) homePage.classList.add('active');
+  $$('.nav-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.page === 'home');
+  });
+}
+
+// Wait for DOM
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
 }

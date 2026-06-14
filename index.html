@@ -3,199 +3,312 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#0f0f13" />
+  <meta name="description" content="ZAM Club – Dein Treueprogramm für das Einkaufszentrum" />
   <title>ZAM Club</title>
+
+  <!-- Google Fonts: Poppins -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ── App Shell ─────────────────────────────────────────────── -->
-  <div class="app-shell">
+<div id="app-shell">
 
-    <!-- Status Bar (decorative) -->
-    <div class="status-bar">
-      <span class="status-time" id="statusTime">21:00</span>
-      <div class="status-icons">
-        <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="2" width="3" height="10" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" opacity=".3"/></svg>
-        <svg width="16" height="12" viewBox="0 0 24 12" fill="currentColor"><rect x="0" y="4" width="22" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="22" y="6" width="2" height="4" rx="1"/><rect x="1.5" y="5.5" width="14" height="5" rx="1"/></svg>
-      </div>
-    </div>
+  <!-- =====================
+       HOME PAGE
+  ========================== -->
+  <section id="page-home" class="page" role="main">
 
-    <!-- ── PAGES ─────────────────────────────────────────────────── -->
-
-    <!-- HOME PAGE -->
-    <section class="page active" id="page-home">
-      <div class="page-header">
+    <!-- Header -->
+    <div class="home-header">
+      <div class="greeting-row">
         <div>
-          <p class="greeting-sub">Guten Tag,</p>
-          <h1 class="greeting-name" id="homeGreeting">Max 👋</h1>
+          <div class="greeting-text" id="home-greeting">Guten Tag,</div>
+          <div class="user-name" id="home-username">Max! 👋</div>
         </div>
-        <div class="header-avatar" id="homeAvatar">MM</div>
-      </div>
-
-      <div class="page-content">
-        <!-- Points Card -->
-        <div class="points-card glass-card">
-          <div class="points-card-bg"></div>
-          <div class="points-info">
-            <p class="points-label">Deine Punkte</p>
-            <p class="points-value" id="homePoints">1.247</p>
-            <p class="points-tier" id="homeTier">🥇 Gold Member</p>
-          </div>
-          <div class="points-actions">
-            <button class="btn-action" id="spinBtn" onclick="handleSpin()">
-              <span class="btn-action-icon">🎰</span>
-              <span>Daily Spin</span>
-            </button>
-            <button class="btn-action" onclick="handleQR()">
-              <span class="btn-action-icon">📱</span>
-              <span>QR Check-in</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Upcoming Events -->
-        <div class="section-header">
-          <h2 class="section-title">Aktuelle Events</h2>
-          <button class="section-link" onclick="navigateTo('events')">Alle →</button>
-        </div>
-        <div class="horizontal-scroll" id="homeEvents"></div>
-
-        <!-- Featured Deals -->
-        <div class="section-header">
-          <h2 class="section-title">Top Angebote</h2>
-          <button class="section-link" onclick="navigateTo('deals')">Alle →</button>
-        </div>
-        <div class="horizontal-scroll" id="homeDeals"></div>
-
-        <!-- Bottom spacer for nav -->
-        <div style="height: 24px;"></div>
-      </div>
-    </section>
-
-    <!-- COMMUNITY PAGE -->
-    <section class="page" id="page-community">
-      <div class="page-header">
-        <h1 class="page-title">Community</h1>
-        <div class="header-icon">💬</div>
-      </div>
-      <div class="page-content" id="communityFeed"></div>
-    </section>
-
-    <!-- EVENTS PAGE -->
-    <section class="page" id="page-events">
-      <div class="page-header">
-        <h1 class="page-title">Events</h1>
-        <div class="header-icon">📅</div>
-      </div>
-      <div class="page-content">
-        <div class="filter-tabs" id="eventsFilter">
-          <button class="filter-tab active" data-filter="all">Alle</button>
-          <button class="filter-tab" data-filter="week">Diese Woche</button>
-          <button class="filter-tab" data-filter="month">Diesen Monat</button>
-        </div>
-        <div id="eventsList"></div>
-        <div style="height: 24px;"></div>
-      </div>
-    </section>
-
-    <!-- DEALS PAGE -->
-    <section class="page" id="page-deals">
-      <div class="page-header">
-        <h1 class="page-title">Angebote</h1>
-        <div class="header-icon">🏷️</div>
-      </div>
-      <div class="page-content" id="dealsList"></div>
-    </section>
-
-    <!-- PROFILE PAGE -->
-    <section class="page" id="page-profile">
-      <div class="page-header profile-header">
-        <h1 class="page-title">Profil</h1>
-        <div class="header-icon">⚙️</div>
-      </div>
-      <div class="page-content" id="profileContent"></div>
-    </section>
-
-    <!-- ── BOTTOM NAVIGATION ──────────────────────────────────────── -->
-    <nav class="bottom-nav" id="bottomNav">
-      <button class="nav-item active" data-page="home" onclick="navigateTo('home')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        <span>Home</span>
-      </button>
-      <button class="nav-item" data-page="community" onclick="navigateTo('community')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-        <span>Community</span>
-      </button>
-      <button class="nav-item" data-page="events" onclick="navigateTo('events')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span>Events</span>
-      </button>
-      <button class="nav-item" data-page="deals" onclick="navigateTo('deals')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-        <span>Deals</span>
-      </button>
-      <button class="nav-item" data-page="profile" onclick="navigateTo('profile')">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span>Profil</span>
-      </button>
-    </nav>
-
-  </div><!-- /app-shell -->
-
-  <!-- ── MODALS ─────────────────────────────────────────────────── -->
-
-  <!-- QR Code Modal -->
-  <div class="modal-overlay" id="qrModal" onclick="closeModal('qrModal')">
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <h3>QR Check-in</h3>
-        <button class="modal-close" onclick="closeModal('qrModal')">✕</button>
-      </div>
-      <div class="modal-body" style="text-align:center;">
-        <div class="qr-placeholder">
-          <div class="qr-inner">
-            <div class="qr-pattern"></div>
-          </div>
-        </div>
-        <p class="modal-text">Zeige diesen Code an der Kasse oder beim Eingang.</p>
-        <p class="modal-id">Mitglieds-ID: ZAM-2024-001</p>
+        <button class="notification-btn" aria-label="Benachrichtigungen">
+          🔔
+          <span class="notif-badge"></span>
+        </button>
       </div>
     </div>
-  </div>
 
-  <!-- Spin Modal -->
-  <div class="modal-overlay" id="spinModal" onclick="closeModal('spinModal')">
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <h3>Daily Spin</h3>
-        <button class="modal-close" onclick="closeModal('spinModal')">✕</button>
+    <!-- Points Card -->
+    <div class="points-card">
+      <div class="points-label">Deine Punkte</div>
+      <div class="points-value">
+        <span id="home-points-value">1.247</span>
+        <span>Pkt.</span>
       </div>
-      <div class="modal-body" style="text-align:center;">
-        <div class="spin-wheel" id="spinWheel">🎰</div>
-        <p class="modal-text" id="spinResult">Drücke Spin um dein Glück zu versuchen!</p>
-        <button class="btn-primary" id="spinActionBtn" onclick="doSpin()">Spin!</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Coupon Modal -->
-  <div class="modal-overlay" id="couponModal" onclick="closeModal('couponModal')">
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <h3>Dein Gutschein</h3>
-        <button class="modal-close" onclick="closeModal('couponModal')">✕</button>
-      </div>
-      <div class="modal-body" style="text-align:center;" id="couponModalBody">
+      <div class="points-level">Gold Member</div>
+      <div class="points-actions">
+        <button class="points-btn" id="btn-daily-spin">
+          <span class="btn-icon">🎰</span>
+          Daily Spin
+        </button>
+        <button class="points-btn" id="btn-qr-checkin">
+          <span class="btn-icon">📷</span>
+          QR Check-in
+        </button>
       </div>
     </div>
+
+    <!-- Current Events (horizontal scroll) -->
+    <div class="section-label">
+      <h2>Aktuelle Events</h2>
+      <a href="#" onclick="navigateTo('events');return false;">Alle →</a>
+    </div>
+    <div class="scroll-row" id="home-events-scroll">
+      <!-- Rendered by app.js -->
+    </div>
+
+    <!-- Current Deals (horizontal scroll) -->
+    <div class="section-label">
+      <h2>Aktuelle Deals</h2>
+      <a href="#" onclick="navigateTo('deals');return false;">Alle →</a>
+    </div>
+    <div class="scroll-row" id="home-deals-scroll">
+      <!-- Rendered by app.js -->
+    </div>
+
+  </section>
+
+  <!-- =====================
+       COMMUNITY PAGE
+  ========================== -->
+  <section id="page-community" class="page" role="main">
+    <div class="page-header">
+      <h1>Community 👥</h1>
+      <button class="header-icon-btn" aria-label="Neuer Beitrag" onclick="showToast('Bald verfügbar: Eigene Beiträge schreiben!')">✏️</button>
+    </div>
+    <div class="page-content" id="community-feed">
+      <!-- Rendered by app.js -->
+    </div>
+  </section>
+
+  <!-- =====================
+       EVENTS PAGE
+  ========================== -->
+  <section id="page-events" class="page" role="main">
+    <div class="page-header">
+      <h1>Events 📅</h1>
+      <button class="header-icon-btn" aria-label="Suche" onclick="showToast('Suche – demnächst verfügbar')">🔍</button>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-filter="all">Alle</button>
+      <button class="filter-tab" data-filter="week">Diese Woche</button>
+      <button class="filter-tab" data-filter="month">Diesen Monat</button>
+    </div>
+
+    <div class="page-content" id="events-list">
+      <!-- Rendered by app.js -->
+    </div>
+  </section>
+
+  <!-- =====================
+       DEALS PAGE
+  ========================== -->
+  <section id="page-deals" class="page" role="main">
+    <div class="page-header">
+      <h1>Deals 🏷️</h1>
+      <button class="header-icon-btn" aria-label="Filtern" onclick="showToast('Filter – demnächst verfügbar')">⚙️</button>
+    </div>
+    <div class="page-content" id="deals-list">
+      <!-- Rendered by app.js -->
+    </div>
+  </section>
+
+  <!-- =====================
+       MERCHANTS PAGE (accessed via bottom nav "Shops" or from home)
+       We'll put this as a sub-page of deals or as standalone.
+       For bottom nav we use: home, community, events, deals, profile
+       Merchants are accessible from deals page header.
+  ========================== -->
+  <section id="page-merchants" class="page" role="main">
+    <div class="page-header">
+      <h1>Shops 🏪</h1>
+      <button class="header-icon-btn" aria-label="Karte" onclick="showToast('Karte – demnächst verfügbar')">🗺️</button>
+    </div>
+    <div class="page-content" id="merchants-list">
+      <!-- Rendered by app.js -->
+    </div>
+  </section>
+
+  <!-- =====================
+       PROFILE PAGE
+  ========================== -->
+  <section id="page-profile" class="page" role="main">
+
+    <!-- Hero Banner -->
+    <div class="profile-hero">
+      <div class="profile-avatar-wrapper">
+        <div class="profile-avatar" id="profile-avatar">MM</div>
+        <div class="profile-level-badge">GOLD</div>
+      </div>
+      <div class="profile-name" id="profile-name">Max Müller</div>
+      <div class="profile-username" id="profile-username">@maxmueller</div>
+      <div class="profile-member-since" id="profile-member">Mitglied seit März 2023</div>
+    </div>
+
+    <!-- Profile Body Card -->
+    <div class="profile-body">
+
+      <!-- Points -->
+      <div class="profile-points-row">
+        <div class="profile-points-label">Gesammelte Punkte</div>
+        <div class="profile-points-value" id="profile-points-value">1.247</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="profile-stats-row">
+        <div class="profile-stat">
+          <div class="profile-stat-value" id="profile-stat-visits">34</div>
+          <div class="profile-stat-label">Besuche</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-value" id="profile-stat-events">8</div>
+          <div class="profile-stat-label">Events</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-value" id="profile-stat-deals">21</div>
+          <div class="profile-stat-label">Deals</div>
+        </div>
+      </div>
+
+      <!-- Badges -->
+      <div class="badges-section">
+        <div class="badges-section-title">Meine Abzeichen</div>
+        <div class="badges-grid" id="badges-grid">
+          <!-- Rendered by app.js -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Settings Teaser -->
+    <div style="padding: 16px 16px 8px">
+      <button class="btn btn-ghost btn-full" onclick="showToast('Einstellungen – demnächst verfügbar')">
+        ⚙️ Einstellungen
+      </button>
+    </div>
+    <div style="padding: 0 16px 8px">
+      <button class="btn btn-ghost btn-full" onclick="showToast('Hier könntest du dich ausloggen (Supabase Auth)')">
+        🚪 Abmelden
+      </button>
+    </div>
+
+  </section>
+
+  <!-- =====================
+       BOTTOM NAVIGATION
+  ========================== -->
+  <nav id="bottom-nav" role="navigation" aria-label="Hauptnavigation">
+    <button class="nav-tab active" data-page="home" aria-label="Startseite">
+      <span class="nav-icon">🏠</span>
+      <span>Home</span>
+    </button>
+    <button class="nav-tab" data-page="community" aria-label="Community">
+      <span class="nav-icon">👥</span>
+      <span>Community</span>
+    </button>
+    <button class="nav-tab" data-page="events" aria-label="Events">
+      <span class="nav-icon">📅</span>
+      <span>Events</span>
+    </button>
+    <button class="nav-tab" data-page="deals" aria-label="Deals">
+      <span class="nav-icon">🏷️</span>
+      <span>Deals</span>
+    </button>
+    <button class="nav-tab" data-page="profile" aria-label="Profil">
+      <span class="nav-icon">👤</span>
+      <span>Profil</span>
+    </button>
+  </nav>
+
+</div><!-- /#app-shell -->
+
+<!-- =====================
+     MODALS
+========================== -->
+
+<!-- Daily Spin Modal -->
+<div class="modal-overlay" id="modal-spin" role="dialog" aria-modal="true" aria-label="Daily Spin">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🎰 Daily Spin</div>
+    <div class="modal-subtitle">Drehe das Glücksrad und gewinne Punkte!</div>
+
+    <div class="spin-wheel-container">
+      <div style="position:relative;display:inline-block">
+        <div class="spin-pointer">▼</div>
+        <div class="spin-wheel" id="spin-wheel">
+          <div class="spin-wheel-center">⭐</div>
+        </div>
+      </div>
+
+      <div class="spin-result" id="spin-result">
+        <div class="spin-result-points" id="spin-result-points">+50</div>
+        <div class="spin-result-label" id="spin-result-label">Punkte gewonnen!</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-full" id="btn-spin-go">Drehen!</button>
+    <button class="btn btn-ghost btn-full mt-8" data-close-modal="modal-spin" style="margin-top:10px">Schließen</button>
   </div>
+</div>
 
-  <!-- Toast Notification -->
-  <div class="toast" id="toast"></div>
+<!-- QR Check-in Modal -->
+<div class="modal-overlay" id="modal-qr" role="dialog" aria-modal="true" aria-label="QR Check-in">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📷 QR Check-in</div>
+    <div class="modal-subtitle">Zeige diesen Code beim Eingang oder einem Partnergeschäft.</div>
 
-  <script src="data.js"></script>
-  <script src="app.js"></script>
+    <div class="qr-placeholder">
+      <div class="qr-grid" id="qr-grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:3px;width:176px;height:176px"></div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:0.75rem;color:var(--color-text-muted)">Mitglieds-ID</div>
+      <div style="font-family:monospace;font-size:1rem;font-weight:700;letter-spacing:0.15em;margin-top:4px">ZAM-MM-001247</div>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="showToast('Check-in erfolgreich! +5 Punkte');closeModal('modal-qr')">
+      ✓ Check-in bestätigen
+    </button>
+    <button class="btn btn-ghost btn-full" data-close-modal="modal-qr" style="margin-top:10px">Schließen</button>
+  </div>
+</div>
+
+<!-- Deal / Barcode Modal -->
+<div class="modal-overlay" id="modal-barcode" role="dialog" aria-modal="true" aria-label="Gutschein">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-barcode-title">Gutschein</div>
+    <div class="modal-subtitle" id="modal-barcode-subtitle">Zeige diesen Barcode an der Kasse vor.</div>
+
+    <div class="barcode-placeholder">
+      <div class="barcode-lines" id="barcode-lines" style="display:flex;align-items:stretch;gap:2px;height:64px;justify-content:center;margin-bottom:8px"></div>
+      <div class="barcode-number" id="barcode-number">0000-0000-0000</div>
+    </div>
+
+    <div style="text-align:center;padding:8px 0 16px;font-size:0.78rem;color:var(--color-text-muted)">
+      Einmalig verwendbar · Nicht übertragbar
+    </div>
+
+    <button class="btn btn-ghost btn-full" data-close-modal="modal-barcode">Schließen</button>
+  </div>
+</div>
+
+<!-- Scripts (load data first, then app logic) -->
+<script src="data.js"></script>
+<script src="app.js"></script>
+
 </body>
 </html>
