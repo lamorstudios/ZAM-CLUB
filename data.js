@@ -1,0 +1,363 @@
+/**
+ * ZAM Club - Mock Data
+ * All application data is stored here as JS objects/arrays.
+ * Ready to be replaced with Supabase queries when backend is integrated.
+ */
+
+// ─── Current User ────────────────────────────────────────────────────────────
+const currentUser = {
+  id: "user-001",
+  name: "Max Müller",
+  username: "@maxmueller",
+  email: "max.mueller@example.de",
+  avatar: null, // null = show initials
+  initials: "MM",
+  points: 1247,
+  memberSince: "Januar 2024",
+  tier: "Gold Member",
+  stats: {
+    visits: 34,
+    eventsAttended: 8,
+    dealsUsed: 21,
+  },
+};
+
+// ─── Badges ──────────────────────────────────────────────────────────────────
+const badges = [
+  {
+    id: "badge-001",
+    name: "Erster Besuch",
+    description: "Willkommen im ZAM Club!",
+    icon: "⭐",
+    color: "#f59e0b",
+    earned: true,
+    earnedDate: "15. Jan 2024",
+  },
+  {
+    id: "badge-002",
+    name: "Super Fan",
+    description: "10 Events besucht",
+    icon: "🔥",
+    color: "#ef4444",
+    earned: true,
+    earnedDate: "03. Mär 2024",
+  },
+  {
+    id: "badge-003",
+    name: "Deal Hunter",
+    description: "20 Deals eingelöst",
+    icon: "🎯",
+    color: "#10b981",
+    earned: true,
+    earnedDate: "22. Apr 2024",
+  },
+  {
+    id: "badge-004",
+    name: "Community Star",
+    description: "50 Likes erhalten",
+    icon: "💜",
+    color: "#7c3aed",
+    earned: true,
+    earnedDate: "10. Mai 2024",
+  },
+  {
+    id: "badge-005",
+    name: "Treue-Held",
+    description: "30 Besuche absolviert",
+    icon: "🏆",
+    color: "#3b82f6",
+    earned: false,
+    earnedDate: null,
+  },
+];
+
+// ─── Events ──────────────────────────────────────────────────────────────────
+const events = [
+  {
+    id: "event-001",
+    title: "Yoga & Wellness Morning",
+    date: "2026-06-20",
+    dateDisplay: "Sa, 20. Juni 2026",
+    time: "09:00 – 10:30 Uhr",
+    location: "Fitnessstudio OG2",
+    description:
+      "Starte entspannt ins Wochenende mit einer geführten Yoga-Session für alle Levels. Matten sind vorhanden, bequeme Kleidung mitbringen.",
+    category: "Fitness",
+    categoryColor: "#10b981",
+    image: null,
+    pointsReward: 50,
+    spotsLeft: 8,
+    totalSpots: 20,
+    filter: "week",
+  },
+  {
+    id: "event-002",
+    title: "Streetfood Markt",
+    date: "2026-06-22",
+    dateDisplay: "Mo, 22. Juni 2026",
+    time: "11:00 – 20:00 Uhr",
+    location: "Erdgeschoss, Hauptatrium",
+    description:
+      "Kulinarische Weltreise direkt im Einkaufszentrum! 12 Streetfood-Stände aus aller Welt – von Tacos bis Sushi. Eintritt frei.",
+    category: "Food & Drinks",
+    categoryColor: "#f59e0b",
+    image: null,
+    pointsReward: 30,
+    spotsLeft: null,
+    totalSpots: null,
+    filter: "week",
+  },
+  {
+    id: "event-003",
+    title: "Kids Kreativ-Workshop",
+    date: "2026-06-28",
+    dateDisplay: "So, 28. Juni 2026",
+    time: "14:00 – 16:00 Uhr",
+    location: "Kinderbereich, 1. OG",
+    description:
+      "Malen, basteln und kreativ sein! Ein Nachmittag voller Spaß für Kinder zwischen 4 und 10 Jahren. Alle Materialien werden gestellt.",
+    category: "Familie",
+    categoryColor: "#3b82f6",
+    image: null,
+    pointsReward: 40,
+    spotsLeft: 12,
+    totalSpots: 25,
+    filter: "month",
+  },
+  {
+    id: "event-004",
+    title: "Live Acoustic Night",
+    date: "2026-06-30",
+    dateDisplay: "Di, 30. Juni 2026",
+    time: "19:00 – 22:00 Uhr",
+    location: "Food Court, EG",
+    description:
+      "Genieße einen entspannten Abend mit Live-Musik lokaler Künstler. Perfekt zum Abschalten nach der Arbeit. Eintritt kostenlos.",
+    category: "Musik",
+    categoryColor: "#7c3aed",
+    image: null,
+    pointsReward: 60,
+    spotsLeft: null,
+    totalSpots: null,
+    filter: "month",
+  },
+];
+
+// ─── Deals / Offers ──────────────────────────────────────────────────────────
+const deals = [
+  {
+    id: "deal-001",
+    store: "Café Crema",
+    storeLogo: "☕",
+    discount: "20%",
+    discountValue: 20,
+    title: "Auf alle Heißgetränke",
+    description:
+      "Präsentiere diesen Gutschein und erhalte 20% Rabatt auf Kaffee, Tee und Kakao. Gültig für ein Getränk pro Besuch.",
+    category: "Gastronomie",
+    categoryColor: "#f59e0b",
+    expiryDate: "30. Juni 2026",
+    pointsRequired: 0,
+    isFeatured: true,
+  },
+  {
+    id: "deal-002",
+    store: "FashionPark",
+    storeLogo: "👗",
+    discount: "15%",
+    discountValue: 15,
+    title: "Auf Sommerkollektion",
+    description:
+      "15% auf alle Artikel der neuen Sommerkollektion. Nicht kombinierbar mit anderen Aktionen oder Sale-Artikeln.",
+    category: "Mode",
+    categoryColor: "#ec4899",
+    expiryDate: "15. Juli 2026",
+    pointsRequired: 100,
+    isFeatured: false,
+  },
+  {
+    id: "deal-003",
+    store: "Bella Italia",
+    storeLogo: "🍕",
+    discount: "2 für 1",
+    discountValue: 50,
+    title: "Pizza & Pasta Mittagsangebot",
+    description:
+      "Jeden Wochentag von 12–15 Uhr: Zwei Hauptgerichte zum Preis von einem. Gültig für das gesamte Mittags-Menü.",
+    category: "Restaurant",
+    categoryColor: "#ef4444",
+    expiryDate: "31. Juli 2026",
+    pointsRequired: 0,
+    isFeatured: true,
+  },
+  {
+    id: "deal-004",
+    store: "Bücherwelt",
+    storeLogo: "📚",
+    discount: "10%",
+    discountValue: 10,
+    title: "Auf alle Romane & Sachbücher",
+    description:
+      "Spare 10% beim Kauf von Büchern aus dem Bereich Belletristik und Sachbücher. Ab einem Einkaufswert von 15€.",
+    category: "Shopping",
+    categoryColor: "#10b981",
+    expiryDate: "20. Juni 2026",
+    pointsRequired: 50,
+    isFeatured: false,
+  },
+  {
+    id: "deal-005",
+    store: "FitZone Gym",
+    storeLogo: "💪",
+    discount: "Gratis",
+    discountValue: 100,
+    title: "Probetraining (1 Tag)",
+    description:
+      "Schnupper kostenlos in unser Fitnessstudio rein! Ein ganzer Tag unbegrenzter Zugang zu allen Geräten und Kursen.",
+    category: "Fitness",
+    categoryColor: "#10b981",
+    expiryDate: "30. Juni 2026",
+    pointsRequired: 200,
+    isFeatured: false,
+  },
+];
+
+// ─── Merchants ────────────────────────────────────────────────────────────────
+const merchants = [
+  {
+    id: "merchant-001",
+    name: "Café Crema",
+    icon: "☕",
+    category: "Café & Bäckerei",
+    floor: "Erdgeschoss",
+    hours: "Mo–Sa 8:00–20:00 | So 9:00–18:00",
+    phone: "+49 89 1234-001",
+    description:
+      "Euer Lieblingsplatz für Premium-Kaffee, frische Backwaren und hausgemachte Kuchen. Mit gemütlicher Sitzecke zum Verweilen.",
+    currentPromo: "20% auf alle Heißgetränke",
+    promoColor: "#f59e0b",
+    rating: 4.8,
+    reviewCount: 142,
+    expanded: false,
+  },
+  {
+    id: "merchant-002",
+    name: "FashionPark",
+    icon: "👗",
+    category: "Mode & Accessoires",
+    floor: "1. Obergeschoss",
+    hours: "Mo–Sa 10:00–20:00 | So geschlossen",
+    phone: "+49 89 1234-002",
+    description:
+      "Aktuelle Trends für Damen und Herren. Von casual bis business – wir haben das perfekte Outfit für jeden Anlass.",
+    currentPromo: "15% auf Sommerkollektion",
+    promoColor: "#ec4899",
+    rating: 4.5,
+    reviewCount: 89,
+    expanded: false,
+  },
+  {
+    id: "merchant-003",
+    name: "Bella Italia",
+    icon: "🍕",
+    category: "Restaurant",
+    floor: "Food Court, EG",
+    hours: "Mo–So 11:00–22:00",
+    phone: "+49 89 1234-003",
+    description:
+      "Authentische italienische Küche mit frischen Zutaten direkt aus Italien. Unsere Pizzen werden im Holzofen gebacken.",
+    currentPromo: "2-für-1 Mittagsangebot Mo–Fr",
+    promoColor: "#ef4444",
+    rating: 4.7,
+    reviewCount: 201,
+    expanded: false,
+  },
+  {
+    id: "merchant-004",
+    name: "FitZone Gym",
+    icon: "💪",
+    category: "Fitness & Wellness",
+    floor: "2. Obergeschoss",
+    hours: "Mo–Fr 6:00–22:00 | Sa–So 8:00–20:00",
+    phone: "+49 89 1234-004",
+    description:
+      "Modernes Fitnessstudio mit über 80 Geräten, Gruppenräumen und erfahrenen Personal Trainern. Sauna und Dampfbad inklusive.",
+    currentPromo: "Gratis Probetraining für Club-Mitglieder",
+    promoColor: "#10b981",
+    rating: 4.6,
+    reviewCount: 167,
+    expanded: false,
+  },
+];
+
+// ─── Community Posts ──────────────────────────────────────────────────────────
+const communityPosts = [
+  {
+    id: "post-001",
+    author: "Sarah K.",
+    authorInitials: "SK",
+    authorColor: "#ec4899",
+    timeAgo: "vor 2 Std.",
+    text: "Der Streetfood Markt nächste Woche sieht mega aus! Wer kommt mit? 🌮🍜 Hab letztes Jahr schon teilgenommen und es war unglaublich.",
+    hasImage: false,
+    likes: 24,
+    liked: false,
+    comments: 7,
+  },
+  {
+    id: "post-002",
+    author: "Tobias R.",
+    authorInitials: "TR",
+    authorColor: "#3b82f6",
+    timeAgo: "vor 4 Std.",
+    text: "Gerade den Deal Hunter Badge bekommen! 20 Deals eingelöst 🎯 Der Gutschein beim Café Crema ist besonders empfehlenswert – bester Kaffee im Zentrum.",
+    hasImage: false,
+    likes: 31,
+    liked: false,
+    comments: 4,
+  },
+  {
+    id: "post-003",
+    author: "Lisa M.",
+    authorInitials: "LM",
+    authorColor: "#10b981",
+    timeAgo: "vor 1 Tag",
+    text: "Der Yoga Workshop gestern war absolut traumhaft! Danke an alle Teilnehmer und die tolle Trainerin Mia. Definitiv wieder dabei! 🧘‍♀️✨",
+    hasImage: true,
+    imagePlaceholder: "📸 Foto vom Yoga Workshop",
+    likes: 58,
+    liked: true,
+    comments: 12,
+  },
+  {
+    id: "post-004",
+    author: "Jonas B.",
+    authorInitials: "JB",
+    authorColor: "#f59e0b",
+    timeAgo: "vor 1 Tag",
+    text: "Hat jemand Tipps für den Kids Workshop nächsten Sonntag? Nehme meinen 6-jährigen Sohn mit und bin gespannt, was erwartet uns 😊",
+    hasImage: false,
+    likes: 15,
+    liked: false,
+    comments: 9,
+  },
+  {
+    id: "post-005",
+    author: "Anna S.",
+    authorInitials: "AS",
+    authorColor: "#7c3aed",
+    timeAgo: "vor 2 Tagen",
+    text: "Bella Italia Mittags-Deal ist ein absolutes Muss! Zwei Pizzen für den Preis von einer – perfekt für ein schnelles Mittagessen mit Kolleginnen 🍕❤️",
+    hasImage: false,
+    likes: 42,
+    liked: false,
+    comments: 6,
+  },
+];
+
+// ─── Quick Stats for Home Dashboard ──────────────────────────────────────────
+const homeStats = {
+  nextEvent: events[0],
+  featuredDeals: deals.filter((d) => d.isFeatured),
+  upcomingEvents: events.slice(0, 3),
+};
