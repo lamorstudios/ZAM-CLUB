@@ -1,902 +1,822 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="theme-color" content="#0f0f13" />
-  <title>ZAM Live Map</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
-  <style>
-    :root {
-      --bg:#090910; --surface:#111118; --surface-2:#18181f; --surface-3:#202030;
-      --card:#13131a; --border:rgba(255,255,255,0.06); --border-2:rgba(255,255,255,0.11);
-      --primary:#8b5cf6; --primary-light:#a78bfa; --grad:linear-gradient(135deg,#6d28d9,#8b5cf6,#a78bfa);
-      --text:#eeeef5; --muted:rgba(238,238,245,0.48); --dim:rgba(238,238,245,0.28);
-      --green:#10b981; --yellow:#f59e0b; --red:#ef4444; --blue:#3b82f6;
-      --font:'Poppins',-apple-system,sans-serif;
-      --spring:cubic-bezier(0.34,1.56,0.64,1); --ease:cubic-bezier(0.16,1,0.3,1);
-      --app-w:430px;
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-    html{font-size:16px}
-    body{
-      font-family:var(--font);background:var(--bg);color:var(--text);
-      min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
-      max-width:var(--app-w);margin:0 auto;
-    }
-    button{border:none;outline:none;cursor:pointer;font-family:inherit}
-    select,input{font-family:inherit;outline:none}
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#090910" />
+<title>ZAM Live Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#090910;--surface:rgba(17,17,30,0.92);
+  --primary:#8b5cf6;--pl:#a78bfa;--green:#10b981;
+  --glass:rgba(14,14,26,0.88);--glass-b:rgba(139,92,246,0.22);
+  --font:'Poppins',system-ui,sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:#04040b;font-family:var(--font);color:#e2e8f0}
+button{cursor:pointer;font-family:var(--font);border:none;background:none;color:inherit}
 
-    /* ── Header ── */
-    .map-header{
-      display:flex;align-items:center;gap:10px;
-      padding:16px 16px 12px;
-      padding-top:max(16px,env(safe-area-inset-top,16px));
-      background:var(--surface);border-bottom:1px solid var(--border);
-      position:sticky;top:0;z-index:10;
-    }
-    .map-back-btn{
-      width:36px;height:36px;border-radius:10px;flex-shrink:0;
-      background:var(--surface-2);border:1px solid var(--border);
-      color:var(--text);font-size:1.1rem;
-      display:flex;align-items:center;justify-content:center;
-    }
-    .map-header-title{flex:1;font-size:1rem;font-weight:700}
-    .map-online-badge{
-      display:flex;align-items:center;gap:5px;
-      font-size:0.72rem;color:var(--green);
-      background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);
-      padding:4px 10px;border-radius:99px;
-    }
-    .online-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
-    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+#map-wrap{position:fixed;inset:0;overflow:hidden;cursor:grab;touch-action:none;background:#04040b}
+#map-wrap:active{cursor:grabbing}
+#map-stage{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
+#map-svg{display:block;width:1000px;height:740px}
+#user-layer,#marker-layer{position:absolute;top:0;left:0;width:1000px;height:740px;pointer-events:none}
+.user-bubble,.map-marker{pointer-events:all}
 
-    /* ── Privacy Banner ── */
-    .privacy-banner{
-      margin:14px;border-radius:18px;overflow:hidden;
-      background:linear-gradient(135deg,rgba(109,40,217,0.15),rgba(139,92,246,0.08));
-      border:1px solid rgba(139,92,246,0.25);
-      padding:20px;
-    }
-    .privacy-icon{font-size:2.4rem;text-align:center;margin-bottom:10px}
-    .privacy-title{font-size:1rem;font-weight:700;text-align:center;margin-bottom:6px}
-    .privacy-text{font-size:0.8rem;color:var(--muted);text-align:center;line-height:1.55;margin-bottom:16px}
-    .privacy-features{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}
-    .privacy-feat{display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--muted)}
-    .privacy-feat span:first-child{font-size:1rem;width:22px;text-align:center}
-    .btn-primary{background:var(--grad);color:#fff;border-radius:12px;padding:13px;font-weight:700;font-size:0.9rem;width:100%;margin-bottom:8px}
-    .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:12px;padding:11px;font-size:0.84rem;width:100%}
+/* Header */
+#map-header{
+  position:fixed;top:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;z-index:200;pointer-events:all;
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top,10px));
+  background:linear-gradient(to bottom,rgba(4,4,11,0.96) 50%,transparent);
+}
+.map-back-btn{width:36px;height:36px;border-radius:10px;flex-shrink:0;background:var(--glass);border:1px solid var(--glass-b);color:#e2e8f0;font-size:1.1rem;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.map-title{flex:1;min-width:0}
+.map-title-text{font-size:0.9rem;font-weight:700;display:block}
+#online-display{font-size:0.68rem;color:var(--green);font-weight:600}
+.map-icon-btn{width:36px;height:36px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-b);font-size:1rem;display:flex;align-items:center;justify-content:center}
 
-    /* ── Map Container ── */
-    .map-container{padding:12px;display:flex;flex-direction:column;gap:8px}
+/* Zoom */
+#map-controls{position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:150;display:flex;flex-direction:column;gap:8px;pointer-events:all}
+.zoom-btn{width:40px;height:40px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-b);color:#e2e8f0;font-size:1.1rem;font-weight:700;backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center}
 
-    /* ── Zones ── */
-    .zone-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .map-zone{
-      border-radius:16px;padding:12px 12px 14px;min-height:110px;
-      position:relative;overflow:hidden;cursor:default;
-      transition:transform 0.18s var(--spring);
-    }
-    .map-zone.zone-aussen{min-height:80px;grid-column:1/-1}
-    .zone-bg{position:absolute;inset:0;opacity:0.12}
-    .zone-label{
-      font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;
-      display:flex;align-items:center;gap:5px;position:relative;z-index:1;
-    }
-    .zone-label-icon{font-size:1rem}
-    .zone-users-row{
-      display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;
-      position:relative;z-index:1;
-    }
-    .zone-user-dot{
-      width:34px;height:34px;border-radius:50%;
-      display:flex;align-items:center;justify-content:center;
-      font-size:0.65rem;font-weight:700;color:#fff;
-      cursor:pointer;
-      box-shadow:0 2px 8px rgba(0,0,0,0.4);
-      border:2px solid rgba(255,255,255,0.2);
-      transition:transform 0.2s var(--spring);
-      position:relative;
-    }
-    .zone-user-dot:active{transform:scale(0.88)}
-    .zone-user-dot.is-me{border-color:#fff;box-shadow:0 0 0 2px var(--primary),0 2px 8px rgba(0,0,0,0.4)}
-    .zone-user-dot::after{
-      content:'';position:absolute;bottom:0;right:0;
-      width:9px;height:9px;border-radius:50%;background:var(--green);
-      border:2px solid var(--bg);
-    }
-    .zone-empty{font-size:0.7rem;color:rgba(255,255,255,0.25);margin-top:8px;position:relative;z-index:1}
+/* User Bubbles */
+.user-bubble{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);cursor:pointer;transition:transform .15s}
+.user-bubble:active{transform:translate(-50%,-100%) scale(0.88)}
+.avatar-ring-wrap{position:relative;width:48px;height:48px;border-radius:50%;padding:3px;background:conic-gradient(from 0deg,#6d28d9,#a78bfa,#8b5cf6,#6d28d9);animation:ringRot 3s linear infinite}
+.user-bubble.is-own .avatar-ring-wrap{background:conic-gradient(from 0deg,#059669,#34d399,#10b981,#059669)}
+.avatar-img{position:absolute;inset:3px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.82rem;font-weight:700;color:#fff}
+.online-dot{position:absolute;bottom:2px;right:2px;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid #04040b;z-index:1}
+.status-chip{margin-top:5px;background:rgba(8,8,20,0.92);backdrop-filter:blur(10px);border:1px solid rgba(139,92,246,0.4);border-radius:12px;padding:3px 9px;font-size:0.6rem;font-weight:600;color:#c4b5fd;white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.name-tag{font-size:0.58rem;color:rgba(255,255,255,0.6);font-weight:600;margin-top:2px}
+@keyframes ringRot{to{transform:rotate(360deg)}}
 
-    /* Zone colors */
-    .zone-aussen   .zone-bg{background:#f59e0b}
-    .zone-eingang  .zone-bg{background:#3b82f6}
-    .zone-food     .zone-bg{background:#ef4444}
-    .zone-shops    .zone-bg{background:#10b981}
-    .zone-events   .zone-bg{background:#8b5cf6}
-    .zone-aussen   .zone-label{color:#f59e0b}
-    .zone-eingang  .zone-label{color:#3b82f6}
-    .zone-food     .zone-label{color:#ef4444}
-    .zone-shops    .zone-label{color:#10b981}
-    .zone-events   .zone-label{color:#8b5cf6}
-    .zone-aussen{background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15)}
-    .zone-eingang{background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15)}
-    .zone-food{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15)}
-    .zone-shops{background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15)}
-    .zone-events{background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.15)}
+/* Markers */
+.map-marker{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%);cursor:pointer;z-index:8}
+.marker-icon-wrap{position:relative;width:38px;height:38px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:1.05rem}
+.marker-pulse{position:absolute;inset:-7px;border-radius:50%;border:2px solid;animation:mPulse 2.2s ease-in-out infinite;opacity:0}
+@keyframes mPulse{0%{transform:scale(0.8);opacity:0.7}100%{transform:scale(1.7);opacity:0}}
+.marker-label{font-size:0.58rem;font-weight:700;background:rgba(4,4,11,0.88);border-radius:6px;padding:2px 7px;margin-top:3px;white-space:nowrap;backdrop-filter:blur(8px)}
 
-    /* ── My Status Bar ── */
-    .my-status-bar{
-      margin:0 12px 12px;border-radius:16px;
-      background:var(--surface-2);border:1px solid var(--border);
-      overflow:hidden;
-    }
-    .my-status-header{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:12px 14px;cursor:pointer;
-    }
-    .my-status-title{font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:6px}
-    .my-status-toggle{font-size:0.72rem;color:var(--primary-light)}
-    .my-status-body{padding:0 14px 14px;display:none}
-    .my-status-body.open{display:block}
+/* Status Bar */
+#map-status-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:190;pointer-events:all;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom,12px));background:linear-gradient(to top,rgba(4,4,11,0.98) 60%,transparent)}
+#status-collapsed{display:flex;align-items:center;gap:10px;background:var(--glass);border:1px solid var(--glass-b);border-radius:16px;padding:10px 14px;backdrop-filter:blur(20px);cursor:pointer}
+.my-avatar-mini{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;color:#fff;border:2px solid var(--primary)}
+#status-preview{flex:1;font-size:0.8rem;color:#c4b5fd;font-weight:500}
+.chev{color:var(--pl);font-size:0.85rem}
+#status-expanded{display:none;background:var(--glass);border:1px solid var(--glass-b);border-radius:18px;padding:14px;backdrop-filter:blur(20px)}
+.status-row{display:flex;gap:8px;margin-bottom:10px}
+.status-row select{flex:1;background:rgba(20,20,38,0.9);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:10px;padding:7px 10px;font-size:0.75rem;font-family:var(--font);font-weight:600}
+.status-input-row{display:flex;gap:8px;margin-bottom:10px}
+.status-input-row input{flex:1;background:rgba(20,20,38,0.9);border:1px solid rgba(139,92,246,0.3);color:#e2e8f0;border-radius:10px;padding:8px 12px;font-size:0.82rem;font-family:var(--font);outline:none}
+.status-input-row input:focus{border-color:var(--primary)}
+.btn-status-save{background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border-radius:10px;padding:8px 16px;font-size:0.82rem;font-weight:700}
+.preset-chips{display:flex;flex-wrap:wrap;gap:6px}
+.preset-chip{background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.28);border-radius:20px;padding:4px 12px;font-size:0.7rem;color:#c4b5fd;font-weight:600;transition:background .15s}
+.preset-chip:active{background:rgba(139,92,246,0.28)}
 
-    .status-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-    .status-row label{font-size:0.75rem;color:var(--muted);width:90px;flex-shrink:0}
-    .status-select,.status-input{
-      flex:1;background:var(--surface-3);border:1px solid var(--border);
-      border-radius:8px;padding:8px 10px;font-size:0.8rem;color:var(--text);
-    }
-    .status-select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
-    .status-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-    .status-preset{
-      font-size:0.72rem;padding:4px 10px;border-radius:99px;
-      background:var(--surface-3);border:1px solid var(--border);
-      color:var(--muted);cursor:pointer;transition:all 0.15s;
-    }
-    .status-preset:hover,.status-preset.active{background:rgba(139,92,246,0.15);border-color:var(--primary);color:var(--primary-light)}
-    .btn-update{
-      width:100%;padding:10px;border-radius:10px;font-weight:600;font-size:0.84rem;
-      background:var(--grad);color:#fff;
-    }
+/* Profile Popup */
+#profile-popup{position:fixed;inset:0;z-index:300;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0);transition:background .3s;pointer-events:all}
+#profile-popup.open{background:rgba(0,0,0,0.65)}
+.pop-sheet{width:100%;max-width:480px;background:#0f0f22;border-radius:24px 24px 0 0;border-top:1px solid rgba(139,92,246,0.35);padding:12px 20px 24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));transform:translateY(100%);transition:transform .35s cubic-bezier(0.16,1,0.3,1);position:relative}
+#profile-popup.open .pop-sheet{transform:translateY(0)}
+.pop-handle{width:40px;height:4px;border-radius:99px;background:rgba(255,255,255,0.15);margin:0 auto 16px}
+.pop-header{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.pop-avatar{width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:#fff;border:3px solid var(--primary)}
+.pop-info{flex:1;min-width:0}
+.pop-name{font-size:1rem;font-weight:700}
+.pop-username{font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:1px}
+.pop-status{font-size:0.78rem;color:#c4b5fd;margin-top:4px}
+.pop-zone{background:rgba(139,92,246,0.14);border:1px solid rgba(139,92,246,0.32);border-radius:10px;padding:4px 10px;font-size:0.7rem;color:#a78bfa;font-weight:700;flex-shrink:0}
+.pop-badges{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.pop-badge{background:rgba(24,24,42,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:5px 10px;font-size:0.85rem}
+.pop-points{background:rgba(245,158,11,0.09);border:1px solid rgba(245,158,11,0.22);border-radius:12px;padding:8px 14px;font-size:0.8rem;color:#fcd34d;font-weight:600;margin-bottom:14px;text-align:center}
+.pop-actions{display:flex;gap:10px;margin-bottom:10px}
+.btn-nudge-pop{flex:2;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border-radius:14px;padding:12px;font-size:0.88rem;font-weight:700}
+.btn-nudge-pop:disabled{opacity:0.5;cursor:not-allowed}
+.btn-profile-view{flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);border-radius:14px;padding:12px;font-size:0.82rem;font-weight:600;color:#e2e8f0}
+.pop-secondary{display:flex;gap:10px}
+.pop-secondary button{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:8px;font-size:0.75rem;color:rgba(255,255,255,0.45)}
+.pop-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.45);font-size:0.85rem;display:flex;align-items:center;justify-content:center}
 
-    /* ── User Popup ── */
-    .popup-overlay{
-      position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;
-      opacity:0;pointer-events:none;transition:opacity 0.2s;
-    }
-    .popup-overlay.open{opacity:1;pointer-events:all}
-    .popup-sheet{
-      position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
-      width:min(100vw,var(--app-w));
-      background:var(--surface);border-radius:24px 24px 0 0;
-      padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));
-      z-index:101;transition:transform 0.32s var(--spring);
-    }
-    .popup-overlay.open .popup-sheet{transform:translateX(-50%) translateY(0)}
-    .popup-handle{width:36px;height:4px;border-radius:99px;background:var(--border-2);margin:0 auto 18px}
-    .popup-user-row{display:flex;align-items:center;gap:14px;margin-bottom:16px}
-    .popup-avatar{
-      width:58px;height:58px;border-radius:50%;flex-shrink:0;
-      display:flex;align-items:center;justify-content:center;
-      font-size:1.2rem;font-weight:700;color:#fff;
-      box-shadow:0 4px 16px rgba(0,0,0,0.3);
-    }
-    .popup-info{flex:1}
-    .popup-name{font-size:1rem;font-weight:700}
-    .popup-username{font-size:0.78rem;color:var(--muted);margin-top:2px}
-    .popup-status-text{
-      display:inline-flex;align-items:center;gap:6px;
-      background:var(--surface-2);border:1px solid var(--border);
-      border-radius:99px;padding:5px 12px;font-size:0.78rem;
-      margin-bottom:14px;
-    }
-    .popup-badges{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
-    .popup-badge{
-      display:flex;align-items:center;gap:4px;
-      background:var(--surface-2);border:1px solid var(--border);
-      border-radius:8px;padding:4px 9px;font-size:0.72rem;color:var(--muted);
-    }
-    .popup-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-    .btn-nudge{
-      padding:13px;border-radius:12px;font-weight:700;font-size:0.88rem;
-      background:var(--grad);color:#fff;
-    }
-    .btn-nudge.pending{background:var(--surface-3);color:var(--muted);border:1px solid var(--border)}
-    .btn-nudge.connected{background:rgba(16,185,129,0.15);color:var(--green);border:1px solid rgba(16,185,129,0.25)}
-    .btn-view-profile{
-      padding:13px;border-radius:12px;font-weight:600;font-size:0.88rem;
-      background:var(--surface-2);border:1px solid var(--border);color:var(--text);
-    }
-    .popup-mod-row{display:flex;gap:8px}
-    .btn-mod{
-      flex:1;padding:9px;border-radius:10px;font-size:0.76rem;
-      background:transparent;border:1px solid var(--border);color:var(--muted);
-    }
-    .btn-close-popup{
-      width:100%;padding:11px;border-radius:12px;font-size:0.84rem;
-      background:transparent;border:1px solid var(--border);color:var(--muted);
-      margin-top:8px;
-    }
+/* Nudge Inbox */
+#nudge-inbox{position:fixed;right:12px;bottom:180px;z-index:250;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.nudge-card{pointer-events:all;background:rgba(14,14,28,0.94);border:1px solid rgba(139,92,246,0.45);border-radius:16px;padding:12px;backdrop-filter:blur(20px);animation:slideR .3s cubic-bezier(0.16,1,0.3,1);max-width:230px}
+@keyframes slideR{from{transform:translateX(120%);opacity:0}to{transform:none;opacity:1}}
+.nudge-from{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.nudge-avatar{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:#fff}
+.nudge-text{font-size:0.72rem;font-weight:600;color:#e2e8f0}
+.nudge-btns{display:flex;gap:6px}
+.btn-na{flex:1;background:rgba(16,185,129,0.14);border:1px solid rgba(16,185,129,0.4);color:#34d399;border-radius:10px;padding:6px;font-size:0.75rem;font-weight:700}
+.btn-nr{width:34px;background:rgba(239,68,68,0.09);border:1px solid rgba(239,68,68,0.3);color:rgba(239,68,68,0.7);border-radius:10px;font-size:0.82rem}
 
-    /* ── Nudge Inbox ── */
-    .nudge-inbox{
-      position:fixed;top:max(70px,calc(70px + env(safe-area-inset-top,0)));
-      right:12px;z-index:80;display:flex;flex-direction:column;gap:8px;
-      max-width:calc(min(100vw,var(--app-w)) - 24px);
-      pointer-events:none;
-    }
-    .nudge-card{
-      background:linear-gradient(135deg,#6d28d9,#a855f7);
-      border-radius:16px;padding:14px 14px;
-      display:flex;align-items:center;gap:10px;
-      box-shadow:0 8px 32px rgba(109,40,217,0.5);
-      transform:translateX(120%);opacity:0;
-      transition:all 0.4s var(--spring);
-      pointer-events:all;
-      min-width:260px;
-    }
-    .nudge-card.show{transform:translateX(0);opacity:1}
-    .nudge-avatar{
-      width:36px;height:36px;border-radius:50%;flex-shrink:0;
-      display:flex;align-items:center;justify-content:center;
-      font-size:0.7rem;font-weight:700;color:#fff;background:rgba(255,255,255,0.2);
-    }
-    .nudge-text{flex:1;font-size:0.78rem;color:#fff}
-    .nudge-text strong{display:block;font-size:0.85rem}
-    .nudge-btns{display:flex;flex-direction:column;gap:4px}
-    .btn-accept,.btn-reject{
-      font-size:0.7rem;font-weight:700;padding:5px 10px;border-radius:8px;border:none;cursor:pointer;
-    }
-    .btn-accept{background:#fff;color:#6d28d9}
-    .btn-reject{background:rgba(255,255,255,0.15);color:#fff}
+/* Consent */
+#consent-overlay{position:fixed;inset:0;background:#04040b;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
+.c-icon{font-size:3.5rem;margin-bottom:20px}
+.c-title{font-size:1.4rem;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#8b5cf6,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.c-sub{font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:24px;line-height:1.65}
+.c-points{background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:16px;padding:16px 20px;margin-bottom:24px;text-align:left;width:100%;max-width:320px}
+.c-points li{list-style:none;font-size:0.82rem;color:rgba(255,255,255,0.7);padding:4px 0;display:flex;align-items:center;gap:8px}
+.btn-consent{width:100%;max-width:320px;background:linear-gradient(135deg,#6d28d9,#8b5cf6,#a78bfa);color:#fff;border-radius:16px;padding:14px;font-size:1rem;font-weight:700;margin-bottom:12px}
+.btn-back-a{font-size:0.82rem;color:rgba(255,255,255,0.35);text-decoration:none}
 
-    /* ── Notifications toast ── */
-    .notif-toast{
-      position:fixed;top:max(70px,calc(70px + env(safe-area-inset-top,0)));left:50%;
-      transform:translateX(-50%) translateY(-20px);
-      background:var(--surface-2);border:1px solid var(--border);
-      border-radius:14px;padding:10px 18px;
-      font-size:0.82rem;color:var(--text);
-      box-shadow:0 8px 32px rgba(0,0,0,0.3);
-      z-index:200;opacity:0;transition:all 0.3s var(--spring);pointer-events:none;
-      white-space:nowrap;
-    }
-    .notif-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* Legend */
+#map-legend{position:fixed;left:12px;bottom:180px;z-index:150;display:flex;flex-direction:column;gap:5px;pointer-events:none}
+.leg-item{display:flex;align-items:center;gap:5px;background:rgba(4,4,11,0.82);border-radius:8px;padding:3px 8px}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.leg-label{font-size:0.58rem;font-weight:600;color:rgba(255,255,255,0.5)}
 
-    /* ── Visibility info ── */
-    .visibility-info{
-      margin:0 12px 12px;padding:10px 14px;border-radius:12px;
-      background:rgba(139,92,246,0.07);border:1px solid rgba(139,92,246,0.18);
-      font-size:0.75rem;color:var(--muted);display:flex;align-items:center;gap:8px;
-    }
-    .visibility-dot{
-      width:8px;height:8px;border-radius:50%;flex-shrink:0;
-    }
-    .vis-visible .visibility-dot{background:var(--green)}
-    .vis-invisible .visibility-dot{background:var(--border-2)}
-
-    /* ── Connected users list ── */
-    .connections-section{margin:0 12px 80px;border-radius:16px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden}
-    .connections-header{padding:12px 14px;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);border-bottom:1px solid var(--border)}
-    .connection-row{
-      display:flex;align-items:center;gap:10px;padding:12px 14px;
-      border-bottom:1px solid var(--border);
-    }
-    .connection-row:last-child{border-bottom:none}
-    .conn-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0}
-    .conn-info{flex:1}
-    .conn-name{font-size:0.85rem;font-weight:600}
-    .conn-status{font-size:0.72rem;color:var(--muted)}
-    .btn-open-chat{
-      font-size:0.72rem;font-weight:700;padding:5px 12px;border-radius:8px;
-      background:rgba(139,92,246,0.15);color:var(--primary-light);border:1px solid rgba(139,92,246,0.25);
-      cursor:pointer;
-    }
-  </style>
+/* Toast */
+.map-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-16px);background:rgba(14,14,28,0.96);border:1px solid rgba(139,92,246,0.4);border-radius:14px;padding:10px 20px;font-size:0.82rem;font-weight:600;z-index:9999;opacity:0;pointer-events:none;white-space:nowrap;transition:opacity .25s,transform .25s;backdrop-filter:blur(20px)}
+.map-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
 </head>
 <body>
 
-<!-- Header -->
-<div class="map-header">
-  <button class="map-back-btn" onclick="history.back()" aria-label="Zurück">←</button>
-  <div class="map-header-title">🗺️ ZAM Live Map</div>
-  <div class="map-online-badge">
-    <span class="online-dot"></span>
-    <span id="header-online-count">…</span>
+<!-- CONSENT -->
+<div id="consent-overlay">
+  <div class="c-icon">🗺️</div>
+  <h1 class="c-title">ZAM Live Map</h1>
+  <p class="c-sub">Sieh wer gerade im ZAM ist und triff dich spontan.<br>Datenschutzfreundlich und 100% freiwillig.</p>
+  <ul class="c-points">
+    <li>✅ Kein GPS — du wählst nur eine Zone</li>
+    <li>✅ 30–100m Genauigkeit, keine exakte Position</li>
+    <li>✅ Jederzeit unsichtbar schaltbar</li>
+    <li>✅ Daten nur auf deinem Gerät gespeichert</li>
+    <li>✅ Kein Tracking im Hintergrund</li>
+  </ul>
+  <button class="btn-consent" onclick="acceptConsent()">Karte öffnen →</button>
+  <a class="btn-back-a" href="index.html">← Zurück zur App</a>
+</div>
+
+<!-- HEADER -->
+<div id="map-header" style="display:none">
+  <a class="map-back-btn" href="index.html">←</a>
+  <div class="map-title">
+    <span class="map-title-text">ZAM Live Map ✨</span>
+    <span id="online-display">● Lädt…</span>
+  </div>
+  <button class="map-icon-btn" id="btn-privacy" onclick="togglePrivacy()">👁️</button>
+</div>
+
+<!-- MAP -->
+<div id="map-wrap" style="display:none">
+  <div id="map-stage">
+
+    <svg id="map-svg" viewBox="0 0 1000 740" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="glassgrid" width="28" height="28" patternUnits="userSpaceOnUse">
+          <line x1="0" y1="0" x2="28" y2="0" stroke="rgba(139,92,246,0.08)" stroke-width="1"/>
+          <line x1="0" y1="0" x2="0" y2="28" stroke="rgba(139,92,246,0.08)" stroke-width="1"/>
+        </pattern>
+        <pattern id="floorgrid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M40 0L0 0 0 40" fill="none" stroke="rgba(255,255,255,0.022)" stroke-width="1"/>
+        </pattern>
+        <radialGradient id="h-food" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#f59e0b" stop-opacity="0.38"/>
+          <stop offset="55%"  stop-color="#ef4444" stop-opacity="0.08"/>
+          <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="h-events" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#8b5cf6" stop-opacity="0.42"/>
+          <stop offset="65%"  stop-color="#6d28d9" stop-opacity="0.08"/>
+          <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="h-shops" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#3b82f6" stop-opacity="0.26"/>
+          <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="h-entry" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#10b981" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="fountain-g" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#a78bfa" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="entry-g" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#34d399" stop-opacity="0.45"/>
+          <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+
+      <!-- VOID -->
+      <rect width="1000" height="740" fill="#04040b"/>
+
+      <!-- AUSSENGELÄNDE -->
+      <rect x="50" y="38" width="900" height="664" rx="42" fill="#09091a" stroke="#12122a" stroke-width="2"/>
+      <rect x="50" y="38" width="900" height="664" rx="42" fill="url(#floorgrid)" opacity="0.5"/>
+
+      <!-- Bäume Außen -->
+      <g opacity="0.85">
+        <circle cx="435" cy="44" r="14" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="435" cy="44" r="8" fill="#16381a" opacity="0.75"/>
+        <circle cx="565" cy="44" r="14" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="565" cy="44" r="8" fill="#16381a" opacity="0.75"/>
+        <circle cx="60"  cy="320" r="12" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="60"  cy="320" r="7"  fill="#16381a" opacity="0.75"/>
+        <circle cx="60"  cy="450" r="12" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="60"  cy="450" r="7"  fill="#16381a" opacity="0.75"/>
+        <circle cx="940" cy="320" r="12" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="940" cy="320" r="7"  fill="#16381a" opacity="0.75"/>
+        <circle cx="940" cy="450" r="12" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="940" cy="450" r="7"  fill="#16381a" opacity="0.75"/>
+        <circle cx="415" cy="700" r="14" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="415" cy="700" r="8"  fill="#16381a" opacity="0.75"/>
+        <circle cx="585" cy="700" r="14" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="585" cy="700" r="8"  fill="#16381a" opacity="0.75"/>
+        <circle cx="110" cy="85"  r="10" fill="#0c2810" stroke="#1a4820" stroke-width="1"/><circle cx="110" cy="85"  r="6"  fill="#16381a" opacity="0.75"/>
+        <circle cx="890" cy="85"  r="10" fill="#0c2810" stroke="#1a4820" stroke-width="1"/>
+        <circle cx="110" cy="655" r="10" fill="#0c2810" stroke="#1a4820" stroke-width="1"/>
+        <circle cx="890" cy="655" r="10" fill="#0c2810" stroke="#1a4820" stroke-width="1"/>
+      </g>
+
+      <!-- GEBÄUDE SCHATTEN -->
+      <rect x="136" y="106" width="732" height="532" rx="22" fill="rgba(0,0,0,0.55)"/>
+      <!-- GEBÄUDE BODEN -->
+      <rect x="132" y="102" width="736" height="528" rx="20" fill="#10102c" stroke="#1e1e42" stroke-width="1.5"/>
+      <rect x="132" y="102" width="736" height="528" rx="20" fill="url(#floorgrid)" opacity="0.35"/>
+
+      <!-- HAUPTKORRIDORE -->
+      <rect x="132" y="322" width="736" height="114" fill="#16163c"/>
+      <rect x="438" y="102" width="124" height="528" fill="#16163c"/>
+      <!-- Korridor-Mittellinien -->
+      <line x1="132" y1="379" x2="868" y2="379" stroke="rgba(139,92,246,0.07)" stroke-width="2"/>
+      <line x1="500" y1="102" x2="500" y2="630" stroke="rgba(139,92,246,0.07)" stroke-width="2"/>
+
+      <!-- SHOPS NW -->
+      <rect x="137" y="107" width="296" height="210" rx="8" fill="#0d1530"/>
+      <rect x="137" y="107" width="296" height="210" rx="8" fill="url(#floorgrid)" opacity="0.4"/>
+      <line x1="237" y1="107" x2="237" y2="317" stroke="#1c2845" stroke-width="1.5" stroke-dasharray="7,5"/>
+      <line x1="337" y1="107" x2="337" y2="317" stroke="#1c2845" stroke-width="1.5" stroke-dasharray="7,5"/>
+      <line x1="137" y1="212" x2="433" y2="212" stroke="#1c2845" stroke-width="1.5" stroke-dasharray="7,5"/>
+      <text x="187" y="163" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.06em">FASHION</text>
+      <text x="287" y="163" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.06em">SPORT</text>
+      <text x="384" y="163" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.06em">BEAUTY</text>
+      <text x="187" y="267" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.06em">TECH</text>
+      <text x="287" y="267" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.06em">KIDS</text>
+      <text x="384" y="267" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.06em">BOOKS</text>
+
+      <!-- SHOPS NO -->
+      <rect x="567" y="107" width="296" height="210" rx="8" fill="#0d1530"/>
+      <rect x="567" y="107" width="296" height="210" rx="8" fill="url(#floorgrid)" opacity="0.4"/>
+      <line x1="667" y1="107" x2="667" y2="317" stroke="#1c2845" stroke-width="1.5" stroke-dasharray="7,5"/>
+      <line x1="767" y1="107" x2="767" y2="317" stroke="#1c2845" stroke-width="1.5" stroke-dasharray="7,5"/>
+      <line x1="567" y1="212" x2="863" y2="212" stroke="#1c2845" stroke-width="1.5" stroke-dasharray="7,5"/>
+      <text x="617" y="163" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.06em">HOME</text>
+      <text x="717" y="163" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.06em">JEWELS</text>
+      <text x="815" y="163" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.06em">SHOES</text>
+      <text x="617" y="267" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.06em">PHARMA</text>
+      <text x="717" y="267" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.06em">GIFT</text>
+      <text x="815" y="267" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.06em">OPTIC</text>
+
+      <!-- ATRIUM / EVENT ZENTRUM -->
+      <rect x="332" y="183" width="336" height="268" rx="14" fill="#13102e"/>
+      <rect x="332" y="183" width="336" height="268" rx="14" fill="url(#glassgrid)"/>
+      <rect x="332" y="183" width="336" height="268" rx="14" fill="none" stroke="rgba(139,92,246,0.22)" stroke-width="2"/>
+      <rect x="348" y="198" width="304" height="238" rx="8" fill="rgba(109,40,217,0.055)"/>
+
+      <!-- Eventbühne -->
+      <rect x="388" y="380" width="224" height="62" rx="9" fill="#1a1042" stroke="rgba(139,92,246,0.32)" stroke-width="1.5"/>
+      <text x="500" y="417" text-anchor="middle" font-size="9.5" fill="rgba(167,139,250,0.55)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.09em">EVENTBÜHNE</text>
+      <circle cx="400" cy="400" r="4" fill="#f59e0b" opacity="0.7" filter="url(#glow)"/>
+      <circle cx="450" cy="400" r="4" fill="#8b5cf6" opacity="0.7" filter="url(#glow)"/>
+      <circle cx="500" cy="400" r="4" fill="#3b82f6" opacity="0.7" filter="url(#glow)"/>
+      <circle cx="550" cy="400" r="4" fill="#8b5cf6" opacity="0.7" filter="url(#glow)"/>
+      <circle cx="600" cy="400" r="4" fill="#f59e0b" opacity="0.7" filter="url(#glow)"/>
+
+      <!-- Brunnen -->
+      <circle cx="500" cy="300" r="42" fill="rgba(109,40,217,0.07)" stroke="rgba(139,92,246,0.18)" stroke-width="1.5"/>
+      <circle cx="500" cy="300" r="28" fill="rgba(139,92,246,0.07)" stroke="rgba(167,139,250,0.22)" stroke-width="1">
+        <animate attributeName="r" values="26;30;26" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="500" cy="300" r="14" fill="rgba(139,92,246,0.18)" stroke="rgba(167,139,250,0.45)" stroke-width="1.5"/>
+      <circle cx="500" cy="300" r="5"  fill="#a78bfa" filter="url(#glow)"/>
+      <ellipse cx="500" cy="300" rx="42" ry="42" fill="url(#fountain-g)">
+        <animate attributeName="opacity" values="0.35;0.75;0.35" dur="2.8s" repeatCount="indefinite"/>
+      </ellipse>
+
+      <!-- Atrium Bänke -->
+      <rect x="355" y="243" width="52" height="10" rx="5" fill="#1c1c48" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <rect x="593" y="243" width="52" height="10" rx="5" fill="#1c1c48" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <rect x="355" y="362" width="52" height="10" rx="5" fill="#1c1c48" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <rect x="593" y="362" width="52" height="10" rx="5" fill="#1c1c48" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <!-- Atrium Bäume -->
+      <circle cx="358" cy="222" r="10" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="358" cy="222" r="6" fill="#16381a" opacity="0.8"/>
+      <circle cx="642" cy="222" r="10" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="642" cy="222" r="6" fill="#16381a" opacity="0.8"/>
+      <circle cx="358" cy="376" r="10" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="358" cy="376" r="6" fill="#16381a" opacity="0.8"/>
+      <circle cx="642" cy="376" r="10" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="642" cy="376" r="6" fill="#16381a" opacity="0.8"/>
+      <!-- Atrium Label -->
+      <text x="500" y="210" text-anchor="middle" font-size="10" fill="rgba(139,92,246,0.22)" font-family="Poppins,system-ui" font-weight="800" letter-spacing="0.08em">ATRIUM</text>
+
+      <!-- ROLLTREPPEN -->
+      <g opacity="0.45">
+        <rect x="440" y="192" width="26" height="15" rx="3" fill="#1a1a40" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <polyline points="443,205 453,197 463,205" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/>
+        <rect x="534" y="192" width="26" height="15" rx="3" fill="#1a1a40" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <polyline points="537,197 547,205 557,197" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/>
+        <rect x="440" y="453" width="26" height="15" rx="3" fill="#1a1a40" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <polyline points="443,453 453,461 463,453" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/>
+        <rect x="534" y="453" width="26" height="15" rx="3" fill="#1a1a40" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <polyline points="537,461 547,453 557,461" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/>
+      </g>
+
+      <!-- FOOD COURT -->
+      <rect x="137" y="440" width="726" height="185" rx="10" fill="#1a1208"/>
+      <rect x="137" y="440" width="726" height="185" rx="10" fill="url(#floorgrid)" opacity="0.28"/>
+      <rect x="137" y="440" width="726" height="185" rx="10" fill="none" stroke="#28200a" stroke-width="1.5"/>
+      <!-- Food Stand Trennwände -->
+      <line x1="237" y1="440" x2="237" y2="625" stroke="#28200a" stroke-width="1.5" stroke-dasharray="10,5"/>
+      <line x1="337" y1="440" x2="337" y2="625" stroke="#28200a" stroke-width="1.5" stroke-dasharray="10,5"/>
+      <line x1="500" y1="440" x2="500" y2="625" stroke="#28200a" stroke-width="1.5" stroke-dasharray="10,5"/>
+      <line x1="663" y1="440" x2="663" y2="625" stroke="#28200a" stroke-width="1.5" stroke-dasharray="10,5"/>
+      <line x1="763" y1="440" x2="763" y2="625" stroke="#28200a" stroke-width="1.5" stroke-dasharray="10,5"/>
+      <line x1="137" y1="530" x2="863" y2="530" stroke="#28200a" stroke-width="1" stroke-dasharray="6,6"/>
+      <!-- Food Labels -->
+      <text x="187" y="490" text-anchor="middle" font-size="12" fill="rgba(251,191,36,0.38)">🍕</text>
+      <text x="187" y="503" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.2)" font-family="Poppins,system-ui" font-weight="600">PIZZA</text>
+      <text x="287" y="490" text-anchor="middle" font-size="12" fill="rgba(251,191,36,0.38)">🥙</text>
+      <text x="287" y="503" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.2)" font-family="Poppins,system-ui" font-weight="600">LEVANTE</text>
+      <text x="418" y="490" text-anchor="middle" font-size="12" fill="rgba(251,191,36,0.38)">☕</text>
+      <text x="418" y="503" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.2)" font-family="Poppins,system-ui" font-weight="600">BIO-CAFÉ</text>
+      <text x="581" y="490" text-anchor="middle" font-size="12" fill="rgba(251,191,36,0.38)">🍜</text>
+      <text x="581" y="503" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.2)" font-family="Poppins,system-ui" font-weight="600">ASIA</text>
+      <text x="713" y="490" text-anchor="middle" font-size="12" fill="rgba(251,191,36,0.38)">🥗</text>
+      <text x="713" y="503" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.2)" font-family="Poppins,system-ui" font-weight="600">SALAT BAR</text>
+      <text x="813" y="490" text-anchor="middle" font-size="12" fill="rgba(251,191,36,0.38)">🍦</text>
+      <text x="813" y="503" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.2)" font-family="Poppins,system-ui" font-weight="600">DESSERT</text>
+      <!-- Sitzbereich -->
+      <rect x="155" y="546" width="706" height="64" rx="6" fill="rgba(0,0,0,0.18)"/>
+      <g opacity="0.4" fill="#261c0a" stroke="rgba(255,200,50,0.18)" stroke-width="1">
+        <rect x="165" y="556" width="28" height="18" rx="3"/>
+        <rect x="210" y="556" width="28" height="18" rx="3"/>
+        <rect x="268" y="556" width="28" height="18" rx="3"/>
+        <rect x="340" y="556" width="28" height="18" rx="3"/>
+        <rect x="390" y="556" width="28" height="18" rx="3"/>
+        <rect x="455" y="556" width="28" height="18" rx="3"/>
+        <rect x="520" y="556" width="28" height="18" rx="3"/>
+        <rect x="580" y="556" width="28" height="18" rx="3"/>
+        <rect x="640" y="556" width="28" height="18" rx="3"/>
+        <rect x="700" y="556" width="28" height="18" rx="3"/>
+        <rect x="760" y="556" width="28" height="18" rx="3"/>
+        <rect x="816" y="556" width="28" height="18" rx="3"/>
+      </g>
+      <text x="500" y="598" text-anchor="middle" font-size="11" fill="rgba(251,191,36,0.2)" font-family="Poppins,system-ui" font-weight="800" letter-spacing="0.1em">FOOD COURT</text>
+
+      <!-- EINGÄNGE -->
+      <!-- Nord -->
+      <rect x="438" y="50" width="124" height="56" rx="10" fill="#181840" stroke="rgba(52,211,153,0.45)" stroke-width="2"/>
+      <ellipse cx="500" cy="78" rx="55" ry="35" fill="url(#entry-g)">
+        <animate attributeName="opacity" values="0.3;0.65;0.3" dur="3s" repeatCount="indefinite"/>
+      </ellipse>
+      <rect x="460" y="66" width="30" height="32" rx="3" fill="#1e2048" stroke="rgba(52,211,153,0.5)" stroke-width="1.5"/>
+      <rect x="510" y="66" width="30" height="32" rx="3" fill="#1e2048" stroke="rgba(52,211,153,0.5)" stroke-width="1.5"/>
+      <line x1="475" y1="66" x2="475" y2="98" stroke="rgba(52,211,153,0.35)" stroke-width="1"/>
+      <line x1="525" y1="66" x2="525" y2="98" stroke="rgba(52,211,153,0.35)" stroke-width="1"/>
+      <text x="500" y="60" text-anchor="middle" font-size="6.5" fill="rgba(52,211,153,0.5)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.1em">EINGANG NORD</text>
+
+      <!-- Süd -->
+      <rect x="438" y="634" width="124" height="58" rx="10" fill="#181840" stroke="rgba(52,211,153,0.35)" stroke-width="2"/>
+      <ellipse cx="500" cy="663" rx="55" ry="30" fill="url(#entry-g)">
+        <animate attributeName="opacity" values="0.2;0.5;0.2" dur="3.8s" repeatCount="indefinite"/>
+      </ellipse>
+      <rect x="460" y="640" width="30" height="28" rx="3" fill="#1e2048" stroke="rgba(52,211,153,0.45)" stroke-width="1.5"/>
+      <rect x="510" y="640" width="30" height="28" rx="3" fill="#1e2048" stroke="rgba(52,211,153,0.45)" stroke-width="1.5"/>
+      <text x="500" y="680" text-anchor="middle" font-size="6.5" fill="rgba(52,211,153,0.45)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.1em">EINGANG SÜD</text>
+
+      <!-- West -->
+      <rect x="56" y="328" width="80" height="98" rx="10" fill="#181840" stroke="rgba(52,211,153,0.3)" stroke-width="2"/>
+      <rect x="64" y="346" width="26" height="30" rx="2" fill="#1e2048" stroke="rgba(52,211,153,0.4)" stroke-width="1"/>
+      <rect x="64" y="386" width="26" height="28" rx="2" fill="#1e2048" stroke="rgba(52,211,153,0.4)" stroke-width="1"/>
+      <text x="100" y="377" text-anchor="middle" font-size="6" fill="rgba(52,211,153,0.4)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.08em" transform="rotate(-90,100,377)">WEST</text>
+
+      <!-- Ost -->
+      <rect x="864" y="328" width="80" height="98" rx="10" fill="#181840" stroke="rgba(52,211,153,0.3)" stroke-width="2"/>
+      <rect x="910" y="346" width="26" height="30" rx="2" fill="#1e2048" stroke="rgba(52,211,153,0.4)" stroke-width="1"/>
+      <rect x="910" y="386" width="26" height="28" rx="2" fill="#1e2048" stroke="rgba(52,211,153,0.4)" stroke-width="1"/>
+      <text x="900" y="377" text-anchor="middle" font-size="6" fill="rgba(52,211,153,0.4)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.08em" transform="rotate(90,900,377)">OST</text>
+
+      <!-- HEATMAP -->
+      <ellipse cx="500" cy="532" rx="255" ry="115" fill="url(#h-food)">
+        <animate attributeName="opacity" values="0.55;1;0.55" dur="4s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="500" cy="300" rx="195" ry="145" fill="url(#h-events)">
+        <animate attributeName="opacity" values="0.5;0.95;0.5" dur="3.5s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="285" cy="212" rx="155" ry="105" fill="url(#h-shops)">
+        <animate attributeName="opacity" values="0.3;0.65;0.3" dur="5s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="500" cy="88"  rx="90"  ry="55"  fill="url(#h-entry)">
+        <animate attributeName="opacity" values="0.35;0.75;0.35" dur="4.5s" repeatCount="indefinite"/>
+      </ellipse>
+
+      <!-- Korridor Lichter -->
+      <g opacity="0.32" filter="url(#glow)">
+        <circle cx="200" cy="379" r="3" fill="#a78bfa"/>
+        <circle cx="360" cy="379" r="3" fill="#a78bfa"/>
+        <circle cx="640" cy="379" r="3" fill="#a78bfa"/>
+        <circle cx="800" cy="379" r="3" fill="#a78bfa"/>
+        <circle cx="500" cy="162" r="3" fill="#a78bfa"/>
+        <circle cx="500" cy="248" r="3" fill="#a78bfa"/>
+        <circle cx="500" cy="577" r="3" fill="#a78bfa"/>
+        <circle cx="500" cy="617" r="3" fill="#a78bfa"/>
+      </g>
+
+      <!-- Zone Labels (groß, sehr dezent) -->
+      <text x="285" y="212" text-anchor="middle" font-size="12" fill="rgba(59,130,246,0.18)" font-family="Poppins,system-ui" font-weight="800" letter-spacing="0.06em">SHOPS</text>
+      <text x="715" y="212" text-anchor="middle" font-size="12" fill="rgba(59,130,246,0.18)" font-family="Poppins,system-ui" font-weight="800" letter-spacing="0.06em">SHOPS</text>
+    </svg>
+
+    <div id="user-layer"></div>
+    <div id="marker-layer"></div>
   </div>
 </div>
 
-<!-- Privacy Banner (shown before consent) -->
-<div id="privacy-banner" class="privacy-banner" style="display:none">
-  <div class="privacy-icon">🔒</div>
-  <div class="privacy-title">Deine Privatsphäre zuerst</div>
-  <div class="privacy-text">
-    Die Live Map zeigt nie deinen genauen Standort.<br>
-    Du wählst selbst eine Zone (z.B. „Food-Bereich") und wirst erst angezeigt, wenn du es aktivierst.
-  </div>
-  <div class="privacy-features">
-    <div class="privacy-feat"><span>📍</span><span>Nur Zonen — kein GPS, kein exakter Standort</span></div>
-    <div class="privacy-feat"><span>👁️</span><span>Sichtbarkeit jederzeit ein- und ausschalten</span></div>
-    <div class="privacy-feat"><span>🚫</span><span>Nutzer blockieren & melden jederzeit möglich</span></div>
-    <div class="privacy-feat"><span>🗑️</span><span>Dein Status wird nach 4 Stunden automatisch gelöscht</span></div>
-  </div>
-  <button class="btn-primary" id="btn-enable-map">🗺️ Karte aktivieren</button>
-  <button class="btn-ghost" id="btn-stay-invisible">Unsichtbar bleiben (nur zuschauen)</button>
+<!-- CONTROLS -->
+<div id="map-controls" style="display:none">
+  <button class="zoom-btn" onclick="zoomIn()">＋</button>
+  <button class="zoom-btn" onclick="zoomOut()">－</button>
+  <button class="zoom-btn" style="font-size:0.85rem" onclick="centerOnMe()" title="Meine Position">⊙</button>
 </div>
 
-<!-- Map (shown after consent) -->
-<div id="map-content" style="display:none">
+<!-- LEGEND -->
+<div id="map-legend" style="display:none">
+  <div class="leg-item"><div class="leg-dot" style="background:#f59e0b"></div><span class="leg-label">Viele Leute</span></div>
+  <div class="leg-item"><div class="leg-dot" style="background:#8b5cf6"></div><span class="leg-label">Aktives Event</span></div>
+  <div class="leg-item"><div class="leg-dot" style="background:#3b82f6"></div><span class="leg-label">Beliebt</span></div>
+  <div class="leg-item"><div class="leg-dot" style="background:#10b981"></div><span class="leg-label">Eingang</span></div>
+</div>
 
-  <!-- Visibility info bar -->
-  <div class="visibility-info vis-invisible" id="visibility-info">
-    <div class="visibility-dot"></div>
-    <span id="visibility-info-text">Du bist unsichtbar. Niemand sieht dich auf der Karte.</span>
+<!-- STATUS BAR -->
+<div id="map-status-bar" style="display:none">
+  <div id="status-collapsed" onclick="expandStatus()">
+    <div class="my-avatar-mini" id="my-mini">?</div>
+    <span id="status-preview">Tippe um deinen Status zu setzen…</span>
+    <span class="chev">›</span>
   </div>
-
-  <!-- Zone Map -->
-  <div class="map-container">
-
-    <!-- Außenbereich (full width) -->
-    <div class="map-zone zone-aussen" data-zone="aussen">
-      <div class="zone-bg"></div>
-      <div class="zone-label"><span class="zone-label-icon">🌳</span> Außenbereich</div>
-      <div class="zone-users-row" id="zone-users-aussen"></div>
+  <div id="status-expanded">
+    <div class="status-row">
+      <select id="zone-select">
+        <option value="eingang">🚪 Eingang</option>
+        <option value="food">🍕 Food Area</option>
+        <option value="shops">🛍️ Shops</option>
+        <option value="events">🎭 Events</option>
+        <option value="aussen">☀️ Außenbereich</option>
+      </select>
+      <select id="vis-select">
+        <option value="all">👁️ Alle sehen mich</option>
+        <option value="connections">👥 Nur Freunde</option>
+        <option value="hidden">🚫 Unsichtbar</option>
+      </select>
     </div>
-
-    <!-- Eingang + Food -->
-    <div class="zone-row">
-      <div class="map-zone zone-eingang" data-zone="eingang">
-        <div class="zone-bg"></div>
-        <div class="zone-label"><span class="zone-label-icon">🚪</span> Eingang</div>
-        <div class="zone-users-row" id="zone-users-eingang"></div>
-      </div>
-      <div class="map-zone zone-food" data-zone="food">
-        <div class="zone-bg"></div>
-        <div class="zone-label"><span class="zone-label-icon">🍕</span> Food</div>
-        <div class="zone-users-row" id="zone-users-food"></div>
-      </div>
+    <div class="status-input-row">
+      <input type="text" id="status-text" placeholder="Was machst du gerade?" maxlength="60" autocomplete="off"/>
+      <button class="btn-status-save" onclick="saveMyStatus()">✓</button>
     </div>
-
-    <!-- Shops + Events -->
-    <div class="zone-row">
-      <div class="map-zone zone-shops" data-zone="shops">
-        <div class="zone-bg"></div>
-        <div class="zone-label"><span class="zone-label-icon">🏪</span> Shops</div>
-        <div class="zone-users-row" id="zone-users-shops"></div>
-      </div>
-      <div class="map-zone zone-events" data-zone="events">
-        <div class="zone-bg"></div>
-        <div class="zone-label"><span class="zone-label-icon">🎟️</span> Events</div>
-        <div class="zone-users-row" id="zone-users-events"></div>
-      </div>
+    <div class="preset-chips">
+      <button class="preset-chip" onclick="setPreset('🍕 Beim Essen')">🍕 Beim Essen</button>
+      <button class="preset-chip" onclick="setPreset('🎭 Beim Event')">🎭 Beim Event</button>
+      <button class="preset-chip" onclick="setPreset('🔍 Suche Leute')">🔍 Suche Leute</button>
+      <button class="preset-chip" onclick="setPreset('☕ Kaffeepause')">☕ Kaffeepause</button>
+      <button class="preset-chip" onclick="setPreset('🛍️ Shopping')">🛍️ Shopping</button>
+      <button class="preset-chip" onclick="setPreset('👋 Neu hier!')">👋 Neu hier!</button>
     </div>
-
-  </div><!-- /.map-container -->
-
-  <!-- My Status Bar -->
-  <div class="my-status-bar">
-    <div class="my-status-header" onclick="toggleStatusBar()">
-      <div class="my-status-title">
-        <span id="my-status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--border-2);display:inline-block"></span>
-        Mein Status
-        <span id="my-status-preview" style="font-size:0.72rem;color:var(--muted);font-weight:400"></span>
-      </div>
-      <span class="my-status-toggle" id="status-toggle-icon">▼ Bearbeiten</span>
-    </div>
-    <div class="my-status-body" id="my-status-body">
-
-      <div class="status-row">
-        <label>Sichtbarkeit</label>
-        <select class="status-select" id="sel-visibility">
-          <option value="invisible">🔴 Unsichtbar</option>
-          <option value="visible" selected>🟢 Sichtbar im ZAM</option>
-          <option value="event">🟡 Nur bei Event</option>
-        </select>
-      </div>
-
-      <div class="status-row">
-        <label>Bereich</label>
-        <select class="status-select" id="sel-zone">
-          <option value="">— Kein —</option>
-          <option value="eingang">🚪 Eingang</option>
-          <option value="food">🍕 Food-Bereich</option>
-          <option value="shops">🏪 Shops</option>
-          <option value="events">🎟️ Events-Area</option>
-          <option value="aussen">🌳 Außenbereich</option>
-        </select>
-      </div>
-
-      <div class="status-row">
-        <label>Status-Text</label>
-        <input class="status-input" id="inp-status" placeholder="z.B. Beim Essen…" maxlength="40" />
-      </div>
-
-      <div class="status-presets" id="status-presets">
-        <span class="status-preset" onclick="setPreset('Bin im ZAM 😊')">Bin im ZAM 😊</span>
-        <span class="status-preset" onclick="setPreset('Beim Essen 🍕')">Beim Essen 🍕</span>
-        <span class="status-preset" onclick="setPreset('Suche Leute fürs Event 🎉')">Event-Leute 🎉</span>
-        <span class="status-preset" onclick="setPreset('Shopping 🛍️')">Shopping 🛍️</span>
-        <span class="status-preset" onclick="setPreset('Kaffeepause ☕')">Kaffeepause ☕</span>
-        <span class="status-preset" onclick="setPreset('Bei der Aktion 🏷️')">Bei der Aktion 🏷️</span>
-      </div>
-
-      <button class="btn-update" onclick="saveMyStatus()">✓ Status aktualisieren</button>
-    </div>
-  </div>
-
-  <!-- Connections -->
-  <div class="connections-section" id="connections-section" style="display:none">
-    <div class="connections-header">💬 Meine Verbindungen</div>
-    <div id="connections-list"></div>
-  </div>
-
-</div><!-- /#map-content -->
-
-<!-- User Popup Overlay -->
-<div class="popup-overlay" id="popup-overlay" onclick="closePopup(event)">
-  <div class="popup-sheet" id="popup-sheet">
-    <div class="popup-handle"></div>
-    <div class="popup-user-row">
-      <div class="popup-avatar" id="popup-avatar">JM</div>
-      <div class="popup-info">
-        <div class="popup-name" id="popup-name">Name</div>
-        <div class="popup-username" id="popup-username">@username</div>
-      </div>
-    </div>
-    <div class="popup-status-text" id="popup-status-text">
-      <span>💬</span><span id="popup-status-val">Status</span>
-    </div>
-    <div class="popup-badges" id="popup-badges"></div>
-    <div class="popup-actions">
-      <button class="btn-nudge" id="btn-nudge" onclick="doNudge()">👋 Anstupsen</button>
-      <button class="btn-view-profile" onclick="closePopup()">Profil →</button>
-    </div>
-    <div class="popup-mod-row">
-      <button class="btn-mod" onclick="doBlock()">🚫 Blockieren</button>
-      <button class="btn-mod" onclick="doReport()">🚩 Melden</button>
-    </div>
-    <button class="btn-close-popup" onclick="closePopup()">Schließen</button>
   </div>
 </div>
 
-<!-- Nudge Inbox (floating cards) -->
-<div class="nudge-inbox" id="nudge-inbox"></div>
+<!-- PROFIL POPUP -->
+<div id="profile-popup" onclick="handleOverlay(event)">
+  <div class="pop-sheet">
+    <div class="pop-handle"></div>
+    <button class="pop-close" onclick="closePopup()">✕</button>
+    <div class="pop-header">
+      <div class="pop-avatar" id="pop-av">MK</div>
+      <div class="pop-info">
+        <div class="pop-name"    id="pop-name">Mia K.</div>
+        <div class="pop-username" id="pop-un">@mia_k</div>
+        <div class="pop-status"  id="pop-st">🎭 Beim Event</div>
+      </div>
+      <div class="pop-zone" id="pop-zone">Events</div>
+    </div>
+    <div class="pop-badges" id="pop-badges"></div>
+    <div class="pop-points" id="pop-pts">⭐ 1.250 Punkte</div>
+    <div class="pop-actions">
+      <button class="btn-nudge-pop" id="btn-nudge">👋 Anstupsen</button>
+      <button class="btn-profile-view" onclick="closePopup()">👤 Profil</button>
+    </div>
+    <div class="pop-secondary">
+      <button onclick="blockPop()">🚫 Blockieren</button>
+      <button onclick="reportPop()">⚑ Melden</button>
+    </div>
+  </div>
+</div>
 
-<!-- Toast -->
-<div class="notif-toast" id="notif-toast"></div>
+<!-- NUDGE INBOX -->
+<div id="nudge-inbox"></div>
 
 <script src="data.js"></script>
 <script src="api.js"></script>
 <script>
 'use strict';
 
-// ── State ──────────────────────────────────────────────────────
-const APP_KEY = 'zamclub_global';
+const ZONE_VARIANTS = {
+  eingang:[{x:468,y:108},{x:532,y:122},{x:500,y:94},{x:478,y:128}],
+  food:   [{x:187,y:488},{x:287,y:500},{x:418,y:492},{x:500,y:545},{x:581,y:498},{x:713,y:490},{x:360,y:562}],
+  shops:  [{x:215,y:168},{x:265,y:215},{x:372,y:162},{x:375,y:265},{x:238,y:268},{x:617,y:168},{x:700,y:215},{x:798,y:162},{x:682,y:265},{x:798,y:268}],
+  events: [{x:462,y:278},{x:533,y:318},{x:492,y:358},{x:418,y:316},{x:560,y:268}],
+  aussen: [{x:158,y:388},{x:842,y:388},{x:158,y:512},{x:842,y:512},{x:500,y:684},{x:500,y:54}],
+};
+const ZONE_CENTERS = {eingang:{x:500,y:108},food:{x:500,y:530},shops:{x:285,y:210},events:{x:500,y:305},aussen:{x:500,y:688}};
 
-function gLoad(k, fb = null) {
-  try { return JSON.parse(localStorage.getItem(APP_KEY) || '{}')[k] ?? fb; } catch { return fb; }
-}
-function gSet(k, v) {
-  try {
-    const d = JSON.parse(localStorage.getItem(APP_KEY) || '{}');
-    d[k] = v; localStorage.setItem(APP_KEY, JSON.stringify(d));
-  } catch {}
-}
-function uKey(uid) { return 'zamclub_u_' + uid; }
-function uLoad(uid, k, fb = null) {
-  try { return JSON.parse(localStorage.getItem(uKey(uid)) || '{}')[k] ?? fb; } catch { return fb; }
-}
-function uSet(uid, k, v) {
-  try {
-    const d = JSON.parse(localStorage.getItem(uKey(uid)) || '{}');
-    d[k] = v; localStorage.setItem(uKey(uid), JSON.stringify(d));
-  } catch {}
-}
-function uid() { return ZAMApi.auth.currentUser()?.id || null; }
-function s(k, fb = null) { return uLoad(uid(), k, fb); }
-function set(k, v) { uSet(uid(), k, v); }
-function uuid() { return 'u_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-function now() { return new Date().toISOString(); }
-
-// ── Demo users visible on map ──────────────────────────────────
-const DEMO_MAP_USERS = [
-  { id: 'usr_042', name: 'Mia K.',   initials: 'MK', color: '#7c3aed', status: 'Beim Yoga 🧘‍♀️',        zone: 'events'  },
-  { id: 'usr_017', name: 'Felix B.', initials: 'FB', color: '#10b981', status: 'Kaffee holen ☕',       zone: 'food'    },
-  { id: 'usr_088', name: 'Sarah L.', initials: 'SL', color: '#ec4899', status: 'Shopping 🛍️',          zone: 'shops'   },
-  { id: 'usr_031', name: 'Tom W.',   initials: 'TW', color: '#f59e0b', status: 'Im Gym 💪',              zone: 'shops'   },
-  { id: 'usr_055', name: 'Anna P.',  initials: 'AP', color: '#3b82f6', status: 'Bin im ZAM 😊',         zone: 'eingang' },
-  { id: 'usr_099', name: 'Lukas M.', initials: 'LM', color: '#06b6d4', status: 'Suche Event-Leute 🎉', zone: 'events'  },
-  { id: 'usr_077', name: 'Emma R.',  initials: 'ER', color: '#f97316', status: 'Draußen chillen 🌳',    zone: 'aussen'  },
+const DEMO_USERS = [
+  {id:'usr_042',name:'Mia K.',  initials:'MK',color:'#7c3aed',zone:'events', status:'🎭 Beim Event',  vi:0},
+  {id:'usr_017',name:'Felix B.',initials:'FB',color:'#10b981',zone:'food',   status:'🍕 Beim Essen',  vi:0},
+  {id:'usr_088',name:'Sarah L.',initials:'SL',color:'#ec4899',zone:'shops',  status:'🛍️ Shopping',    vi:0},
+  {id:'usr_031',name:'Tom W.',  initials:'TW',color:'#f59e0b',zone:'shops',  status:'☕ Kaffeepause', vi:5},
+  {id:'usr_055',name:'Anna P.', initials:'AP',color:'#3b82f6',zone:'eingang',status:'👋 Neu hier!',   vi:0},
+  {id:'usr_066',name:'Leo M.',  initials:'LM',color:'#8b5cf6',zone:'food',   status:'🔍 Suche Leute', vi:2},
+  {id:'usr_077',name:'Emma R.', initials:'ER',color:'#06b6d4',zone:'aussen', status:'☀️ Draußen',     vi:0},
 ];
 
-const DEMO_BADGES = [
-  { icon: '🏆', name: 'Erster Besuch' },
-  { icon: '⭐', name: 'Stammgast' },
-  { icon: '🎯', name: 'Deal Hunter' },
+const MAP_MARKERS = [
+  {x:500,y:318,icon:'🎭',label:'Sommermarkt',  color:'#f59e0b'},
+  {x:418,y:492,icon:'🍕',label:'Food Festival', color:'#ef4444'},
+  {x:285,y:178,icon:'🏷️',label:'-20% Deals',  color:'#10b981'},
+  {x:700,y:198,icon:'⭐',label:'Neu: Bio-Café', color:'#8b5cf6'},
 ];
 
-let _popupUser = null; // currently viewed user in popup
-let _mySettings = { visibility: 'invisible', zone: '', status: '', consent: false };
-let _onlineCount = 0;
-let _connections = [];
+// Helpers
+function gLoad(k,d=null){try{return JSON.parse(localStorage.getItem('zamclub_global')||'{}')[k]??d}catch{return d}}
+function uLoad(k,d=null){const u=ZAMApi.auth.currentUser();if(!u)return d;try{return JSON.parse(localStorage.getItem('zamclub_u_'+u.id)||'{}')[k]??d}catch{return d}}
+function uSet(k,v){const u=ZAMApi.auth.currentUser();if(!u)return;try{const d=JSON.parse(localStorage.getItem('zamclub_u_'+u.id)||'{}');d[k]=v;localStorage.setItem('zamclub_u_'+u.id,JSON.stringify(d))}catch{}}
 
-// ── Init ────────────────────────────────────────────────────────
-function init() {
-  const me = ZAMApi.auth.currentUser();
-  if (!me) {
-    // Not logged in — redirect
-    window.location.href = 'index.html';
-    return;
+// Pan/Zoom
+const SVG_W=1000,SVG_H=740,MIN_S=0.35,MAX_S=2.5;
+let mScale=0.55,mTx=0,mTy=0;
+
+function initTransform(){
+  const w=document.getElementById('map-wrap');
+  mScale=Math.min(w.clientWidth/SVG_W,w.clientHeight/SVG_H)*0.9;
+  mTx=(w.clientWidth -SVG_W*mScale)/2;
+  mTy=(w.clientHeight-SVG_H*mScale)/2;
+  applyT(false);
+}
+function applyT(anim){
+  const s=document.getElementById('map-stage');
+  s.style.transition=anim?'transform 0.35s cubic-bezier(0.16,1,0.3,1)':'';
+  s.style.transform=`translate(${mTx}px,${mTy}px) scale(${mScale})`;
+}
+function clamp(){
+  const w=document.getElementById('map-wrap'),mg=80;
+  mTx=Math.max(w.clientWidth -SVG_W*mScale-mg,Math.min(mg,mTx));
+  mTy=Math.max(w.clientHeight-SVG_H*mScale-mg,Math.min(mg,mTy));
+}
+function zoomIn(){mScale=Math.min(MAX_S,mScale*1.3);clamp();applyT(true)}
+function zoomOut(){mScale=Math.max(MIN_S,mScale/1.3);clamp();applyT(true)}
+function centerOnMe(){
+  const z=uLoad('map_zone','eingang'),c=ZONE_CENTERS[z]||ZONE_CENTERS.eingang;
+  const w=document.getElementById('map-wrap');
+  mTx=w.clientWidth/2-c.x*mScale;mTy=w.clientHeight/2-c.y*mScale;
+  clamp();applyT(true);
+}
+
+// Touch/Mouse
+(function(){
+  const wrap=document.getElementById('map-wrap');
+  let drag=false,lx=0,ly=0,pinch=false,ld=0,pcx=0,pcy=0;
+  const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+  const mid=(t,el)=>{const r=el.getBoundingClientRect();return{x:(t[0].clientX+t[1].clientX)/2-r.left,y:(t[0].clientY+t[1].clientY)/2-r.top}};
+  wrap.addEventListener('mousedown',e=>{drag=true;lx=e.clientX;ly=e.clientY;wrap.style.cursor='grabbing'});
+  document.addEventListener('mousemove',e=>{if(!drag)return;mTx+=e.clientX-lx;mTy+=e.clientY-ly;lx=e.clientX;ly=e.clientY;clamp();applyT(false)});
+  document.addEventListener('mouseup',()=>{drag=false;wrap.style.cursor='grab'});
+  wrap.addEventListener('touchstart',e=>{
+    if(e.touches.length===1){drag=true;lx=e.touches[0].clientX;ly=e.touches[0].clientY}
+    else if(e.touches.length===2){drag=false;pinch=true;ld=dist(e.touches);const m=mid(e.touches,wrap);pcx=m.x;pcy=m.y}
+  },{passive:true});
+  wrap.addEventListener('touchmove',e=>{
+    if(drag&&e.touches.length===1){
+      mTx+=e.touches[0].clientX-lx;mTy+=e.touches[0].clientY-ly;
+      lx=e.touches[0].clientX;ly=e.touches[0].clientY;clamp();applyT(false);
+    }else if(pinch&&e.touches.length===2){
+      const nd=dist(e.touches),r=nd/ld;
+      const ns=Math.max(MIN_S,Math.min(MAX_S,mScale*r));
+      mTx=pcx-(pcx-mTx)*(ns/mScale);mTy=pcy-(pcy-mTy)*(ns/mScale);
+      mScale=ns;ld=nd;clamp();applyT(false);
+    }
+    e.preventDefault();
+  },{passive:false});
+  wrap.addEventListener('touchend',e=>{if(e.touches.length<2)pinch=false;if(e.touches.length===0)drag=false});
+  let lt=0;
+  wrap.addEventListener('touchend',e=>{
+    const now=Date.now();
+    if(now-lt<280&&e.changedTouches.length===1){
+      const r=wrap.getBoundingClientRect(),cx=e.changedTouches[0].clientX-r.left,cy=e.changedTouches[0].clientY-r.top;
+      const ns=mScale<1.0?1.3:0.62;
+      mTx=cx-(cx-mTx)*(ns/mScale);mTy=cy-(cy-mTy)*(ns/mScale);
+      mScale=ns;clamp();applyT(true);
+    }
+    lt=now;
+  });
+})();
+
+// Consent
+function checkConsent(){
+  if(!localStorage.getItem('zamclub_map_consent'))document.getElementById('consent-overlay').style.display='flex';
+  else showMap();
+}
+function acceptConsent(){
+  localStorage.setItem('zamclub_map_consent','1');
+  document.getElementById('consent-overlay').style.display='none';
+  showMap();
+}
+
+// Show Map
+function showMap(){
+  const user=ZAMApi.auth.currentUser();
+  if(!user){window.location.href='index.html';return}
+  const ids=['map-header','map-wrap','map-controls','map-legend','map-status-bar'];
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=''});
+  document.getElementById('map-header').style.display='flex';
+  document.getElementById('map-controls').style.display='flex';
+  document.getElementById('map-legend').style.display='flex';
+  document.getElementById('map-status-bar').style.display='block';
+  initTransform();
+  renderBubbles();
+  renderMarkers();
+  loadMyStatus();
+  updatePrivBtn();
+  startPolling();
+}
+
+// Bubbles
+function getPos(zone,vi){
+  const vs=ZONE_VARIANTS[zone]||ZONE_VARIANTS.eingang,v=vs[vi%vs.length];
+  return{x:v.x+(Math.random()-.5)*10,y:v.y+(Math.random()-.5)*9};
+}
+function renderBubbles(){
+  const layer=document.getElementById('user-layer');
+  layer.innerHTML='';
+  const me=ZAMApi.auth.currentUser();
+  const vis=uLoad('map_visibility','all');
+  // Own
+  if(vis!=='hidden'){
+    const zone=uLoad('map_zone','eingang'),status=uLoad('map_status','');
+    const pos=getPos(zone,9);
+    layer.appendChild(makeBubble({id:me.id,name:'Ich',initials:(me.initials||'?').slice(0,2),color:me.avatar_color||'#8b5cf6',status:status||'📍 Ich bin hier',isOwn:true},pos));
   }
+  // Demo
+  DEMO_USERS.forEach(u=>layer.appendChild(makeBubble({...u,isOwn:false},getPos(u.zone,u.vi))));
+}
+function makeBubble(u,pos){
+  const d=document.createElement('div');
+  d.className='user-bubble'+(u.isOwn?' is-own':'');
+  d.style.left=pos.x+'px';d.style.top=pos.y+'px';
+  d.innerHTML=`<div class="avatar-ring-wrap"><div class="avatar-img" style="background:${u.color}">${u.initials}</div><span class="online-dot"></span></div>${u.status?`<div class="status-chip">${u.status}</div>`:''}<div class="name-tag">${u.name}</div>`;
+  if(!u.isOwn)d.onclick=e=>{e.stopPropagation();openPopup(u.id)};
+  return d;
+}
 
-  _mySettings = uLoad(me.id, 'map_settings', { visibility: 'invisible', zone: '', status: '', consent: false });
-  _connections = loadConnections();
+// Markers
+function renderMarkers(){
+  const layer=document.getElementById('marker-layer');
+  layer.innerHTML='';
+  MAP_MARKERS.forEach(m=>{
+    const d=document.createElement('div');
+    d.className='map-marker';d.style.left=m.x+'px';d.style.top=m.y+'px';
+    d.innerHTML=`<div class="marker-icon-wrap" style="border-color:${m.color};background:${m.color}20"><span>${m.icon}</span><div class="marker-pulse" style="border-color:${m.color}"></div></div><div class="marker-label" style="color:${m.color}">${m.label}</div>`;
+    d.onclick=e=>{e.stopPropagation();showToast(`${m.icon} ${m.label}`)};
+    layer.appendChild(d);
+  });
+}
 
-  // Online count simulation (stable per minute)
-  _onlineCount = (Math.floor(Date.now() / 60000) % 9) + DEMO_MAP_USERS.length + 1;
-  document.getElementById('header-online-count').textContent = _onlineCount + ' online';
+// Popup
+let _pu=null;
+function openPopup(uid){
+  _pu=DEMO_USERS.find(u=>u.id===uid);if(!_pu)return;
+  const u=_pu;
+  document.getElementById('pop-av').textContent=u.initials;
+  document.getElementById('pop-av').style.background=u.color;
+  document.getElementById('pop-av').style.borderColor=u.color;
+  document.getElementById('pop-name').textContent=u.name;
+  document.getElementById('pop-un').textContent='@'+u.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'_zam';
+  document.getElementById('pop-st').textContent=u.status;
+  const zl={eingang:'Eingang',food:'Food Area',shops:'Shops',events:'Events',aussen:'Außen'};
+  document.getElementById('pop-zone').textContent=zl[u.zone]||'';
+  document.getElementById('pop-pts').textContent='⭐ '+(800+Math.floor(Math.random()*2400))+' Punkte';
+  const bp=['🌟','🎯','💬','🎟️','🏷️'];
+  const nb=1+Math.floor(Math.random()*3);
+  document.getElementById('pop-badges').innerHTML=bp.slice(0,nb).map(b=>`<span class="pop-badge">${b}</span>`).join('');
+  const btn=document.getElementById('btn-nudge');
+  btn.disabled=false;btn.style.opacity='';
+  const connected=ZAMApi.nudges?.isConnected(uid);
+  const pending=ZAMApi.nudges?.hasPendingNudgeTo(uid);
+  if(connected){btn.textContent='💬 Chatten';btn.onclick=()=>openPrivChat(uid)}
+  else if(pending){btn.textContent='⏳ Angefragt…';btn.disabled=true;btn.style.opacity='0.5'}
+  else{btn.textContent='👋 Anstupsen';btn.onclick=()=>doNudge()}
+  const popup=document.getElementById('profile-popup');
+  popup.style.display='flex';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>popup.classList.add('open')));
+}
+function closePopup(){
+  const p=document.getElementById('profile-popup');
+  p.classList.remove('open');
+  setTimeout(()=>{p.style.display='none';_pu=null},330);
+}
+function handleOverlay(e){if(e.target===document.getElementById('profile-popup'))closePopup()}
 
-  if (!_mySettings.consent) {
-    document.getElementById('privacy-banner').style.display = 'block';
-    document.getElementById('btn-enable-map').addEventListener('click', () => activateMap(true));
-    document.getElementById('btn-stay-invisible').addEventListener('click', () => activateMap(false));
-  } else {
-    showMapContent();
-  }
+// Nudge
+function doNudge(){
+  if(!_pu)return;
+  const saved=_pu;
+  const nid=ZAMApi.nudges?.send(saved.id,saved.name)||('demo_'+Date.now());
+  showToast('👋 Angestupst! Warte auf Antwort…');
+  closePopup();
+  setTimeout(()=>{
+    ZAMApi.nudges?.accept(nid);
+    showToast('✅ '+saved.name+' hat angenommen! Ihr könnt chatten.');
+    renderBubbles();
+  },4000+Math.random()*3000);
+}
+function checkNudges(){
+  const pending=ZAMApi.nudges?.myNudges()||[];
+  const inbox=document.getElementById('nudge-inbox');
+  inbox.innerHTML='';
+  pending.forEach(n=>{
+    const fu=DEMO_USERS.find(u=>u.id===n.from_id)||{name:n.from_name||'?',initials:'??',color:'#8b5cf6'};
+    const c=document.createElement('div');
+    c.className='nudge-card';
+    c.innerHTML=`<div class="nudge-from"><span class="nudge-avatar" style="background:${fu.color}">${fu.initials}</span><div><div class="nudge-text">${fu.name} stupst dich an!</div></div></div><div class="nudge-btns"><button class="btn-na" onclick="acceptNudge('${n.id}')">✓ Annehmen</button><button class="btn-nr" onclick="rejectNudge('${n.id}')">✕</button></div>`;
+    inbox.appendChild(c);
+  });
+}
+function acceptNudge(id){ZAMApi.nudges?.accept(id);checkNudges();showToast('✅ Verbunden! Ihr könnt jetzt chatten.')}
+function rejectNudge(id){ZAMApi.nudges?.reject(id);checkNudges()}
 
-  // Poll for nudges every 3s
-  setInterval(checkNudges, 3000);
+// Status
+function saveMyStatus(){
+  const zone=document.getElementById('zone-select').value;
+  const status=document.getElementById('status-text').value.trim();
+  const vis=document.getElementById('vis-select').value;
+  uSet('map_zone',zone);uSet('map_status',status);uSet('map_visibility',vis);
+  renderBubbles();updatePreview();collapseStatus();updatePrivBtn();
+  showToast('✅ Status gespeichert!');
+}
+function setPreset(t){document.getElementById('status-text').value=t}
+function loadMyStatus(){
+  const z=document.getElementById('zone-select'),s=document.getElementById('status-text'),v=document.getElementById('vis-select');
+  if(z)z.value=uLoad('map_zone','eingang');
+  if(s)s.value=uLoad('map_status','');
+  if(v)v.value=uLoad('map_visibility','all');
+  const me=ZAMApi.auth.currentUser();
+  if(me){const av=document.getElementById('my-mini');if(av){av.textContent=(me.initials||'?').slice(0,2);av.style.background=me.avatar_color||'#8b5cf6'}}
+  updatePreview();
+}
+function updatePreview(){
+  const st=uLoad('map_status',''),z=uLoad('map_zone','eingang');
+  const zl={eingang:'Eingang',food:'Food Area',shops:'Shops',events:'Events',aussen:'Außen'};
+  document.getElementById('status-preview').textContent=st||`📍 ${zl[z]||'Eingang'}`;
+}
+function expandStatus(){document.getElementById('status-collapsed').style.display='none';document.getElementById('status-expanded').style.display='block'}
+function collapseStatus(){document.getElementById('status-collapsed').style.display='flex';document.getElementById('status-expanded').style.display='none'}
+
+// Privacy
+function togglePrivacy(){
+  const cur=uLoad('map_visibility','all'),next=cur==='hidden'?'all':'hidden';
+  uSet('map_visibility',next);renderBubbles();updatePrivBtn();
+  showToast(next==='hidden'?'🚫 Du bist jetzt unsichtbar':'👁️ Du bist wieder sichtbar');
+}
+function updatePrivBtn(){
+  const v=uLoad('map_visibility','all');
+  const b=document.getElementById('btn-privacy');if(b)b.textContent=v==='hidden'?'🚫':'👁️';
+}
+
+// Block/Report
+function blockPop(){if(!_pu)return;ZAMApi.chat?.blockUser(_pu.id);closePopup();showToast('🚫 Nutzer blockiert')}
+function reportPop(){if(!_pu)return;ZAMApi.chat?.report('user',_pu.id,'inappropriate',_pu.id);closePopup();showToast('⚑ Gemeldet. Danke!')}
+
+// Private Chat
+function openPrivChat(uid){
+  const rid=ZAMApi.nudges?.privateChatRoomId(uid)||`room_priv_${uid}`;
+  const other=DEMO_USERS.find(u=>u.id===uid)||{name:'Nutzer'};
+  sessionStorage.setItem('open_chat_room',JSON.stringify({id:rid,name:'💬 '+other.name,isPrivate:true}));
+  window.location.href='index.html#community';
+}
+
+// Polling
+function startPolling(){
   checkNudges();
+  setInterval(checkNudges,5000);
+  const c=ZAMApi.chat?.onlineCount()||8;
+  const el=document.getElementById('online-display');
+  if(el)el.textContent=`● ${c+DEMO_USERS.length} online`;
 }
 
-function activateMap(visible) {
-  _mySettings.consent = true;
-  if (visible) {
-    _mySettings.visibility = 'visible';
-    _mySettings.zone = 'eingang';
-    _mySettings.status = 'Bin im ZAM 😊';
-  }
-  const me = ZAMApi.auth.currentUser();
-  uSet(me.id, 'map_settings', _mySettings);
-  document.getElementById('privacy-banner').style.display = 'none';
-  showMapContent();
-  if (visible) showToast('🟢 Du bist jetzt auf der Karte sichtbar!');
+// Toast
+function showToast(msg){
+  const t=document.createElement('div');t.className='map-toast';t.textContent=msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),280)},2800);
 }
 
-function showMapContent() {
-  document.getElementById('map-content').style.display = 'block';
-  loadSettingsIntoForm();
-  renderMap();
-  renderConnections();
-  updateVisibilityInfo();
-}
-
-// ── Map Render ──────────────────────────────────────────────────
-function renderMap() {
-  const ZONES = ['aussen', 'eingang', 'food', 'shops', 'events'];
-  ZONES.forEach(zone => {
-    const container = document.getElementById('zone-users-' + zone);
-    if (!container) return;
-    container.innerHTML = '';
-  });
-
-  // Place demo users
-  DEMO_MAP_USERS.forEach(user => {
-    const me = ZAMApi.auth.currentUser();
-    if (ZAMApi.chat.isBlocked(user.id)) return;
-    const container = document.getElementById('zone-users-' + user.zone);
-    if (!container) return;
-    const dot = document.createElement('div');
-    dot.className = 'zone-user-dot';
-    dot.style.background = user.color;
-    dot.textContent = user.initials;
-    dot.title = user.name + ' — ' + user.status;
-    dot.addEventListener('click', () => openUserPopup(user));
-    container.appendChild(dot);
-  });
-
-  // Place current user if visible
-  const me = ZAMApi.auth.currentUser();
-  if (_mySettings.visibility !== 'invisible' && _mySettings.zone) {
-    const container = document.getElementById('zone-users-' + _mySettings.zone);
-    if (container) {
-      const dot = document.createElement('div');
-      dot.className = 'zone-user-dot is-me';
-      dot.style.background = '#8b5cf6';
-      dot.textContent = me.initials || 'Ich';
-      dot.title = 'Du — ' + (_mySettings.status || '');
-      container.appendChild(dot);
-    }
-  }
-
-  // Add empty labels for empty zones
-  ZONES.forEach(zone => {
-    const container = document.getElementById('zone-users-' + zone);
-    if (container && container.children.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'zone-empty';
-      empty.textContent = 'Niemand hier';
-      container.appendChild(empty);
-    }
-  });
-}
-
-// ── Status Bar ──────────────────────────────────────────────────
-let _statusBarOpen = false;
-
-function toggleStatusBar() {
-  _statusBarOpen = !_statusBarOpen;
-  document.getElementById('my-status-body').classList.toggle('open', _statusBarOpen);
-  document.getElementById('status-toggle-icon').textContent = _statusBarOpen ? '▲ Schließen' : '▼ Bearbeiten';
-}
-
-function loadSettingsIntoForm() {
-  document.getElementById('sel-visibility').value = _mySettings.visibility || 'invisible';
-  document.getElementById('sel-zone').value = _mySettings.zone || '';
-  document.getElementById('inp-status').value = _mySettings.status || '';
-  updateStatusPreview();
-}
-
-function updateStatusPreview() {
-  const preview = document.getElementById('my-status-preview');
-  const dot = document.getElementById('my-status-dot');
-  const vis = _mySettings.visibility;
-  if (preview) preview.textContent = _mySettings.status ? '· ' + _mySettings.status : '';
-  if (dot) dot.style.background = vis === 'invisible' ? 'rgba(255,255,255,0.2)' : '#10b981';
-}
-
-function setPreset(text) {
-  document.getElementById('inp-status').value = text;
-  document.querySelectorAll('.status-preset').forEach(p => p.classList.toggle('active', p.textContent.trim() === text));
-}
-
-function saveMyStatus() {
-  const me = ZAMApi.auth.currentUser();
-  if (!me) return;
-  _mySettings = {
-    ..._mySettings,
-    visibility: document.getElementById('sel-visibility').value,
-    zone:       document.getElementById('sel-zone').value,
-    status:     document.getElementById('inp-status').value.trim(),
-  };
-  uSet(me.id, 'map_settings', _mySettings);
-
-  // Publish to global visible users
-  const visUsers = gLoad('map_visible_users', {});
-  if (_mySettings.visibility === 'invisible') {
-    delete visUsers[me.id];
-  } else {
-    visUsers[me.id] = { id: me.id, name: me.display_name, initials: me.initials, color: '#8b5cf6', status: _mySettings.status, zone: _mySettings.zone, last_seen: now() };
-  }
-  gSet('map_visible_users', visUsers);
-
-  updateStatusPreview();
-  updateVisibilityInfo();
-  renderMap();
-  toggleStatusBar();
-  showToast(_mySettings.visibility === 'invisible' ? '🔴 Du bist jetzt unsichtbar' : '🟢 Status aktualisiert!');
-}
-
-function updateVisibilityInfo() {
-  const bar  = document.getElementById('visibility-info');
-  const text = document.getElementById('visibility-info-text');
-  const vis  = _mySettings.visibility;
-  if (!bar || !text) return;
-  if (vis === 'invisible') {
-    bar.className = 'visibility-info vis-invisible';
-    text.textContent = 'Du bist unsichtbar. Niemand sieht dich auf der Karte.';
-  } else {
-    bar.className = 'visibility-info vis-visible';
-    const zoneNames = { eingang: 'Eingang', food: 'Food-Bereich', shops: 'Shops', events: 'Events-Area', aussen: 'Außenbereich' };
-    const zoneName  = zoneNames[_mySettings.zone] || _mySettings.zone || 'irgendwo';
-    text.textContent = `Du bist sichtbar im Bereich „${zoneName}".`;
-  }
-}
-
-// ── User Popup ──────────────────────────────────────────────────
-function openUserPopup(user) {
-  _popupUser = user;
-  document.getElementById('popup-avatar').textContent  = user.initials;
-  document.getElementById('popup-avatar').style.background = user.color;
-  document.getElementById('popup-name').textContent    = user.name;
-  document.getElementById('popup-username').textContent = '@' + user.name.toLowerCase().replace(/[^a-z]/g, '');
-  document.getElementById('popup-status-val').textContent = user.status || 'Kein Status';
-
-  // Badges (demo)
-  const badgesEl = document.getElementById('popup-badges');
-  badgesEl.innerHTML = DEMO_BADGES.slice(0, 3).map(b =>
-    `<div class="popup-badge">${b.icon} ${b.name}</div>`
-  ).join('');
-
-  // Nudge button state
-  const nudgeBtn = document.getElementById('btn-nudge');
-  const isConnected = ZAMApi.nudges.isConnected(user.id);
-  const isPending   = ZAMApi.nudges.hasPendingNudgeTo(user.id);
-  nudgeBtn.className = isConnected ? 'btn-nudge connected' : isPending ? 'btn-nudge pending' : 'btn-nudge';
-  nudgeBtn.textContent = isConnected ? '✅ Verbunden — Chatten' : isPending ? '⏳ Angestupst…' : '👋 Anstupsen';
-  if (isConnected) nudgeBtn.onclick = () => openPrivateChat(user.id);
-  else nudgeBtn.onclick = doNudge;
-
-  document.getElementById('popup-overlay').classList.add('open');
-}
-
-function closePopup(e) {
-  if (e && e.target !== document.getElementById('popup-overlay')) return;
-  document.getElementById('popup-overlay').classList.remove('open');
-  _popupUser = null;
-}
-
-// ── Nudge ───────────────────────────────────────────────────────
-function doNudge() {
-  if (!_popupUser) return;
-  const me = ZAMApi.auth.currentUser();
-  if (!me) return;
-
-  try {
-    ZAMApi.nudges.send(_popupUser.id, _popupUser.name);
-  } catch (e) { showToast(e.message, true); return; }
-
-  const btn = document.getElementById('btn-nudge');
-  btn.className   = 'btn-nudge pending';
-  btn.textContent = '⏳ Angestupst…';
-  showToast(`👋 ${_popupUser.name} wurde angestupst!`);
-
-  // Simulate demo user accepting after a delay (3–6 s)
-  const delay = 3000 + Math.random() * 3000;
-  const nudgeId = gLoad('nudges', []).slice(-1)[0]?.id;
-  if (nudgeId) {
-    setTimeout(() => {
-      ZAMApi.nudges.accept(nudgeId);
-      _connections = loadConnections();
-      renderConnections();
-      showNudgeAcceptedToast(_popupUser.name, _popupUser.initials, _popupUser.color, nudgeId);
-      // Update button if popup still open
-      const b = document.getElementById('btn-nudge');
-      if (b && _popupUser) { b.className = 'btn-nudge connected'; b.textContent = '✅ Verbunden — Chatten'; b.onclick = () => openPrivateChat(_popupUser.id); }
-    }, delay);
-  }
-
-  document.getElementById('popup-overlay').classList.remove('open');
-}
-
-function doBlock() {
-  if (!_popupUser) return;
-  ZAMApi.chat.blockUser(_popupUser.id);
-  document.getElementById('popup-overlay').classList.remove('open');
-  renderMap();
-  showToast(`🚫 ${_popupUser.name} blockiert.`);
-  _popupUser = null;
-}
-
-function doReport() {
-  if (!_popupUser) return;
-  ZAMApi.chat.report('user', _popupUser.id, 'map_report', _popupUser.id);
-  document.getElementById('popup-overlay').classList.remove('open');
-  showToast('✅ Nutzer gemeldet. Danke!');
-  _popupUser = null;
-}
-
-// ── Nudge notifications check ────────────────────────────────────
-function checkNudges() {
-  const pending = ZAMApi.nudges.myNudges();
-  pending.forEach(nudge => {
-    const alreadyShown = s('shown_nudges', []).includes(nudge.id);
-    if (!alreadyShown) {
-      const shown = s('shown_nudges', []);
-      shown.push(nudge.id);
-      set('shown_nudges', shown);
-      showNudgeCard(nudge);
-    }
-  });
-}
-
-function showNudgeCard(nudge) {
-  const inbox = document.getElementById('nudge-inbox');
-  const card  = document.createElement('div');
-  card.className = 'nudge-card';
-  card.innerHTML = `
-    <div class="nudge-avatar" style="background:${nudge.from_color || '#8b5cf6'}">${nudge.from_initials || '?'}</div>
-    <div class="nudge-text"><strong>${nudge.from_name}</strong>hat dich angestupst 👋</div>
-    <div class="nudge-btns">
-      <button class="btn-accept" onclick="acceptNudge('${nudge.id}','${nudge.from_id}','${nudge.from_name}')">Annehmen</button>
-      <button class="btn-reject" onclick="rejectNudge('${nudge.id}',this.closest('.nudge-card'))">Ablehnen</button>
-    </div>`;
-  inbox.appendChild(card);
-  requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('show')));
-  setTimeout(() => { card.classList.remove('show'); setTimeout(() => card.remove(), 400); }, 15000);
-}
-
-function acceptNudge(nudgeId, fromId, fromName) {
-  ZAMApi.nudges.accept(nudgeId);
-  _connections = loadConnections();
-  renderConnections();
-  showToast(`✅ Verbunden mit ${fromName}! Privater Chat freigeschaltet.`);
-  document.querySelectorAll('.nudge-card').forEach(c => c.remove());
-}
-
-function rejectNudge(nudgeId, cardEl) {
-  ZAMApi.nudges.reject(nudgeId);
-  cardEl.classList.remove('show');
-  setTimeout(() => cardEl.remove(), 400);
-}
-
-function showNudgeAcceptedToast(name, initials, color, nudgeId) {
-  const inbox = document.getElementById('nudge-inbox');
-  const card  = document.createElement('div');
-  card.className = 'nudge-card';
-  card.innerHTML = `
-    <div class="nudge-avatar" style="background:${color}">${initials}</div>
-    <div class="nudge-text"><strong>${name}</strong>hat dein Anstupsen angenommen! 🎉<br><small>Privater Chat freigeschaltet</small></div>
-    <div class="nudge-btns">
-      <button class="btn-accept" onclick="openPrivateChatById('${nudgeId}')">Chatten</button>
-    </div>`;
-  inbox.appendChild(card);
-  requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('show')));
-  setTimeout(() => { card.classList.remove('show'); setTimeout(() => card.remove(), 400); }, 8000);
-  renderConnections();
-}
-
-// ── Connections ──────────────────────────────────────────────────
-function loadConnections() {
-  const myId = uid();
-  if (!myId) return [];
-  return gLoad('connections', []).filter(c => c.user_ids && c.user_ids.includes(myId));
-}
-
-function renderConnections() {
-  _connections = loadConnections();
-  const section = document.getElementById('connections-section');
-  const list    = document.getElementById('connections-list');
-  if (!section || !list) return;
-
-  if (_connections.length === 0) { section.style.display = 'none'; return; }
-  section.style.display = 'block';
-  const myId = uid();
-
-  list.innerHTML = _connections.map(conn => {
-    const otherId = conn.user_ids.find(id => id !== myId);
-    const other   = DEMO_MAP_USERS.find(u => u.id === otherId) || { name: 'Nutzer', initials: '?', color: '#8b5cf6', status: '' };
-    const roomId  = ZAMApi.nudges.privateChatRoomId(otherId);
-    return `<div class="connection-row">
-      <div class="conn-avatar" style="background:${other.color}">${other.initials}</div>
-      <div class="conn-info">
-        <div class="conn-name">${other.name}</div>
-        <div class="conn-status">${other.status || 'Im ZAM'}</div>
-      </div>
-      <button class="btn-open-chat" onclick="openPrivateChat('${otherId}')">💬 Chatten</button>
-    </div>`;
-  }).join('');
-}
-
-function openPrivateChat(userId) {
-  const roomId = ZAMApi.nudges.privateChatRoomId(userId);
-  const other  = DEMO_MAP_USERS.find(u => u.id === userId) || { name: 'Nutzer' };
-  // Pass room info via sessionStorage to index.html
-  sessionStorage.setItem('open_chat_room', JSON.stringify({ id: roomId, name: '💬 ' + other.name, isPrivate: true }));
-  window.location.href = 'index.html#community';
-}
-
-function openPrivateChatById(nudgeId) {
-  const nudge = gLoad('nudges', []).find(n => n.id === nudgeId);
-  if (!nudge) return;
-  const otherId = nudge.from_id;
-  openPrivateChat(otherId);
-}
-
-// ── Toast ────────────────────────────────────────────────────────
-let _toastTimer = null;
-function showToast(msg, isError = false) {
-  const toast = document.getElementById('notif-toast');
-  if (!toast) return;
-  toast.textContent = msg;
-  toast.style.borderColor = isError ? 'rgba(239,68,68,0.3)' : 'var(--border)';
-  clearTimeout(_toastTimer);
-  toast.classList.add('show');
-  _toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
-}
-
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded',checkConsent);
 </script>
-
 </body>
 </html>
