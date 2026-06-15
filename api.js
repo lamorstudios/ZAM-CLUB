@@ -1585,5 +1585,99 @@ ZAMApi.privacy = {
   },
 };
 
+// ──────────────────────────────────────────────────────────
+// PACKAGES (Phase 14)
+// ──────────────────────────────────────────────────────────
+ZAMApi.packages = {
+  PLANS: {
+    basic:    { id:'basic',    name:'Basic',    price:49,  currency:'€/Monat', features:['Händlerprofil','Bis zu 3 Angebote','Community-Sichtbarkeit'] },
+    premium:  { id:'premium',  name:'Premium',  price:99,  currency:'€/Monat', features:['Händlerprofil','Unbegrenzte Angebote','Events erstellen','Statistiken & Analytics','Push-Benachrichtigungen'] },
+    business: { id:'business', name:'Business', price:199, currency:'€/Monat', features:['Alles aus Premium','Hervorgehobene Platzierungen','Sponsored Deals & Events','Prioritäts-Support','Individuelle Beratung'] },
+  },
+  getMyPlan() {
+    const uid = _uid(); if (!uid) return null;
+    const c = _gLoad('contracts', []).find(c => c.merchant_id === uid && c.status === 'active');
+    return c ? this.PLANS[c.plan_id] : null;
+  },
+  canAccess(feature) {
+    const plan = this.getMyPlan(); if (!plan) return false;
+    const A = { basic:['profile','deals'], premium:['profile','deals','events','analytics','push'], business:['profile','deals','events','analytics','push','sponsored','highlights'] };
+    return (A[plan.id] || []).includes(feature);
+  },
+};
+
+// ──────────────────────────────────────────────────────────
+// CONTRACTS (Phase 14)
+// ──────────────────────────────────────────────────────────
+ZAMApi.contracts = {
+  getAll() { return _gLoad('contracts', []); },
+  getMine() { const uid = _uid(); return _gLoad('contracts', []).filter(c => c.merchant_id === uid); },
+  getActive() { const uid = _uid(); return _gLoad('contracts', []).find(c => c.merchant_id === uid && c.status === 'active'); },
+  create(planId, months = 1) {
+    const uid = _uid(); if (!uid) return { ok: false, error: 'Nicht angemeldet' };
+    const plan = ZAMApi.packages.PLANS[planId]; if (!plan) return { ok: false, error: 'Ungültiges Paket' };
+    const contracts = _gLoad('contracts', []);
+    contracts.forEach(c => { if (c.merchant_id === uid && c.status === 'active') c.status = 'cancelled'; });
+    const now = new Date(), end = new Date(now);
+    end.setMonth(end.getMonth() + months);
+    const contract = { id: _uuid(), merchant_id: uid, plan_id: planId, plan_name: plan.name, price: plan.price * months, months, status: 'trial', started_at: now.toISOString(), ends_at: end.toISOString(), created_at: now.toISOString() };
+    contracts.push(contract); _gSet('contracts', contracts);
+    return { ok: true, contract };
+  },
+  activate(contractId) {
+    const contracts = _gLoad('contracts', []), c = contracts.find(x => x.id === contractId);
+    if (!c) return { ok: false }; c.status = 'active'; _gSet('contracts', contracts); return { ok: true };
+  },
+  cancel(contractId) {
+    const contracts = _gLoad('contracts', []), c = contracts.find(x => x.id === contractId);
+    if (!c) return { ok: false }; c.status = 'cancelled'; _gSet('contracts', contracts); return { ok: true };
+  },
+  statusLabel(s) { return { active:'Aktiv', trial:'Testphase', expired:'Abgelaufen', cancelled:'Gekündigt' }[s] || s; },
+  statusColor(s) { return { active:'#22c55e', trial:'#f59e0b', expired:'#ef4444', cancelled:'rgba(255,255,255,0.3)' }[s] || '#fff'; },
+};
+
+// ──────────────────────────────────────────────────────────
+// BILLING (Phase 14)
+// ──────────────────────────────────────────────────────────
+ZAMApi.billing = {
+  getAll() { return _gLoad('invoices', []); },
+  getMine() { const uid = _uid(); return _gLoad('invoices', []).filter(i => i.merchant_id === uid); },
+  generate(contractId) {
+    const c = _gLoad('contracts', []).find(x => x.id === contractId); if (!c) return null;
+    const inv = { id: 'INV-' + Date.now().toString(36).toUpperCase(), merchant_id: c.merchant_id, contract_id: contractId, plan_name: c.plan_name, amount: c.price, status: 'pending', issued_at: new Date().toISOString(), due_at: new Date(Date.now() + 14*864e5).toISOString() };
+    const invoices = _gLoad('invoices', []); invoices.push(inv); _gSet('invoices', invoices); return inv;
+  },
+  markPaid(invoiceId) {
+    const invoices = _gLoad('invoices', []), inv = invoices.find(x => x.id === invoiceId);
+    if (inv) { inv.status = 'paid'; inv.paid_at = new Date().toISOString(); } _gSet('invoices', invoices); return inv;
+  },
+};
+
+// ──────────────────────────────────────────────────────────
+// SPONSORED (Phase 14)
+// ──────────────────────────────────────────────────────────
+ZAMApi.sponsored = {
+  boost(type, itemId, days = 7) {
+    if (!ZAMApi.packages.canAccess('sponsored')) return { ok: false, error: 'Business-Paket erforderlich' };
+    const boosts = _gLoad('sponsored_boosts', []);
+    boosts.push({ id: _uuid(), type, item_id: itemId, merchant_id: _uid(), days, starts_at: new Date().toISOString(), ends_at: new Date(Date.now() + days*864e5).toISOString(), active: true });
+    _gSet('sponsored_boosts', boosts); return { ok: true };
+  },
+  getActive(type) {
+    const now = Date.now();
+    return _gLoad('sponsored_boosts', []).filter(b => b.type === type && b.active && new Date(b.ends_at) > now);
+  },
+  isBoosted(type, itemId) { return this.getActive(type).some(b => b.item_id === itemId); },
+  getAdminStats() {
+    const contracts = _gLoad('contracts', []);
+    const active = contracts.filter(c => c.status === 'active');
+    const trial = contracts.filter(c => c.status === 'trial');
+    const revenue = active.reduce((s, c) => s + (c.price || 0), 0);
+    const plans = { basic: 0, premium: 0, business: 0 };
+    active.forEach(c => { if (plans[c.plan_id] !== undefined) plans[c.plan_id]++; });
+    return { totalContracts: contracts.length, activeContracts: active.length, trialContracts: trial.length, monthlyRevenue: revenue, plans, activeSponsorships: _gLoad('sponsored_boosts', []).filter(b => b.active).length };
+  },
+};
+
 window.ZAMApi = ZAMApi;
 window._levelLabel = _levelLabel;

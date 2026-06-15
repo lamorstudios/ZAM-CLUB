@@ -2175,3 +2175,57 @@ a.nav-tab-map { text-decoration: none; }
 .role-guard-title{font-size:1rem;font-weight:700;color:#e2e8f0;margin-bottom:6px}
 .role-guard-sub{font-size:0.78rem;color:rgba(255,255,255,0.4)}
 
+/* =============================================
+   PHASE 14: Onboarding, Packages, Billing
+   ============================================= */
+.onboarding-steps{display:flex;align-items:center;margin-bottom:28px}
+.ob-step{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:rgba(139,92,246,0.1);border:2px solid rgba(139,92,246,0.2);color:rgba(255,255,255,0.3);font-weight:700;font-size:0.9rem;position:relative;flex-shrink:0;transition:all 0.2s}
+.ob-step span{position:absolute;top:46px;font-size:0.58rem;font-weight:600;white-space:nowrap;color:rgba(255,255,255,0.3);left:50%;transform:translateX(-50%)}
+.ob-step.active{background:linear-gradient(135deg,#6d28d9,#8b5cf6);border-color:#8b5cf6;color:#fff}
+.ob-step.active span{color:#8b5cf6}
+.ob-step.done{background:rgba(34,197,94,0.15);border-color:#22c55e;color:#22c55e}
+.ob-step.done span{color:#22c55e}
+.ob-step-line{flex:1;height:2px;background:rgba(139,92,246,0.15);margin:0 6px}
+.ob-panel{display:none}
+.ob-panel.active{display:block}
+.ob-step-title{font-size:1rem;font-weight:700;color:#e2e8f0;margin-bottom:16px}
+
+.plan-card{background:var(--surface);border:1px solid rgba(139,92,246,0.15);border-radius:16px;padding:20px;margin-bottom:12px;position:relative;transition:border-color 0.2s}
+.plan-card.popular,.plan-card.selected{border-color:#8b5cf6;background:linear-gradient(135deg,rgba(109,40,217,0.1),rgba(139,92,246,0.04))}
+.plan-card-badge{position:absolute;top:-10px;right:16px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border-radius:20px;padding:2px 10px;font-size:0.62rem;font-weight:700;letter-spacing:0.05em}
+.plan-card-badge.active-badge{background:rgba(34,197,94,0.2);color:#22c55e;border:1px solid rgba(34,197,94,0.3)}
+.plan-card-name{font-size:1rem;font-weight:800;color:#e2e8f0;margin-bottom:4px}
+.plan-card-price{font-size:1.6rem;font-weight:900;color:#8b5cf6;margin-bottom:12px}
+.plan-card-price span{font-size:0.75rem;font-weight:400;color:rgba(255,255,255,0.4)}
+.plan-card-features{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.plan-card-features li{font-size:0.78rem;color:rgba(255,255,255,0.7);display:flex;align-items:center;gap:6px}
+.plan-card-features li::before{content:'✓';color:#22c55e;font-weight:700;flex-shrink:0}
+.plan-select-btn{width:100%;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:12px;padding:12px;font-size:0.85rem;font-weight:700;font-family:var(--font);cursor:pointer}
+.plan-select-btn.outline{background:none;border:1px solid rgba(139,92,246,0.4);color:#8b5cf6}
+
+.contract-card{background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px;margin-bottom:10px}
+.contract-status{display:inline-block;padding:2px 10px;border-radius:20px;font-size:0.65rem;font-weight:700;letter-spacing:0.04em}
+.contract-card-title{font-size:0.9rem;font-weight:700;color:#e2e8f0;margin-bottom:4px}
+.contract-card-meta{font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:6px}
+
+.invoice-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.invoice-row:last-child{border-bottom:none}
+.invoice-id{font-size:0.68rem;font-weight:700;color:#8b5cf6;font-family:monospace}
+.invoice-plan{font-size:0.8rem;font-weight:600;color:#e2e8f0}
+.invoice-amount{font-size:0.85rem;font-weight:800;color:#a78bfa}
+.invoice-status{font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:20px}
+.invoice-status.paid{background:rgba(34,197,94,0.15);color:#22c55e}
+.invoice-status.pending{background:rgba(245,158,11,0.15);color:#f59e0b}
+
+.sponsored-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#92400e,#d97706);color:#fff;border-radius:6px;padding:1px 6px;font-size:0.6rem;font-weight:700}
+
+.revenue-kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.revenue-kpi-card{background:var(--surface);border:1px solid rgba(139,92,246,0.15);border-radius:14px;padding:16px;text-align:center}
+.revenue-kpi-num{font-size:1.4rem;font-weight:800;color:#8b5cf6}
+.revenue-kpi-lbl{font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.4);margin-top:4px}
+.plan-dist-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.plan-dist-row:last-child{border-bottom:none}
+.plan-dist-name{font-size:0.78rem;font-weight:600;color:#e2e8f0;width:72px}
+.plan-dist-bar{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.07);overflow:hidden}
+.plan-dist-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#6d28d9,#a78bfa)}
+.plan-dist-count{font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.5);width:20px;text-align:right}

@@ -190,6 +190,17 @@ function navigateTo(pageId) {
     renderAdminDashboard();
   } else if (pageId === 'demo') {
     renderDemoMode();
+  } else if (pageId === 'merchant-onboarding') {
+    _obCurrentStep = 1;
+    obShowStep(1);
+  } else if (pageId === 'merchant-packages') {
+    renderMerchantPackages();
+  } else if (pageId === 'merchant-contracts') {
+    renderMerchantContracts();
+  } else if (pageId === 'merchant-billing') {
+    renderMerchantBilling();
+  } else if (pageId === 'admin-revenue') {
+    renderAdminRevenue();
   }
 }
 
@@ -1061,8 +1072,10 @@ function renderRoleActions() {
       </a>
       <button class="btn btn-ghost btn-full" onclick="navigateTo('admin-dashboard')" style="margin-bottom:8px">
         📊 Center Analytics
+      </button>
+      <button class="btn btn-ghost btn-full" onclick="navigateTo('admin-revenue')" style="margin-bottom:8px">
+        💰 Umsatzübersicht
       </button>`;
-    // Load unread notification count
     ZAMApi.admin.unreadCount().then(count => {
       const badge = $('#admin-notif-badge');
       if (badge && count > 0) { badge.textContent = count; badge.style.display = 'inline'; }
@@ -1074,9 +1087,21 @@ function renderRoleActions() {
       </a>
       <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-dashboard')" style="margin-bottom:8px">
         📊 Mein Dashboard
+      </button>
+      <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-packages')" style="margin-bottom:8px">
+        📦 Mein Paket
+      </button>
+      <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-contracts')" style="margin-bottom:8px">
+        📄 Verträge
+      </button>
+      <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-billing')" style="margin-bottom:8px">
+        🧾 Rechnungen
       </button>`;
   } else {
-    container.innerHTML = '';
+    container.innerHTML = `
+      <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-onboarding')" style="margin-bottom:8px">
+        🏪 Händler werden
+      </button>`;
   }
 }
 
@@ -2707,6 +2732,10 @@ function renderMerchantDashboard() {
         </div>`).join('');
     }
   }
+
+  // Sponsored section
+  const sponsoredEl = document.getElementById('merchant-sponsored');
+  if (sponsoredEl) sponsoredEl.innerHTML = renderSponsoredSection('deal') + renderSponsoredSection('event');
 }
 
 function openVoucherRedeemer() {
@@ -2822,6 +2851,244 @@ function renderAdminPushStats() {
 function _topNotifType(byType) {
   if (!byType || !Object.keys(byType).length) return '–';
   return Object.entries(byType).sort((a,b) => b[1]-a[1])[0][0];
+}
+
+// =============================================
+// Phase 14: Monetarisierung & Händler-Onboarding
+// =============================================
+
+// — Onboarding —
+let _obCurrentStep = 1;
+const _obData = {};
+
+function obShowStep(step) {
+  _obCurrentStep = step;
+  document.querySelectorAll('.ob-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById(`ob-step-${step}`);
+  if (panel) panel.classList.add('active');
+  document.querySelectorAll('.ob-step').forEach(s => {
+    const n = +s.dataset.step;
+    s.classList.toggle('active', n === step);
+    s.classList.toggle('done', n < step);
+  });
+  if (step === 3) renderObPlanCards();
+}
+
+function obNextStep(direction) {
+  const err = document.getElementById('ob-error');
+  if (err) err.style.display = 'none';
+  if (direction === 1) {
+    const name = document.getElementById('ob-name')?.value?.trim();
+    const cat  = document.getElementById('ob-category')?.value;
+    const desc = document.getElementById('ob-description')?.value?.trim();
+    if (!name || !cat || !desc) {
+      if (err) { err.textContent = 'Bitte alle Pflichtfelder ausfüllen.'; err.style.display = 'block'; }
+      return;
+    }
+    _obData.name = name; _obData.category = cat; _obData.description = desc;
+    _obData.zone = document.getElementById('ob-zone')?.value || 'mk2_1';
+    obShowStep(2);
+  } else if (direction === 2) {
+    _obData.hours   = document.getElementById('ob-hours')?.value?.trim();
+    _obData.phone   = document.getElementById('ob-phone')?.value?.trim();
+    _obData.website = document.getElementById('ob-website')?.value?.trim();
+    _obData.logo    = document.getElementById('ob-logo')?.value?.trim() || '🏪';
+    obShowStep(3);
+  } else if (direction === 0)  { obShowStep(1);
+  } else if (direction === -1) { obShowStep(2); }
+}
+
+function renderObPlanCards() {
+  const el = document.getElementById('ob-plan-cards');
+  if (!el) return;
+  el.innerHTML = Object.values(ZAMApi.packages.PLANS).map((plan, i) => `
+    <div class="plan-card ${i === 1 ? 'popular' : ''}">
+      ${i === 1 ? '<div class="plan-card-badge">⭐ Beliebt</div>' : ''}
+      <div class="plan-card-name">${plan.name}</div>
+      <div class="plan-card-price">${plan.price}€ <span>${plan.currency}</span></div>
+      <ul class="plan-card-features">${plan.features.map(f => `<li>${escHtml(f)}</li>`).join('')}</ul>
+      <button class="plan-select-btn ${i === 0 ? 'outline' : ''}" onclick="obSelectPlan('${plan.id}')">
+        ${i === 0 ? 'Kostenlos testen' : 'Paket wählen & starten'}
+      </button>
+    </div>`).join('');
+}
+
+function obSelectPlan(planId) {
+  const user = ZAMApi.auth.currentUser();
+  if (!user) { showToast('Bitte zuerst anmelden.'); return; }
+  const uid = user.id;
+
+  const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const merchants = g.merchants || [];
+  const idx = merchants.findIndex(m => m.id === uid);
+  const merchantData = { id: uid, name: _obData.name || 'Mein Shop', category: _obData.category || 'Sonstiges', description: _obData.description || '', zone: _obData.zone || 'mk2_1', hours: _obData.hours || '', phone: _obData.phone || '', website: _obData.website || '', logo: _obData.logo || '🏪', status: 'active', created_at: new Date().toISOString() };
+  if (idx >= 0) merchants[idx] = merchantData; else merchants.push(merchantData);
+  g.merchants = merchants;
+  const accounts = g.accounts || [];
+  const acc = accounts.find(a => a.id === uid);
+  if (acc) acc.role = 'merchant';
+  g.accounts = accounts;
+  localStorage.setItem('zamclub_global', JSON.stringify(g));
+
+  const u = JSON.parse(localStorage.getItem(`zamclub_u_${uid}`) || '{}');
+  u.role = 'merchant';
+  localStorage.setItem(`zamclub_u_${uid}`, JSON.stringify(u));
+  try { const s = JSON.parse(sessionStorage.getItem('zamclub_session') || '{}'); s.role = 'merchant'; sessionStorage.setItem('zamclub_session', JSON.stringify(s)); } catch {}
+
+  const res = ZAMApi.contracts.create(planId, 1);
+  if (!res.ok) { showToast('Fehler: ' + res.error); return; }
+  ZAMApi.billing.generate(res.contract.id);
+  showToast('🎉 Willkommen! Dein Händler-Profil ist angelegt.');
+  navigateTo('merchant-dashboard');
+}
+
+// — Packages Page —
+function renderMerchantPackages() {
+  const el = document.getElementById('packages-content');
+  if (!el) return;
+  const active = ZAMApi.contracts.getActive();
+  const plans = ZAMApi.packages.PLANS;
+  el.innerHTML = `
+    ${active ? `<div class="contract-card" style="margin-bottom:16px;border-color:rgba(139,92,246,0.3)">
+      <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-bottom:4px">AKTUELLES PAKET</div>
+      <div style="font-size:1.1rem;font-weight:800;color:#8b5cf6">${active.plan_name}</div>
+      <div style="margin-top:6px"><span class="contract-status" style="background:${active.status==='active'?'rgba(34,197,94,0.15)':'rgba(245,158,11,0.15)'};color:${ZAMApi.contracts.statusColor(active.status)}">${ZAMApi.contracts.statusLabel(active.status)}</span>
+      <span style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-left:8px">bis ${new Date(active.ends_at).toLocaleDateString('de-DE')}</span></div>
+    </div>` : '<p style="font-size:0.82rem;color:rgba(255,255,255,0.5);margin-bottom:16px">Kein aktives Paket. Wähle ein Paket um loszulegen.</p>'}
+    <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:12px">${active ? 'Upgrade' : 'Paket wählen'}</div>
+    ${Object.values(plans).map((plan, i) => `
+      <div class="plan-card ${plan.id === active?.plan_id ? 'selected' : ''} ${i === 1 ? 'popular' : ''}">
+        ${i === 1 && plan.id !== active?.plan_id ? '<div class="plan-card-badge">⭐ Beliebt</div>' : ''}
+        ${plan.id === active?.plan_id ? '<div class="plan-card-badge active-badge">✓ Aktiv</div>' : ''}
+        <div class="plan-card-name">${plan.name}</div>
+        <div class="plan-card-price">${plan.price}€ <span>${plan.currency}</span></div>
+        <ul class="plan-card-features">${plan.features.map(f => `<li>${escHtml(f)}</li>`).join('')}</ul>
+        ${plan.id !== active?.plan_id
+          ? `<button class="plan-select-btn ${i === 0 ? 'outline' : ''}" onclick="upgradePlan('${plan.id}')">${active ? 'Zu diesem Paket wechseln' : 'Starten'}</button>`
+          : `<div style="text-align:center;font-size:0.75rem;color:#22c55e;padding:8px 0">✓ Dein aktuelles Paket</div>`}
+      </div>`).join('')}`;
+}
+
+function upgradePlan(planId) {
+  const name = ZAMApi.packages.PLANS[planId]?.name;
+  if (!confirm(`Zu ${name}-Paket wechseln?`)) return;
+  const res = ZAMApi.contracts.create(planId, 1);
+  if (!res.ok) { showToast('Fehler: ' + res.error); return; }
+  ZAMApi.billing.generate(res.contract.id);
+  showToast('✅ Paket gewechselt zu ' + name + '!');
+  renderMerchantPackages();
+}
+
+// — Contracts Page —
+function renderMerchantContracts() {
+  const el = document.getElementById('contracts-content');
+  if (!el) return;
+  const contracts = ZAMApi.contracts.getMine();
+  if (!contracts.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📄</div><div class="empty-state-title">Keine Verträge</div><div class="empty-state-sub">Du hast noch kein Paket gebucht.</div></div>';
+    return;
+  }
+  el.innerHTML = contracts.slice().reverse().map(c => `
+    <div class="contract-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div><div class="contract-card-title">${escHtml(c.plan_name)}</div>
+        <div class="contract-card-meta">${new Date(c.started_at).toLocaleDateString('de-DE')} – ${new Date(c.ends_at).toLocaleDateString('de-DE')} · ${c.months} Monat${c.months>1?'e':''}</div></div>
+        <span class="contract-status" style="background:${c.status==='active'?'rgba(34,197,94,0.15)':c.status==='trial'?'rgba(245,158,11,0.15)':'rgba(239,68,68,0.1)'};color:${ZAMApi.contracts.statusColor(c.status)};white-space:nowrap">${ZAMApi.contracts.statusLabel(c.status)}</span>
+      </div>
+      <div style="font-size:0.85rem;font-weight:700;color:#8b5cf6;margin-top:10px">${c.price}€ gesamt</div>
+      ${c.status==='trial' ? `<div style="margin-top:10px"><button class="btn btn-primary" style="padding:8px 16px;font-size:0.75rem" onclick="activateContract('${c.id}')">Jetzt aktivieren</button></div>` : ''}
+      ${c.status==='active' ? `<div style="margin-top:10px"><button class="btn btn-ghost" style="padding:8px 16px;font-size:0.75rem;color:rgba(239,68,68,0.7);border-color:rgba(239,68,68,0.2)" onclick="cancelContract('${c.id}')">Kündigen</button></div>` : ''}
+    </div>`).join('');
+}
+
+function activateContract(id) { ZAMApi.contracts.activate(id); showToast('✅ Vertrag aktiviert!'); renderMerchantContracts(); }
+function cancelContract(id) { if (!confirm('Vertrag wirklich kündigen?')) return; ZAMApi.contracts.cancel(id); showToast('Vertrag gekündigt.'); renderMerchantContracts(); }
+
+// — Billing Page —
+function renderMerchantBilling() {
+  const el = document.getElementById('billing-content');
+  if (!el) return;
+  const invoices = ZAMApi.billing.getMine();
+  const active = ZAMApi.contracts.getActive();
+  if (!invoices.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🧾</div><div class="empty-state-title">Keine Rechnungen</div><div class="empty-state-sub">Rechnungen erscheinen nach der Paket-Buchung.</div></div>';
+    return;
+  }
+  el.innerHTML = `
+    ${active ? `<div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:14px;margin-bottom:16px">
+      <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-bottom:4px">LAUFENDES PAKET</div>
+      <div style="font-size:0.95rem;font-weight:700;color:#c4b5fd">${escHtml(active.plan_name)} — ${ZAMApi.packages.PLANS[active.plan_id]?.price||0}€/Monat</div>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:4px">Status: <span style="color:${ZAMApi.contracts.statusColor(active.status)}">${ZAMApi.contracts.statusLabel(active.status)}</span></div>
+    </div>` : ''}
+    <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:10px">Rechnungshistorie</div>
+    <div style="background:var(--surface);border-radius:14px;padding:0 14px">
+      ${invoices.slice().reverse().map(inv => `
+        <div class="invoice-row">
+          <div><div class="invoice-id">${inv.id}</div><div class="invoice-plan">${escHtml(inv.plan_name)}</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.3)">${new Date(inv.issued_at).toLocaleDateString('de-DE')}</div></div>
+          <div style="margin-left:auto;text-align:right">
+            <div class="invoice-amount">${inv.amount}€</div>
+            <span class="invoice-status ${inv.status}">${inv.status==='paid'?'Bezahlt':'Ausstehend'}</span>
+            ${inv.status==='pending' ? `<br><button style="font-size:0.65rem;color:#8b5cf6;background:none;border:none;cursor:pointer;margin-top:4px;font-family:var(--font)" onclick="markInvoicePaid('${inv.id}')">Als bezahlt markieren</button>` : ''}
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function markInvoicePaid(id) { ZAMApi.billing.markPaid(id); showToast('✅ Rechnung als bezahlt markiert.'); renderMerchantBilling(); }
+
+// — Merchant Dashboard: Sponsored —
+function renderSponsoredSection(type) {
+  const items = type === 'deal' ? ZAMApi.deals.list() : ZAMApi.events.list();
+  const uid = ZAMApi.auth.currentUser()?.id;
+  const myItems = items.filter(i => i.merchant_id === uid);
+  if (!myItems.length) return `<div class="dash-empty">Keine eigenen ${type==='deal'?'Deals':'Events'} vorhanden</div>`;
+  const canBoost = ZAMApi.packages.canAccess('sponsored');
+  return myItems.map(item => {
+    const boosted = ZAMApi.sponsored.isBoosted(type, item.id);
+    return `<div class="dash-row">
+      <div class="dash-row-icon">${type==='deal'?'🏷️':'🎉'}</div>
+      <div class="dash-row-main"><div class="dash-row-name">${escHtml(item.title||item.name||'')}</div>
+      <div class="dash-row-sub">${boosted ? '<span class="sponsored-badge">⚡ Aktiver Boost</span>' : 'Kein Boost aktiv'}</div></div>
+      ${canBoost && !boosted ? `<button style="font-size:0.7rem;background:linear-gradient(135deg,#92400e,#d97706);color:#fff;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:var(--font);font-weight:700;flex-shrink:0" onclick="boostItem('${type}','${item.id}')">Boost</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function boostItem(type, itemId) {
+  const res = ZAMApi.sponsored.boost(type, itemId, 7);
+  if (!res.ok) { showToast('❌ ' + (res.error || 'Fehler')); return; }
+  showToast('⚡ Boost aktiviert – 7 Tage Spotlight!');
+  renderMerchantDashboard();
+}
+
+// — Admin Revenue Overview —
+function renderAdminRevenue() {
+  const el = document.getElementById('revenue-content');
+  if (!el) return;
+  const stats = ZAMApi.sponsored.getAdminStats();
+  const contracts = ZAMApi.contracts.getAll();
+  el.innerHTML = `
+    <div class="revenue-kpi-grid">
+      <div class="revenue-kpi-card"><div class="revenue-kpi-num">${stats.activeContracts}</div><div class="revenue-kpi-lbl">Aktive Verträge</div></div>
+      <div class="revenue-kpi-card"><div class="revenue-kpi-num">${stats.monthlyRevenue}€</div><div class="revenue-kpi-lbl">Monatl. Umsatz</div></div>
+      <div class="revenue-kpi-card"><div class="revenue-kpi-num">${stats.trialContracts}</div><div class="revenue-kpi-lbl">Testphase</div></div>
+      <div class="revenue-kpi-card"><div class="revenue-kpi-num">${stats.activeSponsorships}</div><div class="revenue-kpi-lbl">Aktive Boosts</div></div>
+    </div>
+    <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:12px">Paket-Verteilung</div>
+    <div style="background:var(--surface);border-radius:14px;padding:8px 14px;margin-bottom:16px">
+      ${Object.entries(ZAMApi.packages.PLANS).map(([id, plan]) => {
+        const count = stats.plans[id] || 0, maxC = Math.max(...Object.values(stats.plans), 1);
+        return `<div class="plan-dist-row"><div class="plan-dist-name">${plan.name}</div><div class="plan-dist-bar"><div class="plan-dist-fill" style="width:${(count/maxC*100).toFixed(0)}%"></div></div><div class="plan-dist-count">${count}</div></div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:12px">Alle Verträge (${contracts.length})</div>
+    <div style="background:var(--surface);border-radius:14px;padding:0 14px">
+      ${contracts.length ? contracts.slice().reverse().map(c => `
+        <div class="invoice-row">
+          <div><div style="font-size:0.78rem;font-weight:600;color:#e2e8f0">${escHtml(c.plan_name)}</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.3)">${new Date(c.created_at).toLocaleDateString('de-DE')} · ${c.months} Mon.</div></div>
+          <div style="margin-left:auto;text-align:right"><div style="font-size:0.85rem;font-weight:700;color:#a78bfa">${c.price}€</div><span class="contract-status" style="background:${c.status==='active'?'rgba(34,197,94,0.15)':c.status==='trial'?'rgba(245,158,11,0.15)':'rgba(239,68,68,0.1)'};color:${ZAMApi.contracts.statusColor(c.status)}">${ZAMApi.contracts.statusLabel(c.status)}</span></div>
+        </div>`).join('') : '<div style="padding:16px;font-size:0.78rem;color:rgba(255,255,255,0.3)">Noch keine Verträge</div>'}
+    </div>`;
 }
 
 // =============================================

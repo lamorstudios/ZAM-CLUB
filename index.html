@@ -814,6 +814,111 @@
     <div id="merchant-vouchers" class="dash-table-wrap"></div>
     <button class="btn-dash-action" onclick="openVoucherRedeemer()">QR-Code einlösen</button>
   </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">⚡ Sponsored Boosts</h3>
+    <div id="merchant-sponsored" class="dash-table-wrap"></div>
+    <button class="btn-dash-action" onclick="navigateTo('merchant-packages')">📦 Paket verwalten</button>
+  </div>
+  <div style="display:flex;gap:8px;padding:0 16px 16px">
+    <button class="btn-dash-action" style="flex:1" onclick="navigateTo('merchant-contracts')">📄 Verträge</button>
+    <button class="btn-dash-action" style="flex:1" onclick="navigateTo('merchant-billing')">🧾 Rechnungen</button>
+  </div>
+</div>
+
+<!-- =====================
+     PHASE 14: NEUE SEITEN
+========================== -->
+
+<!-- Händler Onboarding -->
+<div id="page-merchant-onboarding" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('profile')">←</button>
+    <h1 class="page-title">Händler werden</h1>
+  </div>
+  <div style="padding:20px 16px">
+    <div class="onboarding-steps">
+      <div class="ob-step active" data-step="1">1<span>Profil</span></div>
+      <div class="ob-step-line"></div>
+      <div class="ob-step" data-step="2">2<span>Details</span></div>
+      <div class="ob-step-line"></div>
+      <div class="ob-step" data-step="3">3<span>Paket</span></div>
+    </div>
+    <div id="ob-step-1" class="ob-panel active">
+      <h3 class="ob-step-title">Händlerprofil anlegen</h3>
+      <div class="input-group"><label class="input-label">Shop-Name *</label><input type="text" id="ob-name" class="input-field" placeholder="z.B. Mein Shop Freiham"/></div>
+      <div class="input-group"><label class="input-label">Kategorie *</label>
+        <select id="ob-category" class="input-field" style="background:var(--surface-2);color:#e2e8f0">
+          <option value="">Bitte wählen…</option>
+          <option>Mode</option><option>Elektronik</option><option>Gastronomie</option><option>Drogerie</option><option>Sport</option><option>Lebensmittel</option><option>Bücher &amp; Medien</option><option>Schmuck &amp; Accessoires</option><option>Kosmetik &amp; Beauty</option><option>Dienstleistungen</option><option>Sonstiges</option>
+        </select>
+      </div>
+      <div class="input-group"><label class="input-label">Kurzbeschreibung *</label><textarea id="ob-description" class="input-field" rows="3" placeholder="Was macht euren Shop besonders?" maxlength="300"></textarea></div>
+      <div class="input-group"><label class="input-label">Zone im ZAM</label>
+        <select id="ob-zone" class="input-field" style="background:var(--surface-2);color:#e2e8f0">
+          <option value="mk2_1">MK 2(1) – Nahversorgung / Gastro</option>
+          <option value="mk2_2">MK 2(2) – Zentrenrelevante Sortimente</option>
+          <option value="mk2_3">MK 2(3) – Zentrenrelevante Sortimente</option>
+          <option value="mk2_4">MK 2(4) – Nahversorgung</option>
+          <option value="plaza">Mahatma-Gandhi-Platz</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="obNextStep(1)" style="margin-top:8px">Weiter →</button>
+    </div>
+    <div id="ob-step-2" class="ob-panel">
+      <h3 class="ob-step-title">Öffnungszeiten &amp; Kontakt</h3>
+      <div class="input-group"><label class="input-label">Öffnungszeiten</label><input type="text" id="ob-hours" class="input-field" placeholder="Mo–Sa 09:00–20:00"/></div>
+      <div class="input-group"><label class="input-label">Telefon (optional)</label><input type="tel" id="ob-phone" class="input-field" placeholder="+49 89 …"/></div>
+      <div class="input-group"><label class="input-label">Website (optional)</label><input type="url" id="ob-website" class="input-field" placeholder="https://meinshop.de"/></div>
+      <div class="input-group"><label class="input-label">Logo (Emoji, 1–2 Zeichen)</label><input type="text" id="ob-logo" class="input-field" placeholder="🏪" maxlength="2" style="font-size:1.5rem;text-align:center"/></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-ghost btn-full" onclick="obNextStep(0)">← Zurück</button>
+        <button class="btn btn-primary btn-full" onclick="obNextStep(2)">Weiter →</button>
+      </div>
+    </div>
+    <div id="ob-step-3" class="ob-panel">
+      <h3 class="ob-step-title">Paket wählen</h3>
+      <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);margin-bottom:16px">14 Tage kostenlos testen – keine Kreditkarte nötig.</p>
+      <div id="ob-plan-cards"></div>
+      <button class="btn btn-ghost btn-full" onclick="obNextStep(-1)" style="margin-top:8px">← Zurück</button>
+    </div>
+    <div class="auth-error" id="ob-error" style="display:none;margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- Pakete & Upgrades -->
+<div id="page-merchant-packages" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('merchant-dashboard')">←</button>
+    <h1 class="page-title">Mein Paket</h1>
+  </div>
+  <div style="padding:16px" id="packages-content"></div>
+</div>
+
+<!-- Verträge -->
+<div id="page-merchant-contracts" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('merchant-dashboard')">←</button>
+    <h1 class="page-title">Verträge</h1>
+  </div>
+  <div style="padding:16px" id="contracts-content"></div>
+</div>
+
+<!-- Rechnungen -->
+<div id="page-merchant-billing" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('merchant-dashboard')">←</button>
+    <h1 class="page-title">Rechnungen</h1>
+  </div>
+  <div style="padding:16px" id="billing-content"></div>
+</div>
+
+<!-- Admin Umsatzübersicht -->
+<div id="page-admin-revenue" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('profile')">←</button>
+    <h1 class="page-title">Umsatzübersicht</h1>
+  </div>
+  <div style="padding:16px" id="revenue-content"></div>
 </div>
 
 <!-- =====================
