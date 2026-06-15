@@ -1219,12 +1219,9 @@ function openChatRoom(roomId, roomName) {
   ZAMApi.chat.markRoomRead(roomId);
   _updateChatUnreadBadge();
 
+  _lockBodyScroll();
   view.classList.add('open');
-  // Apply visual viewport height if keyboard is already open
-  if (window.visualViewport) {
-    view.style.height = window.visualViewport.height + 'px';
-    view.style.top = window.visualViewport.offsetTop + 'px';
-  }
+  _applyChatViewport(view);
   setTimeout(() => {
     $('#chat-input')?.focus();
     const msgs = $('#chat-messages');
@@ -1239,6 +1236,7 @@ function openChatRoom(roomId, roomName) {
 function closeChatRoom() {
   resetChatHeight('#chat-room-view');
   $('#chat-room-view')?.classList.remove('open');
+  _unlockBodyScroll();
   clearInterval(_chatPollTimer);
   _chatPollTimer = null;
   _currentRoomId = null;
@@ -2104,11 +2102,9 @@ function openPrivateChat(userId, userName, initials, avatarUrl) {
 
   const pcView = $('#private-chat-view');
   if (pcView) {
+    _lockBodyScroll();
     pcView.classList.add('open');
-    if (window.visualViewport) {
-      pcView.style.height = window.visualViewport.height + 'px';
-      pcView.style.top = window.visualViewport.offsetTop + 'px';
-    }
+    _applyChatViewport(pcView);
   }
   setTimeout(() => {
     $('#pc-input')?.focus();
@@ -2124,6 +2120,7 @@ function openPrivateChat(userId, userName, initials, avatarUrl) {
 function closePrivateChat() {
   resetChatHeight('#private-chat-view');
   $('#private-chat-view')?.classList.remove('open');
+  _unlockBodyScroll();
   clearInterval(_pcPollTimer);
   _pcPollTimer       = null;
   _pcCurrentChatId   = null;
@@ -2185,31 +2182,69 @@ function sendPrivateMessage() {
   _pcRenderMessages();
 }
 
-// ── Mobile keyboard-safe chat layout (VisualViewport API) ──
+// ── Mobile keyboard-safe chat layout ──
+// Strategy:
+//   1. Lock body scroll when chat is open (prevents iOS from shifting fixed elements)
+//   2. Use VisualViewport API to shrink chat container exactly to visible area
+//   3. Translate chat upward to stay in view (avoids top/transform conflict)
+
+let _bodyScrollY = 0;
+
+function _lockBodyScroll() {
+  _bodyScrollY = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${_bodyScrollY}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.overflow = 'hidden';
+}
+
+function _unlockBodyScroll() {
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.overflow = '';
+  window.scrollTo(0, _bodyScrollY);
+}
+
+function _applyChatViewport(el) {
+  if (!el) return;
+  const vv = window.visualViewport;
+  if (!vv) return;
+  // Height = visual viewport height (excludes keyboard)
+  // Offset compensates for any residual scroll/zoom shift
+  el.style.height = vv.height + 'px';
+  // We keep top:0 via CSS; use translateY to shift up if viewport scrolled
+  // (on iOS, visualViewport.offsetTop > 0 when page scrolled under keyboard)
+  el.style.setProperty('--chat-vv-offset', `-${vv.offsetTop}px`);
+}
+
+function _resetChatViewport(el) {
+  if (!el) return;
+  el.style.height = '';
+  el.style.removeProperty('--chat-vv-offset');
+}
+
 function initChatKeyboardFix() {
   if (!window.visualViewport) return;
-  const CHAT_SELECTORS = ['#chat-room-view', '#private-chat-view'];
-  function applyHeight() {
-    const vvh = window.visualViewport.height;
-    const vvt = window.visualViewport.offsetTop;
-    CHAT_SELECTORS.forEach(sel => {
-      const el = document.querySelector(sel);
+  function onVVChange() {
+    [document.getElementById('chat-room-view'), document.getElementById('private-chat-view')].forEach(el => {
       if (el && el.classList.contains('open')) {
-        el.style.height = vvh + 'px';
-        el.style.top = vvt + 'px';
-        // Scroll to bottom of messages on keyboard open
+        _applyChatViewport(el);
+        // Keep messages scrolled to bottom when keyboard resizes
         const msgs = el.querySelector('.chat-messages, .private-chat-messages');
         if (msgs) requestAnimationFrame(() => { msgs.scrollTop = msgs.scrollHeight; });
       }
     });
   }
-  window.visualViewport.addEventListener('resize', applyHeight);
-  window.visualViewport.addEventListener('scroll', applyHeight);
+  window.visualViewport.addEventListener('resize', onVVChange);
+  window.visualViewport.addEventListener('scroll', onVVChange);
 }
 
 function resetChatHeight(selector) {
   const el = document.querySelector(selector);
-  if (el) { el.style.height = ''; el.style.top = ''; }
+  if (el) _resetChatViewport(el);
 }
 
 function initPrivateChat() {
