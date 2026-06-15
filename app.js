@@ -3634,7 +3634,7 @@ function onLogoTap() {
 // ── AI Chat State ──
 let _aiMessages = []; // { role: 'bot'|'user', text, time }
 
-function renderAIConcierge() {
+function renderAIConcierge(scrollToBottom) {
   const win = $('#ai-chat-window');
   if (!win) return;
   // Preserve welcome bubble, append messages
@@ -3654,7 +3654,7 @@ function renderAIConcierge() {
     }
     win.appendChild(div);
   });
-  win.scrollTop = win.scrollHeight;
+  if (scrollToBottom) win.scrollTop = win.scrollHeight;
 }
 
 function aiSend() {
@@ -3668,7 +3668,7 @@ function aiSend() {
 
 function aiAsk(question) {
   _aiMessages.push({ role: 'user', text: question });
-  renderAIConcierge();
+  renderAIConcierge(true);
   // Show typing indicator
   const win = $('#ai-chat-window');
   let typingEl = null;
@@ -3684,7 +3684,7 @@ function aiAsk(question) {
     if (typingEl) typingEl.remove();
     const answer = aiGenerateAnswer(question);
     _aiMessages.push({ role: 'bot', html: answer });
-    renderAIConcierge();
+    renderAIConcierge(true);
   }, 800 + Math.random() * 600);
 }
 

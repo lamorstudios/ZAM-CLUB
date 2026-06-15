@@ -983,14 +983,14 @@
 <!-- =====================
      PHASE 17: ZAM KI CONCIERGE PAGE
 ========================== -->
-<div id="page-ai" class="page">
-  <div class="page-header">
+<div id="page-ai" class="page" style="height:100dvh;max-height:100dvh;overflow:hidden;padding-bottom:0;display:flex;flex-direction:column">
+  <div class="page-header" style="flex-shrink:0">
     <button class="back-btn" onclick="navigateTo('home')">←</button>
     <h1 class="page-title">ZAM Assistent 🤖</h1>
   </div>
 
   <!-- Chat Window -->
-  <div class="ai-chat-window" id="ai-chat-window">
+  <div class="ai-chat-window" id="ai-chat-window" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;min-height:0">
     <!-- Welcome bubble -->
     <div class="ai-bubble ai-bubble-bot">
       <div class="ai-avatar">Z</div>
@@ -1002,7 +1002,7 @@
   </div>
 
   <!-- Quick Suggestions -->
-  <div class="ai-suggestions" id="ai-suggestions">
+  <div class="ai-suggestions" id="ai-suggestions" style="flex-shrink:0">
     <button class="ai-chip" onclick="aiAsk('Was kann ich heute im ZAM machen?')">Was kann ich heute machen?</button>
     <button class="ai-chip" onclick="aiAsk('Wo gibt es aktuell Angebote?')">Aktuelle Angebote</button>
     <button class="ai-chip" onclick="aiAsk('Welche Events laufen heute?')">Events heute</button>
@@ -1012,7 +1012,7 @@
   </div>
 
   <!-- Input -->
-  <div class="ai-input-bar">
+  <div class="ai-input-bar" style="flex-shrink:0;padding-bottom:max(16px,env(safe-area-inset-bottom,16px))">
     <input type="text" id="ai-input" class="ai-input-field" placeholder="Frag den ZAM Assistenten…" maxlength="200" autocomplete="off" onkeydown="if(event.key==='Enter')aiSend()" />
     <button class="ai-send-btn" onclick="aiSend()" aria-label="Senden">➤</button>
   </div>
