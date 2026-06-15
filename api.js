@@ -1,14 +1,9 @@
 /**
- * ZAM Club — API-Abstraktionsschicht
+ * ZAM Club — API-Abstraktionsschicht v3
  * ============================================================
- * Alle Datenzugriffe laufen über window.ZAMApi.
- * Jetzt: localStorage + ZAMData als Demo-Backend.
- * Später: Supabase — kommentierte Aufrufe stehen bei jeder Methode.
- *
- * Supabase aktivieren:
- *   1. Drei Zeilen unten einkommentieren
- *   2. Pro Methode den "// Supabase:"-Block einkommentieren
- *      und den "// Demo:"-Block entfernen
+ * Demo-Backend: localStorage mit echtem Multi-User-System.
+ * Jede Methode enthält den Supabase-Äquivalent als Kommentar.
+ * Migration: 4 Zeilen unten einkommentieren + Demo-Blöcke ersetzen.
  * ============================================================
  */
 
@@ -16,36 +11,68 @@
 
 // ── Supabase Init (auskommentiert bis Zugangsdaten vorhanden) ──
 // import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-// const SUPABASE_URL     = 'https://DEIN-PROJEKT.supabase.co'
+// const SUPABASE_URL      = 'https://DEIN-PROJEKT.supabase.co'
 // const SUPABASE_ANON_KEY = 'eyJ...'
 // const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-// ── Demo-Kommentar-Posts (in memory, reset bei Reload) ────────
+// ============================================================
+// Interne Helfer
+// ============================================================
+
+// Kommentare in memory (reset bei Reload — in Supabase persistent)
 const _commentStore = {};
-const _notifStore   = [];
 
+function _uuid() { return 'demo_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function _now()  { return new Date().toISOString(); }
 function _todayKey() { return new Date().toISOString().slice(0, 10); }
-function _uuid()     { return 'demo_' + Math.random().toString(36).slice(2, 11); }
-function _now()      { return new Date().toISOString(); }
 
-function _loadStore(key, fallback) {
-  try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback; }
-  catch { return fallback; }
+// Haupt-Nutzer-Namespace (per User-ID isoliert)
+const _GLOBAL_KEY = 'zamclub_global';   // Accounts-Registry
+const _KEY_PREFIX = 'zamclub_u_';       // Pro-Nutzer-Daten
+
+function _gLoad(k, fb = null) {
+  try { return JSON.parse(localStorage.getItem(_GLOBAL_KEY) || '{}')[k] ?? fb; }
+  catch { return fb; }
 }
-function _saveStore(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+function _gSet(k, v) {
+  try {
+    const d = JSON.parse(localStorage.getItem(_GLOBAL_KEY) || '{}');
+    d[k] = v; localStorage.setItem(_GLOBAL_KEY, JSON.stringify(d));
+  } catch {}
 }
 
-// Haupt-localStorage-Key
-const _KEY = 'zamclub_v1';
-function _s(k, fb = null) {
-  const d = _loadStore(_KEY, {});
-  return d[k] ?? fb;
+// Pro-Nutzer-Store (Punkte, Stats, gespeicherte Items — getrennt pro Account)
+function _uKey(userId) { return _KEY_PREFIX + (userId || 'guest'); }
+function _uLoad(userId, k, fb = null) {
+  try { return JSON.parse(localStorage.getItem(_uKey(userId)) || '{}')[k] ?? fb; }
+  catch { return fb; }
 }
-function _set(k, v) {
-  const d = _loadStore(_KEY, {});
-  d[k] = v;
-  _saveStore(_KEY, d);
+function _uSet(userId, k, v) {
+  try {
+    const d = JSON.parse(localStorage.getItem(_uKey(userId)) || '{}');
+    d[k] = v; localStorage.setItem(_uKey(userId), JSON.stringify(d));
+  } catch {}
+}
+
+// Aktuellen User-ID aus Session holen
+function _uid() {
+  const u = ZAMApi.auth.currentUser();
+  return u ? u.id : null;
+}
+// Shorthand: lade/setze aktuellen Nutzer-Store
+function _s(k, fb = null) { return _uLoad(_uid(), k, fb); }
+function _set(k, v)        { _uSet(_uid(), k, v); }
+
+// Kompatibilität: altes zamclub_v1 auslesen (einmalig migrieren)
+function _migrateLegacy(userId) {
+  try {
+    const legacy = JSON.parse(localStorage.getItem('zamclub_v1') || '{}');
+    if (Object.keys(legacy).length === 0) return;
+    const existing = JSON.parse(localStorage.getItem(_uKey(userId)) || '{}');
+    if (Object.keys(existing).length === 0) {
+      localStorage.setItem(_uKey(userId), JSON.stringify(legacy));
+    }
+  } catch {}
 }
 
 // ============================================================
@@ -56,73 +83,104 @@ const ZAMApi = {
   // ──────────────────────────────────────────────────────────
   auth: {
 
-    /**
-     * Aktuellen Nutzer zurückgeben oder null.
-     * Supabase: const { data: { user } } = await supabase.auth.getUser()
-     *           + profiles.select('*').eq('id', user.id).single()
-     */
+    /** Session des aktuellen Nutzers
+     * Supabase: const { data: { user } } = await supabase.auth.getUser() */
     currentUser() {
-      // Demo:
-      const stored = _s('auth_user', null);
-      if (stored) return stored;
-      return null;
+      return _gLoad('session_user', null);
     },
 
-    isLoggedIn() {
-      return this.currentUser() !== null;
-    },
+    isLoggedIn() { return this.currentUser() !== null; },
 
     /**
-     * Einloggen.
+     * Einloggen mit E-Mail + Passwort.
      * Supabase: const { data, error } = await supabase.auth.signInWithPassword({ email, password })
      */
     async signIn(email, password) {
-      // Demo: akzeptiert beliebige Kombination, loggt Demo-User ein
       if (!email || !password) throw new Error('E-Mail und Passwort erforderlich.');
+      // Demo: Accounts-Registry prüfen
+      const accounts = _gLoad('accounts', []);
+      const account  = accounts.find(a => a.email.toLowerCase() === email.toLowerCase() && a.password === password);
+      if (!account) throw new Error('E-Mail oder Passwort falsch.');
+      _gSet('session_user', account.profile);
+      ZAMData.currentUser = { ...ZAMData.currentUser, ...account.profile };
+      _migrateLegacy(account.profile.id);
+      return { user: account.profile };
+    },
+
+    /**
+     * Demo-Schnelllogin (für Präsentationen, kein Passwort nötig).
+     */
+    async demoLogin() {
       const profile = {
-        id:                     'usr_001',
-        email,
+        id:                     'demo_julia',
+        email:                  'julia@zamclub.de',
         display_name:           ZAMData.currentUser.display_name,
         username:               ZAMData.currentUser.username,
         initials:               ZAMData.currentUser.initials,
         avatar_url:             null,
+        role:                   'user',
         level:                  ZAMData.currentUser.level,
-        points:                 _s('points', ZAMData.currentUser.points),
+        points:                 _uLoad('demo_julia', 'points', ZAMData.currentUser.points),
         member_since_formatted: ZAMData.currentUser.member_since_formatted,
-        stats:                  _s('stats', ZAMData.currentUser.stats),
+        stats:                  _uLoad('demo_julia', 'stats', ZAMData.currentUser.stats),
       };
-      _set('auth_user', profile);
-      // Supabase würde hier das Session-Token speichern (automatisch über supabase-js).
+      _gSet('session_user', profile);
+      ZAMData.currentUser = { ...ZAMData.currentUser, ...profile };
+      _migrateLegacy('demo_julia');
       return { user: profile };
     },
 
     /**
-     * Registrieren.
-     * Supabase: await supabase.auth.signUp({ email, password, options: { data: { display_name, username } } })
-     *           → Trigger handle_new_user() legt Profil automatisch an
+     * Registrieren — legt neuen Account an.
+     * Supabase: await supabase.auth.signUp({ email, password, options:{ data:{ display_name, username } } })
+     *           Trigger fn_handle_new_user() legt Profil automatisch an.
      */
     async signUp(email, password, username, displayName) {
       if (!email || !password || !username || !displayName)
         throw new Error('Alle Felder ausfüllen.');
-      if (password.length < 6) throw new Error('Passwort muss mindestens 6 Zeichen lang sein.');
+      if (password.length < 6)
+        throw new Error('Passwort muss mindestens 6 Zeichen lang sein.');
+
+      const cleanUsername = username.replace(/^@/, '').replace(/[^a-zA-Z0-9_.]/g, '');
+      if (cleanUsername.length < 3)
+        throw new Error('Benutzername muss mindestens 3 Zeichen haben (nur Buchstaben, Zahlen, _ erlaubt).');
+
+      const accounts = _gLoad('accounts', []);
+      if (accounts.find(a => a.email.toLowerCase() === email.toLowerCase()))
+        throw new Error('Diese E-Mail-Adresse ist bereits registriert.');
+      if (accounts.find(a => a.profile.username.toLowerCase() === ('@' + cleanUsername).toLowerCase()))
+        throw new Error('Dieser Benutzername ist bereits vergeben.');
 
       const parts    = displayName.trim().split(' ');
-      const initials = (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase();
+      const initials = ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || displayName.slice(0, 2).toUpperCase();
       const profile  = {
         id:                     _uuid(),
         email,
-        display_name:           displayName,
-        username:               '@' + username.replace(/^@/, ''),
+        display_name:           displayName.trim(),
+        username:               '@' + cleanUsername,
         initials,
         avatar_url:             null,
+        role:                   'user',
         level:                  'bronze',
-        points:                 0,
+        points:                 50,    // Willkommens-Bonus
         member_since_formatted: 'Mitglied seit ' + new Date().toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }),
         stats:                  { visits: 0, events_attended: 0, deals_used: 0 },
       };
-      _set('auth_user', profile);
-      _set('points', 0);
-      _set('stats', profile.stats);
+
+      accounts.push({ email, password, profile });
+      _gLoad('accounts') !== undefined; // ensure global initialized
+      _gSet('accounts', accounts);
+      _gSet('session_user', profile);
+
+      // Willkommens-Bonus in Punkte-Log
+      _uSet(profile.id, 'points', 50);
+      _uSet(profile.id, 'points_log', [{
+        id: _uuid(), points: 50, action: 'welcome_bonus',
+        description: '🎉 Willkommen im ZAM Club!', created_at: _now(),
+      }]);
+      _uSet(profile.id, 'stats', profile.stats);
+
+      ZAMData.currentUser = { ...ZAMData.currentUser, ...profile };
       return { user: profile };
     },
 
@@ -131,49 +189,66 @@ const ZAMApi = {
      * Supabase: await supabase.auth.signOut()
      */
     async signOut() {
-      // Demo: Auth-User aus localStorage löschen
-      const d = _loadStore(_KEY, {});
-      delete d.auth_user;
-      _saveStore(_KEY, d);
-      // ZAMData auf Demo-Nutzer zurücksetzen
+      _gSet('session_user', null);
       ZAMData.currentUser = ZAMData.profiles[0];
     },
 
     /**
      * Passwort-Reset-Mail senden.
-     * Supabase: await supabase.auth.resetPasswordForEmail(email, { redirectTo: '...' })
+     * Supabase: await supabase.auth.resetPasswordForEmail(email, { redirectTo })
      */
     async resetPassword(email) {
       if (!email) throw new Error('E-Mail erforderlich.');
-      // Demo: tut nichts, simuliert Erfolg
+      const accounts = _gLoad('accounts', []);
+      if (!accounts.find(a => a.email.toLowerCase() === email.toLowerCase()))
+        throw new Error('Keine Konto mit dieser E-Mail gefunden.');
+      // Demo: zeige Erfolgsmeldung (in Supabase wird echte Mail versendet)
       return { success: true };
     },
 
     /**
-     * Nutzerprofil aktualisieren.
+     * Profil aktualisieren.
      * Supabase: await supabase.from('profiles').update(data).eq('id', userId)
      */
     async updateProfile(data) {
       const user = this.currentUser();
       if (!user) throw new Error('Nicht eingeloggt.');
+
+      // Username-Eindeutigkeit prüfen
+      if (data.username) {
+        const clean = ('@' + data.username.replace(/^@/, '').replace(/[^a-zA-Z0-9_.]/g, ''));
+        const accounts = _gLoad('accounts', []);
+        if (accounts.find(a => a.profile.username.toLowerCase() === clean.toLowerCase() && a.profile.id !== user.id))
+          throw new Error('Dieser Benutzername ist bereits vergeben.');
+        data.username = clean;
+        data.initials = ((data.display_name || user.display_name).trim().split(' '))
+          .slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
+      }
+
       const updated = { ...user, ...data };
-      _set('auth_user', updated);
-      ZAMData.currentUser = { ...ZAMData.currentUser, ...data };
+      _gSet('session_user', updated);
+      ZAMData.currentUser = { ...ZAMData.currentUser, ...updated };
+
+      // In Accounts-Registry synchronisieren
+      const accounts = _gLoad('accounts', []);
+      const idx = accounts.findIndex(a => a.profile.id === user.id);
+      if (idx !== -1) {
+        accounts[idx].profile = updated;
+        _gSet('accounts', accounts);
+      }
       return updated;
     },
 
     /**
-     * Avatar hochladen (Vorbereitung).
-     * Supabase: await supabase.storage.from('avatars').upload(`${userId}.jpg`, file)
-     *           const url = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl
-     *           await supabase.from('profiles').update({ avatar_url: url }).eq('id', userId)
+     * Avatar hochladen (DataURL für Demo, Supabase Storage später).
+     * Supabase: await supabase.storage.from('avatars').upload(`${userId}/avatar.jpg`, file)
      */
     async uploadAvatar(file) {
-      // Demo: DataURL als avatar_url speichern
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          this.updateProfile({ avatar_url: e.target.result }).then(resolve).catch(reject);
+        reader.onload = async (e) => {
+          await this.updateProfile({ avatar_url: e.target.result });
+          resolve(e.target.result);
         };
         reader.onerror = reject;
         reader.readAsDataURL(file);
@@ -187,36 +262,52 @@ const ZAMApi = {
   posts: {
 
     /**
-     * Alle freigegebenen Posts laden.
-     * Supabase: const { data } = await supabase
-     *   .from('posts').select('*, profiles(*)')
-     *   .eq('status', 'approved').order('created_at', { ascending: false })
+     * Alle freigegebenen Posts + eigene Posts des Nutzers.
+     * Supabase: await supabase.from('posts')
+     *   .select('*, profiles(display_name, initials, avatar_url)')
+     *   .eq('status','approved').order('created_at',{ascending:false})
      */
     async list() {
-      // Demo:
-      const adminPosts  = _s('community_user_posts', []);
-      const liked       = _s('liked_posts', []);
-      const allPosts    = [...adminPosts.filter(p => p.status === 'approved'), ...ZAMData.communityPosts];
-      return allPosts.map(p => ({ ...p, is_liked: liked.includes(p.id) }));
+      const uid        = _uid();
+      const liked      = _s('liked_posts', []);
+      const userPosts  = _gLoad('all_posts', []);
+      const approved   = userPosts.filter(p => p.status === 'approved' || p.user_id === uid);
+      const merged     = [...approved, ...ZAMData.communityPosts];
+      // Deduplizieren nach id
+      const seen = new Set();
+      return merged.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true; })
+        .map(p => ({ ...p, is_liked: liked.includes(p.id) }));
     },
 
     /**
-     * Neuen Post erstellen (wartet auf Freigabe).
-     * Supabase: await supabase.from('posts').insert({ user_id, content, image_url, tags })
+     * Eigene Posts des aktuellen Nutzers.
+     * Supabase: .from('posts').select('*').eq('user_id', uid).order('created_at',{ascending:false})
+     */
+    async myPosts() {
+      const uid = _uid();
+      return _gLoad('all_posts', []).filter(p => p.user_id === uid);
+    },
+
+    /**
+     * Neuen Post erstellen (status=pending bis Admin freigibt).
+     * Supabase: await supabase.from('posts').insert({ user_id, content, tags, image_url })
      */
     async create(content, tags = [], imageUrl = null) {
       const user = ZAMApi.auth.currentUser();
       if (!user) throw new Error('Nicht eingeloggt.');
+      if (!content.trim()) throw new Error('Inhalt darf nicht leer sein.');
+
       const post = {
         id:         _uuid(),
         user_id:    user.id,
         author: {
           name:         user.display_name,
           initials:     user.initials,
+          avatar_url:   user.avatar_url,
           avatar_color: '#8b5cf6',
-          level:        user.level.charAt(0).toUpperCase() + user.level.slice(1) + ' Member',
+          level:        _levelLabel(user.level),
         },
-        content,
+        content: content.trim(),
         tags,
         image_url:  imageUrl,
         likes:      0,
@@ -226,68 +317,71 @@ const ZAMApi = {
         time_ago:   'gerade eben',
         is_liked:   false,
       };
-      const posts = _s('community_user_posts', []);
-      posts.unshift(post);
-      _set('community_user_posts', posts);
 
-      // Admin-Pending benachrichtigen
-      const pending = _s('pending_posts', []);
+      const posts = _gLoad('all_posts', []);
+      posts.unshift(post);
+      _gSet('all_posts', posts);
+
+      // Pending-Queue für Admin
+      const pending = _gLoad('pending_posts', []);
       pending.unshift({ ...post });
-      _set('pending_posts', pending);
+      _gSet('pending_posts', pending);
 
       return post;
     },
 
     /**
-     * Post liken.
-     * Supabase: await supabase.from('post_likes').insert({ post_id, user_id })
-     *           await supabase.rpc('increment_likes', { post_id })
+     * Eigenen Post löschen.
+     * Supabase: await supabase.from('posts').delete().eq('id', postId).eq('user_id', uid)
      */
-    async like(postId) {
-      let liked = _s('liked_posts', []);
-      if (!liked.includes(postId)) { liked.push(postId); _set('liked_posts', liked); }
+    async delete(postId) {
+      const uid  = _uid();
+      const posts = _gLoad('all_posts', []);
+      const post  = posts.find(p => p.id === postId);
+      if (!post) throw new Error('Post nicht gefunden.');
+      if (post.user_id !== uid) throw new Error('Keine Berechtigung.');
+      _gSet('all_posts', posts.filter(p => p.id !== postId));
+      _gSet('pending_posts', _gLoad('pending_posts',[]).filter(p => p.id !== postId));
     },
 
-    /**
-     * Like entfernen.
-     * Supabase: await supabase.from('post_likes').delete().match({ post_id, user_id })
-     */
+    /** Supabase: await supabase.from('post_likes').insert({ post_id, user_id }) */
+    async like(postId) {
+      const liked = _s('liked_posts', []);
+      if (!liked.includes(postId)) { liked.push(postId); _set('liked_posts', liked); }
+      // Likes-Count im globalen Post erhöhen
+      const posts = _gLoad('all_posts', []);
+      const p = posts.find(x => x.id === postId);
+      if (p) { p.likes = (p.likes || 0) + 1; _gSet('all_posts', posts); }
+    },
+
+    /** Supabase: await supabase.from('post_likes').delete().match({ post_id, user_id }) */
     async unlike(postId) {
       _set('liked_posts', _s('liked_posts', []).filter(id => id !== postId));
+      const posts = _gLoad('all_posts', []);
+      const p = posts.find(x => x.id === postId);
+      if (p) { p.likes = Math.max(0, (p.likes || 1) - 1); _gSet('all_posts', posts); }
     },
 
-    /**
-     * Kommentare zu einem Post laden.
-     * Supabase: const { data } = await supabase
-     *   .from('comments').select('*, profiles(display_name, initials, avatar_url)')
-     *   .eq('post_id', postId).order('created_at')
-     */
+    /** Supabase: await supabase.from('comments').select('*,profiles(*)').eq('post_id', postId) */
     async getComments(postId) {
       if (!_commentStore[postId]) _commentStore[postId] = [];
       return _commentStore[postId];
     },
 
-    /**
-     * Kommentar hinzufügen.
-     * Supabase: await supabase.from('comments').insert({ post_id, user_id, content })
-     */
+    /** Supabase: await supabase.from('comments').insert({ post_id, user_id, content }) */
     async addComment(postId, content) {
       const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
       const comment = {
-        id:         _uuid(),
-        post_id:    postId,
-        user_id:    user.id || 'usr_001',
-        author: {
-          name:         user.display_name,
-          initials:     user.initials,
-          avatar_color: '#8b5cf6',
-        },
-        content,
-        created_at: _now(),
-        time_ago:   'gerade eben',
+        id: _uuid(), post_id: postId, user_id: user.id,
+        author: { name: user.display_name, initials: user.initials, avatar_color: '#8b5cf6', avatar_url: user.avatar_url },
+        content, created_at: _now(), time_ago: 'gerade eben',
       };
       if (!_commentStore[postId]) _commentStore[postId] = [];
       _commentStore[postId].push(comment);
+      // comments_count hochzählen
+      const posts = _gLoad('all_posts', []);
+      const p = posts.find(x => x.id === postId);
+      if (p) { p.comments = (p.comments || 0) + 1; _gSet('all_posts', posts); }
       return comment;
     },
   },
@@ -297,27 +391,31 @@ const ZAMApi = {
   // ──────────────────────────────────────────────────────────
   events: {
 
-    /**
-     * Supabase: const { data } = await supabase.from('events')
-     *   .select('*, merchants(name, icon)').eq('status', 'approved').order('date_iso')
-     */
+    /** Supabase: await supabase.from('events').select('*').eq('status','approved').order('date_iso') */
     async list(filter = 'all') {
-      const adminData = _loadStore('zamclub_admin', {});
+      const adminData = JSON.parse(localStorage.getItem('zamclub_admin') || '{}');
       const adminEvts = (adminData.events || []).map(e => ({ ...e, status: 'approved' }));
       let all = [...ZAMData.events, ...adminEvts];
       if (filter === 'week') all = all.slice(0, 2);
+      if (filter === 'month') all = all.slice(0, 4);
       const joined = _s('joined_events', []);
       const saved  = _s('saved_events',  []);
       return all.map(e => ({ ...e, is_joined: joined.includes(e.id), is_saved: saved.includes(e.id) }));
     },
 
-    /** Supabase: await supabase.from('event_registrations').insert({ event_id, user_id }) */
+    /** Supabase: await supabase.from('events').select('*').eq('id', id).single() */
+    async get(eventId) {
+      const all = await this.list();
+      return all.find(e => e.id === eventId) || null;
+    },
+
+    /** Supabase: await supabase.from('event_participants').insert({ event_id, user_id }) */
     async register(eventId) {
       const joined = _s('joined_events', []);
       if (!joined.includes(eventId)) { joined.push(eventId); _set('joined_events', joined); }
     },
 
-    /** Supabase: await supabase.from('event_registrations').delete().match({ event_id, user_id }) */
+    /** Supabase: await supabase.from('event_participants').delete().match({ event_id, user_id }) */
     async unregister(eventId) {
       _set('joined_events', _s('joined_events', []).filter(id => id !== eventId));
     },
@@ -327,11 +425,7 @@ const ZAMApi = {
       const saved = _s('saved_events', []);
       if (!saved.includes(eventId)) { saved.push(eventId); _set('saved_events', saved); }
     },
-
-    /** Supabase: await supabase.from('saved_events').delete().match({ event_id, user_id }) */
-    async unsave(eventId) {
-      _set('saved_events', _s('saved_events', []).filter(id => id !== eventId));
-    },
+    async unsave(eventId) { _set('saved_events', _s('saved_events', []).filter(id => id !== eventId)); },
 
     isSaved(eventId)      { return _s('saved_events',  []).includes(eventId); },
     isRegistered(eventId) { return _s('joined_events', []).includes(eventId); },
@@ -342,10 +436,9 @@ const ZAMApi = {
   // ──────────────────────────────────────────────────────────
   deals: {
 
-    /** Supabase: const { data } = await supabase.from('deals')
-     *   .select('*, merchants(name, icon)').eq('status', 'approved').order('created_at', { ascending: false }) */
+    /** Supabase: await supabase.from('deals').select('*,merchants(name,icon)').eq('status','approved') */
     async list() {
-      const adminData  = _loadStore('zamclub_admin', {});
+      const adminData  = JSON.parse(localStorage.getItem('zamclub_admin') || '{}');
       const adminDeals = (adminData.deals || []).map(d => ({ ...d, status: 'approved' }));
       const all        = [...ZAMData.deals, ...adminDeals];
       const claimed    = _s('claimed_deals', []);
@@ -353,18 +446,18 @@ const ZAMApi = {
       return all.map(d => ({ ...d, is_claimed: claimed.includes(d.id), is_saved: saved.includes(d.id) }));
     },
 
-    /** Supabase: await supabase.from('saved_deals').insert({ deal_id, user_id }) */
-    async save(dealId) {
+    async savedList() {
+      const all   = await this.list();
+      const saved = _s('saved_deals', []);
+      return all.filter(d => saved.includes(d.id));
+    },
+
+    async save(dealId)  {
       const saved = _s('saved_deals', []);
       if (!saved.includes(dealId)) { saved.push(dealId); _set('saved_deals', saved); }
     },
+    async unsave(dealId) { _set('saved_deals', _s('saved_deals', []).filter(id => id !== dealId)); },
 
-    /** Supabase: await supabase.from('saved_deals').delete().match({ deal_id, user_id }) */
-    async unsave(dealId) {
-      _set('saved_deals', _s('saved_deals', []).filter(id => id !== dealId));
-    },
-
-    /** Supabase: await supabase.from('deal_redemptions').insert({ deal_id, user_id }) */
     async redeem(dealId) {
       const claimed = _s('claimed_deals', []);
       if (!claimed.includes(dealId)) { claimed.push(dealId); _set('claimed_deals', claimed); }
@@ -378,45 +471,24 @@ const ZAMApi = {
   // MERCHANTS
   // ──────────────────────────────────────────────────────────
   merchants: {
+    async list() { return ZAMData.merchants; },
+    async get(id) { return ZAMData.merchants.find(m => m.id === id) || null; },
 
-    /** Supabase: const { data } = await supabase.from('merchants').select('*').order('name') */
-    async list() {
-      return ZAMData.merchants;
-    },
-
-    /** Supabase: const { data } = await supabase.from('merchants').select('*').eq('id', id).single() */
-    async get(merchantId) {
-      return ZAMData.merchants.find(m => m.id === merchantId) || null;
-    },
-
-    /**
-     * Händler erstellt neues Deal (wartet auf Admin-Freigabe).
-     * Supabase: await supabase.from('deals').insert({ ...dealData, merchant_id, created_by, status: 'pending' })
-     */
+    /** Supabase: await supabase.from('deals').insert({...dealData, merchant_id, status:'pending'}) */
     async createDeal(merchantId, dealData) {
       const deal = { ...dealData, id: _uuid(), merchant_id: merchantId, status: 'pending', created_at: _now() };
-      const pending = _s('merchant_pending_deals', []);
-      pending.push(deal);
-      _set('merchant_pending_deals', pending);
-      // Auch in Admin-Pending speichern
-      const ap = _s('pending_deals', []);
-      ap.push(deal);
-      _set('pending_deals', ap);
+      const pend = _gLoad('pending_deals', []);
+      pend.unshift(deal);
+      _gSet('pending_deals', pend);
       return deal;
     },
 
-    /**
-     * Händler erstellt neues Event (wartet auf Admin-Freigabe).
-     * Supabase: await supabase.from('events').insert({ ...eventData, merchant_id, created_by, status: 'pending' })
-     */
+    /** Supabase: await supabase.from('events').insert({...eventData, merchant_id, status:'pending'}) */
     async createEvent(merchantId, eventData) {
       const event = { ...eventData, id: _uuid(), merchant_id: merchantId, status: 'pending', created_at: _now() };
-      const pending = _s('merchant_pending_events', []);
-      pending.push(event);
-      _set('merchant_pending_events', pending);
-      const ap = _s('pending_events', []);
-      ap.push(event);
-      _set('pending_events', ap);
+      const pend  = _gLoad('pending_events', []);
+      pend.unshift(event);
+      _gSet('pending_events', pend);
       return event;
     },
   },
@@ -426,32 +498,36 @@ const ZAMApi = {
   // ──────────────────────────────────────────────────────────
   points: {
 
-    /** Supabase: const { data } = await supabase.from('profiles').select('points').eq('id', userId).single() */
-    async get() {
-      return _s('points', ZAMData.currentUser.points);
-    },
+    /** Supabase: .from('profiles').select('points').eq('id', uid).single() */
+    async get() { return _s('points', ZAMData.currentUser.points); },
 
     /**
-     * Punkte gutschreiben.
-     * Supabase: await supabase.from('points_log').insert({ user_id, points, action, reference_id })
-     *           (Trigger sync_points() aktualisiert profiles.points automatisch)
+     * Punkte gutschreiben + Log-Eintrag.
+     * Supabase: await supabase.from('points_transactions').insert({ user_id, points, action, description })
+     *   (Trigger sync_points aktualisiert profiles.points automatisch)
      */
-    async add(amount, action, referenceId = null) {
+    async add(amount, action, description = '') {
       const current = _s('points', ZAMData.currentUser.points);
       const newPts  = current + amount;
       _set('points', newPts);
       ZAMData.currentUser.points = newPts;
 
-      // Log
+      // Level aktualisieren
+      const level = newPts >= 3000 ? 'platinum' : newPts >= 1500 ? 'gold' : newPts >= 500 ? 'silver' : 'bronze';
+      const user  = ZAMApi.auth.currentUser();
+      if (user) { user.level = level; _gSet('session_user', user); ZAMData.currentUser.level = level; }
+
+      // Log-Eintrag
       const log = _s('points_log', []);
-      log.unshift({ id: _uuid(), points: amount, action, reference_id: referenceId, created_at: _now() });
-      _set('points_log', log.slice(0, 100)); // max. 100 Einträge lokal
+      log.unshift({ id: _uuid(), points: amount, action, description: description || action, created_at: _now() });
+      _set('points_log', log.slice(0, 100));
+
       return newPts;
     },
 
-    /** Supabase: const { data } = await supabase.from('points_log').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(50) */
-    async log() {
-      return _s('points_log', []);
+    /** Supabase: .from('points_transactions').select('*').eq('user_id',uid).order('created_at',{ascending:false}).limit(50) */
+    async log(limit = 30) {
+      return (_s('points_log', [])).slice(0, limit);
     },
   },
 
@@ -459,126 +535,82 @@ const ZAMApi = {
   // PROFILE
   // ──────────────────────────────────────────────────────────
   profile: {
+    async get()            { return ZAMApi.auth.currentUser() || ZAMData.currentUser; },
+    async update(data)     { return ZAMApi.auth.updateProfile(data); },
+    async uploadAvatar(f)  { return ZAMApi.auth.uploadAvatar(f); },
+    async badges()         { return ZAMData.badges; },
+    async stats()          { return _s('stats', ZAMData.currentUser.stats); },
 
-    /** Supabase: const { data } = await supabase.from('profiles').select('*').eq('id', userId).single() */
-    async get(userId = null) {
-      const user = ZAMApi.auth.currentUser();
-      return user || ZAMData.currentUser;
+    async savedEvents() {
+      const all   = await ZAMApi.events.list();
+      const saved = _s('saved_events', []);
+      return all.filter(e => saved.includes(e.id));
     },
-
-    /** Supabase: await supabase.from('profiles').update(data).eq('id', userId) */
-    async update(data) {
-      return ZAMApi.auth.updateProfile(data);
-    },
-
-    /** Supabase: await supabase.storage.from('avatars').upload(...) */
-    async uploadAvatar(file) {
-      return ZAMApi.auth.uploadAvatar(file);
-    },
-
-    /**
-     * Verdiente Badges des Nutzers.
-     * Supabase: const { data } = await supabase.from('user_badges')
-     *   .select('*, badges(*)').eq('user_id', userId)
-     */
-    async badges() {
-      return ZAMData.badges;
-    },
-
-    /**
-     * Nutzer-Statistiken.
-     * Supabase: abgeleitet aus event_registrations, deal_redemptions, checkins
-     */
-    async stats() {
-      return _s('stats', ZAMData.currentUser.stats);
-    },
+    async savedDeals() { return ZAMApi.deals.savedList(); },
   },
 
   // ──────────────────────────────────────────────────────────
   // ADMIN
   // ──────────────────────────────────────────────────────────
   admin: {
+    async pendingPosts()   { return _gLoad('pending_posts',  []); },
+    async pendingDeals()   { return _gLoad('pending_deals',  []); },
+    async pendingEvents()  { return _gLoad('pending_events', []); },
 
-    /** Supabase: await supabase.from('posts').select('*, profiles(*)').eq('status', 'pending').order('created_at') */
-    async pendingPosts() { return _s('pending_posts', []); },
-
-    /** Supabase: await supabase.from('posts').update({ status: 'approved' }).eq('id', postId) */
     async approvePost(postId) {
-      _updatePendingStatus('pending_posts', 'community_user_posts', postId, 'approved');
+      _updateGlobalStatus('pending_posts', 'all_posts', postId, 'approved');
+      // Punkte an Autor vergeben
+      const posts = _gLoad('all_posts', []);
+      const post  = posts.find(p => p.id === postId);
+      if (post) {
+        const log = _uLoad(post.user_id, 'points_log', []);
+        log.unshift({ id: _uuid(), points: 10, action: 'post_approved', description: '✅ Beitrag freigegeben', created_at: _now() });
+        _uSet(post.user_id, 'points_log', log.slice(0, 100));
+        _uSet(post.user_id, 'points', (_uLoad(post.user_id, 'points', 0)) + 10);
+      }
     },
-
-    /** Supabase: await supabase.from('posts').update({ status: 'rejected', reject_reason: reason }).eq('id', postId) */
-    async rejectPost(postId, reason = '') {
-      _updatePendingStatus('pending_posts', 'community_user_posts', postId, 'rejected', reason);
-    },
-
-    /** Supabase: await supabase.from('deals').select('*, merchants(*)').eq('status', 'pending') */
-    async pendingDeals() { return _s('pending_deals', []); },
-
-    /** Supabase: await supabase.from('deals').update({ status: 'approved' }).eq('id', dealId) */
-    async approveDeal(dealId) {
-      _updatePendingStatus('pending_deals', 'merchant_pending_deals', dealId, 'approved');
-    },
-
-    /** Supabase: await supabase.from('deals').update({ status: 'rejected' }).eq('id', dealId) */
-    async rejectDeal(dealId, reason = '') {
-      _updatePendingStatus('pending_deals', 'merchant_pending_deals', dealId, 'rejected', reason);
-    },
-
-    /** Supabase: await supabase.from('events').select('*, merchants(*)').eq('status', 'pending') */
-    async pendingEvents() { return _s('pending_events', []); },
-
-    /** Supabase: await supabase.from('events').update({ status: 'approved' }).eq('id', eventId) */
-    async approveEvent(eventId) {
-      _updatePendingStatus('pending_events', 'merchant_pending_events', eventId, 'approved');
-    },
-
-    /** Supabase: await supabase.from('events').update({ status: 'rejected' }).eq('id', eventId) */
-    async rejectEvent(eventId, reason = '') {
-      _updatePendingStatus('pending_events', 'merchant_pending_events', eventId, 'rejected', reason);
-    },
+    async rejectPost(postId, reason)  { _updateGlobalStatus('pending_posts',  'all_posts',    postId, 'rejected', reason); },
+    async approveDeal(dealId)         { _updateGlobalStatus('pending_deals',  null,            dealId, 'approved'); },
+    async rejectDeal(dealId, reason)  { _updateGlobalStatus('pending_deals',  null,            dealId, 'rejected', reason); },
+    async approveEvent(eventId)       { _updateGlobalStatus('pending_events', null,            eventId,'approved'); },
+    async rejectEvent(eventId, reason){ _updateGlobalStatus('pending_events', null,            eventId,'rejected', reason); },
   },
 
   // ──────────────────────────────────────────────────────────
-  // NOTIFICATIONS (In-App, kein Push)
+  // NOTIFICATIONS
   // ──────────────────────────────────────────────────────────
   notifications: {
-
-    /** Supabase: await supabase.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false }) */
-    async list() { return _s('notifications', []); },
-
-    /** Supabase: await supabase.from('notifications').update({ is_read: true }).eq('id', id) */
-    async markRead(id) {
-      const notifs = _s('notifications', []);
-      const i = notifs.findIndex(n => n.id === id);
-      if (i !== -1) { notifs[i].is_read = true; _set('notifications', notifs); }
+    async list()         { return _s('notifications', []); },
+    async markRead(id)   {
+      const n = _s('notifications', []);
+      const i = n.findIndex(x => x.id === id);
+      if (i !== -1) { n[i].is_read = true; _set('notifications', n); }
     },
-
-    /** Supabase: await supabase.from('notifications').update({ is_read: true }).eq('user_id', userId) */
-    async markAllRead() {
-      const notifs = _s('notifications', []).map(n => ({ ...n, is_read: true }));
-      _set('notifications', notifs);
-    },
-
-    // Intern: Benachrichtigung erstellen
+    async markAllRead()  { _set('notifications', _s('notifications', []).map(n => ({ ...n, is_read: true }))); },
     _add(title, body, type = 'info', actionUrl = null) {
-      const notifs = _s('notifications', []);
-      notifs.unshift({ id: _uuid(), title, body, type, action_url: actionUrl, is_read: false, created_at: _now() });
-      _set('notifications', notifs.slice(0, 50));
+      const n = _s('notifications', []);
+      n.unshift({ id: _uuid(), title, body, type, action_url: actionUrl, is_read: false, created_at: _now() });
+      _set('notifications', n.slice(0, 50));
     },
   },
 };
 
-// ── Hilfsfunktion für Admin-Status-Updates ────────────────────
-function _updatePendingStatus(pendingKey, listKey, itemId, status, reason = '') {
-  const pending = _s(pendingKey, []);
-  const idx = pending.findIndex(i => i.id === itemId);
-  if (idx !== -1) { pending[idx].status = status; if (reason) pending[idx].reject_reason = reason; }
-  _set(pendingKey, pending);
+// ── Hilfsfunktionen ───────────────────────────────────────────
+function _updateGlobalStatus(pendingKey, listKey, itemId, status, reason = '') {
+  const pending = _gLoad(pendingKey, []);
+  const pi = pending.findIndex(i => i.id === itemId);
+  if (pi !== -1) { pending[pi].status = status; if (reason) pending[pi].reject_reason = reason; }
+  _gSet(pendingKey, pending);
+  if (listKey) {
+    const list = _gLoad(listKey, []);
+    const li = list.findIndex(i => i.id === itemId);
+    if (li !== -1) { list[li].status = status; _gSet(listKey, list); }
+  }
+}
 
-  const list = _s(listKey, []);
-  const li = list.findIndex(i => i.id === itemId);
-  if (li !== -1) { list[li].status = status; _set(listKey, list); }
+function _levelLabel(level) {
+  return { bronze: 'Bronze Member', silver: 'Silber Member', gold: 'Gold Member', platinum: 'Platin Member' }[level] || 'Member';
 }
 
 window.ZAMApi = ZAMApi;
+window._levelLabel = _levelLabel;

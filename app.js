@@ -102,24 +102,20 @@ function showToast(message, type = '') {
 // =============================================
 // Points System
 // =============================================
-function addPoints(amount, reason = '') {
-  ZAMData.currentUser.points += amount;
-  Storage.set('points', ZAMData.currentUser.points);
-
-  // Update stats
-  const stats = Storage.get('stats', { visits: ZAMData.currentUser.stats.visits, events_attended: ZAMData.currentUser.stats.events_attended, deals_used: ZAMData.currentUser.stats.deals_used });
-  Storage.set('stats', stats);
-
+async function addPoints(amount, reason = '') {
+  const newPts = await ZAMApi.points.add(amount, reason, reason);
   updatePointsDisplay(true);
-
-  if (reason) showToast(`+${amount} Punkte${reason ? ' · ' + reason : ''}`, 'success');
+  if (reason) showToast(`+${amount} Punkte · ${reason}`, 'success');
+  return newPts;
 }
 
 function updatePointsDisplay(animate = false) {
-  const pts = ZAMData.currentUser.points;
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const pts = user.points || 0;
   const homeEl = $('#home-points-value');
   const profileEl = $('#profile-points-value');
   const progressLabel = $('.points-progress-label');
+  const levelBadge = $('.profile-level-badge');
 
   if (homeEl) {
     if (animate) {
@@ -130,17 +126,29 @@ function updatePointsDisplay(animate = false) {
   }
   if (profileEl) profileEl.textContent = pts.toLocaleString('de-DE');
 
-  // Progress bar update (Gold: 0–2000, Platin: 2000+)
+  // Level
+  const levelKey = pts >= 3000 ? 'platinum' : pts >= 1500 ? 'gold' : pts >= 500 ? 'silver' : 'bronze';
+  const levelMap = { bronze: 'BRONZE', silver: 'SILBER', gold: 'GOLD', platinum: 'PLATIN' };
+  const levelDisplay = { bronze: 'Bronze Member', silver: 'Silber Member', gold: 'Gold Member', platinum: 'Platin Member' };
+  if (levelBadge) levelBadge.textContent = levelMap[levelKey];
+  const levelEl = $('.points-level');
+  if (levelEl) levelEl.innerHTML = `<span class="points-level-dot"></span>${levelDisplay[levelKey]}`;
+
+  // Progress bar
+  const thresholds = { bronze: [0, 500], silver: [500, 1500], gold: [1500, 3000], platinum: [3000, 3000] };
+  const [min, max] = thresholds[levelKey];
   const progressFill = $('.points-progress-fill');
   if (progressFill) {
-    const pct = Math.min((pts / 2000) * 100, 100);
+    const pct = levelKey === 'platinum' ? 100 : Math.min(((pts - min) / (max - min)) * 100, 100);
     progressFill.style.width = pct + '%';
   }
   if (progressLabel) {
-    const remaining = Math.max(0, 2000 - pts);
-    progressLabel.textContent = remaining > 0
-      ? `${pts.toLocaleString('de-DE')} / 2.000 Pkt. bis Platin`
-      : '🎉 Platin erreicht!';
+    if (levelKey === 'platinum') {
+      progressLabel.textContent = '🎉 Platin erreicht!';
+    } else {
+      const nextLevelName = { bronze: 'Silber', silver: 'Gold', gold: 'Platin' }[levelKey];
+      progressLabel.textContent = `${pts.toLocaleString('de-DE')} / ${max.toLocaleString('de-DE')} Pkt. bis ${nextLevelName}`;
+    }
   }
 }
 
