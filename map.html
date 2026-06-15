@@ -643,7 +643,7 @@ function openNudgeInbox(){
 let statusOpen=false;
 function toggleStatus(){statusOpen=!statusOpen;document.getElementById('st-expanded').style.display=statusOpen?'block':'none';document.querySelector('.st-chev').textContent=statusOpen?'⌄':'⌃'}
 function setStatus(txt){document.getElementById('st-text').textContent=txt;localStorage.setItem('zam_map_status',txt);renderUsers()}
-function saveStatus(){const z=document.getElementById('zone-sel').value;const st=document.getElementById('st-text').textContent;localStorage.setItem('zam_map_zone',z);localStorage.setItem('zam_map_status',st);toggleStatus();renderUsers();locateMe()}
+function saveStatus(){const z=document.getElementById('zone-sel').value;const st=document.getElementById('st-text').textContent;localStorage.setItem('zam_map_zone',z);localStorage.setItem('zam_map_status',st);toggleStatus();renderUsers();locateMe();if(typeof ZAMApi!=='undefined'&&ZAMApi.analytics)ZAMApi.analytics.trackZoneVisit(z);}
 function loadMyState(){const z=localStorage.getItem('zam_map_zone')||'mk2_1';const st=localStorage.getItem('zam_map_status')||'📍 Eingang';document.getElementById('st-text').textContent=st;document.getElementById('zone-sel').value=z}
 
 function sbNav(btn,panel){

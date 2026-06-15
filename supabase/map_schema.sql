@@ -270,3 +270,47 @@ CREATE TABLE public.notification_settings (
 );
 ALTER TABLE public.notification_settings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "notif_settings_own" ON public.notification_settings FOR ALL USING (user_id = auth.uid());
+
+-- ── analytics_events ─────────────────────────────────────────────
+CREATE TABLE public.analytics_events (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  event_type  TEXT NOT NULL,
+  entity_id   UUID,
+  metadata    JSONB DEFAULT '{}',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_analytics_type_time ON public.analytics_events(event_type, created_at);
+CREATE INDEX idx_analytics_entity ON public.analytics_events(entity_id);
+ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "analytics_insert" ON public.analytics_events FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "analytics_admin_read" ON public.analytics_events FOR SELECT USING (
+  EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin')
+);
+
+-- ── vouchers ─────────────────────────────────────────────────────
+CREATE TABLE public.vouchers (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code         TEXT NOT NULL UNIQUE,
+  deal_id      UUID REFERENCES public.deals(id) ON DELETE CASCADE,
+  user_id      UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  status       TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','redeemed','expired')),
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  redeemed_at  TIMESTAMPTZ
+);
+ALTER TABLE public.vouchers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "voucher_own" ON public.vouchers FOR ALL USING (user_id = auth.uid());
+CREATE POLICY "voucher_merchant_redeem" ON public.vouchers FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'merchant')
+);
+
+-- ── merchant_premium ─────────────────────────────────────────────
+CREATE TABLE public.merchant_premium (
+  merchant_id  UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  tier         TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free','basic','premium','enterprise')),
+  features     JSONB DEFAULT '{"highlighted_deals": false, "top_placement": false, "sponsored": false}',
+  valid_until  TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE public.merchant_premium ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "premium_own" ON public.merchant_premium FOR SELECT USING (merchant_id = auth.uid());

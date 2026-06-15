@@ -2088,3 +2088,46 @@ a.nav-tab-map { text-decoration: none; }
 .push-stat-card{background:var(--surface);border-radius:14px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,0.06)}
 .push-stat-num{font-size:1.6rem;font-weight:800;color:var(--primary)}
 .push-stat-lbl{font-size:0.62rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600}
+
+/* ── DASHBOARD (Phase 12) ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 16px 16px}
+.kpi-card{background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;background:var(--primary);opacity:0.08}
+.kpi-value{font-size:1.8rem;font-weight:800;color:#fff;letter-spacing:-0.02em}
+.kpi-label{font-size:0.62rem;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px}
+.kpi-trend{font-size:0.65rem;font-weight:600;margin-top:6px;display:flex;align-items:center;gap:3px}
+.kpi-trend.up{color:#34d399}.kpi-trend.down{color:#ef4444}.kpi-trend.neutral{color:rgba(255,255,255,0.35)}
+.kpi-icon{position:absolute;top:12px;right:12px;font-size:1.4rem;opacity:0.6}
+
+.dash-section{margin:0 16px 20px}
+.dash-section-title{font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.55);letter-spacing:0.04em;margin-bottom:10px;padding-left:2px}
+
+.dash-table-wrap{background:var(--surface);border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.06)}
+.dash-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.04);gap:10px}
+.dash-row:last-child{border-bottom:none}
+.dash-row-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;background:rgba(139,92,246,0.12)}
+.dash-row-main{flex:1;min-width:0}
+.dash-row-name{font-size:0.78rem;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dash-row-sub{font-size:0.62rem;color:rgba(255,255,255,0.4);margin-top:1px}
+.dash-row-val{font-size:0.85rem;font-weight:700;color:var(--primary);flex-shrink:0}
+.dash-empty{padding:24px;text-align:center;color:rgba(255,255,255,0.3);font-size:0.78rem}
+
+/* BAR CHART */
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:80px;padding:8px 14px;background:var(--surface);border-radius:14px;border:1px solid rgba(255,255,255,0.06)}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+.bar-fill{width:100%;border-radius:4px 4px 0 0;background:linear-gradient(to top,#6d28d9,#a78bfa);min-height:2px;margin-top:auto;transition:height .5s}
+.bar-lbl{font-size:0.46rem;color:rgba(255,255,255,0.3);font-weight:600;white-space:nowrap}
+
+/* ZONE POPULARITY BARS */
+.zone-bar-row{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.zone-bar-row:last-child{border-bottom:none}
+.zone-bar-name{font-size:0.72rem;font-weight:600;color:#e2e8f0;width:80px;flex-shrink:0}
+.zone-bar-track{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.07);overflow:hidden}
+.zone-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#6d28d9,#a78bfa)}
+.zone-bar-count{font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.5);width:30px;text-align:right;flex-shrink:0}
+
+/* PREMIUM BADGE */
+.premium-badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#b45309,#f59e0b);border-radius:20px;padding:2px 8px;font-size:0.6rem;font-weight:700;color:#fff;letter-spacing:0.04em}
+
+.btn-dash-action{width:100%;margin-top:8px;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.28);border-radius:10px;padding:9px;color:#c4b5fd;font-size:0.76rem;font-weight:600;font-family:var(--font);cursor:pointer}
+.dash-period-select{display:flex;align-items:center}

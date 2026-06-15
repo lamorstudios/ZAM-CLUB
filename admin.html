@@ -429,6 +429,9 @@
       🔔 Inbox
       <span class="count" id="count-notifications" style="background:#ef4444;color:#fff;display:none">0</span>
     </button>
+    <button class="tab-btn" data-tab="analytics" role="tab">
+      📊 Analytics
+    </button>
   </nav>
 
   <!-- ══════════════════════════════════════════
@@ -654,6 +657,26 @@
         <button onclick="markAllNotifsRead()" style="margin-left:auto;background:none;border:1px solid rgba(255,255,255,0.1);color:#888;border-radius:8px;padding:4px 12px;font-size:0.72rem;cursor:pointer">Alle gelesen</button>
       </div>
       <div id="admin-notifications-list"></div>
+    </div>
+  </div>
+
+  <!-- TAB 6: ANALYTICS -->
+  <div class="tab-panel" id="tab-analytics">
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+        📊 Center Analytics
+        <select id="admin-analytics-period" onchange="renderAdminAnalyticsTab()" style="background:#1c1c28;border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-family:inherit">
+          <option value="7">7 Tage</option>
+          <option value="30" selected>30 Tage</option>
+        </select>
+      </div>
+      <div id="admin-analytics-kpi" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px"></div>
+      <div style="font-size:0.75rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:8px">📈 Nutzer-Wachstum</div>
+      <div id="admin-analytics-chart" style="display:flex;align-items:flex-end;gap:6px;height:80px;padding:8px;background:rgba(255,255,255,0.03);border-radius:10px;margin-bottom:16px"></div>
+      <div style="font-size:0.75rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:8px">🗺️ Beliebteste Zonen</div>
+      <div id="admin-analytics-zones" style="margin-bottom:16px"></div>
+      <div style="font-size:0.75rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:8px">⭐ Top Händler / Deals / Events</div>
+      <div id="admin-analytics-top"></div>
     </div>
   </div>
 
@@ -1264,11 +1287,85 @@ function rejectEvent(id, reason = '') { _updatePendingStatus('pending_events', i
 function deactivateDeal(id)  { _updatePendingStatus('pending_deals',  id, 'inactive'); renderModeration(); }
 function deactivateEvent(id) { _updatePendingStatus('pending_events', id, 'inactive'); renderModeration(); }
 
+// ── Analytics Tab ─────────────────────────────────────────────
+function renderAdminAnalyticsTab() {
+  if (typeof ZAMApi === 'undefined' || !ZAMApi.analytics) return;
+  ZAMApi.analytics.seedDemo();
+  const days = parseInt(document.getElementById('admin-analytics-period')?.value || '30');
+  const stats = ZAMApi.analytics.getCommunityStats(days);
+
+  // KPI Cards
+  const kpiEl = document.getElementById('admin-analytics-kpi');
+  if (kpiEl) {
+    const kpis = [
+      {icon:'👥', value: stats.totalUsers,  label: 'Gesamt-Nutzer'},
+      {icon:'⚡', value: stats.activeUsers, label: 'Aktive Nutzer'},
+      {icon:'🆕', value: stats.newUsers,    label: `Neue (${days}d)`},
+      {icon:'📊', value: stats.totalEvents, label: 'Events total'},
+    ];
+    kpiEl.innerHTML = kpis.map(k => `
+      <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:12px;text-align:center">
+        <div style="font-size:1.4rem;font-weight:800;color:#fff">${k.value}</div>
+        <div style="font-size:0.58rem;color:rgba(255,255,255,0.4);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em">${k.icon} ${k.label}</div>
+      </div>`).join('');
+  }
+
+  // Growth chart
+  const chartEl = document.getElementById('admin-analytics-chart');
+  if (chartEl && stats.growth) {
+    const max = Math.max(...stats.growth.map(g => g.count), 1);
+    chartEl.innerHTML = stats.growth.map(g => `
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%">
+        <div style="width:100%;border-radius:3px 3px 0 0;background:linear-gradient(to top,#6d28d9,#a78bfa);min-height:2px;margin-top:auto;height:${Math.max(4,(g.count/max)*100)}%"></div>
+        <div style="font-size:0.44rem;color:rgba(255,255,255,0.3);white-space:nowrap">${g.label}</div>
+      </div>`).join('');
+  }
+
+  // Zones
+  const zonesEl = document.getElementById('admin-analytics-zones');
+  if (zonesEl && stats.zoneVisits) {
+    const zoneNames  = {mk2_1:'MK 2(1)', mk2_2:'MK 2(2)', mk2_3:'MK 2(3)', mk2_4:'MK 2(4)', plaza:'Gandhi-Platz'};
+    const zoneColors = {mk2_1:'#d97706', mk2_2:'#7c3aed', mk2_3:'#059669', mk2_4:'#2563eb', plaza:'#8b5cf6'};
+    const entries = Object.entries(stats.zoneVisits).sort((a,b)=>b[1]-a[1]);
+    const maxV = Math.max(...entries.map(z=>z[1]), 1);
+    zonesEl.innerHTML = entries.map(([z, c]) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="font-size:0.7rem;font-weight:600;width:80px;flex-shrink:0;color:${zoneColors[z]||'#e2e8f0'}">${zoneNames[z]||z}</div>
+        <div style="flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.07);overflow:hidden">
+          <div style="height:100%;border-radius:4px;background:${zoneColors[z]||'#8b5cf6'};width:${(c/maxV*100).toFixed(0)}%"></div>
+        </div>
+        <div style="font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.5);width:25px;text-align:right">${c}</div>
+      </div>`).join('');
+  }
+
+  // Top lists
+  const topEl = document.getElementById('admin-analytics-top');
+  if (topEl) {
+    const sections = [
+      {title:'⭐ Top Händler', list: stats.topMerchants, icon:'🏪'},
+      {title:'🏷️ Top Deals',  list: stats.topDeals,     icon:'🏷️'},
+      {title:'🎉 Top Events', list: stats.topEvents,    icon:'🎉'},
+    ];
+    topEl.innerHTML = sections.map(s => `
+      <div style="margin-bottom:12px">
+        <div style="font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:6px">${s.title}</div>
+        ${!s.list || !s.list.length ? '<div style="font-size:0.72rem;color:rgba(255,255,255,0.3);padding:8px 0">Noch keine Daten</div>' :
+          s.list.slice(0,3).map(([id, count], i) => `
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+              <span style="font-size:0.9rem">${i===0?'🥇':i===1?'🥈':'🥉'}</span>
+              <span style="flex:1;font-size:0.72rem;color:#e2e8f0">${s.icon} ${id}</span>
+              <span style="font-size:0.72rem;font-weight:700;color:#8b5cf6">${count} Aufrufe</span>
+            </div>`).join('')}
+      </div>`).join('');
+  }
+}
+
 // Tab wechsel
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     if (btn.dataset.tab === 'moderation')     renderModeration();
     if (btn.dataset.tab === 'notifications')  { renderNotifications(); markAllNotifsRead(); }
+    if (btn.dataset.tab === 'analytics')      renderAdminAnalyticsTab();
   });
 });
 

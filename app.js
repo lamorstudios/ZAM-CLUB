@@ -184,6 +184,10 @@ function navigateTo(pageId) {
     renderNotifications();
   } else if (pageId === 'notif-settings') {
     renderNotifSettings();
+  } else if (pageId === 'merchant-dashboard') {
+    renderMerchantDashboard();
+  } else if (pageId === 'admin-dashboard') {
+    renderAdminDashboard();
   }
 }
 
@@ -1052,7 +1056,10 @@ function renderRoleActions() {
       <a href="admin.html" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;padding:13px">
         🛡️ Admin-Dashboard
         <span id="admin-notif-badge" style="background:rgba(255,255,255,0.25);border-radius:20px;padding:1px 8px;font-size:0.72rem;margin-left:6px;display:none">0</span>
-      </a>`;
+      </a>
+      <button class="btn btn-ghost btn-full" onclick="navigateTo('admin-dashboard')" style="margin-bottom:8px">
+        📊 Center Analytics
+      </button>`;
     // Load unread notification count
     ZAMApi.admin.unreadCount().then(count => {
       const badge = $('#admin-notif-badge');
@@ -1062,7 +1069,10 @@ function renderRoleActions() {
     container.innerHTML = `
       <a href="merchant.html" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;padding:13px">
         🏪 Händler-Dashboard
-      </a>`;
+      </a>
+      <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-dashboard')" style="margin-bottom:8px">
+        📊 Mein Dashboard
+      </button>`;
   } else {
     container.innerHTML = '';
   }
@@ -1528,6 +1538,9 @@ function showApp() {
   setTimeout(() => checkBadgesAfterAction(), 900);
   startNotifPolling();
   checkMapRedirect();
+
+  // Phase 12: Analytics seed
+  ZAMApi.analytics.seedDemo();
 
   // Phase 11: Push Notifications & Notification Center
   scheduleEventReminders();
@@ -2602,6 +2615,190 @@ function seedDemoNotifications() {
     {type:'badge',     title:'🏆 Neues Abzeichen: Früher Vogel!', body:'Du warst unter den ersten 100 ZAM-Mitgliedern'},
   ];
   demos.forEach(d => ZAMApi.notifications.add(d));
+}
+
+// =============================================
+// Phase 12 — Merchant Dashboard
+// =============================================
+function renderMerchantDashboard() {
+  const me = ZAMApi.auth.currentUser();
+  if (!me || me.role !== 'merchant') return;
+
+  ZAMApi.analytics.seedDemo();
+
+  const days = parseInt(document.getElementById('dash-period')?.value || '30');
+  const stats = ZAMApi.analytics.getMerchantStats(me.id, days);
+
+  const kpiGrid = document.getElementById('merchant-kpi-grid');
+  if (kpiGrid) {
+    const kpis = [
+      {icon:'👁️', value: stats.profileViews,    label: 'Profilaufrufe',    trend: '+12%', dir: 'up'},
+      {icon:'🏷️', value: stats.dealViews,        label: 'Deal-Aufrufe',     trend: '+8%',  dir: 'up'},
+      {icon:'💾', value: stats.dealSaves,        label: 'Deal gespeichert', trend: '+5%',  dir: 'up'},
+      {icon:'✅', value: stats.dealRedemptions,  label: 'Eingelöst',        trend: '+3%',  dir: 'up'},
+      {icon:'🎉', value: stats.eventViews,       label: 'Event-Aufrufe',    trend: '0%',   dir: 'neutral'},
+      {icon:'🙋', value: stats.eventJoins,       label: 'Teilnehmer',       trend: '+15%', dir: 'up'},
+    ];
+    kpiGrid.innerHTML = kpis.map(k => `
+      <div class="kpi-card">
+        <div class="kpi-icon">${k.icon}</div>
+        <div class="kpi-value">${k.value}</div>
+        <div class="kpi-label">${k.label}</div>
+        <div class="kpi-trend ${k.dir}">${k.dir === 'up' ? '↑' : k.dir === 'down' ? '↓' : '→'} ${k.trend}</div>
+      </div>`).join('');
+  }
+
+  const deals = _gLoad('deals', []).filter(d => d.merchantId === me.id);
+  const dealsTable = document.getElementById('merchant-deals-table');
+  if (dealsTable) {
+    if (!deals.length) {
+      dealsTable.innerHTML = '<div class="dash-empty">Noch keine Deals erstellt</div>';
+    } else {
+      dealsTable.innerHTML = deals.slice(0, 5).map(d => {
+        const ds = ZAMApi.analytics.getDealStats(d.id, days);
+        return `<div class="dash-row">
+          <div class="dash-row-icon">🏷️</div>
+          <div class="dash-row-main">
+            <div class="dash-row-name">${escHtml(d.title||d.name||'Deal')}</div>
+            <div class="dash-row-sub">${ds.views} Aufrufe · ${ds.saves} Gespeichert · ${ds.redemptions} Eingelöst</div>
+          </div>
+          <div class="dash-row-val">${ds.views}</div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  const evts = _gLoad('events', []).filter(e => e.merchantId === me.id);
+  const eventsTable = document.getElementById('merchant-events-table');
+  if (eventsTable) {
+    if (!evts.length) {
+      eventsTable.innerHTML = '<div class="dash-empty">Noch keine Events erstellt</div>';
+    } else {
+      eventsTable.innerHTML = evts.slice(0, 5).map(ev => {
+        const es = ZAMApi.analytics.getEventStats(ev.id, days);
+        return `<div class="dash-row">
+          <div class="dash-row-icon">🎉</div>
+          <div class="dash-row-main">
+            <div class="dash-row-name">${escHtml(ev.title||'Event')}</div>
+            <div class="dash-row-sub">${es.views} Aufrufe · ${es.joins} Teilnehmer · ${es.checkins} Check-ins</div>
+          </div>
+          <div class="dash-row-val">${es.joins}</div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  const vouchers = ZAMApi.vouchers.getMyVouchers();
+  const vouchersEl = document.getElementById('merchant-vouchers');
+  if (vouchersEl) {
+    if (!vouchers.length) {
+      vouchersEl.innerHTML = '<div class="dash-empty">Noch keine Gutscheine generiert</div>';
+    } else {
+      vouchersEl.innerHTML = vouchers.slice(-5).reverse().map(v => `
+        <div class="dash-row">
+          <div class="dash-row-icon">🎟️</div>
+          <div class="dash-row-main">
+            <div class="dash-row-name" style="font-family:monospace;letter-spacing:0.05em">${v.code}</div>
+            <div class="dash-row-sub">${v.status === 'redeemed' ? '✅ Eingelöst' : '⏳ Aktiv'}</div>
+          </div>
+          <div class="dash-row-val" style="font-size:0.65rem;color:${v.status==='redeemed'?'#34d399':'#f59e0b'}">${v.status.toUpperCase()}</div>
+        </div>`).join('');
+    }
+  }
+}
+
+function openVoucherRedeemer() {
+  const modal = document.getElementById('voucher-modal');
+  if (modal) { modal.style.display = 'flex'; document.getElementById('voucher-result').textContent = ''; }
+}
+function closeVoucherModal() {
+  const modal = document.getElementById('voucher-modal');
+  if (modal) modal.style.display = 'none';
+}
+function redeemVoucher() {
+  const code = document.getElementById('voucher-code-input')?.value?.trim().toUpperCase();
+  if (!code) return;
+  const result = ZAMApi.vouchers.redeem(code);
+  const el = document.getElementById('voucher-result');
+  if (el) {
+    el.textContent = result.ok ? '✅ Erfolgreich eingelöst!' : `❌ ${result.error}`;
+    el.style.color = result.ok ? '#34d399' : '#ef4444';
+  }
+  if (result.ok) setTimeout(closeVoucherModal, 1500);
+}
+
+// =============================================
+// Phase 12 — Admin Dashboard
+// =============================================
+function renderAdminDashboard() {
+  ZAMApi.analytics.seedDemo();
+  const days = parseInt(document.getElementById('admin-period')?.value || '30');
+  const stats = ZAMApi.analytics.getCommunityStats(days);
+
+  const kpiGrid = document.getElementById('admin-kpi-grid');
+  if (kpiGrid) {
+    const kpis = [
+      {icon:'👥', value: stats.totalUsers,  label: 'Gesamt-Nutzer',    trend: `+${stats.newUsers} neu`, dir: 'up'},
+      {icon:'⚡', value: stats.activeUsers, label: 'Aktive Nutzer',    trend: `${days}d`,               dir: 'neutral'},
+      {icon:'🆕', value: stats.newUsers,    label: 'Neue Nutzer',      trend: `letzte ${days}d`,         dir: 'up'},
+      {icon:'📊', value: stats.totalEvents, label: 'Analytics Events', trend: '',                        dir: 'neutral'},
+    ];
+    kpiGrid.innerHTML = kpis.map(k => `
+      <div class="kpi-card">
+        <div class="kpi-icon">${k.icon}</div>
+        <div class="kpi-value">${k.value}</div>
+        <div class="kpi-label">${k.label}</div>
+        <div class="kpi-trend ${k.dir}">${k.trend}</div>
+      </div>`).join('');
+  }
+
+  const chart = document.getElementById('growth-chart');
+  if (chart && stats.growth) {
+    const max = Math.max(...stats.growth.map(g => g.count), 1);
+    chart.innerHTML = stats.growth.map(g => `
+      <div class="bar-col">
+        <div class="bar-fill" style="height:${Math.max(4, (g.count/max)*100)}%"></div>
+        <div class="bar-lbl">${g.label}</div>
+      </div>`).join('');
+  }
+
+  const zoneEl = document.getElementById('zone-popularity');
+  if (zoneEl && stats.zoneVisits) {
+    const zoneNames  = {mk2_1:'MK 2(1)', mk2_2:'MK 2(2)', mk2_3:'MK 2(3)', mk2_4:'MK 2(4)', plaza:'Gandhi-Platz'};
+    const zoneColors = {mk2_1:'#d97706', mk2_2:'#7c3aed', mk2_3:'#059669', mk2_4:'#2563eb', plaza:'#8b5cf6'};
+    const zoneEntries = Object.entries(stats.zoneVisits).sort((a,b)=>b[1]-a[1]);
+    const maxV = Math.max(...zoneEntries.map(z=>z[1]), 1);
+    zoneEl.innerHTML = `<div class="dash-table-wrap">${zoneEntries.map(([zone, count]) => `
+      <div class="zone-bar-row">
+        <div class="zone-bar-name" style="color:${zoneColors[zone]||'#e2e8f0'}">${zoneNames[zone]||zone}</div>
+        <div class="zone-bar-track"><div class="zone-bar-fill" style="width:${(count/maxV*100).toFixed(0)}%;background:${zoneColors[zone]||'#8b5cf6'}"></div></div>
+        <div class="zone-bar-count">${count}</div>
+      </div>`).join('')}</div>`;
+  }
+
+  renderAdminTopList('admin-top-merchants', stats.topMerchants, '🏪', 'Händler', 'Aufrufe');
+  renderAdminTopList('admin-top-deals',     stats.topDeals,     '🏷️', 'Deal',    'Aufrufe');
+  renderAdminTopList('admin-top-events',    stats.topEvents,    '🎉', 'Event',   'Aufrufe');
+
+  renderAdminPushStats();
+}
+
+function renderAdminTopList(elId, list, icon, singular, metric) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!list || !list.length) {
+    el.innerHTML = `<div class="dash-table-wrap"><div class="dash-empty">Noch keine Daten</div></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="dash-table-wrap">${list.map(([id, count], i) => `
+    <div class="dash-row">
+      <div class="dash-row-icon">${i===0?'🥇':i===1?'🥈':i===2?'🥉':icon}</div>
+      <div class="dash-row-main">
+        <div class="dash-row-name">${singular} ${escHtml(id)}</div>
+        <div class="dash-row-sub">${metric}: ${count}</div>
+      </div>
+      <div class="dash-row-val">#${i+1}</div>
+    </div>`).join('')}</div>`;
 }
 
 // ── Admin Push Stats ──────────────────────────────────────────

@@ -1288,6 +1288,189 @@ const ZAMApi = {
   },
 
   // ──────────────────────────────────────────────────────────
+  // ANALYTICS (Phase 12)
+  // ──────────────────────────────────────────────────────────
+  analytics: {
+    trackDealView(dealId, merchantId) { _track('deal_view', {dealId, merchantId}); },
+    trackDealSave(dealId, merchantId) { _track('deal_save', {dealId, merchantId}); },
+    trackDealRedeem(dealId, merchantId) { _track('deal_redeem', {dealId, merchantId}); },
+    trackEventView(eventId, merchantId) { _track('event_view', {eventId, merchantId}); },
+    trackEventJoin(eventId) { _track('event_join', {eventId}); },
+    trackEventCheckin(eventId) { _track('event_checkin', {eventId}); },
+    trackMerchantView(merchantId) { _track('merchant_view', {merchantId}); },
+    trackPostView(postId) { _track('post_view', {postId}); },
+    trackPostLike(postId) { _track('post_like', {postId}); },
+    trackZoneVisit(zone) { _track('zone_visit', {zone}); },
+
+    getAllEvents() {
+      return JSON.parse(localStorage.getItem('zamclub_analytics') || '[]');
+    },
+
+    _since(days) { return Date.now() - days * 86400000; },
+    _filter(type, since) {
+      return this.getAllEvents().filter(e => e.type === type && e.t > since);
+    },
+
+    getMerchantStats(merchantId, days = 30) {
+      const since = this._since(days);
+      const all = this.getAllEvents().filter(e => e.t > since && e.merchantId === merchantId);
+      return {
+        profileViews:     all.filter(e => e.type === 'merchant_view').length,
+        dealViews:        all.filter(e => e.type === 'deal_view').length,
+        dealSaves:        all.filter(e => e.type === 'deal_save').length,
+        dealRedemptions:  all.filter(e => e.type === 'deal_redeem').length,
+        eventViews:       all.filter(e => e.type === 'event_view').length,
+        eventJoins:       all.filter(e => e.type === 'event_join').length,
+        eventCheckins:    all.filter(e => e.type === 'event_checkin').length,
+      };
+    },
+
+    getDealStats(dealId, days = 30) {
+      const since = this._since(days);
+      const all = this.getAllEvents().filter(e => e.t > since && e.dealId === dealId);
+      return {
+        views:       all.filter(e => e.type === 'deal_view').length,
+        saves:       all.filter(e => e.type === 'deal_save').length,
+        redemptions: all.filter(e => e.type === 'deal_redeem').length,
+      };
+    },
+
+    getEventStats(eventId, days = 90) {
+      const since = this._since(days);
+      const all = this.getAllEvents().filter(e => e.t > since && e.eventId === eventId);
+      return {
+        views:    all.filter(e => e.type === 'event_view').length,
+        joins:    all.filter(e => e.type === 'event_join').length,
+        checkins: all.filter(e => e.type === 'event_checkin').length,
+      };
+    },
+
+    getCommunityStats(days = 30) {
+      const since = this._since(days);
+      const accounts = _gLoad('accounts', []);
+      const recentAccounts = accounts.filter(a => a.createdAt > since);
+      const allEvents = this.getAllEvents();
+      const recentEvents = allEvents.filter(e => e.t > since);
+
+      const activeUsers = new Set(recentEvents.map(e => e.userId).filter(Boolean)).size;
+
+      const zoneVisits = {};
+      recentEvents.filter(e => e.type === 'zone_visit').forEach(e => {
+        zoneVisits[e.zone] = (zoneVisits[e.zone] || 0) + 1;
+      });
+
+      const dealViews = {};
+      recentEvents.filter(e => e.type === 'deal_view').forEach(e => {
+        if (e.dealId) dealViews[e.dealId] = (dealViews[e.dealId] || 0) + 1;
+      });
+      const topDeals = Object.entries(dealViews).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+      const eventViews = {};
+      recentEvents.filter(e => e.type === 'event_view').forEach(e => {
+        if (e.eventId) eventViews[e.eventId] = (eventViews[e.eventId] || 0) + 1;
+      });
+      const topEvents = Object.entries(eventViews).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+      const merchantViews = {};
+      recentEvents.filter(e => e.type === 'merchant_view').forEach(e => {
+        if (e.merchantId) merchantViews[e.merchantId] = (merchantViews[e.merchantId] || 0) + 1;
+      });
+      const topMerchants = Object.entries(merchantViews).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+      const growth = [];
+      for (let i = 6; i >= 0; i--) {
+        const dayStart = Date.now() - i * 86400000;
+        const dayEnd = dayStart + 86400000;
+        const count = accounts.filter(a => a.createdAt >= dayStart && a.createdAt < dayEnd).length;
+        const d = new Date(dayStart);
+        growth.push({ label: `${d.getDate()}.${d.getMonth()+1}`, count });
+      }
+
+      return {
+        totalUsers: accounts.length,
+        newUsers: recentAccounts.length,
+        activeUsers,
+        totalEvents: allEvents.length,
+        zoneVisits,
+        topDeals,
+        topEvents,
+        topMerchants,
+        growth,
+      };
+    },
+
+    getZoneHeatmap() {
+      const since = this._since(7);
+      const events = this.getAllEvents().filter(e => e.t > since && e.type === 'zone_visit');
+      const heat = {mk2_1: 0, mk2_2: 0, mk2_3: 0, mk2_4: 0, plaza: 0};
+      events.forEach(e => { if (heat[e.zone] !== undefined) heat[e.zone]++; });
+      return heat;
+    },
+
+    seedDemo() {
+      const key = 'zamclub_analytics';
+      if (localStorage.getItem(key + '_seeded')) return;
+      const zones = ['mk2_1','mk2_2','mk2_3','mk2_4','plaza'];
+      const merchants = ['m1','m2','m3','m4','m5'];
+      const deals = ['d1','d2','d3','d4','d5'];
+      const events = ['ev1','ev2','ev3'];
+      const now = Date.now();
+      const seed = [];
+      for (let i = 0; i < 200; i++) {
+        const daysAgo = Math.floor(Math.random() * 30);
+        const t = now - daysAgo * 86400000 - Math.random() * 3600000;
+        const types = ['zone_visit','deal_view','deal_save','deal_redeem','event_view','event_join','merchant_view','post_like'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        const zone = zones[Math.floor(Math.random() * zones.length)];
+        const merchantId = merchants[Math.floor(Math.random() * merchants.length)];
+        const dealId = deals[Math.floor(Math.random() * deals.length)];
+        const eventId = events[Math.floor(Math.random() * events.length)];
+        seed.push({ t, type, zone, merchantId, dealId, eventId });
+      }
+      localStorage.setItem(key, JSON.stringify(seed));
+      localStorage.setItem(key + '_seeded', '1');
+    },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // VOUCHERS (Phase 12)
+  // ──────────────────────────────────────────────────────────
+  vouchers: {
+    generate(dealId, userId) {
+      const code = 'ZAM-' + Math.random().toString(36).slice(2,6).toUpperCase() + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
+      const vouchers = _gLoad('vouchers', []);
+      const v = {
+        id: Date.now().toString(36),
+        code,
+        dealId,
+        userId,
+        createdAt: Date.now(),
+        redeemedAt: null,
+        status: 'active',
+      };
+      vouchers.push(v);
+      _gSet('vouchers', vouchers);
+      return v;
+    },
+    getMyVouchers() {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return [];
+      return _gLoad('vouchers', []).filter(v => v.userId === me.id);
+    },
+    redeem(code) {
+      const vouchers = _gLoad('vouchers', []);
+      const v = vouchers.find(x => x.code === code && x.status === 'active');
+      if (!v) return {ok: false, error: 'Ungültiger oder bereits eingelöster Code'};
+      v.status = 'redeemed';
+      v.redeemedAt = Date.now();
+      _gSet('vouchers', vouchers);
+      ZAMApi.analytics.trackDealRedeem(v.dealId, null);
+      return {ok: true, voucher: v};
+    },
+    getAll() { return _gLoad('vouchers', []); },
+  },
+
+  // ──────────────────────────────────────────────────────────
   // PUSH (Phase 11)
   // ──────────────────────────────────────────────────────────
   push: {
@@ -1336,6 +1519,15 @@ const ZAMApi = {
     },
   },
 };
+
+// ── Analytics Tracking Helper ─────────────────────────────────
+function _track(eventType, data) {
+  const key = 'zamclub_analytics';
+  const events = JSON.parse(localStorage.getItem(key) || '[]');
+  events.push({ t: Date.now(), type: eventType, ...data });
+  if (events.length > 1000) events.splice(0, events.length - 1000);
+  localStorage.setItem(key, JSON.stringify(events));
+}
 
 // ── Hilfsfunktionen ───────────────────────────────────────────
 function _updateGlobalStatus(pendingKey, listKey, itemId, status, reason = '') {

@@ -764,6 +764,90 @@
   </div>
 </div>
 
+<!-- =====================
+     MERCHANT DASHBOARD PAGE
+========================== -->
+<div id="page-merchant-dashboard" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('profile')">←</button>
+    <h1 class="page-title">Mein Dashboard</h1>
+    <div class="dash-period-select">
+      <select id="dash-period" onchange="renderMerchantDashboard()" style="background:var(--surface);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-family:var(--font)">
+        <option value="7">7 Tage</option>
+        <option value="30" selected>30 Tage</option>
+        <option value="90">90 Tage</option>
+      </select>
+    </div>
+  </div>
+  <div class="kpi-grid" id="merchant-kpi-grid"></div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🏷️ Deal Performance</h3>
+    <div id="merchant-deals-table" class="dash-table-wrap"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🎉 Event Performance</h3>
+    <div id="merchant-events-table" class="dash-table-wrap"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🎟️ Gutscheine</h3>
+    <div id="merchant-vouchers" class="dash-table-wrap"></div>
+    <button class="btn-dash-action" onclick="openVoucherRedeemer()">QR-Code einlösen</button>
+  </div>
+</div>
+
+<!-- =====================
+     ADMIN DASHBOARD PAGE
+========================== -->
+<div id="page-admin-dashboard" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('profile')">←</button>
+    <h1 class="page-title">Center Analytics</h1>
+    <select id="admin-period" onchange="renderAdminDashboard()" style="background:var(--surface);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-family:var(--font)">
+      <option value="7">7 Tage</option>
+      <option value="30" selected>30 Tage</option>
+    </select>
+  </div>
+  <div class="kpi-grid" id="admin-kpi-grid"></div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">📈 Nutzer-Wachstum (7 Tage)</h3>
+    <div class="bar-chart" id="growth-chart"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🗺️ Beliebteste Zonen</h3>
+    <div id="zone-popularity"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">⭐ Top Händler</h3>
+    <div id="admin-top-merchants"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🏷️ Top Deals</h3>
+    <div id="admin-top-deals"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🎉 Top Events</h3>
+    <div id="admin-top-events"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🔔 Push Statistiken</h3>
+    <div id="admin-push-stats"></div>
+  </div>
+</div>
+
+<!-- Voucher Redeemer Modal -->
+<div id="voucher-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.8);align-items:flex-end;justify-content:center">
+  <div style="width:100%;max-width:480px;background:#0f0f1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(139,92,246,0.3);padding:20px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px))">
+    <div style="width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,0.12);margin:0 auto 16px"></div>
+    <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px">🎟️ Gutschein einlösen</h3>
+    <input id="voucher-code-input" placeholder="ZAM-XXXX-XXXX eingeben" style="width:100%;background:var(--surface-2);border:1px solid rgba(139,92,246,0.3);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.9rem;font-family:var(--font);outline:none;margin-bottom:10px"/>
+    <div id="voucher-result" style="font-size:0.78rem;margin-bottom:10px;min-height:20px;color:#c4b5fd"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="redeemVoucher()" style="flex:1;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border-radius:10px;padding:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer;border:none">Einlösen</button>
+      <button onclick="closeVoucherModal()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.82rem;font-weight:600;font-family:var(--font);cursor:pointer">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
 <!-- Scripts (load data first, then app logic) -->
 <script src="data.js"></script>
 <script src="api.js"></script>
