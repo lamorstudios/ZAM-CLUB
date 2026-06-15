@@ -474,22 +474,116 @@ const ZAMApi = {
     async list() { return ZAMData.merchants; },
     async get(id) { return ZAMData.merchants.find(m => m.id === id) || null; },
 
-    /** Supabase: await supabase.from('deals').insert({...dealData, merchant_id, status:'pending'}) */
+    /** Händler des aktuellen Nutzers (via merchant_staff) */
+    async myMerchant() {
+      const uid = _uid();
+      if (!uid) return null;
+      // Supabase: .from('merchant_staff').select('merchants(*)').eq('user_id', uid).single()
+      const staff = _gLoad('merchant_staff', []);
+      const entry = staff.find(s => s.user_id === uid);
+      if (entry) return ZAMData.merchants.find(m => m.id === entry.merchant_id) || null;
+      // Fallback: Demo-Händler für Demo-User
+      if (uid === 'demo_julia') return null;
+      return null;
+    },
+
+    /** Eigene Deals des Händlers (alle Status) */
+    async myDeals(merchantId) {
+      const allPending = _gLoad('pending_deals', []);
+      const fromData   = ZAMData.deals.filter(d => d.merchant_id === merchantId);
+      const fromPending = allPending.filter(d => d.merchant_id === merchantId);
+      // Merge, deduplizieren
+      const seen = new Set(fromPending.map(d => d.id));
+      return [...fromPending, ...fromData.filter(d => !seen.has(d.id))];
+    },
+
+    /** Eigene Events des Händlers (alle Status) */
+    async myEvents(merchantId) {
+      const allPending = _gLoad('pending_events', []);
+      const fromData   = ZAMData.events.filter(e => e.merchant_id === merchantId);
+      const fromPending = allPending.filter(e => e.merchant_id === merchantId);
+      const seen = new Set(fromPending.map(e => e.id));
+      return [...fromPending, ...fromData.filter(e => !seen.has(e.id))];
+    },
+
+    /** Deal erstellen (status=pending) */
     async createDeal(merchantId, dealData) {
-      const deal = { ...dealData, id: _uuid(), merchant_id: merchantId, status: 'pending', created_at: _now() };
+      const merchant = await this.get(merchantId);
+      const deal = {
+        ...dealData,
+        id:           _uuid(),
+        merchant_id:  merchantId,
+        store_name:   merchant?.name || '',
+        store_icon:   merchant?.icon || '🏪',
+        category_color: merchant?.category_color || '#8b5cf6',
+        status:       'pending',
+        created_at:   _now(),
+        created_by:   _uid(),
+      };
       const pend = _gLoad('pending_deals', []);
       pend.unshift(deal);
       _gSet('pending_deals', pend);
+      // Admin-Benachrichtigung
+      _addAdminNotif('Neuer Deal eingereicht', `${deal.title} von ${merchant?.name || 'Händler'}`, 'deal', deal.id);
       return deal;
     },
 
-    /** Supabase: await supabase.from('events').insert({...eventData, merchant_id, status:'pending'}) */
+    /** Event erstellen (status=pending) */
     async createEvent(merchantId, eventData) {
-      const event = { ...eventData, id: _uuid(), merchant_id: merchantId, status: 'pending', created_at: _now() };
-      const pend  = _gLoad('pending_events', []);
+      const merchant = await this.get(merchantId);
+      const event = {
+        ...eventData,
+        id:          _uuid(),
+        merchant_id: merchantId,
+        status:      'pending',
+        created_at:  _now(),
+        created_by:  _uid(),
+      };
+      const pend = _gLoad('pending_events', []);
       pend.unshift(event);
       _gSet('pending_events', pend);
+      // Admin-Benachrichtigung
+      _addAdminNotif('Neues Event eingereicht', `${event.title} von ${merchant?.name || 'Händler'}`, 'event', event.id);
       return event;
+    },
+
+    /** Deal aktualisieren */
+    async updateDeal(dealId, data) {
+      const pending = _gLoad('pending_deals', []);
+      const i = pending.findIndex(d => d.id === dealId);
+      if (i !== -1) { pending[i] = { ...pending[i], ...data, updated_at: _now() }; _gSet('pending_deals', pending); return pending[i]; }
+      throw new Error('Deal nicht gefunden.');
+    },
+
+    /** Event aktualisieren */
+    async updateEvent(eventId, data) {
+      const pending = _gLoad('pending_events', []);
+      const i = pending.findIndex(e => e.id === eventId);
+      if (i !== -1) { pending[i] = { ...pending[i], ...data, updated_at: _now() }; _gSet('pending_events', pending); return pending[i]; }
+      throw new Error('Event nicht gefunden.');
+    },
+
+    /** Deal deaktivieren */
+    async deactivateDeal(dealId) {
+      const pending = _gLoad('pending_deals', []);
+      const i = pending.findIndex(d => d.id === dealId);
+      if (i !== -1) { pending[i].status = 'inactive'; _gSet('pending_deals', pending); }
+    },
+
+    /** Event deaktivieren */
+    async deactivateEvent(eventId) {
+      const pending = _gLoad('pending_events', []);
+      const i = pending.findIndex(e => e.id === eventId);
+      if (i !== -1) { pending[i].status = 'inactive'; _gSet('pending_events', pending); }
+    },
+
+    /** Händler-Staff zuweisen (Demo) */
+    async assignStaff(merchantId, userId) {
+      const staff = _gLoad('merchant_staff', []);
+      if (!staff.find(s => s.merchant_id === merchantId && s.user_id === userId)) {
+        staff.push({ merchant_id: merchantId, user_id: userId, role: 'owner' });
+        _gSet('merchant_staff', staff);
+      }
     },
   },
 
@@ -556,10 +650,12 @@ const ZAMApi = {
     async pendingPosts()   { return _gLoad('pending_posts',  []); },
     async pendingDeals()   { return _gLoad('pending_deals',  []); },
     async pendingEvents()  { return _gLoad('pending_events', []); },
+    async allDeals()       { return [..._gLoad('pending_deals', []), ...ZAMData.deals]; },
+    async allEvents()      { return [..._gLoad('pending_events', []), ...ZAMData.events]; },
+    async allPosts()       { return [..._gLoad('pending_posts', []), ...ZAMData.communityPosts]; },
 
     async approvePost(postId) {
       _updateGlobalStatus('pending_posts', 'all_posts', postId, 'approved');
-      // Punkte an Autor vergeben
       const posts = _gLoad('all_posts', []);
       const post  = posts.find(p => p.id === postId);
       if (post) {
@@ -568,12 +664,53 @@ const ZAMApi = {
         _uSet(post.user_id, 'points_log', log.slice(0, 100));
         _uSet(post.user_id, 'points', (_uLoad(post.user_id, 'points', 0)) + 10);
       }
+      _markAdminNotifHandled('post', postId);
     },
-    async rejectPost(postId, reason)  { _updateGlobalStatus('pending_posts',  'all_posts',    postId, 'rejected', reason); },
-    async approveDeal(dealId)         { _updateGlobalStatus('pending_deals',  null,            dealId, 'approved'); },
-    async rejectDeal(dealId, reason)  { _updateGlobalStatus('pending_deals',  null,            dealId, 'rejected', reason); },
-    async approveEvent(eventId)       { _updateGlobalStatus('pending_events', null,            eventId,'approved'); },
-    async rejectEvent(eventId, reason){ _updateGlobalStatus('pending_events', null,            eventId,'rejected', reason); },
+    async rejectPost(postId, reason)  {
+      _updateGlobalStatus('pending_posts', 'all_posts', postId, 'rejected', reason);
+      _markAdminNotifHandled('post', postId);
+    },
+    async approveDeal(dealId) {
+      _updateGlobalStatus('pending_deals', null, dealId, 'approved');
+      _markAdminNotifHandled('deal', dealId);
+    },
+    async rejectDeal(dealId, reason)  {
+      _updateGlobalStatus('pending_deals', null, dealId, 'rejected', reason);
+      _markAdminNotifHandled('deal', dealId);
+    },
+    async approveEvent(eventId) {
+      _updateGlobalStatus('pending_events', null, eventId, 'approved');
+      _markAdminNotifHandled('event', eventId);
+    },
+    async rejectEvent(eventId, reason) {
+      _updateGlobalStatus('pending_events', null, eventId, 'rejected', reason);
+      _markAdminNotifHandled('event', eventId);
+    },
+    async updateDeal(dealId, data) {
+      const pending = _gLoad('pending_deals', []);
+      const i = pending.findIndex(d => d.id === dealId);
+      if (i !== -1) { pending[i] = { ...pending[i], ...data }; _gSet('pending_deals', pending); return pending[i]; }
+    },
+    async updateEvent(eventId, data) {
+      const pending = _gLoad('pending_events', []);
+      const i = pending.findIndex(e => e.id === eventId);
+      if (i !== -1) { pending[i] = { ...pending[i], ...data }; _gSet('pending_events', pending); return pending[i]; }
+    },
+    async deactivateDeal(dealId)  { _updateGlobalStatus('pending_deals',  null, dealId,  'inactive'); },
+    async deactivateEvent(eventId){ _updateGlobalStatus('pending_events', null, eventId, 'inactive'); },
+    async deactivatePost(postId)  { _updateGlobalStatus('pending_posts', 'all_posts', postId, 'inactive'); },
+
+    // Admin-Benachrichtigungen
+    async notifications()  { return _gLoad('admin_notifications', []); },
+    async unreadCount()    { return _gLoad('admin_notifications', []).filter(n => !n.is_read).length; },
+    async markRead(id)     {
+      const notifs = _gLoad('admin_notifications', []);
+      const i = notifs.findIndex(n => n.id === id);
+      if (i !== -1) { notifs[i].is_read = true; _gSet('admin_notifications', notifs); }
+    },
+    async markAllRead() {
+      _gSet('admin_notifications', _gLoad('admin_notifications', []).map(n => ({ ...n, is_read: true })));
+    },
   },
 
   // ──────────────────────────────────────────────────────────
@@ -606,6 +743,18 @@ function _updateGlobalStatus(pendingKey, listKey, itemId, status, reason = '') {
     const li = list.findIndex(i => i.id === itemId);
     if (li !== -1) { list[li].status = status; _gSet(listKey, list); }
   }
+}
+
+function _addAdminNotif(title, body, type = 'info', refId = null) {
+  const notifs = _gLoad('admin_notifications', []);
+  notifs.unshift({ id: _uuid(), title, body, type, ref_id: refId, is_read: false, created_at: _now() });
+  _gSet('admin_notifications', notifs.slice(0, 100));
+}
+
+function _markAdminNotifHandled(type, refId) {
+  const notifs = _gLoad('admin_notifications', []);
+  notifs.forEach(n => { if (n.type === type && n.ref_id === refId) n.is_read = true; });
+  _gSet('admin_notifications', notifs);
 }
 
 function _levelLabel(level) {

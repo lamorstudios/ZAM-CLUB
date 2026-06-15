@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#0f0f13" />
+  <title>ZAM Händler-Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Merchant Dashboard Styles ── */
+    body { min-height: 100vh; background: var(--bg, #090910); color: var(--text, #e8e8f0); font-family: 'Poppins', sans-serif; }
+
+    .merchant-shell { max-width: 480px; margin: 0 auto; padding-bottom: 80px; }
+
+    .merchant-header {
+      background: var(--surface, #111118);
+      border-bottom: 1px solid var(--border, rgba(255,255,255,0.06));
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .merchant-header-back {
+      background: none;
+      border: none;
+      color: var(--primary, #8b5cf6);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .merchant-header-title { font-size: 1rem; font-weight: 700; flex: 1; }
+    .merchant-header-icon { font-size: 1.5rem; }
+
+    .merchant-profile-card {
+      margin: 16px;
+      background: var(--card, #13131a);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border, rgba(255,255,255,0.06));
+    }
+    .merchant-profile-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .merchant-profile-icon { font-size: 2.5rem; }
+    .merchant-profile-name { font-size: 1.1rem; font-weight: 700; }
+    .merchant-profile-cat { font-size: 0.78rem; color: var(--text-muted, #6b6b80); margin-top: 2px; }
+    .merchant-profile-meta { display: flex; gap: 20px; margin-top: 4px; }
+    .merchant-profile-stat { text-align: center; }
+    .merchant-profile-stat-val { font-size: 1.2rem; font-weight: 700; color: var(--primary, #8b5cf6); }
+    .merchant-profile-stat-lbl { font-size: 0.68rem; color: var(--text-muted, #6b6b80); }
+
+    .m-tabs { display: flex; gap: 4px; padding: 0 16px 12px; overflow-x: auto; }
+    .m-tab {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border, rgba(255,255,255,0.08));
+      background: none;
+      color: var(--text-muted, #6b6b80);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .m-tab.active { background: var(--primary, #8b5cf6); color: white; border-color: var(--primary, #8b5cf6); }
+
+    .m-section { padding: 0 16px; }
+    .m-section-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted, #6b6b80); margin-bottom: 12px; }
+
+    .m-item-card {
+      background: var(--card, #13131a);
+      border: 1px solid var(--border, rgba(255,255,255,0.06));
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .m-item-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+    .m-item-title { font-size: 0.9rem; font-weight: 600; }
+    .m-item-sub { font-size: 0.75rem; color: var(--text-muted, #6b6b80); margin-top: 2px; }
+    .m-item-actions { display: flex; gap: 6px; margin-top: 10px; }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .status-pending  { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+    .status-approved { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+    .status-rejected { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    .status-inactive { background: rgba(107,114,128,0.15);color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); }
+    .status-draft    { background: rgba(139,92,246,0.15); color: #8b5cf6; border: 1px solid rgba(139,92,246,0.3); }
+
+    .m-form { background: var(--card, #13131a); border: 1px solid var(--border, rgba(255,255,255,0.06)); border-radius: 16px; padding: 20px; }
+    .m-form .input-group { margin-bottom: 14px; }
+    .m-form .input-label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-muted, #6b6b80); margin-bottom: 6px; }
+    .m-form .input-field { width: 100%; box-sizing: border-box; }
+    .m-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .m-form select.input-field { appearance: none; cursor: pointer; }
+    .m-form textarea.input-field { resize: none; }
+
+    .m-empty { text-align: center; padding: 40px 20px; color: var(--text-muted, #6b6b80); font-size: 0.85rem; }
+    .m-empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+    .btn-sm-outline {
+      background: none;
+      border: 1px solid var(--border, rgba(255,255,255,0.12));
+      color: var(--text, #e8e8f0);
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-sm-outline:hover { border-color: var(--primary, #8b5cf6); color: var(--primary, #8b5cf6); }
+    .btn-sm-danger {
+      background: none;
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #ef4444;
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .m-tab-content { display: none; }
+    .m-tab-content.active { display: block; }
+
+    .char-counter { text-align: right; font-size: 0.7rem; color: var(--text-muted, #6b6b80); margin-top: 3px; }
+    .required-star { color: #ef4444; }
+
+    #toast-merchant {
+      position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: #1e1e2e; border: 1px solid rgba(255,255,255,0.1);
+      color: #e8e8f0; padding: 10px 20px; border-radius: 12px;
+      font-size: 0.83rem; font-weight: 600; opacity: 0; transition: all 0.3s;
+      pointer-events: none; z-index: 999; white-space: nowrap; max-width: 90vw;
+    }
+    #toast-merchant.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast-merchant.success { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.4); color: #10b981; }
+    #toast-merchant.error   { background: rgba(239,68,68,0.2);  border-color: rgba(239,68,68,0.4);  color: #ef4444; }
+
+    .no-merchant-screen { text-align: center; padding: 60px 20px; }
+    .no-merchant-screen h2 { margin-bottom: 10px; }
+    .no-merchant-screen p { color: var(--text-muted, #6b6b80); font-size: 0.85rem; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+
+<div id="merchant-shell" class="merchant-shell" style="display:none">
+
+  <!-- Header -->
+  <div class="merchant-header">
+    <button class="merchant-header-back" onclick="history.back()">←</button>
+    <div class="merchant-header-title">🏪 Händler-Dashboard</div>
+    <div class="merchant-header-icon" id="mh-icon"></div>
+  </div>
+
+  <!-- Merchant Profile Card -->
+  <div class="merchant-profile-card" id="merchant-profile-card">
+    <div class="merchant-profile-top">
+      <div class="merchant-profile-icon" id="mp-icon">🏪</div>
+      <div>
+        <div class="merchant-profile-name" id="mp-name">Mein Shop</div>
+        <div class="merchant-profile-cat" id="mp-cat"></div>
+        <div style="margin-top:6px">
+          <span id="mp-open-badge" class="open-badge">Geöffnet</span>
+        </div>
+      </div>
+    </div>
+    <div class="merchant-profile-meta">
+      <div class="merchant-profile-stat">
+        <div class="merchant-profile-stat-val" id="mp-deals-count">0</div>
+        <div class="merchant-profile-stat-lbl">Deals</div>
+      </div>
+      <div class="merchant-profile-stat">
+        <div class="merchant-profile-stat-val" id="mp-events-count">0</div>
+        <div class="merchant-profile-stat-lbl">Events</div>
+      </div>
+      <div class="merchant-profile-stat">
+        <div class="merchant-profile-stat-val" id="mp-active-count">0</div>
+        <div class="merchant-profile-stat-lbl">Live</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="m-tabs">
+    <button class="m-tab active" data-tab="deals">Meine Deals</button>
+    <button class="m-tab" data-tab="events">Meine Events</button>
+    <button class="m-tab" data-tab="new-deal">+ Neuer Deal</button>
+    <button class="m-tab" data-tab="new-event">+ Neues Event</button>
+  </div>
+
+  <!-- Tab: Meine Deals -->
+  <div class="m-tab-content active" id="tab-deals">
+    <div class="m-section">
+      <div class="m-section-title">Meine Deals</div>
+      <div id="my-deals-list"></div>
+    </div>
+  </div>
+
+  <!-- Tab: Meine Events -->
+  <div class="m-tab-content" id="tab-events">
+    <div class="m-section">
+      <div class="m-section-title">Meine Events</div>
+      <div id="my-events-list"></div>
+    </div>
+  </div>
+
+  <!-- Tab: Neuer Deal -->
+  <div class="m-tab-content" id="tab-new-deal">
+    <div class="m-section">
+      <div class="m-section-title">Neuen Deal erstellen</div>
+      <div class="m-form">
+        <div class="input-group">
+          <label class="input-label">Titel <span class="required-star">*</span></label>
+          <input type="text" id="deal-title" class="input-field" placeholder="z.B. 20% auf alle Jacken" maxlength="80" />
+          <div class="char-counter"><span id="deal-title-count">0</span>/80</div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Beschreibung <span class="required-star">*</span></label>
+          <textarea id="deal-desc" class="input-field" rows="3" placeholder="Was bekommt der Kunde genau?" maxlength="300"></textarea>
+          <div class="char-counter"><span id="deal-desc-count">0</span>/300</div>
+        </div>
+        <div class="m-form-row">
+          <div class="input-group">
+            <label class="input-label">Rabatt-Label <span class="required-star">*</span></label>
+            <input type="text" id="deal-discount" class="input-field" placeholder="z.B. 20%" maxlength="20" />
+          </div>
+          <div class="input-group">
+            <label class="input-label">Punkte-Belohnung</label>
+            <input type="number" id="deal-points" class="input-field" placeholder="z.B. 25" min="0" max="500" value="20" />
+          </div>
+        </div>
+        <div class="m-form-row">
+          <div class="input-group">
+            <label class="input-label">Kategorie <span class="required-star">*</span></label>
+            <select id="deal-category" class="input-field">
+              <option value="Food & Drinks">Food & Drinks</option>
+              <option value="Mode">Mode</option>
+              <option value="Sport & Wellness">Sport & Wellness</option>
+              <option value="Bücher & Kultur">Bücher & Kultur</option>
+              <option value="Gesundheit & Beauty">Gesundheit & Beauty</option>
+              <option value="Restaurant">Restaurant</option>
+              <option value="Sonstiges">Sonstiges</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Gültig bis <span class="required-star">*</span></label>
+            <input type="date" id="deal-expiry" class="input-field" />
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Barcode / Gutschein-Code</label>
+          <input type="text" id="deal-barcode" class="input-field" placeholder="z.B. SOMMER2026" maxlength="30" />
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:16px;cursor:pointer;font-size:0.83rem">
+          <input type="checkbox" id="deal-hot" style="accent-color:var(--primary,#8b5cf6)">
+          🔥 Als „Beliebt" markieren
+        </label>
+        <div id="deal-form-error" style="display:none;color:#ef4444;font-size:0.8rem;margin-bottom:10px;padding:8px 12px;background:rgba(239,68,68,0.1);border-radius:8px"></div>
+        <button class="btn btn-primary btn-full" id="btn-submit-deal">Deal einreichen</button>
+        <p style="text-align:center;font-size:0.72rem;color:var(--text-muted,#6b6b80);margin-top:10px">Deals werden vor der Veröffentlichung vom ZAM-Team geprüft.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Neues Event -->
+  <div class="m-tab-content" id="tab-new-event">
+    <div class="m-section">
+      <div class="m-section-title">Neues Event erstellen</div>
+      <div class="m-form">
+        <div class="input-group">
+          <label class="input-label">Titel <span class="required-star">*</span></label>
+          <input type="text" id="event-title" class="input-field" placeholder="z.B. Yoga-Schnupperstunde" maxlength="80" />
+          <div class="char-counter"><span id="event-title-count">0</span>/80</div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Beschreibung <span class="required-star">*</span></label>
+          <textarea id="event-desc" class="input-field" rows="3" placeholder="Was erwartet die Besucher?" maxlength="400"></textarea>
+          <div class="char-counter"><span id="event-desc-count">0</span>/400</div>
+        </div>
+        <div class="m-form-row">
+          <div class="input-group">
+            <label class="input-label">Datum <span class="required-star">*</span></label>
+            <input type="date" id="event-date" class="input-field" />
+          </div>
+          <div class="input-group">
+            <label class="input-label">Kategorie <span class="required-star">*</span></label>
+            <select id="event-category" class="input-field">
+              <option value="Sport & Wellness">Sport & Wellness</option>
+              <option value="Food & Lifestyle">Food & Lifestyle</option>
+              <option value="Familie">Familie</option>
+              <option value="Kultur & Musik">Kultur & Musik</option>
+              <option value="Community">Community</option>
+              <option value="Sonstiges">Sonstiges</option>
+            </select>
+          </div>
+        </div>
+        <div class="m-form-row">
+          <div class="input-group">
+            <label class="input-label">Uhrzeit von <span class="required-star">*</span></label>
+            <input type="time" id="event-time-start" class="input-field" />
+          </div>
+          <div class="input-group">
+            <label class="input-label">Uhrzeit bis</label>
+            <input type="time" id="event-time-end" class="input-field" />
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">Ort / Location <span class="required-star">*</span></label>
+          <input type="text" id="event-location" class="input-field" placeholder="z.B. OG 3, Yoga-Raum" maxlength="80" />
+        </div>
+        <div class="m-form-row">
+          <div class="input-group">
+            <label class="input-label">Max. Plätze</label>
+            <input type="number" id="event-spots" class="input-field" placeholder="leer = unbegrenzt" min="1" max="1000" />
+          </div>
+          <div class="input-group">
+            <label class="input-label">Punkte-Belohnung</label>
+            <input type="number" id="event-points" class="input-field" placeholder="z.B. 50" min="0" max="500" value="50" />
+          </div>
+        </div>
+        <div id="event-form-error" style="display:none;color:#ef4444;font-size:0.8rem;margin-bottom:10px;padding:8px 12px;background:rgba(239,68,68,0.1);border-radius:8px"></div>
+        <button class="btn btn-primary btn-full" id="btn-submit-event">Event einreichen</button>
+        <p style="text-align:center;font-size:0.72rem;color:var(--text-muted,#6b6b80);margin-top:10px">Events werden vor der Veröffentlichung vom ZAM-Team geprüft.</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#merchant-shell -->
+
+<!-- No merchant access screen -->
+<div id="no-merchant-screen" class="no-merchant-screen" style="display:none">
+  <div style="font-size:3rem;margin-bottom:16px">🔒</div>
+  <h2>Kein Zugang</h2>
+  <p>Du hast keinen Händler-Zugang.<br>Bitte wende dich an das ZAM-Team.</p>
+  <a href="index.html" class="btn btn-primary" style="display:inline-block;text-decoration:none;padding:12px 28px">← Zurück zur App</a>
+</div>
+
+<!-- Not logged in screen -->
+<div id="not-logged-in-screen" style="display:none;text-align:center;padding:60px 20px">
+  <div style="font-size:3rem;margin-bottom:16px">👤</div>
+  <h2>Nicht eingeloggt</h2>
+  <p style="color:var(--text-muted,#6b6b80);margin-bottom:20px">Bitte melde dich zuerst an.</p>
+  <a href="index.html" class="btn btn-primary" style="display:inline-block;text-decoration:none;padding:12px 28px">← Zur App</a>
+</div>
+
+<div id="toast-merchant"></div>
+
+<script src="data.js"></script>
+<script src="api.js"></script>
+<script>
+'use strict';
+
+let _currentMerchant = null;
+
+function mToast(msg, type = '') {
+  const t = document.getElementById('toast-merchant');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = 'show' + (type ? ' ' + type : '');
+  setTimeout(() => t.className = '', 3000);
+}
+
+function statusPill(status) {
+  const map = {
+    pending:  { cls: 'status-pending',  label: '⏳ Wartet auf Freigabe' },
+    approved: { cls: 'status-approved', label: '✅ Live' },
+    rejected: { cls: 'status-rejected', label: '❌ Abgelehnt' },
+    inactive: { cls: 'status-inactive', label: '⏸ Deaktiviert' },
+    draft:    { cls: 'status-draft',    label: '📝 Entwurf' },
+  };
+  const s = map[status] || map.pending;
+  return `<span class="status-pill ${s.cls}">${s.label}</span>`;
+}
+
+function fmtDate(isoStr) {
+  if (!isoStr) return '';
+  try { return new Date(isoStr).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+  catch { return isoStr; }
+}
+
+// ── Tab switching ──
+document.querySelectorAll('.m-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.m-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.m-tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    const content = document.getElementById('tab-' + tab.dataset.tab);
+    if (content) content.classList.add('active');
+    if (tab.dataset.tab === 'deals')  renderMyDeals();
+    if (tab.dataset.tab === 'events') renderMyEvents();
+  });
+});
+
+// ── Char counters ──
+[
+  ['deal-title', 'deal-title-count'],
+  ['deal-desc', 'deal-desc-count'],
+  ['event-title', 'event-title-count'],
+  ['event-desc', 'event-desc-count'],
+].forEach(([inputId, countId]) => {
+  const input = document.getElementById(inputId);
+  const count = document.getElementById(countId);
+  if (input && count) {
+    input.addEventListener('input', () => count.textContent = input.value.length);
+  }
+});
+
+// ── Set min date for date inputs ──
+const today = new Date().toISOString().split('T')[0];
+document.querySelectorAll('input[type="date"]').forEach(inp => inp.min = today);
+
+// ── Render my deals ──
+async function renderMyDeals() {
+  const container = document.getElementById('my-deals-list');
+  if (!container || !_currentMerchant) return;
+  container.innerHTML = '<div class="m-empty"><div class="m-empty-icon">⏳</div>Lädt…</div>';
+
+  const deals = await ZAMApi.merchants.myDeals(_currentMerchant.id);
+  if (deals.length === 0) {
+    container.innerHTML = '<div class="m-empty"><div class="m-empty-icon">🏷️</div><div>Noch keine Deals.<br>Erstelle deinen ersten Deal!</div></div>';
+    return;
+  }
+  container.innerHTML = '';
+  deals.forEach(deal => {
+    const card = document.createElement('div');
+    card.className = 'm-item-card';
+    card.innerHTML = `
+      <div class="m-item-header">
+        <div>
+          <div class="m-item-title">${deal.title}</div>
+          <div class="m-item-sub">${deal.discount} · Bis ${fmtDate(deal.expiry_date)}</div>
+        </div>
+        ${statusPill(deal.status || 'pending')}
+      </div>
+      <div style="font-size:0.78rem;color:var(--text-muted,#6b6b80);margin-bottom:8px">${deal.description?.slice(0, 100) || ''}${deal.description?.length > 100 ? '…' : ''}</div>
+      ${deal.reject_reason ? `<div style="font-size:0.75rem;color:#ef4444;margin-bottom:8px">💬 Ablehnungsgrund: ${deal.reject_reason}</div>` : ''}
+      <div class="m-item-actions">
+        ${(deal.status === 'pending' || deal.status === 'rejected') ? `<button class="btn-sm-outline" onclick="editDeal('${deal.id}')">✏️ Bearbeiten</button>` : ''}
+        ${deal.status !== 'inactive' ? `<button class="btn-sm-danger" onclick="deactivateDeal('${deal.id}')">⏸ Deaktivieren</button>` : ''}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  // Stats
+  document.getElementById('mp-deals-count').textContent = deals.length;
+  document.getElementById('mp-active-count').textContent = deals.filter(d => d.status === 'approved').length;
+}
+
+// ── Render my events ──
+async function renderMyEvents() {
+  const container = document.getElementById('my-events-list');
+  if (!container || !_currentMerchant) return;
+  container.innerHTML = '<div class="m-empty"><div class="m-empty-icon">⏳</div>Lädt…</div>';
+
+  const events = await ZAMApi.merchants.myEvents(_currentMerchant.id);
+  if (events.length === 0) {
+    container.innerHTML = '<div class="m-empty"><div class="m-empty-icon">📅</div><div>Noch keine Events.<br>Erstelle dein erstes Event!</div></div>';
+    return;
+  }
+  container.innerHTML = '';
+  events.forEach(evt => {
+    const card = document.createElement('div');
+    card.className = 'm-item-card';
+    card.innerHTML = `
+      <div class="m-item-header">
+        <div>
+          <div class="m-item-title">${evt.title}</div>
+          <div class="m-item-sub">📅 ${evt.date_formatted || fmtDate(evt.date_iso)} · ${evt.location || ''}</div>
+        </div>
+        ${statusPill(evt.status || 'pending')}
+      </div>
+      <div style="font-size:0.78rem;color:var(--text-muted,#6b6b80);margin-bottom:8px">${evt.description?.slice(0, 100) || ''}${evt.description?.length > 100 ? '…' : ''}</div>
+      ${evt.reject_reason ? `<div style="font-size:0.75rem;color:#ef4444;margin-bottom:8px">💬 Ablehnungsgrund: ${evt.reject_reason}</div>` : ''}
+      <div class="m-item-actions">
+        ${(evt.status === 'pending' || evt.status === 'rejected') ? `<button class="btn-sm-outline" onclick="editEvent('${evt.id}')">✏️ Bearbeiten</button>` : ''}
+        ${evt.status !== 'inactive' ? `<button class="btn-sm-danger" onclick="deactivateEvent('${evt.id}')">⏸ Deaktivieren</button>` : ''}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  document.getElementById('mp-events-count').textContent = events.length;
+}
+
+// ── Deal einreichen ──
+document.getElementById('btn-submit-deal')?.addEventListener('click', async () => {
+  const title    = document.getElementById('deal-title')?.value.trim();
+  const desc     = document.getElementById('deal-desc')?.value.trim();
+  const discount = document.getElementById('deal-discount')?.value.trim();
+  const points   = parseInt(document.getElementById('deal-points')?.value) || 20;
+  const category = document.getElementById('deal-category')?.value;
+  const expiry   = document.getElementById('deal-expiry')?.value;
+  const barcode  = document.getElementById('deal-barcode')?.value.trim() || `ZAM-${Date.now().toString(36).toUpperCase()}`;
+  const isHot    = document.getElementById('deal-hot')?.checked;
+  const errEl    = document.getElementById('deal-form-error');
+
+  errEl.style.display = 'none';
+  if (!title)    { errEl.textContent = 'Bitte Titel eingeben.';        errEl.style.display = 'block'; return; }
+  if (!desc)     { errEl.textContent = 'Bitte Beschreibung eingeben.'; errEl.style.display = 'block'; return; }
+  if (!discount) { errEl.textContent = 'Bitte Rabatt-Label eingeben.'; errEl.style.display = 'block'; return; }
+  if (!expiry)   { errEl.textContent = 'Bitte Gültigkeitsdatum wählen.'; errEl.style.display = 'block'; return; }
+  if (expiry < today) { errEl.textContent = 'Datum muss in der Zukunft liegen.'; errEl.style.display = 'block'; return; }
+
+  const btn = document.getElementById('btn-submit-deal');
+  btn.textContent = 'Wird eingereicht…'; btn.disabled = true;
+
+  try {
+    await ZAMApi.merchants.createDeal(_currentMerchant.id, {
+      title, description: desc, discount, points_reward: points,
+      category, category_color: categoryColor(category),
+      expiry_date: expiry,
+      expiry_formatted: fmtDate(expiry),
+      barcode, is_hot: isHot,
+    });
+    // Reset form
+    ['deal-title','deal-desc','deal-discount','deal-barcode'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    document.getElementById('deal-points').value = '20';
+    document.getElementById('deal-hot').checked = false;
+    document.getElementById('deal-title-count').textContent = '0';
+    document.getElementById('deal-desc-count').textContent = '0';
+    mToast('✅ Deal eingereicht! Wird geprüft.', 'success');
+    // Switch to deals tab
+    document.querySelector('[data-tab="deals"]').click();
+  } catch (e) {
+    errEl.textContent = e.message; errEl.style.display = 'block';
+  }
+  btn.textContent = 'Deal einreichen'; btn.disabled = false;
+});
+
+// ── Event einreichen ──
+document.getElementById('btn-submit-event')?.addEventListener('click', async () => {
+  const title     = document.getElementById('event-title')?.value.trim();
+  const desc      = document.getElementById('event-desc')?.value.trim();
+  const date      = document.getElementById('event-date')?.value;
+  const category  = document.getElementById('event-category')?.value;
+  const timeStart = document.getElementById('event-time-start')?.value;
+  const timeEnd   = document.getElementById('event-time-end')?.value;
+  const location  = document.getElementById('event-location')?.value.trim();
+  const spots     = parseInt(document.getElementById('event-spots')?.value) || null;
+  const points    = parseInt(document.getElementById('event-points')?.value) || 50;
+  const errEl     = document.getElementById('event-form-error');
+
+  errEl.style.display = 'none';
+  if (!title)     { errEl.textContent = 'Bitte Titel eingeben.';   errEl.style.display = 'block'; return; }
+  if (!desc)      { errEl.textContent = 'Bitte Beschreibung eingeben.'; errEl.style.display = 'block'; return; }
+  if (!date)      { errEl.textContent = 'Bitte Datum wählen.';     errEl.style.display = 'block'; return; }
+  if (date < today){ errEl.textContent = 'Datum muss in der Zukunft liegen.'; errEl.style.display = 'block'; return; }
+  if (!timeStart) { errEl.textContent = 'Bitte Startzeit eingeben.'; errEl.style.display = 'block'; return; }
+  if (!location)  { errEl.textContent = 'Bitte Ort eingeben.';     errEl.style.display = 'block'; return; }
+
+  const btn = document.getElementById('btn-submit-event');
+  btn.textContent = 'Wird eingereicht…'; btn.disabled = true;
+
+  try {
+    await ZAMApi.merchants.createEvent(_currentMerchant.id, {
+      title, description: desc,
+      date_iso: date,
+      date_formatted: fmtDate(date),
+      time_start: timeStart, time_end: timeEnd,
+      time: timeStart + (timeEnd ? ' – ' + timeEnd : ''),
+      category, category_color: categoryColor(category),
+      location, spots_total: spots, spots_left: spots,
+      points_reward: points,
+    });
+    ['event-title','event-desc','event-location'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    document.getElementById('event-title-count').textContent = '0';
+    document.getElementById('event-desc-count').textContent = '0';
+    document.getElementById('event-points').value = '50';
+    mToast('✅ Event eingereicht! Wird geprüft.', 'success');
+    document.querySelector('[data-tab="events"]').click();
+  } catch (e) {
+    errEl.textContent = e.message; errEl.style.display = 'block';
+  }
+  btn.textContent = 'Event einreichen'; btn.disabled = false;
+});
+
+// ── Edit / Deactivate ──
+async function editDeal(dealId) {
+  const title = prompt('Neuer Titel (leer = unverändert):');
+  if (title === null) return;
+  const desc = prompt('Neue Beschreibung (leer = unverändert):');
+  if (desc === null) return;
+  try {
+    const data = {};
+    if (title.trim()) data.title = title.trim();
+    if (desc.trim()) data.description = desc.trim();
+    await ZAMApi.merchants.updateDeal(dealId, { ...data, status: 'pending' });
+    mToast('Deal aktualisiert und erneut eingereicht.', 'success');
+    renderMyDeals();
+  } catch (e) { mToast(e.message, 'error'); }
+}
+
+async function editEvent(eventId) {
+  const title = prompt('Neuer Titel (leer = unverändert):');
+  if (title === null) return;
+  try {
+    const data = {};
+    if (title.trim()) data.title = title.trim();
+    await ZAMApi.merchants.updateEvent(eventId, { ...data, status: 'pending' });
+    mToast('Event aktualisiert und erneut eingereicht.', 'success');
+    renderMyEvents();
+  } catch (e) { mToast(e.message, 'error'); }
+}
+
+async function deactivateDeal(dealId) {
+  if (!confirm('Deal wirklich deaktivieren?')) return;
+  await ZAMApi.merchants.deactivateDeal(dealId);
+  mToast('Deal deaktiviert.', 'success');
+  renderMyDeals();
+}
+
+async function deactivateEvent(eventId) {
+  if (!confirm('Event wirklich deaktivieren?')) return;
+  await ZAMApi.merchants.deactivateEvent(eventId);
+  mToast('Event deaktiviert.', 'success');
+  renderMyEvents();
+}
+
+// ── Category color map ──
+function categoryColor(cat) {
+  const map = {
+    'Food & Drinks': '#f59e0b', 'Mode': '#ec4899',
+    'Sport & Wellness': '#10b981', 'Bücher & Kultur': '#3b82f6',
+    'Gesundheit & Beauty': '#06b6d4', 'Restaurant': '#ef4444',
+    'Familie': '#ec4899', 'Kultur & Musik': '#7c3aed',
+    'Community': '#06b6d4', 'Food & Lifestyle': '#f59e0b',
+    'Sonstiges': '#8b5cf6',
+  };
+  return map[cat] || '#8b5cf6';
+}
+
+// ── Init ──
+async function init() {
+  const user = ZAMApi.auth.currentUser();
+  if (!user) {
+    document.getElementById('not-logged-in-screen').style.display = 'block';
+    return;
+  }
+
+  // For demo: allow demo_julia to see merchant dashboard with Café Freiham
+  let merchant = await ZAMApi.merchants.myMerchant();
+  if (!merchant && user.id === 'demo_julia') {
+    // Assign demo merchant for presentation
+    await ZAMApi.merchants.assignStaff('mer_001', 'demo_julia');
+    merchant = await ZAMApi.merchants.get('mer_001');
+  }
+
+  if (!merchant && user.role !== 'merchant' && user.role !== 'admin') {
+    document.getElementById('no-merchant-screen').style.display = 'block';
+    return;
+  }
+
+  if (!merchant && user.role === 'admin') {
+    // Admin can access but needs to pick a merchant
+    merchant = ZAMData.merchants[0];
+  }
+
+  _currentMerchant = merchant;
+
+  // Render profile card
+  document.getElementById('mp-icon').textContent = merchant.icon || '🏪';
+  document.getElementById('mh-icon').textContent = merchant.icon || '🏪';
+  document.getElementById('mp-name').textContent = merchant.name;
+  document.getElementById('mp-cat').textContent  = merchant.category || '';
+  const openBadge = document.getElementById('mp-open-badge');
+  if (openBadge) {
+    openBadge.textContent = merchant.is_open ? 'Geöffnet' : 'Geschlossen';
+    if (!merchant.is_open) openBadge.style.cssText += ';background:rgba(239,68,68,0.1);color:#ef4444;border-color:rgba(239,68,68,0.25)';
+  }
+
+  document.getElementById('merchant-shell').style.display = 'block';
+  renderMyDeals();
+}
+
+init();
+</script>
+
+</body>
+</html>

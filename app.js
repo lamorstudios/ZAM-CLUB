@@ -845,6 +845,7 @@ async function renderProfile() {
 
   updatePointsDisplay();
   renderBadges();
+  renderRoleActions();
   await renderSavedSummary();
 }
 
@@ -865,6 +866,32 @@ async function renderSavedSummary() {
     savedDealsArr.length ? `<div class="saved-chip" onclick="navigateTo('deals')">🏷️ ${savedDealsArr.length} Deal${savedDealsArr.length !== 1 ? 's' : ''} gemerkt</div>` : '',
     savedDealsArr.length ? `<div class="saved-chip" onclick="openSavedDeals()" style="background:var(--primary,#8b5cf6);color:white;border-color:var(--primary,#8b5cf6)">Gespeicherte Deals →</div>` : '',
   ].join('');
+}
+
+function renderRoleActions() {
+  const user = ZAMApi.auth.currentUser();
+  const container = $('#profile-role-actions');
+  if (!container || !user) return;
+
+  if (user.role === 'admin') {
+    container.innerHTML = `
+      <a href="admin.html" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;padding:13px">
+        🛡️ Admin-Dashboard
+        <span id="admin-notif-badge" style="background:rgba(255,255,255,0.25);border-radius:20px;padding:1px 8px;font-size:0.72rem;margin-left:6px;display:none">0</span>
+      </a>`;
+    // Load unread notification count
+    ZAMApi.admin.unreadCount().then(count => {
+      const badge = $('#admin-notif-badge');
+      if (badge && count > 0) { badge.textContent = count; badge.style.display = 'inline'; }
+    });
+  } else if (user.role === 'merchant') {
+    container.innerHTML = `
+      <a href="merchant.html" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;padding:13px">
+        🏪 Händler-Dashboard
+      </a>`;
+  } else {
+    container.innerHTML = '';
+  }
 }
 
 function renderBadges() {
