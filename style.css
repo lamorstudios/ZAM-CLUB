@@ -456,6 +456,8 @@ a.nav-tab-map { text-decoration: none; }
    COMMUNITY
 ══════════════════════════════════════════ */
 #page-community { padding-top: 0; }
+#page-community .community-panel:not(.active) { display: none !important; }
+#page-community .community-panel.active { display: block; }
 
 .community-post { margin: 0 16px 14px; padding: 18px; }
 
@@ -1654,7 +1656,7 @@ a.nav-tab-map { text-decoration: none; }
   transform: translateX(-50%) translateX(100vw);
   height: 100dvh;
   background: var(--bg);
-  z-index: 50;
+  z-index: 200;
   display: flex; flex-direction: column;
   transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1664,9 +1666,10 @@ a.nav-tab-map { text-decoration: none; }
   display: flex; align-items: center; gap: 10px;
   padding: 14px 16px 12px;
   padding-top: max(14px, env(safe-area-inset-top, 14px));
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  border-bottom: 1px solid rgba(139,92,246,0.25);
+  background: var(--surface-2);
   flex-shrink: 0;
+  box-shadow: 0 1px 12px rgba(0,0,0,0.3);
 }
 .chat-back-btn {
   width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
@@ -1732,9 +1735,9 @@ a.nav-tab-map { text-decoration: none; }
 .chat-input-bar {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 14px;
-  padding-bottom: max(10px, calc(10px + env(safe-area-inset-bottom, 0px)));
-  border-top: 1px solid var(--border);
-  background: var(--surface);
+  padding-bottom: max(14px, calc(14px + env(safe-area-inset-bottom, 0px)));
+  border-top: 1px solid rgba(139,92,246,0.2);
+  background: var(--surface-2);
   flex-shrink: 0;
 }
 .chat-input-field {
