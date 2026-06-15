@@ -2250,7 +2250,8 @@ a.nav-tab-map { text-decoration: none; }
 .ai-home-banner-arrow{font-size:1.1rem;color:#8b5cf6;font-weight:700}
 
 /* AI Chat Page */
-.ai-chat-window{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;min-height:0;height:calc(100vh - 240px)}
+#page-ai{height:100dvh;overflow:hidden;padding-bottom:0;min-height:unset}
+.ai-chat-window{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;min-height:0}
 .ai-bubble{display:flex;align-items:flex-start;gap:10px}
 .ai-bubble-bot{flex-direction:row}
 .ai-bubble-user{flex-direction:row-reverse}
