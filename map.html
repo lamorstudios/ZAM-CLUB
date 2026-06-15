@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#0f0f13" />
+  <title>ZAM Live Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <style>
+    :root {
+      --bg:#090910; --surface:#111118; --surface-2:#18181f; --surface-3:#202030;
+      --card:#13131a; --border:rgba(255,255,255,0.06); --border-2:rgba(255,255,255,0.11);
+      --primary:#8b5cf6; --primary-light:#a78bfa; --grad:linear-gradient(135deg,#6d28d9,#8b5cf6,#a78bfa);
+      --text:#eeeef5; --muted:rgba(238,238,245,0.48); --dim:rgba(238,238,245,0.28);
+      --green:#10b981; --yellow:#f59e0b; --red:#ef4444; --blue:#3b82f6;
+      --font:'Poppins',-apple-system,sans-serif;
+      --spring:cubic-bezier(0.34,1.56,0.64,1); --ease:cubic-bezier(0.16,1,0.3,1);
+      --app-w:430px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html{font-size:16px}
+    body{
+      font-family:var(--font);background:var(--bg);color:var(--text);
+      min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+      max-width:var(--app-w);margin:0 auto;
+    }
+    button{border:none;outline:none;cursor:pointer;font-family:inherit}
+    select,input{font-family:inherit;outline:none}
+
+    /* ── Header ── */
+    .map-header{
+      display:flex;align-items:center;gap:10px;
+      padding:16px 16px 12px;
+      padding-top:max(16px,env(safe-area-inset-top,16px));
+      background:var(--surface);border-bottom:1px solid var(--border);
+      position:sticky;top:0;z-index:10;
+    }
+    .map-back-btn{
+      width:36px;height:36px;border-radius:10px;flex-shrink:0;
+      background:var(--surface-2);border:1px solid var(--border);
+      color:var(--text);font-size:1.1rem;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .map-header-title{flex:1;font-size:1rem;font-weight:700}
+    .map-online-badge{
+      display:flex;align-items:center;gap:5px;
+      font-size:0.72rem;color:var(--green);
+      background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);
+      padding:4px 10px;border-radius:99px;
+    }
+    .online-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+    /* ── Privacy Banner ── */
+    .privacy-banner{
+      margin:14px;border-radius:18px;overflow:hidden;
+      background:linear-gradient(135deg,rgba(109,40,217,0.15),rgba(139,92,246,0.08));
+      border:1px solid rgba(139,92,246,0.25);
+      padding:20px;
+    }
+    .privacy-icon{font-size:2.4rem;text-align:center;margin-bottom:10px}
+    .privacy-title{font-size:1rem;font-weight:700;text-align:center;margin-bottom:6px}
+    .privacy-text{font-size:0.8rem;color:var(--muted);text-align:center;line-height:1.55;margin-bottom:16px}
+    .privacy-features{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}
+    .privacy-feat{display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--muted)}
+    .privacy-feat span:first-child{font-size:1rem;width:22px;text-align:center}
+    .btn-primary{background:var(--grad);color:#fff;border-radius:12px;padding:13px;font-weight:700;font-size:0.9rem;width:100%;margin-bottom:8px}
+    .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:12px;padding:11px;font-size:0.84rem;width:100%}
+
+    /* ── Map Container ── */
+    .map-container{padding:12px;display:flex;flex-direction:column;gap:8px}
+
+    /* ── Zones ── */
+    .zone-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .map-zone{
+      border-radius:16px;padding:12px 12px 14px;min-height:110px;
+      position:relative;overflow:hidden;cursor:default;
+      transition:transform 0.18s var(--spring);
+    }
+    .map-zone.zone-aussen{min-height:80px;grid-column:1/-1}
+    .zone-bg{position:absolute;inset:0;opacity:0.12}
+    .zone-label{
+      font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;
+      display:flex;align-items:center;gap:5px;position:relative;z-index:1;
+    }
+    .zone-label-icon{font-size:1rem}
+    .zone-users-row{
+      display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;
+      position:relative;z-index:1;
+    }
+    .zone-user-dot{
+      width:34px;height:34px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:0.65rem;font-weight:700;color:#fff;
+      cursor:pointer;
+      box-shadow:0 2px 8px rgba(0,0,0,0.4);
+      border:2px solid rgba(255,255,255,0.2);
+      transition:transform 0.2s var(--spring);
+      position:relative;
+    }
+    .zone-user-dot:active{transform:scale(0.88)}
+    .zone-user-dot.is-me{border-color:#fff;box-shadow:0 0 0 2px var(--primary),0 2px 8px rgba(0,0,0,0.4)}
+    .zone-user-dot::after{
+      content:'';position:absolute;bottom:0;right:0;
+      width:9px;height:9px;border-radius:50%;background:var(--green);
+      border:2px solid var(--bg);
+    }
+    .zone-empty{font-size:0.7rem;color:rgba(255,255,255,0.25);margin-top:8px;position:relative;z-index:1}
+
+    /* Zone colors */
+    .zone-aussen   .zone-bg{background:#f59e0b}
+    .zone-eingang  .zone-bg{background:#3b82f6}
+    .zone-food     .zone-bg{background:#ef4444}
+    .zone-shops    .zone-bg{background:#10b981}
+    .zone-events   .zone-bg{background:#8b5cf6}
+    .zone-aussen   .zone-label{color:#f59e0b}
+    .zone-eingang  .zone-label{color:#3b82f6}
+    .zone-food     .zone-label{color:#ef4444}
+    .zone-shops    .zone-label{color:#10b981}
+    .zone-events   .zone-label{color:#8b5cf6}
+    .zone-aussen{background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15)}
+    .zone-eingang{background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15)}
+    .zone-food{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15)}
+    .zone-shops{background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15)}
+    .zone-events{background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.15)}
+
+    /* ── My Status Bar ── */
+    .my-status-bar{
+      margin:0 12px 12px;border-radius:16px;
+      background:var(--surface-2);border:1px solid var(--border);
+      overflow:hidden;
+    }
+    .my-status-header{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:12px 14px;cursor:pointer;
+    }
+    .my-status-title{font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:6px}
+    .my-status-toggle{font-size:0.72rem;color:var(--primary-light)}
+    .my-status-body{padding:0 14px 14px;display:none}
+    .my-status-body.open{display:block}
+
+    .status-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .status-row label{font-size:0.75rem;color:var(--muted);width:90px;flex-shrink:0}
+    .status-select,.status-input{
+      flex:1;background:var(--surface-3);border:1px solid var(--border);
+      border-radius:8px;padding:8px 10px;font-size:0.8rem;color:var(--text);
+    }
+    .status-select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+    .status-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+    .status-preset{
+      font-size:0.72rem;padding:4px 10px;border-radius:99px;
+      background:var(--surface-3);border:1px solid var(--border);
+      color:var(--muted);cursor:pointer;transition:all 0.15s;
+    }
+    .status-preset:hover,.status-preset.active{background:rgba(139,92,246,0.15);border-color:var(--primary);color:var(--primary-light)}
+    .btn-update{
+      width:100%;padding:10px;border-radius:10px;font-weight:600;font-size:0.84rem;
+      background:var(--grad);color:#fff;
+    }
+
+    /* ── User Popup ── */
+    .popup-overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;
+      opacity:0;pointer-events:none;transition:opacity 0.2s;
+    }
+    .popup-overlay.open{opacity:1;pointer-events:all}
+    .popup-sheet{
+      position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
+      width:min(100vw,var(--app-w));
+      background:var(--surface);border-radius:24px 24px 0 0;
+      padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));
+      z-index:101;transition:transform 0.32s var(--spring);
+    }
+    .popup-overlay.open .popup-sheet{transform:translateX(-50%) translateY(0)}
+    .popup-handle{width:36px;height:4px;border-radius:99px;background:var(--border-2);margin:0 auto 18px}
+    .popup-user-row{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+    .popup-avatar{
+      width:58px;height:58px;border-radius:50%;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.2rem;font-weight:700;color:#fff;
+      box-shadow:0 4px 16px rgba(0,0,0,0.3);
+    }
+    .popup-info{flex:1}
+    .popup-name{font-size:1rem;font-weight:700}
+    .popup-username{font-size:0.78rem;color:var(--muted);margin-top:2px}
+    .popup-status-text{
+      display:inline-flex;align-items:center;gap:6px;
+      background:var(--surface-2);border:1px solid var(--border);
+      border-radius:99px;padding:5px 12px;font-size:0.78rem;
+      margin-bottom:14px;
+    }
+    .popup-badges{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+    .popup-badge{
+      display:flex;align-items:center;gap:4px;
+      background:var(--surface-2);border:1px solid var(--border);
+      border-radius:8px;padding:4px 9px;font-size:0.72rem;color:var(--muted);
+    }
+    .popup-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+    .btn-nudge{
+      padding:13px;border-radius:12px;font-weight:700;font-size:0.88rem;
+      background:var(--grad);color:#fff;
+    }
+    .btn-nudge.pending{background:var(--surface-3);color:var(--muted);border:1px solid var(--border)}
+    .btn-nudge.connected{background:rgba(16,185,129,0.15);color:var(--green);border:1px solid rgba(16,185,129,0.25)}
+    .btn-view-profile{
+      padding:13px;border-radius:12px;font-weight:600;font-size:0.88rem;
+      background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    }
+    .popup-mod-row{display:flex;gap:8px}
+    .btn-mod{
+      flex:1;padding:9px;border-radius:10px;font-size:0.76rem;
+      background:transparent;border:1px solid var(--border);color:var(--muted);
+    }
+    .btn-close-popup{
+      width:100%;padding:11px;border-radius:12px;font-size:0.84rem;
+      background:transparent;border:1px solid var(--border);color:var(--muted);
+      margin-top:8px;
+    }
+
+    /* ── Nudge Inbox ── */
+    .nudge-inbox{
+      position:fixed;top:max(70px,calc(70px + env(safe-area-inset-top,0)));
+      right:12px;z-index:80;display:flex;flex-direction:column;gap:8px;
+      max-width:calc(min(100vw,var(--app-w)) - 24px);
+      pointer-events:none;
+    }
+    .nudge-card{
+      background:linear-gradient(135deg,#6d28d9,#a855f7);
+      border-radius:16px;padding:14px 14px;
+      display:flex;align-items:center;gap:10px;
+      box-shadow:0 8px 32px rgba(109,40,217,0.5);
+      transform:translateX(120%);opacity:0;
+      transition:all 0.4s var(--spring);
+      pointer-events:all;
+      min-width:260px;
+    }
+    .nudge-card.show{transform:translateX(0);opacity:1}
+    .nudge-avatar{
+      width:36px;height:36px;border-radius:50%;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+      font-size:0.7rem;font-weight:700;color:#fff;background:rgba(255,255,255,0.2);
+    }
+    .nudge-text{flex:1;font-size:0.78rem;color:#fff}
+    .nudge-text strong{display:block;font-size:0.85rem}
+    .nudge-btns{display:flex;flex-direction:column;gap:4px}
+    .btn-accept,.btn-reject{
+      font-size:0.7rem;font-weight:700;padding:5px 10px;border-radius:8px;border:none;cursor:pointer;
+    }
+    .btn-accept{background:#fff;color:#6d28d9}
+    .btn-reject{background:rgba(255,255,255,0.15);color:#fff}
+
+    /* ── Notifications toast ── */
+    .notif-toast{
+      position:fixed;top:max(70px,calc(70px + env(safe-area-inset-top,0)));left:50%;
+      transform:translateX(-50%) translateY(-20px);
+      background:var(--surface-2);border:1px solid var(--border);
+      border-radius:14px;padding:10px 18px;
+      font-size:0.82rem;color:var(--text);
+      box-shadow:0 8px 32px rgba(0,0,0,0.3);
+      z-index:200;opacity:0;transition:all 0.3s var(--spring);pointer-events:none;
+      white-space:nowrap;
+    }
+    .notif-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    /* ── Visibility info ── */
+    .visibility-info{
+      margin:0 12px 12px;padding:10px 14px;border-radius:12px;
+      background:rgba(139,92,246,0.07);border:1px solid rgba(139,92,246,0.18);
+      font-size:0.75rem;color:var(--muted);display:flex;align-items:center;gap:8px;
+    }
+    .visibility-dot{
+      width:8px;height:8px;border-radius:50%;flex-shrink:0;
+    }
+    .vis-visible .visibility-dot{background:var(--green)}
+    .vis-invisible .visibility-dot{background:var(--border-2)}
+
+    /* ── Connected users list ── */
+    .connections-section{margin:0 12px 80px;border-radius:16px;background:var(--surface-2);border:1px solid var(--border);overflow:hidden}
+    .connections-header{padding:12px 14px;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);border-bottom:1px solid var(--border)}
+    .connection-row{
+      display:flex;align-items:center;gap:10px;padding:12px 14px;
+      border-bottom:1px solid var(--border);
+    }
+    .connection-row:last-child{border-bottom:none}
+    .conn-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0}
+    .conn-info{flex:1}
+    .conn-name{font-size:0.85rem;font-weight:600}
+    .conn-status{font-size:0.72rem;color:var(--muted)}
+    .btn-open-chat{
+      font-size:0.72rem;font-weight:700;padding:5px 12px;border-radius:8px;
+      background:rgba(139,92,246,0.15);color:var(--primary-light);border:1px solid rgba(139,92,246,0.25);
+      cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="map-header">
+  <button class="map-back-btn" onclick="history.back()" aria-label="Zurück">←</button>
+  <div class="map-header-title">🗺️ ZAM Live Map</div>
+  <div class="map-online-badge">
+    <span class="online-dot"></span>
+    <span id="header-online-count">…</span>
+  </div>
+</div>
+
+<!-- Privacy Banner (shown before consent) -->
+<div id="privacy-banner" class="privacy-banner" style="display:none">
+  <div class="privacy-icon">🔒</div>
+  <div class="privacy-title">Deine Privatsphäre zuerst</div>
+  <div class="privacy-text">
+    Die Live Map zeigt nie deinen genauen Standort.<br>
+    Du wählst selbst eine Zone (z.B. „Food-Bereich") und wirst erst angezeigt, wenn du es aktivierst.
+  </div>
+  <div class="privacy-features">
+    <div class="privacy-feat"><span>📍</span><span>Nur Zonen — kein GPS, kein exakter Standort</span></div>
+    <div class="privacy-feat"><span>👁️</span><span>Sichtbarkeit jederzeit ein- und ausschalten</span></div>
+    <div class="privacy-feat"><span>🚫</span><span>Nutzer blockieren & melden jederzeit möglich</span></div>
+    <div class="privacy-feat"><span>🗑️</span><span>Dein Status wird nach 4 Stunden automatisch gelöscht</span></div>
+  </div>
+  <button class="btn-primary" id="btn-enable-map">🗺️ Karte aktivieren</button>
+  <button class="btn-ghost" id="btn-stay-invisible">Unsichtbar bleiben (nur zuschauen)</button>
+</div>
+
+<!-- Map (shown after consent) -->
+<div id="map-content" style="display:none">
+
+  <!-- Visibility info bar -->
+  <div class="visibility-info vis-invisible" id="visibility-info">
+    <div class="visibility-dot"></div>
+    <span id="visibility-info-text">Du bist unsichtbar. Niemand sieht dich auf der Karte.</span>
+  </div>
+
+  <!-- Zone Map -->
+  <div class="map-container">
+
+    <!-- Außenbereich (full width) -->
+    <div class="map-zone zone-aussen" data-zone="aussen">
+      <div class="zone-bg"></div>
+      <div class="zone-label"><span class="zone-label-icon">🌳</span> Außenbereich</div>
+      <div class="zone-users-row" id="zone-users-aussen"></div>
+    </div>
+
+    <!-- Eingang + Food -->
+    <div class="zone-row">
+      <div class="map-zone zone-eingang" data-zone="eingang">
+        <div class="zone-bg"></div>
+        <div class="zone-label"><span class="zone-label-icon">🚪</span> Eingang</div>
+        <div class="zone-users-row" id="zone-users-eingang"></div>
+      </div>
+      <div class="map-zone zone-food" data-zone="food">
+        <div class="zone-bg"></div>
+        <div class="zone-label"><span class="zone-label-icon">🍕</span> Food</div>
+        <div class="zone-users-row" id="zone-users-food"></div>
+      </div>
+    </div>
+
+    <!-- Shops + Events -->
+    <div class="zone-row">
+      <div class="map-zone zone-shops" data-zone="shops">
+        <div class="zone-bg"></div>
+        <div class="zone-label"><span class="zone-label-icon">🏪</span> Shops</div>
+        <div class="zone-users-row" id="zone-users-shops"></div>
+      </div>
+      <div class="map-zone zone-events" data-zone="events">
+        <div class="zone-bg"></div>
+        <div class="zone-label"><span class="zone-label-icon">🎟️</span> Events</div>
+        <div class="zone-users-row" id="zone-users-events"></div>
+      </div>
+    </div>
+
+  </div><!-- /.map-container -->
+
+  <!-- My Status Bar -->
+  <div class="my-status-bar">
+    <div class="my-status-header" onclick="toggleStatusBar()">
+      <div class="my-status-title">
+        <span id="my-status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--border-2);display:inline-block"></span>
+        Mein Status
+        <span id="my-status-preview" style="font-size:0.72rem;color:var(--muted);font-weight:400"></span>
+      </div>
+      <span class="my-status-toggle" id="status-toggle-icon">▼ Bearbeiten</span>
+    </div>
+    <div class="my-status-body" id="my-status-body">
+
+      <div class="status-row">
+        <label>Sichtbarkeit</label>
+        <select class="status-select" id="sel-visibility">
+          <option value="invisible">🔴 Unsichtbar</option>
+          <option value="visible" selected>🟢 Sichtbar im ZAM</option>
+          <option value="event">🟡 Nur bei Event</option>
+        </select>
+      </div>
+
+      <div class="status-row">
+        <label>Bereich</label>
+        <select class="status-select" id="sel-zone">
+          <option value="">— Kein —</option>
+          <option value="eingang">🚪 Eingang</option>
+          <option value="food">🍕 Food-Bereich</option>
+          <option value="shops">🏪 Shops</option>
+          <option value="events">🎟️ Events-Area</option>
+          <option value="aussen">🌳 Außenbereich</option>
+        </select>
+      </div>
+
+      <div class="status-row">
+        <label>Status-Text</label>
+        <input class="status-input" id="inp-status" placeholder="z.B. Beim Essen…" maxlength="40" />
+      </div>
+
+      <div class="status-presets" id="status-presets">
+        <span class="status-preset" onclick="setPreset('Bin im ZAM 😊')">Bin im ZAM 😊</span>
+        <span class="status-preset" onclick="setPreset('Beim Essen 🍕')">Beim Essen 🍕</span>
+        <span class="status-preset" onclick="setPreset('Suche Leute fürs Event 🎉')">Event-Leute 🎉</span>
+        <span class="status-preset" onclick="setPreset('Shopping 🛍️')">Shopping 🛍️</span>
+        <span class="status-preset" onclick="setPreset('Kaffeepause ☕')">Kaffeepause ☕</span>
+        <span class="status-preset" onclick="setPreset('Bei der Aktion 🏷️')">Bei der Aktion 🏷️</span>
+      </div>
+
+      <button class="btn-update" onclick="saveMyStatus()">✓ Status aktualisieren</button>
+    </div>
+  </div>
+
+  <!-- Connections -->
+  <div class="connections-section" id="connections-section" style="display:none">
+    <div class="connections-header">💬 Meine Verbindungen</div>
+    <div id="connections-list"></div>
+  </div>
+
+</div><!-- /#map-content -->
+
+<!-- User Popup Overlay -->
+<div class="popup-overlay" id="popup-overlay" onclick="closePopup(event)">
+  <div class="popup-sheet" id="popup-sheet">
+    <div class="popup-handle"></div>
+    <div class="popup-user-row">
+      <div class="popup-avatar" id="popup-avatar">JM</div>
+      <div class="popup-info">
+        <div class="popup-name" id="popup-name">Name</div>
+        <div class="popup-username" id="popup-username">@username</div>
+      </div>
+    </div>
+    <div class="popup-status-text" id="popup-status-text">
+      <span>💬</span><span id="popup-status-val">Status</span>
+    </div>
+    <div class="popup-badges" id="popup-badges"></div>
+    <div class="popup-actions">
+      <button class="btn-nudge" id="btn-nudge" onclick="doNudge()">👋 Anstupsen</button>
+      <button class="btn-view-profile" onclick="closePopup()">Profil →</button>
+    </div>
+    <div class="popup-mod-row">
+      <button class="btn-mod" onclick="doBlock()">🚫 Blockieren</button>
+      <button class="btn-mod" onclick="doReport()">🚩 Melden</button>
+    </div>
+    <button class="btn-close-popup" onclick="closePopup()">Schließen</button>
+  </div>
+</div>
+
+<!-- Nudge Inbox (floating cards) -->
+<div class="nudge-inbox" id="nudge-inbox"></div>
+
+<!-- Toast -->
+<div class="notif-toast" id="notif-toast"></div>
+
+<script src="data.js"></script>
+<script src="api.js"></script>
+<script>
+'use strict';
+
+// ── State ──────────────────────────────────────────────────────
+const APP_KEY = 'zamclub_global';
+
+function gLoad(k, fb = null) {
+  try { return JSON.parse(localStorage.getItem(APP_KEY) || '{}')[k] ?? fb; } catch { return fb; }
+}
+function gSet(k, v) {
+  try {
+    const d = JSON.parse(localStorage.getItem(APP_KEY) || '{}');
+    d[k] = v; localStorage.setItem(APP_KEY, JSON.stringify(d));
+  } catch {}
+}
+function uKey(uid) { return 'zamclub_u_' + uid; }
+function uLoad(uid, k, fb = null) {
+  try { return JSON.parse(localStorage.getItem(uKey(uid)) || '{}')[k] ?? fb; } catch { return fb; }
+}
+function uSet(uid, k, v) {
+  try {
+    const d = JSON.parse(localStorage.getItem(uKey(uid)) || '{}');
+    d[k] = v; localStorage.setItem(uKey(uid), JSON.stringify(d));
+  } catch {}
+}
+function uid() { return ZAMApi.auth.currentUser()?.id || null; }
+function s(k, fb = null) { return uLoad(uid(), k, fb); }
+function set(k, v) { uSet(uid(), k, v); }
+function uuid() { return 'u_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function now() { return new Date().toISOString(); }
+
+// ── Demo users visible on map ──────────────────────────────────
+const DEMO_MAP_USERS = [
+  { id: 'usr_042', name: 'Mia K.',   initials: 'MK', color: '#7c3aed', status: 'Beim Yoga 🧘‍♀️',        zone: 'events'  },
+  { id: 'usr_017', name: 'Felix B.', initials: 'FB', color: '#10b981', status: 'Kaffee holen ☕',       zone: 'food'    },
+  { id: 'usr_088', name: 'Sarah L.', initials: 'SL', color: '#ec4899', status: 'Shopping 🛍️',          zone: 'shops'   },
+  { id: 'usr_031', name: 'Tom W.',   initials: 'TW', color: '#f59e0b', status: 'Im Gym 💪',              zone: 'shops'   },
+  { id: 'usr_055', name: 'Anna P.',  initials: 'AP', color: '#3b82f6', status: 'Bin im ZAM 😊',         zone: 'eingang' },
+  { id: 'usr_099', name: 'Lukas M.', initials: 'LM', color: '#06b6d4', status: 'Suche Event-Leute 🎉', zone: 'events'  },
+  { id: 'usr_077', name: 'Emma R.',  initials: 'ER', color: '#f97316', status: 'Draußen chillen 🌳',    zone: 'aussen'  },
+];
+
+const DEMO_BADGES = [
+  { icon: '🏆', name: 'Erster Besuch' },
+  { icon: '⭐', name: 'Stammgast' },
+  { icon: '🎯', name: 'Deal Hunter' },
+];
+
+let _popupUser = null; // currently viewed user in popup
+let _mySettings = { visibility: 'invisible', zone: '', status: '', consent: false };
+let _onlineCount = 0;
+let _connections = [];
+
+// ── Init ────────────────────────────────────────────────────────
+function init() {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) {
+    // Not logged in — redirect
+    window.location.href = 'index.html';
+    return;
+  }
+
+  _mySettings = uLoad(me.id, 'map_settings', { visibility: 'invisible', zone: '', status: '', consent: false });
+  _connections = loadConnections();
+
+  // Online count simulation (stable per minute)
+  _onlineCount = (Math.floor(Date.now() / 60000) % 9) + DEMO_MAP_USERS.length + 1;
+  document.getElementById('header-online-count').textContent = _onlineCount + ' online';
+
+  if (!_mySettings.consent) {
+    document.getElementById('privacy-banner').style.display = 'block';
+    document.getElementById('btn-enable-map').addEventListener('click', () => activateMap(true));
+    document.getElementById('btn-stay-invisible').addEventListener('click', () => activateMap(false));
+  } else {
+    showMapContent();
+  }
+
+  // Poll for nudges every 3s
+  setInterval(checkNudges, 3000);
+  checkNudges();
+}
+
+function activateMap(visible) {
+  _mySettings.consent = true;
+  if (visible) {
+    _mySettings.visibility = 'visible';
+    _mySettings.zone = 'eingang';
+    _mySettings.status = 'Bin im ZAM 😊';
+  }
+  const me = ZAMApi.auth.currentUser();
+  uSet(me.id, 'map_settings', _mySettings);
+  document.getElementById('privacy-banner').style.display = 'none';
+  showMapContent();
+  if (visible) showToast('🟢 Du bist jetzt auf der Karte sichtbar!');
+}
+
+function showMapContent() {
+  document.getElementById('map-content').style.display = 'block';
+  loadSettingsIntoForm();
+  renderMap();
+  renderConnections();
+  updateVisibilityInfo();
+}
+
+// ── Map Render ──────────────────────────────────────────────────
+function renderMap() {
+  const ZONES = ['aussen', 'eingang', 'food', 'shops', 'events'];
+  ZONES.forEach(zone => {
+    const container = document.getElementById('zone-users-' + zone);
+    if (!container) return;
+    container.innerHTML = '';
+  });
+
+  // Place demo users
+  DEMO_MAP_USERS.forEach(user => {
+    const me = ZAMApi.auth.currentUser();
+    if (ZAMApi.chat.isBlocked(user.id)) return;
+    const container = document.getElementById('zone-users-' + user.zone);
+    if (!container) return;
+    const dot = document.createElement('div');
+    dot.className = 'zone-user-dot';
+    dot.style.background = user.color;
+    dot.textContent = user.initials;
+    dot.title = user.name + ' — ' + user.status;
+    dot.addEventListener('click', () => openUserPopup(user));
+    container.appendChild(dot);
+  });
+
+  // Place current user if visible
+  const me = ZAMApi.auth.currentUser();
+  if (_mySettings.visibility !== 'invisible' && _mySettings.zone) {
+    const container = document.getElementById('zone-users-' + _mySettings.zone);
+    if (container) {
+      const dot = document.createElement('div');
+      dot.className = 'zone-user-dot is-me';
+      dot.style.background = '#8b5cf6';
+      dot.textContent = me.initials || 'Ich';
+      dot.title = 'Du — ' + (_mySettings.status || '');
+      container.appendChild(dot);
+    }
+  }
+
+  // Add empty labels for empty zones
+  ZONES.forEach(zone => {
+    const container = document.getElementById('zone-users-' + zone);
+    if (container && container.children.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'zone-empty';
+      empty.textContent = 'Niemand hier';
+      container.appendChild(empty);
+    }
+  });
+}
+
+// ── Status Bar ──────────────────────────────────────────────────
+let _statusBarOpen = false;
+
+function toggleStatusBar() {
+  _statusBarOpen = !_statusBarOpen;
+  document.getElementById('my-status-body').classList.toggle('open', _statusBarOpen);
+  document.getElementById('status-toggle-icon').textContent = _statusBarOpen ? '▲ Schließen' : '▼ Bearbeiten';
+}
+
+function loadSettingsIntoForm() {
+  document.getElementById('sel-visibility').value = _mySettings.visibility || 'invisible';
+  document.getElementById('sel-zone').value = _mySettings.zone || '';
+  document.getElementById('inp-status').value = _mySettings.status || '';
+  updateStatusPreview();
+}
+
+function updateStatusPreview() {
+  const preview = document.getElementById('my-status-preview');
+  const dot = document.getElementById('my-status-dot');
+  const vis = _mySettings.visibility;
+  if (preview) preview.textContent = _mySettings.status ? '· ' + _mySettings.status : '';
+  if (dot) dot.style.background = vis === 'invisible' ? 'rgba(255,255,255,0.2)' : '#10b981';
+}
+
+function setPreset(text) {
+  document.getElementById('inp-status').value = text;
+  document.querySelectorAll('.status-preset').forEach(p => p.classList.toggle('active', p.textContent.trim() === text));
+}
+
+function saveMyStatus() {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) return;
+  _mySettings = {
+    ..._mySettings,
+    visibility: document.getElementById('sel-visibility').value,
+    zone:       document.getElementById('sel-zone').value,
+    status:     document.getElementById('inp-status').value.trim(),
+  };
+  uSet(me.id, 'map_settings', _mySettings);
+
+  // Publish to global visible users
+  const visUsers = gLoad('map_visible_users', {});
+  if (_mySettings.visibility === 'invisible') {
+    delete visUsers[me.id];
+  } else {
+    visUsers[me.id] = { id: me.id, name: me.display_name, initials: me.initials, color: '#8b5cf6', status: _mySettings.status, zone: _mySettings.zone, last_seen: now() };
+  }
+  gSet('map_visible_users', visUsers);
+
+  updateStatusPreview();
+  updateVisibilityInfo();
+  renderMap();
+  toggleStatusBar();
+  showToast(_mySettings.visibility === 'invisible' ? '🔴 Du bist jetzt unsichtbar' : '🟢 Status aktualisiert!');
+}
+
+function updateVisibilityInfo() {
+  const bar  = document.getElementById('visibility-info');
+  const text = document.getElementById('visibility-info-text');
+  const vis  = _mySettings.visibility;
+  if (!bar || !text) return;
+  if (vis === 'invisible') {
+    bar.className = 'visibility-info vis-invisible';
+    text.textContent = 'Du bist unsichtbar. Niemand sieht dich auf der Karte.';
+  } else {
+    bar.className = 'visibility-info vis-visible';
+    const zoneNames = { eingang: 'Eingang', food: 'Food-Bereich', shops: 'Shops', events: 'Events-Area', aussen: 'Außenbereich' };
+    const zoneName  = zoneNames[_mySettings.zone] || _mySettings.zone || 'irgendwo';
+    text.textContent = `Du bist sichtbar im Bereich „${zoneName}".`;
+  }
+}
+
+// ── User Popup ──────────────────────────────────────────────────
+function openUserPopup(user) {
+  _popupUser = user;
+  document.getElementById('popup-avatar').textContent  = user.initials;
+  document.getElementById('popup-avatar').style.background = user.color;
+  document.getElementById('popup-name').textContent    = user.name;
+  document.getElementById('popup-username').textContent = '@' + user.name.toLowerCase().replace(/[^a-z]/g, '');
+  document.getElementById('popup-status-val').textContent = user.status || 'Kein Status';
+
+  // Badges (demo)
+  const badgesEl = document.getElementById('popup-badges');
+  badgesEl.innerHTML = DEMO_BADGES.slice(0, 3).map(b =>
+    `<div class="popup-badge">${b.icon} ${b.name}</div>`
+  ).join('');
+
+  // Nudge button state
+  const nudgeBtn = document.getElementById('btn-nudge');
+  const isConnected = ZAMApi.nudges.isConnected(user.id);
+  const isPending   = ZAMApi.nudges.hasPendingNudgeTo(user.id);
+  nudgeBtn.className = isConnected ? 'btn-nudge connected' : isPending ? 'btn-nudge pending' : 'btn-nudge';
+  nudgeBtn.textContent = isConnected ? '✅ Verbunden — Chatten' : isPending ? '⏳ Angestupst…' : '👋 Anstupsen';
+  if (isConnected) nudgeBtn.onclick = () => openPrivateChat(user.id);
+  else nudgeBtn.onclick = doNudge;
+
+  document.getElementById('popup-overlay').classList.add('open');
+}
+
+function closePopup(e) {
+  if (e && e.target !== document.getElementById('popup-overlay')) return;
+  document.getElementById('popup-overlay').classList.remove('open');
+  _popupUser = null;
+}
+
+// ── Nudge ───────────────────────────────────────────────────────
+function doNudge() {
+  if (!_popupUser) return;
+  const me = ZAMApi.auth.currentUser();
+  if (!me) return;
+
+  try {
+    ZAMApi.nudges.send(_popupUser.id, _popupUser.name);
+  } catch (e) { showToast(e.message, true); return; }
+
+  const btn = document.getElementById('btn-nudge');
+  btn.className   = 'btn-nudge pending';
+  btn.textContent = '⏳ Angestupst…';
+  showToast(`👋 ${_popupUser.name} wurde angestupst!`);
+
+  // Simulate demo user accepting after a delay (3–6 s)
+  const delay = 3000 + Math.random() * 3000;
+  const nudgeId = gLoad('nudges', []).slice(-1)[0]?.id;
+  if (nudgeId) {
+    setTimeout(() => {
+      ZAMApi.nudges.accept(nudgeId);
+      _connections = loadConnections();
+      renderConnections();
+      showNudgeAcceptedToast(_popupUser.name, _popupUser.initials, _popupUser.color, nudgeId);
+      // Update button if popup still open
+      const b = document.getElementById('btn-nudge');
+      if (b && _popupUser) { b.className = 'btn-nudge connected'; b.textContent = '✅ Verbunden — Chatten'; b.onclick = () => openPrivateChat(_popupUser.id); }
+    }, delay);
+  }
+
+  document.getElementById('popup-overlay').classList.remove('open');
+}
+
+function doBlock() {
+  if (!_popupUser) return;
+  ZAMApi.chat.blockUser(_popupUser.id);
+  document.getElementById('popup-overlay').classList.remove('open');
+  renderMap();
+  showToast(`🚫 ${_popupUser.name} blockiert.`);
+  _popupUser = null;
+}
+
+function doReport() {
+  if (!_popupUser) return;
+  ZAMApi.chat.report('user', _popupUser.id, 'map_report', _popupUser.id);
+  document.getElementById('popup-overlay').classList.remove('open');
+  showToast('✅ Nutzer gemeldet. Danke!');
+  _popupUser = null;
+}
+
+// ── Nudge notifications check ────────────────────────────────────
+function checkNudges() {
+  const pending = ZAMApi.nudges.myNudges();
+  pending.forEach(nudge => {
+    const alreadyShown = s('shown_nudges', []).includes(nudge.id);
+    if (!alreadyShown) {
+      const shown = s('shown_nudges', []);
+      shown.push(nudge.id);
+      set('shown_nudges', shown);
+      showNudgeCard(nudge);
+    }
+  });
+}
+
+function showNudgeCard(nudge) {
+  const inbox = document.getElementById('nudge-inbox');
+  const card  = document.createElement('div');
+  card.className = 'nudge-card';
+  card.innerHTML = `
+    <div class="nudge-avatar" style="background:${nudge.from_color || '#8b5cf6'}">${nudge.from_initials || '?'}</div>
+    <div class="nudge-text"><strong>${nudge.from_name}</strong>hat dich angestupst 👋</div>
+    <div class="nudge-btns">
+      <button class="btn-accept" onclick="acceptNudge('${nudge.id}','${nudge.from_id}','${nudge.from_name}')">Annehmen</button>
+      <button class="btn-reject" onclick="rejectNudge('${nudge.id}',this.closest('.nudge-card'))">Ablehnen</button>
+    </div>`;
+  inbox.appendChild(card);
+  requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('show')));
+  setTimeout(() => { card.classList.remove('show'); setTimeout(() => card.remove(), 400); }, 15000);
+}
+
+function acceptNudge(nudgeId, fromId, fromName) {
+  ZAMApi.nudges.accept(nudgeId);
+  _connections = loadConnections();
+  renderConnections();
+  showToast(`✅ Verbunden mit ${fromName}! Privater Chat freigeschaltet.`);
+  document.querySelectorAll('.nudge-card').forEach(c => c.remove());
+}
+
+function rejectNudge(nudgeId, cardEl) {
+  ZAMApi.nudges.reject(nudgeId);
+  cardEl.classList.remove('show');
+  setTimeout(() => cardEl.remove(), 400);
+}
+
+function showNudgeAcceptedToast(name, initials, color, nudgeId) {
+  const inbox = document.getElementById('nudge-inbox');
+  const card  = document.createElement('div');
+  card.className = 'nudge-card';
+  card.innerHTML = `
+    <div class="nudge-avatar" style="background:${color}">${initials}</div>
+    <div class="nudge-text"><strong>${name}</strong>hat dein Anstupsen angenommen! 🎉<br><small>Privater Chat freigeschaltet</small></div>
+    <div class="nudge-btns">
+      <button class="btn-accept" onclick="openPrivateChatById('${nudgeId}')">Chatten</button>
+    </div>`;
+  inbox.appendChild(card);
+  requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('show')));
+  setTimeout(() => { card.classList.remove('show'); setTimeout(() => card.remove(), 400); }, 8000);
+  renderConnections();
+}
+
+// ── Connections ──────────────────────────────────────────────────
+function loadConnections() {
+  const myId = uid();
+  if (!myId) return [];
+  return gLoad('connections', []).filter(c => c.user_ids && c.user_ids.includes(myId));
+}
+
+function renderConnections() {
+  _connections = loadConnections();
+  const section = document.getElementById('connections-section');
+  const list    = document.getElementById('connections-list');
+  if (!section || !list) return;
+
+  if (_connections.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  const myId = uid();
+
+  list.innerHTML = _connections.map(conn => {
+    const otherId = conn.user_ids.find(id => id !== myId);
+    const other   = DEMO_MAP_USERS.find(u => u.id === otherId) || { name: 'Nutzer', initials: '?', color: '#8b5cf6', status: '' };
+    const roomId  = ZAMApi.nudges.privateChatRoomId(otherId);
+    return `<div class="connection-row">
+      <div class="conn-avatar" style="background:${other.color}">${other.initials}</div>
+      <div class="conn-info">
+        <div class="conn-name">${other.name}</div>
+        <div class="conn-status">${other.status || 'Im ZAM'}</div>
+      </div>
+      <button class="btn-open-chat" onclick="openPrivateChat('${otherId}')">💬 Chatten</button>
+    </div>`;
+  }).join('');
+}
+
+function openPrivateChat(userId) {
+  const roomId = ZAMApi.nudges.privateChatRoomId(userId);
+  const other  = DEMO_MAP_USERS.find(u => u.id === userId) || { name: 'Nutzer' };
+  // Pass room info via sessionStorage to index.html
+  sessionStorage.setItem('open_chat_room', JSON.stringify({ id: roomId, name: '💬 ' + other.name, isPrivate: true }));
+  window.location.href = 'index.html#community';
+}
+
+function openPrivateChatById(nudgeId) {
+  const nudge = gLoad('nudges', []).find(n => n.id === nudgeId);
+  if (!nudge) return;
+  const otherId = nudge.from_id;
+  openPrivateChat(otherId);
+}
+
+// ── Toast ────────────────────────────────────────────────────────
+let _toastTimer = null;
+function showToast(msg, isError = false) {
+  const toast = document.getElementById('notif-toast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.style.borderColor = isError ? 'rgba(239,68,68,0.3)' : 'var(--border)';
+  clearTimeout(_toastTimer);
+  toast.classList.add('show');
+  _toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>

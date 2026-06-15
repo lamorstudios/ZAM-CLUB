@@ -1496,7 +1496,20 @@ function showApp() {
 
   renderAll();
   state.currentPage = '';
-  navigateTo('home');
+
+  // Check if map.html redirected us to open a private chat
+  const pendingChat = sessionStorage.getItem('open_chat_room');
+  if (pendingChat) {
+    sessionStorage.removeItem('open_chat_room');
+    try {
+      const room = JSON.parse(pendingChat);
+      navigateTo('community');
+      setTimeout(() => openChatRoom(room.id, room.name), 300);
+    } catch { navigateTo('home'); }
+  } else {
+    navigateTo(location.hash === '#community' ? 'community' : 'home');
+  }
+
   setTimeout(() => checkBadgesAfterAction(), 900);
 }
 

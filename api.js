@@ -939,6 +939,107 @@ const ZAMApi = {
   },
 
   // ──────────────────────────────────────────────────────────
+  // NUDGES & CONNECTIONS (Phase 8)
+  // ──────────────────────────────────────────────────────────
+  nudges: {
+    privateChatRoomId(userId) {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return null;
+      const pair = [me.id, userId].sort().join('_');
+      return `room_priv_${pair}`;
+    },
+
+    hasPendingNudgeTo(toUserId) {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return false;
+      const nudges = _gLoad('nudges', []);
+      return nudges.some(n => n.from_id === me.id && n.to_id === toUserId && n.status === 'pending');
+    },
+
+    isConnected(userId) {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return false;
+      const connections = _gLoad('connections', []);
+      return connections.some(c =>
+        (c.user_a === me.id && c.user_b === userId) ||
+        (c.user_a === userId && c.user_b === me.id)
+      );
+    },
+
+    send(toUserId, toUserName) {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return null;
+      if (this.hasPendingNudgeTo(toUserId) || this.isConnected(toUserId)) return null;
+      const nudgeId = _uuid();
+      const nudge = { id: nudgeId, from_id: me.id, from_name: me.name || me.username, to_id: toUserId, to_name: toUserName, status: 'pending', created_at: _now() };
+      const nudges = _gLoad('nudges', []);
+      nudges.push(nudge);
+      _gSet('nudges', nudges);
+      // Add notification to recipient's per-user store
+      const recipientKey = `zamclub_u_${toUserId}`;
+      try {
+        const rData = JSON.parse(localStorage.getItem(recipientKey) || '{}');
+        const rNotifs = rData.nudge_notifications || [];
+        rNotifs.unshift({ id: nudgeId, from_id: me.id, from_name: me.name || me.username, created_at: _now() });
+        rData.nudge_notifications = rNotifs.slice(0, 20);
+        localStorage.setItem(recipientKey, JSON.stringify(rData));
+      } catch {}
+      return nudgeId;
+    },
+
+    myNudges() {
+      const pending = _s('nudge_notifications', []);
+      const nudges  = _gLoad('nudges', []);
+      return pending.map(n => {
+        const global = nudges.find(g => g.id === n.id);
+        return { ...n, status: global ? global.status : 'pending' };
+      }).filter(n => n.status === 'pending');
+    },
+
+    accept(nudgeId) {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return;
+      // Update global nudge status
+      const nudges = _gLoad('nudges', []);
+      const nudge  = nudges.find(n => n.id === nudgeId);
+      if (nudge) {
+        nudge.status = 'accepted';
+        _gSet('nudges', nudges);
+        // Create connection
+        const connections = _gLoad('connections', []);
+        const alreadyConnected = connections.some(c =>
+          (c.user_a === nudge.from_id && c.user_b === nudge.to_id) ||
+          (c.user_a === nudge.to_id   && c.user_b === nudge.from_id)
+        );
+        if (!alreadyConnected) {
+          connections.push({ id: _uuid(), user_a: nudge.from_id, user_b: nudge.to_id, connected_at: _now() });
+          _gSet('connections', connections);
+        }
+        // Notify the sender
+        const senderKey = `zamclub_u_${nudge.from_id}`;
+        try {
+          const sData = JSON.parse(localStorage.getItem(senderKey) || '{}');
+          const sNotifs = sData.notifications || [];
+          sNotifs.unshift({ id: _uuid(), title: 'Anstupsen angenommen!', body: `${nudge.to_name || 'Jemand'} hat deinen Anstoß angenommen. Du kannst jetzt chatten!`, type: 'nudge_accepted', is_read: false, created_at: _now() });
+          sData.notifications = sNotifs.slice(0, 50);
+          localStorage.setItem(senderKey, JSON.stringify(sData));
+        } catch {}
+      }
+      // Remove from own nudge_notifications
+      const myNotifs = _s('nudge_notifications', []).filter(n => n.id !== nudgeId);
+      _set('nudge_notifications', myNotifs);
+    },
+
+    reject(nudgeId) {
+      const nudges = _gLoad('nudges', []);
+      const nudge  = nudges.find(n => n.id === nudgeId);
+      if (nudge) { nudge.status = 'rejected'; _gSet('nudges', nudges); }
+      const myNotifs = _s('nudge_notifications', []).filter(n => n.id !== nudgeId);
+      _set('nudge_notifications', myNotifs);
+    },
+  },
+
+  // ──────────────────────────────────────────────────────────
   // NOTIFICATIONS
   // ──────────────────────────────────────────────────────────
   notifications: {

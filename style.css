@@ -185,6 +185,7 @@ ul, ol { list-style: none; }
   filter: drop-shadow(0 0 10px rgba(139,92,246,0.8));
 }
 .nav-tab:active .nav-icon { transform: scale(0.8); }
+a.nav-tab-map { text-decoration: none; }
 
 /* Active bar */
 .nav-tab.active::after {
