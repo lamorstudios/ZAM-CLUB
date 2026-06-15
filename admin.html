@@ -432,6 +432,9 @@
     <button class="tab-btn" data-tab="analytics" role="tab">
       📊 Analytics
     </button>
+    <button class="tab-btn" data-tab="betreiber" role="tab">
+      🛰️ Betreiber
+    </button>
   </nav>
 
   <!-- ══════════════════════════════════════════
@@ -662,6 +665,7 @@
 
   <!-- TAB 6: ANALYTICS -->
   <div class="tab-panel" id="tab-analytics">
+
     <div class="card">
       <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
         📊 Center Analytics
@@ -678,6 +682,77 @@
       <div style="font-size:0.75rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:8px">⭐ Top Händler / Deals / Events</div>
       <div id="admin-analytics-top"></div>
     </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       TAB 7: BETREIBER DASHBOARD (Phase 15)
+  ══════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab-betreiber">
+
+    <!-- Refresh Button -->
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button onclick="renderBetreiberDashboard()" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:10px;padding:8px 16px;font-size:0.75rem;font-weight:600;font-family:inherit;cursor:pointer">↻ Aktualisieren</button>
+    </div>
+
+    <!-- 1. Betreiber Dashboard -->
+    <div class="card">
+      <div class="card-title">📊 Plattform-Übersicht</div>
+      <div id="b-platform-kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:4px"></div>
+    </div>
+
+    <!-- 2. Community Analytics -->
+    <div class="card">
+      <div class="card-title">👥 Community Analytics</div>
+      <div id="b-community-kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px"></div>
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:10px">Beliebteste Beiträge</div>
+      <div id="b-top-posts"></div>
+    </div>
+
+    <!-- 3. Event Analytics -->
+    <div class="card">
+      <div class="card-title">🎉 Event Analytics</div>
+      <div id="b-event-kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px"></div>
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:10px">Beliebteste Events</div>
+      <div id="b-top-events"></div>
+    </div>
+
+    <!-- 4. Deal Analytics -->
+    <div class="card">
+      <div class="card-title">🏷️ Deal Analytics</div>
+      <div id="b-deal-kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px"></div>
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:10px">Meistgeklickte Deals</div>
+      <div id="b-top-deals"></div>
+    </div>
+
+    <!-- 5. Map Analytics -->
+    <div class="card">
+      <div class="card-title">🗺️ Map Analytics</div>
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:10px">Zonen-Heatmap (Aktivität)</div>
+      <div id="b-zone-heatmap"></div>
+    </div>
+
+    <!-- 6. Händler Rankings -->
+    <div class="card">
+      <div class="card-title">🏪 Händler Rankings</div>
+      <div id="b-merchant-rankings"></div>
+    </div>
+
+    <!-- 7. Umsatz Dashboard -->
+    <div class="card">
+      <div class="card-title">💰 Umsatz-Dashboard</div>
+      <div id="b-revenue-kpis" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px"></div>
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:10px">Paket-Verteilung</div>
+      <div id="b-plan-dist"></div>
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-top:16px;margin-bottom:10px">Aktive Verträge</div>
+      <div id="b-contracts-list"></div>
+    </div>
+
+    <!-- 8. Systemstatus -->
+    <div class="card">
+      <div class="card-title">⚙️ Systemstatus</div>
+      <div id="b-system-status"></div>
+    </div>
+
   </div>
 
 </main>
@@ -1360,12 +1435,273 @@ function renderAdminAnalyticsTab() {
   }
 }
 
+// ═══════════════════════════════════════════════
+// PHASE 15: BETREIBER DASHBOARD
+// ═══════════════════════════════════════════════
+
+function bKpi(num, label, color) {
+  return `<div style="background:var(--surface2);border:1px solid rgba(139,92,246,0.15);border-radius:12px;padding:14px;text-align:center">
+    <div style="font-size:1.4rem;font-weight:800;color:${color||'#8b5cf6'}">${num}</div>
+    <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-top:4px">${label}</div>
+  </div>`;
+}
+
+function bTopList(items, icon, metricLabel) {
+  if (!items || !items.length) return '<div style="font-size:0.72rem;color:rgba(255,255,255,0.3);padding:8px 0">Noch keine Daten</div>';
+  return items.slice(0, 5).map(([id, count], i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+      <span style="font-size:0.9rem">${['🥇','🥈','🥉','4️⃣','5️⃣'][i]||'#'}</span>
+      <span style="flex:1;font-size:0.75rem;color:#e2e8f0">${icon} ${bEsc(id)}</span>
+      <span style="font-size:0.72rem;font-weight:700;color:#8b5cf6">${count} ${metricLabel}</span>
+    </div>`).join('');
+}
+
+function bEsc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function bZoneBar(zone, count, maxV) {
+  const names  = {mk2_1:'MK 2(1) Orange', mk2_2:'MK 2(2) Lila', mk2_3:'MK 2(3) Grün', mk2_4:'MK 2(4) Blau', plaza:'Gandhi-Platz'};
+  const colors = {mk2_1:'#d97706', mk2_2:'#7c3aed', mk2_3:'#059669', mk2_4:'#2563eb', plaza:'#8b5cf6'};
+  const pct = maxV > 0 ? (count / maxV * 100).toFixed(0) : 0;
+  return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+    <div style="font-size:0.7rem;font-weight:600;width:110px;flex-shrink:0;color:${colors[zone]||'#e2e8f0'}">${names[zone]||zone}</div>
+    <div style="flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.07);overflow:hidden">
+      <div style="height:100%;width:${pct}%;border-radius:4px;background:${colors[zone]||'#8b5cf6'}"></div>
+    </div>
+    <div style="font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.5);width:30px;text-align:right">${count}</div>
+  </div>`;
+}
+
+function renderBetreiberDashboard() {
+  const g = (() => { try { return JSON.parse(localStorage.getItem('zamclub_global') || '{}'); } catch { return {}; } })();
+  const accounts   = g.accounts   || [];
+  const merchants  = g.merchants  || [];
+  const events     = g.events     || [];
+  const deals      = g.deals      || [];
+  const posts      = g.posts      || [];
+  const contracts  = _getContracts ? _getContracts() : (g.contracts || []);
+  const invoices   = (() => { try { return JSON.parse(localStorage.getItem('zamclub_invoices') || '[]'); } catch { return []; } })();
+  const analytics  = (() => { try { return JSON.parse(localStorage.getItem('zamclub_analytics') || '[]'); } catch { return []; } })();
+  const boosts     = (() => { try { return JSON.parse(localStorage.getItem('zamclub_sponsored_boosts') || '[]'); } catch { return []; } })();
+
+  const now = Date.now();
+  const today = new Date().toDateString();
+  const weekAgo = now - 7 * 864e5;
+
+  // — 1. Platform KPIs —
+  const totalUsers   = accounts.length;
+  const activeToday  = accounts.filter(a => a.last_active && new Date(a.last_active).toDateString() === today).length;
+  const activeWeek   = accounts.filter(a => a.last_active && new Date(a.last_active) >= new Date(weekAgo)).length;
+  const newThisWeek  = accounts.filter(a => a.created_at && new Date(a.created_at) >= new Date(weekAgo)).length;
+  const activeMerchants = merchants.filter(m => m.status === 'active').length;
+  const el1 = document.getElementById('b-platform-kpis');
+  if (el1) el1.innerHTML = [
+    bKpi(totalUsers,    'Nutzer gesamt',   '#8b5cf6'),
+    bKpi(activeToday,   'Aktiv heute',     '#22c55e'),
+    bKpi(activeWeek,    'Aktiv diese Woche','#3b82f6'),
+    bKpi(newThisWeek,   'Neu diese Woche', '#f59e0b'),
+    bKpi(activeMerchants,'Aktive Händler', '#d97706'),
+    bKpi(accounts.filter(a=>a.role==='merchant').length, 'Händler-Accounts', '#a855f7'),
+  ].join('');
+
+  // — 2. Community Analytics —
+  const allComments = posts.reduce((s, p) => s + (p.comments || []).length, 0);
+  const allLikes    = posts.reduce((s, p) => s + (p.likes || 0), 0);
+  const el2 = document.getElementById('b-community-kpis');
+  if (el2) el2.innerHTML = [
+    bKpi(posts.filter(p=>p.status==='approved').length, 'Beiträge', '#8b5cf6'),
+    bKpi(posts.filter(p=>p.status==='pending').length,  'In Warteschlange', '#f59e0b'),
+    bKpi(allComments, 'Kommentare', '#22c55e'),
+    bKpi(allLikes,    'Likes', '#ec4899'),
+  ].join('');
+
+  const topPostsEl = document.getElementById('b-top-posts');
+  if (topPostsEl) {
+    const sorted = posts.filter(p=>p.status==='approved').sort((a,b)=>(b.likes||0)-(a.likes||0)).slice(0,5);
+    topPostsEl.innerHTML = sorted.length ? sorted.map((p,i) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <span style="font-size:0.9rem">${['🥇','🥈','🥉','4️⃣','5️⃣'][i]||''}</span>
+        <span style="flex:1;font-size:0.75rem;color:#e2e8f0">${bEsc((p.content||'').slice(0,60))}…</span>
+        <span style="font-size:0.72rem;font-weight:700;color:#ec4899">❤️ ${p.likes||0}</span>
+      </div>`).join('') : '<div style="font-size:0.72rem;color:rgba(255,255,255,0.3);padding:8px 0">Noch keine Beiträge</div>';
+  }
+
+  // — 3. Event Analytics (from analytics events) —
+  const evViews    = analytics.filter(e => e.type === 'event_view').length;
+  const evJoins    = analytics.filter(e => e.type === 'event_join').length;
+  const evCheckins = analytics.filter(e => e.type === 'event_checkin').length;
+  const totalRegs  = events.reduce((s, e) => s + (e.registrations||[]).length, 0);
+  const el3 = document.getElementById('b-event-kpis');
+  if (el3) el3.innerHTML = [
+    bKpi(events.filter(e=>e.status==='active').length, 'Aktive Events', '#8b5cf6'),
+    bKpi(totalRegs,  'Anmeldungen gesamt', '#22c55e'),
+    bKpi(evViews,    'Aufrufe (Analytics)', '#3b82f6'),
+    bKpi(evCheckins, 'Check-ins', '#f59e0b'),
+  ].join('');
+
+  // Top events by registrations
+  const topEvEl = document.getElementById('b-top-events');
+  if (topEvEl) {
+    const sorted = events.slice().sort((a,b)=>(b.registrations||[]).length-(a.registrations||[]).length);
+    const top = sorted.slice(0,5).map(e => [e.title||e.id, (e.registrations||[]).length]);
+    topEvEl.innerHTML = bTopList(top, '🎉', 'Teilnehmer');
+  }
+
+  // — 4. Deal Analytics —
+  const dealViews  = analytics.filter(e => e.type === 'deal_view').length;
+  const dealSaves  = analytics.filter(e => e.type === 'deal_save').length;
+  const dealRedeem = analytics.filter(e => e.type === 'deal_redeem').length;
+  const el4 = document.getElementById('b-deal-kpis');
+  if (el4) el4.innerHTML = [
+    bKpi(deals.filter(d=>d.status==='active').length, 'Aktive Deals', '#8b5cf6'),
+    bKpi(dealViews,  'Deal-Aufrufe', '#3b82f6'),
+    bKpi(dealSaves,  'Gespeichert', '#22c55e'),
+    bKpi(dealRedeem, 'Eingelöst', '#f59e0b'),
+  ].join('');
+
+  // Top deals by views (from analytics)
+  const dealViewMap = {};
+  analytics.filter(e=>e.type==='deal_view'&&e.deal_id).forEach(e => { dealViewMap[e.deal_id]=(dealViewMap[e.deal_id]||0)+1; });
+  const topDealsArr = Object.entries(dealViewMap).sort((a,b)=>b[1]-a[1]);
+  const topDealEl = document.getElementById('b-top-deals');
+  if (topDealEl) topDealEl.innerHTML = bTopList(topDealsArr.map(([id,c])=>{
+    const d = deals.find(x=>x.id===id); return [d?.title||id, c];
+  }), '🏷️', 'Aufrufe');
+
+  // — 5. Map Analytics —
+  const zoneMap = {};
+  analytics.filter(e=>e.type==='zone_visit'&&e.zone).forEach(e => { zoneMap[e.zone]=(zoneMap[e.zone]||0)+1; });
+  const zoneEl = document.getElementById('b-zone-heatmap');
+  if (zoneEl) {
+    const entries = Object.entries(zoneMap).sort((a,b)=>b[1]-a[1]);
+    const maxV = Math.max(...entries.map(e=>e[1]), 1);
+    if (!entries.length) {
+      zoneEl.innerHTML = '<div style="font-size:0.72rem;color:rgba(255,255,255,0.3);padding:8px 0">Noch keine Map-Daten</div>';
+    } else {
+      zoneEl.innerHTML = entries.map(([z,c]) => bZoneBar(z, c, maxV)).join('');
+    }
+  }
+
+  // — 6. Händler Rankings —
+  const merchantViewMap = {};
+  analytics.filter(e=>e.type==='merchant_view'&&e.merchant_id).forEach(e => { merchantViewMap[e.merchant_id]=(merchantViewMap[e.merchant_id]||0)+1; });
+  const topMerchantsArr = Object.entries(merchantViewMap).sort((a,b)=>b[1]-a[1]).map(([id,c]) => {
+    const m = merchants.find(x=>x.id===id); return [m?.name||id, c];
+  });
+  const rankEl = document.getElementById('b-merchant-rankings');
+  if (rankEl) {
+    const hasBoosted = merchants.filter(m => boosts.some(b=>b.merchant_id===m.id&&b.active));
+    rankEl.innerHTML = `
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:10px">Top Händler (nach Aufrufen)</div>
+      ${bTopList(topMerchantsArr, '🏪', 'Aufrufe')}
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-top:16px;margin-bottom:10px">Händler mit aktiven Boosts</div>
+      ${hasBoosted.length ? hasBoosted.map(m=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+          <span>⚡</span><span style="flex:1;font-size:0.75rem;color:#e2e8f0">${bEsc(m.name)}</span>
+          <span style="font-size:0.65rem;background:linear-gradient(135deg,#92400e,#d97706);color:#fff;padding:2px 8px;border-radius:6px;font-weight:700">Gesponsert</span>
+        </div>`).join('') : '<div style="font-size:0.72rem;color:rgba(255,255,255,0.3);padding:8px 0">Keine aktiven Boosts</div>'}
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-top:16px;margin-bottom:10px">Alle registrierten Händler (${merchants.length})</div>
+      ${merchants.length ? merchants.map(m=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+          <span style="font-size:1rem">${m.logo||'🏪'}</span>
+          <div style="flex:1"><div style="font-size:0.78rem;font-weight:600;color:#e2e8f0">${bEsc(m.name)}</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.35)">${bEsc(m.category||'')} · ${bEsc(m.zone||'')}</div></div>
+          <span style="font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:6px;background:${m.status==='active'?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.1)'};color:${m.status==='active'?'#22c55e':'#ef4444'}">${m.status==='active'?'Aktiv':'Inaktiv'}</span>
+        </div>`).join('') : '<div style="font-size:0.72rem;color:rgba(255,255,255,0.3);padding:8px 0">Keine Händler</div>'}`;
+  }
+
+  // — 7. Umsatz Dashboard —
+  const activeContracts = contracts.filter(c=>c.status==='active');
+  const trialContracts  = contracts.filter(c=>c.status==='trial');
+  const monthlyRevenue  = activeContracts.reduce((s,c)=>s+(c.price||0),0);
+  const premiumCount    = activeContracts.filter(c=>c.plan_id==='premium'||c.plan_id==='business').length;
+  const planCounts      = {basic:0,premium:0,business:0};
+  activeContracts.forEach(c=>{if(planCounts[c.plan_id]!==undefined)planCounts[c.plan_id]++;});
+  const el7 = document.getElementById('b-revenue-kpis');
+  if (el7) el7.innerHTML = [
+    bKpi(activeContracts.length, 'Aktive Pakete', '#22c55e'),
+    bKpi(monthlyRevenue+'€', 'Monatl. Umsatz', '#8b5cf6'),
+    bKpi(premiumCount, 'Premium-Händler', '#f59e0b'),
+    bKpi(trialContracts.length, 'In Testphase', '#3b82f6'),
+  ].join('');
+
+  const planNames = {basic:'Basic (49€)',premium:'Premium (99€)',business:'Business (199€)'};
+  const planDistEl = document.getElementById('b-plan-dist');
+  if (planDistEl) {
+    const maxC = Math.max(...Object.values(planCounts), 1);
+    planDistEl.innerHTML = Object.entries(planCounts).map(([id,count])=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="font-size:0.75rem;font-weight:600;color:#e2e8f0;width:110px;flex-shrink:0">${planNames[id]||id}</div>
+        <div style="flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.07);overflow:hidden">
+          <div style="height:100%;width:${(count/maxC*100).toFixed(0)}%;border-radius:4px;background:linear-gradient(90deg,#6d28d9,#a78bfa)"></div>
+        </div>
+        <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.5);width:20px;text-align:right">${count}</div>
+      </div>`).join('');
+  }
+
+  const contractsEl = document.getElementById('b-contracts-list');
+  if (contractsEl) {
+    contractsEl.innerHTML = contracts.length ? contracts.slice().reverse().slice(0,10).map(c=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="flex:1"><div style="font-size:0.78rem;font-weight:600;color:#e2e8f0">${bEsc(c.plan_name)}</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.35)">${new Date(c.created_at).toLocaleDateString('de-DE')} · ${c.months} Mon.</div></div>
+        <div style="text-align:right"><div style="font-size:0.8rem;font-weight:700;color:#a78bfa">${c.price}€</div>
+        <span style="font-size:0.62rem;font-weight:700;padding:2px 8px;border-radius:12px;background:${c.status==='active'?'rgba(34,197,94,0.15)':c.status==='trial'?'rgba(245,158,11,0.15)':'rgba(239,68,68,0.1)'};color:${c.status==='active'?'#22c55e':c.status==='trial'?'#f59e0b':'#ef4444'}">${{active:'Aktiv',trial:'Test',cancelled:'Gekündigt',expired:'Abgelaufen'}[c.status]||c.status}</span></div>
+      </div>`).join('') : '<div style="font-size:0.72rem;color:rgba(255,255,255,0.3);padding:8px 0">Noch keine Verträge</div>';
+  }
+
+  // — 8. Systemstatus —
+  let storageUsed = 0;
+  try { for (let k in localStorage) { if (k.startsWith('zamclub')) storageUsed += (localStorage[k]||'').length; } } catch {}
+  const storageMB = (storageUsed / 1024).toFixed(1);
+  const pushPerm = ('Notification' in window) ? Notification.permission : 'unsupported';
+  const pushColor = {granted:'#22c55e',denied:'#ef4444',default:'#f59e0b',unsupported:'rgba(255,255,255,0.3)'}[pushPerm]||'#fff';
+  const swStatus = ('serviceWorker' in navigator) ? 'Unterstützt' : 'Nicht verfügbar';
+  const analyticsCount = analytics.length;
+  const errors = (() => { try { return JSON.parse(localStorage.getItem('zamclub_errors')||'[]'); } catch { return []; } })();
+  const sysEl = document.getElementById('b-system-status');
+  if (sysEl) sysEl.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      ${bKpi('OK', 'App-Status', '#22c55e')}
+      ${bKpi(storageMB+'KB', 'Speicher genutzt', '#8b5cf6')}
+      ${bKpi(analyticsCount, 'Analytics-Events', '#3b82f6')}
+      ${bKpi(errors.length, 'Fehler-Logs', errors.length>0?'#ef4444':'#22c55e')}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
+        <span style="font-size:0.78rem;color:#e2e8f0">Push Notifications</span>
+        <span style="font-size:0.75rem;font-weight:700;color:${pushColor}">${{granted:'Aktiviert',denied:'Blockiert',default:'Nicht gesetzt',unsupported:'Nicht verfügbar'}[pushPerm]||pushPerm}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
+        <span style="font-size:0.78rem;color:#e2e8f0">Service Worker</span>
+        <span style="font-size:0.75rem;font-weight:700;color:${swStatus==='Unterstützt'?'#22c55e':'#f59e0b'}">${swStatus}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
+        <span style="font-size:0.78rem;color:#e2e8f0">localStorage</span>
+        <span style="font-size:0.75rem;font-weight:700;color:#22c55e">Verfügbar</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
+        <span style="font-size:0.78rem;color:#e2e8f0">Supabase</span>
+        <span style="font-size:0.75rem;font-weight:700;color:#f59e0b">Vorbereitet (localStorage-Modus)</span>
+      </div>
+    </div>
+    ${errors.length ? `<div style="margin-top:12px"><div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(239,68,68,0.6);margin-bottom:8px">Fehler-Logs</div>${errors.slice(-5).reverse().map(e=>`<div style="font-size:0.7rem;color:#fca5a5;padding:6px 10px;background:rgba(239,68,68,0.08);border-radius:8px;margin-bottom:4px;font-family:monospace">${bEsc(JSON.stringify(e))}</div>`).join('')}</div>` : ''}`;
+}
+
+// Helper to get contracts from localStorage directly (api.js may not be loaded yet)
+function _getContracts() {
+  try {
+    const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+    return g.contracts || [];
+  } catch { return []; }
+}
+
 // Tab wechsel
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     if (btn.dataset.tab === 'moderation')     renderModeration();
     if (btn.dataset.tab === 'notifications')  { renderNotifications(); markAllNotifsRead(); }
     if (btn.dataset.tab === 'analytics')      renderAdminAnalyticsTab();
+    if (btn.dataset.tab === 'betreiber')      renderBetreiberDashboard();
   });
 });
 
