@@ -302,11 +302,92 @@ async function toggleSave(type, id, btnEl) {
       btnEl.style.transform = 'scale(1.3)';
       setTimeout(() => { btnEl.style.transform = ''; }, 250);
     }
-    showToast(type === 'event' ? '🔖 Event gespeichert!' : '🔖 Deal gespeichert!', 'success');
+    showToast(type === 'event' ? '🔖 Event gespeichert!' : '🔖 Deal gespeichert! +5 Punkte', 'success');
+    if (type === 'deal') {
+      // Award points silently (toast already shown above)
+      await ZAMApi.points.add(5, 'deal_saved', 'Deal gespeichert');
+      updatePointsDisplay(true);
+      await checkBadgesAfterAction();
+      renderChallenges();
+    }
   }
 
   // Refresh saved summary in profile
   renderSavedSummary();
+}
+
+// =============================================
+// Badge system
+// =============================================
+let _badgeToastTimer = null;
+
+function showBadgeUnlockToast(badge) {
+  let toast = document.getElementById('badge-unlock-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'badge-unlock-toast';
+    toast.className = 'badge-unlock-toast';
+    toast.innerHTML = `<div class="badge-toast-icon"></div><div class="badge-toast-text"><strong></strong><span>Abzeichen freigeschaltet! 🎉</span></div>`;
+    document.body.appendChild(toast);
+  }
+  toast.querySelector('.badge-toast-icon').textContent = badge.icon;
+  toast.querySelector('strong').textContent = badge.name;
+  clearTimeout(_badgeToastTimer);
+  toast.classList.remove('show');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    toast.classList.add('show');
+    _badgeToastTimer = setTimeout(() => toast.classList.remove('show'), 3600);
+  }));
+}
+
+async function checkBadgesAfterAction() {
+  const newBadges = await ZAMApi.badges.checkAndUnlock();
+  for (let i = 0; i < newBadges.length; i++) {
+    if (i > 0) await new Promise(r => setTimeout(r, 800));
+    showBadgeUnlockToast(newBadges[i]);
+  }
+  if (newBadges.length > 0) renderBadges();
+}
+
+// =============================================
+// Challenges
+// =============================================
+async function renderChallenges() {
+  const container = $('#challenges-list');
+  if (!container) return;
+  const list = await ZAMApi.challenges.list();
+  container.innerHTML = list.map(c => `
+    <div class="challenge-card">
+      <div class="challenge-header">
+        <div class="challenge-icon">${c.icon}</div>
+        <div class="challenge-info">
+          <div class="challenge-title">${c.title}</div>
+          <div class="challenge-desc">${c.description}</div>
+        </div>
+        <div class="challenge-reward">+${c.reward_pts} Pkt.</div>
+      </div>
+      <div class="challenge-progress-track">
+        <div class="challenge-progress-fill" style="width:${c.pct}%"></div>
+      </div>
+      <div class="challenge-footer">
+        <span>${c.progress} / ${c.target}</span>
+        ${c.is_claimed
+          ? `<span class="challenge-done-label">✅ Belohnung erhalten</span>`
+          : c.is_complete
+            ? `<button class="challenge-claim-btn" onclick="claimChallenge('${c.id}')">Belohnung abholen 🎁</button>`
+            : `<span>${c.pct}% geschafft</span>`}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function claimChallenge(challengeId) {
+  const result = await ZAMApi.challenges.claim(challengeId);
+  if (!result) return;
+  showToast(`🎉 +${result.points} Punkte! Challenge abgeschlossen!`, 'success');
+  updatePointsDisplay(true);
+  renderChallenges();
+  await checkBadgesAfterAction();
 }
 
 // =============================================
@@ -319,19 +400,38 @@ function initDailySpin() {
 }
 
 function _spinKey() { return 'zamclub_spin_' + (ZAMApi.auth.currentUser()?.id || 'guest'); }
-function _checkinKey() { return 'zamclub_checkin_' + (ZAMApi.auth.currentUser()?.id || 'guest'); }
 function _todayStr() { return new Date().toISOString().slice(0, 10); }
+
+const _SPIN_COLORS = ['#f59e0b', '#8b5cf6', '#10b981', '#3b82f6', '#ec4899', '#ef4444'];
+
+function _buildSpinCards(disabled = false) {
+  const grid = $('#spin-cards-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  ZAMData.spinRewards.forEach((r, i) => {
+    const card = document.createElement('div');
+    card.className = 'spin-card';
+    card.dataset.idx = i;
+    card.innerHTML = `
+      <div class="spin-card-inner">
+        <div class="spin-card-face spin-card-front">🎴</div>
+        <div class="spin-card-face spin-card-back" style="background:${_SPIN_COLORS[i % _SPIN_COLORS.length]}">
+          ${r.points}<span>${r.label}</span>
+        </div>
+      </div>`;
+    if (disabled) card.style.opacity = '0.5';
+    grid.appendChild(card);
+  });
+}
 
 function openSpinModal() {
   const overlay = $('#modal-spin');
   if (!overlay) return;
-  const lastSpin = localStorage.getItem(_spinKey());
-  const alreadySpun = lastSpin === _todayStr();
-  const wheel = $('#spin-wheel');
+  const alreadySpun = localStorage.getItem(_spinKey()) === _todayStr();
   const result = $('#spin-result');
   const spinBtn = $('#btn-spin-go');
-  if (wheel) wheel.style.transform = '';
-  if (result) result.classList.remove('show');
+  if (result) result.style.display = 'none';
+  _buildSpinCards(alreadySpun);
   if (spinBtn) {
     spinBtn.disabled = alreadySpun;
     spinBtn.textContent = alreadySpun ? '✓ Heute bereits gedreht' : '🎰 Jetzt drehen!';
@@ -348,99 +448,155 @@ async function doSpin() {
   const spinBtn = $('#btn-spin-go');
   if (spinBtn) { spinBtn.disabled = true; spinBtn.textContent = '⏳ Dreht…'; }
 
-  const rand = Math.random();
+  // Pick reward by probability
   let cumulative = 0;
+  const rand = Math.random();
   let reward = ZAMData.spinRewards[0];
-  for (const r of ZAMData.spinRewards) {
-    cumulative += r.probability;
-    if (rand <= cumulative) { reward = r; break; }
+  let rewardIdx = 0;
+  for (let i = 0; i < ZAMData.spinRewards.length; i++) {
+    cumulative += ZAMData.spinRewards[i].probability;
+    if (rand <= cumulative) { reward = ZAMData.spinRewards[i]; rewardIdx = i; break; }
   }
 
-  const wheel = $('#spin-wheel');
-  if (wheel) {
-    const deg = 1440 + Math.floor(Math.random() * 360);
-    wheel.style.transition = 'transform 2.5s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
-    wheel.style.transform = `rotate(${deg}deg)`;
-  }
+  // Animate — shake all cards, then flip the winner
+  const cards = $$('.spin-card');
+  cards.forEach((c, i) => {
+    setTimeout(() => {
+      c.classList.add('shaking');
+      setTimeout(() => c.classList.remove('shaking'), 350);
+    }, i * 70);
+  });
 
   setTimeout(async () => {
-    const resultEl = $('#spin-result');
-    const resultPoints = $('#spin-result-points');
-    const resultLabel = $('#spin-result-label');
-    if (resultEl) resultEl.classList.add('show');
-    if (resultPoints) resultPoints.textContent = '+' + reward.points;
-    if (resultLabel) resultLabel.textContent = reward.label + ' gewonnen! 🎉';
+    if (cards[rewardIdx]) cards[rewardIdx].classList.add('flipped');
+
+    const resultEl  = $('#spin-result');
+    const resultPts = $('#spin-result-points');
+    const resultLbl = $('#spin-result-label');
+    const resultIcon = $('#spin-result-icon');
+    if (resultEl)   resultEl.style.display = 'block';
+    if (resultPts)  resultPts.textContent  = '+' + reward.points;
+    if (resultLbl)  resultLbl.textContent  = reward.label + ' gewonnen!';
+    if (resultIcon) resultIcon.textContent = reward.points >= 250 ? '🎉' : reward.points >= 100 ? '🥳' : '✨';
 
     await addPoints(reward.points, 'Daily Spin');
     localStorage.setItem(_spinKey(), _todayStr());
 
+    // Track spin stat
+    const user = ZAMApi.auth.currentUser();
+    if (user) {
+      try {
+        const d = JSON.parse(localStorage.getItem(`zamclub_u_${user.id}`) || '{}');
+        d.stats = d.stats || {}; d.stats.spins = (d.stats.spins || 0) + 1;
+        localStorage.setItem(`zamclub_u_${user.id}`, JSON.stringify(d));
+        if (ZAMData.currentUser.stats) ZAMData.currentUser.stats.spins = d.stats.spins;
+      } catch {}
+    }
+
     if (spinBtn) spinBtn.textContent = '✓ Punkte gutgeschrieben';
     const nextSpin = $('#spin-next-info');
     if (nextSpin) nextSpin.textContent = '⏰ Nächste Drehung ab Mitternacht';
-  }, 2600);
+
+    await checkBadgesAfterAction();
+    renderChallenges();
+  }, 650);
 }
 
 // =============================================
-// QR Check-in
+// QR Check-in (per merchant)
 // =============================================
+let _currentQRMerchant = null;
+
 function initQRCheckin() {
   const btn = $('#btn-qr-checkin');
   if (!btn) return;
   btn.addEventListener('click', openQRModal);
 }
 
+function _merchantCheckinKey(merchantId) {
+  const uid = ZAMApi.auth.currentUser()?.id || 'guest';
+  return `zamclub_checkin_${uid}_${merchantId || 'zam'}`;
+}
+
+function _buildQRMerchantTabs() {
+  const container = $('#qr-merchant-tabs');
+  if (!container) return;
+  const merchantList = [{ id: null, name: 'ZAM', icon: '🏢' }, ...ZAMData.merchants.slice(0, 5)];
+  container.innerHTML = merchantList.map(m => {
+    const done = localStorage.getItem(_merchantCheckinKey(m.id)) === _todayStr();
+    return `<div class="qr-merchant-tab${done ? ' done-today' : ''}${_currentQRMerchant === m.id ? ' active' : ''}" data-mid="${m.id || ''}" onclick="selectQRMerchant('${m.id || ''}')">
+      <span class="qm-icon">${m.icon}</span><span>${m.name}</span>
+    </div>`;
+  }).join('');
+  // activate current selection
+  const sel = container.querySelector(`[data-mid="${_currentQRMerchant || ''}"]`);
+  if (sel && !sel.classList.contains('active')) sel.classList.add('active');
+}
+
+function selectQRMerchant(merchantId) {
+  _currentQRMerchant = merchantId || null;
+  $$('.qr-merchant-tab').forEach(t => t.classList.toggle('active', t.dataset.mid === (merchantId || '')));
+  _updateQRDisplay();
+}
+
+function _updateQRDisplay() {
+  const done    = localStorage.getItem(_merchantCheckinKey(_currentQRMerchant)) === _todayStr();
+  const merchant = _currentQRMerchant ? ZAMData.merchants.find(m => m.id === _currentQRMerchant) : null;
+  const label    = merchant ? merchant.name : 'ZAM Freiham';
+  const checkinBtn    = $('#btn-qr-confirm');
+  const checkinStatus = $('#qr-checkin-status');
+  generateQRGrid();
+  if (checkinBtn) {
+    checkinBtn.disabled  = done;
+    checkinBtn.textContent = done ? `✓ Heute bei ${label} eingecheckt` : `✅ Bei ${label} einchecken (+25 Pkt.)`;
+    checkinBtn.className   = done ? 'btn btn-full claimed' : 'btn btn-primary btn-full btn-pulse';
+  }
+  if (checkinStatus) checkinStatus.textContent = done ? '⏰ Nächster Check-in morgen möglich' : `📍 Zeige diesen Code bei ${label}`;
+}
+
 function openQRModal() {
   const overlay = $('#modal-qr');
   if (!overlay) return;
-  const alreadyCheckedIn = localStorage.getItem(_checkinKey()) === _todayStr();
-  const checkinBtn = $('#btn-qr-confirm');
-  const checkinStatus = $('#qr-checkin-status');
+  _currentQRMerchant = null;
+  _buildQRMerchantTabs();
+  _updateQRDisplay();
   const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
-  const memberId = `ZAM-${user.initials || 'MB'}-${String(user.points || 0).padStart(6, '0')}`;
-  const memberIdEl = document.querySelector('[style*="monospace"]');
-
-  generateQRGrid();
-  if (checkinBtn) {
-    checkinBtn.disabled = alreadyCheckedIn;
-    checkinBtn.textContent = alreadyCheckedIn ? '✓ Heute bereits eingecheckt' : '✅ Jetzt einchecken (+25 Punkte)';
-    checkinBtn.className = alreadyCheckedIn ? 'btn btn-full claimed' : 'btn btn-primary btn-full btn-pulse';
-  }
-  if (checkinStatus) {
-    checkinStatus.textContent = alreadyCheckedIn ? '⏰ Nächster Check-in morgen möglich' : '📍 Zeige diesen Code an der Info-Theke';
-  }
+  const memberIdEl = $('#qr-member-id');
+  if (memberIdEl) memberIdEl.textContent = `ZAM-${user.initials || 'MB'}-${String(user.points || 0).padStart(6, '0')}`;
   overlay.classList.add('open');
 }
 
 async function doCheckin() {
-  const alreadyCheckedIn = localStorage.getItem(_checkinKey()) === _todayStr();
-  if (alreadyCheckedIn) return;
+  const key = _merchantCheckinKey(_currentQRMerchant);
+  if (localStorage.getItem(key) === _todayStr()) return;
+  localStorage.setItem(key, _todayStr());
 
-  localStorage.setItem(_checkinKey(), _todayStr());
-
-  // Update stats
   const user = ZAMApi.auth.currentUser();
   if (user) {
-    const statsKey = `zamclub_u_${user.id}`;
     try {
-      const d = JSON.parse(localStorage.getItem(statsKey) || '{}');
-      d.stats = d.stats || {};
-      d.stats.visits = (d.stats.visits || 0) + 1;
-      localStorage.setItem(statsKey, JSON.stringify(d));
+      const d = JSON.parse(localStorage.getItem(`zamclub_u_${user.id}`) || '{}');
+      d.stats = d.stats || {}; d.stats.visits = (d.stats.visits || 0) + 1;
+      localStorage.setItem(`zamclub_u_${user.id}`, JSON.stringify(d));
       ZAMData.currentUser.stats = d.stats;
     } catch {}
   }
 
   await addPoints(25, 'QR Check-in');
 
-  const checkinBtn = $('#btn-qr-confirm');
+  const merchant = _currentQRMerchant ? ZAMData.merchants.find(m => m.id === _currentQRMerchant) : null;
+  const label = merchant ? merchant.name : 'ZAM Freiham';
+  const checkinBtn    = $('#btn-qr-confirm');
   const checkinStatus = $('#qr-checkin-status');
-  if (checkinBtn) { checkinBtn.disabled = true; checkinBtn.textContent = '✓ Eingecheckt!'; checkinBtn.className = 'btn btn-full claimed'; }
+  if (checkinBtn) { checkinBtn.disabled = true; checkinBtn.textContent = `✓ Bei ${label} eingecheckt!`; checkinBtn.className = 'btn btn-full claimed'; }
   if (checkinStatus) checkinStatus.textContent = '🎉 +25 Punkte wurden gutgeschrieben!';
 
+  _buildQRMerchantTabs();
   const visitsEl = $('#profile-stat-visits');
-  if (visitsEl) visitsEl.textContent = ZAMData.currentUser.stats.visits;
+  if (visitsEl) visitsEl.textContent = ZAMData.currentUser.stats?.visits || 0;
 
-  showToast('📍 Eingecheckt! +25 Punkte', 'success');
+  showToast(`📍 ${label} Check-in! +25 Punkte`, 'success');
+  await checkBadgesAfterAction();
+  renderChallenges();
 }
 
 function generateQRGrid() {
@@ -644,6 +800,8 @@ async function joinEvent(idx, cardEl) {
   const eventsEl = $('#profile-stat-events');
   if (eventsEl) eventsEl.textContent = ZAMData.currentUser.stats?.events_attended || 0;
   showToast(`🎉 Angemeldet! +${evt.points_reward || 0} Punkte`, 'success');
+  await checkBadgesAfterAction();
+  renderChallenges();
 }
 
 // =============================================
@@ -738,6 +896,8 @@ async function claimDeal(idx, cardEl, deal) {
   await addPoints(deal.points_reward || 0, deal.store_name || 'Deal');
   const dealsEl = $('#profile-stat-deals');
   if (dealsEl) dealsEl.textContent = ZAMData.currentUser.stats?.deals_used || 0;
+  await checkBadgesAfterAction();
+  renderChallenges();
 }
 
 function generateBarcode() {
@@ -845,7 +1005,9 @@ async function renderProfile() {
 
   updatePointsDisplay();
   renderBadges();
+  renderRoleActions();
   await renderSavedSummary();
+  renderChallenges();
 }
 
 async function renderSavedSummary() {
@@ -867,27 +1029,277 @@ async function renderSavedSummary() {
   ].join('');
 }
 
-function renderBadges() {
+function renderRoleActions() {
+  const user = ZAMApi.auth.currentUser();
+  const container = $('#profile-role-actions');
+  if (!container || !user) return;
+
+  if (user.role === 'admin') {
+    container.innerHTML = `
+      <a href="admin.html" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;padding:13px">
+        🛡️ Admin-Dashboard
+        <span id="admin-notif-badge" style="background:rgba(255,255,255,0.25);border-radius:20px;padding:1px 8px;font-size:0.72rem;margin-left:6px;display:none">0</span>
+      </a>`;
+    // Load unread notification count
+    ZAMApi.admin.unreadCount().then(count => {
+      const badge = $('#admin-notif-badge');
+      if (badge && count > 0) { badge.textContent = count; badge.style.display = 'inline'; }
+    });
+  } else if (user.role === 'merchant') {
+    container.innerHTML = `
+      <a href="merchant.html" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;padding:13px">
+        🏪 Händler-Dashboard
+      </a>`;
+  } else {
+    container.innerHTML = '';
+  }
+}
+
+async function renderBadges() {
   const container = $('#badges-grid');
   if (!container) return;
   container.innerHTML = '';
-
-  ZAMData.badges.forEach(badge => {
+  const badges = await ZAMApi.badges.list();
+  badges.forEach(badge => {
     const item = el('div', badge.earned ? 'badge-item' : 'badge-item locked');
     const wrap = el('div', 'badge-icon-wrap');
     wrap.style.background = badge.earned ? badge.color + '22' : 'rgba(255,255,255,0.05)';
     wrap.style.border = badge.earned ? `1px solid ${badge.color}44` : '1px solid rgba(255,255,255,0.1)';
     wrap.textContent = badge.icon;
-
     const name = el('div', 'badge-name', { textContent: badge.name });
-
     item.appendChild(wrap);
     item.appendChild(name);
-    if (badge.earned) {
-      item.addEventListener('click', () => showToast(badge.description));
-    }
+    if (badge.earned) item.addEventListener('click', () => showToast(`${badge.icon} ${badge.name}: ${badge.description}`));
     container.appendChild(item);
   });
+}
+
+// =============================================
+// Community sub-tabs
+// =============================================
+function initCommunityTabs() {
+  $$('.community-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('.community-tab').forEach(t => t.classList.remove('active'));
+      $$('.community-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      $(`#cpanel-${tab.dataset.ctab}`)?.classList.add('active');
+      const hBtn = $('#community-header-btn');
+      if (hBtn) hBtn.style.visibility = tab.dataset.ctab === 'wall' ? '' : 'hidden';
+      if (tab.dataset.ctab === 'chat') renderChatRooms();
+    });
+  });
+}
+
+function communityHeaderAction() {
+  const activeTab = $('.community-tab.active')?.dataset.ctab;
+  if (!activeTab || activeTab === 'wall') openNewPostModal();
+}
+
+// =============================================
+// Chat — Room List
+// =============================================
+function renderChatRooms() {
+  const { global, events } = ZAMApi.chat.rooms();
+  const onlineCount = ZAMApi.chat.onlineCount();
+  const onlineEl = $('#online-count-text');
+  if (onlineEl) onlineEl.textContent = `${onlineCount} Nutzer aktuell online`;
+
+  _renderRoomList('#chat-rooms-global', global);
+  _renderRoomList('#chat-rooms-events', events);
+}
+
+function _renderRoomList(selector, rooms) {
+  const container = $(selector);
+  if (!container) return;
+  container.innerHTML = rooms.map(r => `
+    <div class="chat-room-card" onclick="openChatRoom('${r.id}','${r.name.replace(/'/g,"\\'")}')">
+      <div class="chat-room-card-icon">${r.icon}</div>
+      <div class="chat-room-card-info">
+        <div class="chat-room-card-name">${r.name}</div>
+        <div class="chat-room-card-sub">${r.description || ''}</div>
+      </div>
+      <span class="chat-room-arrow">›</span>
+    </div>`).join('');
+}
+
+// =============================================
+// Chat — Room View
+// =============================================
+let _currentRoomId   = null;
+let _currentRoomName = '';
+let _chatPollTimer   = null;
+let _chatMsgCount    = 0;
+let _reportTarget    = null; // { msgId, userId, userName }
+
+function openChatRoom(roomId, roomName) {
+  _currentRoomId   = roomId;
+  _currentRoomName = roomName;
+
+  const view   = $('#chat-room-view');
+  const nameEl = $('#chat-room-name');
+  if (!view) return;
+  if (nameEl) nameEl.textContent = roomName;
+
+  // Online count
+  const count     = ZAMApi.chat.onlineCount();
+  const onlineEl  = $('#chat-online-small');
+  if (onlineEl) onlineEl.textContent = `● ${count} online`;
+
+  // Seed + render
+  ZAMApi.chat.seedDemoMessages(roomId);
+  _renderMessages();
+  ZAMApi.chat.markRoomRead(roomId);
+  _updateChatUnreadBadge();
+
+  view.classList.add('open');
+  setTimeout(() => $('#chat-input')?.focus(), 320);
+
+  // Poll for new messages every 2.5 s (simulates Supabase Realtime)
+  clearInterval(_chatPollTimer);
+  _chatPollTimer = setInterval(_pollMessages, 2500);
+}
+
+function closeChatRoom() {
+  $('#chat-room-view')?.classList.remove('open');
+  clearInterval(_chatPollTimer);
+  _chatPollTimer = null;
+  _currentRoomId = null;
+  _chatMsgCount  = 0;
+}
+
+function _renderMessages() {
+  const container = $('#chat-messages');
+  if (!container || !_currentRoomId) return;
+
+  const msgs = ZAMApi.chat.messages(_currentRoomId);
+  const uid  = ZAMApi.auth.currentUser()?.id;
+  const user = ZAMApi.auth.currentUser();
+  const isAdmin = user?.role === 'admin';
+  _chatMsgCount = msgs.length;
+
+  container.innerHTML = msgs.map(m => {
+    const isOwn = m.user_id === uid;
+    const time  = new Date(m.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    return `
+      <div class="chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}" data-msg-id="${m.id}">
+        ${!isOwn ? `<div class="chat-msg-avatar" style="background:${m.author.color || '#8b5cf6'}">${m.author.initials || '?'}</div>` : ''}
+        <div class="chat-msg-bubble-wrap">
+          ${!isOwn ? `<div class="chat-msg-name">${m.author.name}</div>` : ''}
+          <div class="chat-msg-bubble">${m.content}</div>
+          <div class="chat-msg-time">
+            ${time}
+            ${!isOwn ? `<button class="chat-report-btn" onclick="openChatOptions('${m.id}','${m.user_id}','${(m.author.name||'').replace(/'/g,"\\'")}',${isAdmin})" aria-label="Optionen">⋯</button>` : ''}
+            ${isOwn && isAdmin ? `<button class="chat-report-btn" onclick="deleteChatMsg('${m.id}')" aria-label="Löschen">🗑</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function _pollMessages() {
+  if (!_currentRoomId) return;
+  const msgs = ZAMApi.chat.messages(_currentRoomId);
+  if (msgs.length > _chatMsgCount) {
+    _renderMessages();
+  }
+}
+
+async function sendChatMessage() {
+  const input = $('#chat-input');
+  if (!input || !_currentRoomId) return;
+  const content = input.value.trim();
+  if (!content) return;
+  input.value = '';
+  input.focus();
+
+  ZAMApi.chat.sendMessage(_currentRoomId, content);
+  _renderMessages();
+
+  // +2 Punkte für aktive Teilnahme (still, kein Toast-Spam)
+  ZAMApi.points.add(2, 'chat_message', 'Chat-Nachricht');
+}
+
+function initChatInput() {
+  const sendBtn = $('#chat-send-btn');
+  const input   = $('#chat-input');
+  if (sendBtn) sendBtn.addEventListener('click', sendChatMessage);
+  if (input) {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+    });
+  }
+}
+
+// =============================================
+// Chat — Moderation
+// =============================================
+function openChatOptions(msgId, userId, userName, isAdmin = false) {
+  _reportTarget = { msgId, userId, userName };
+  const titleEl     = $('#chat-options-title');
+  const deleteBtn   = $('#btn-chat-delete-msg');
+  if (titleEl)   titleEl.textContent = `Optionen · ${userName}`;
+  if (deleteBtn) deleteBtn.style.display = isAdmin ? '' : 'none';
+
+  const blockBtn  = $('#btn-chat-block-user');
+  const reportBtn = $('#btn-chat-report-msg');
+  if (blockBtn) {
+    const alreadyBlocked = ZAMApi.chat.isBlocked(userId);
+    blockBtn.textContent = alreadyBlocked ? '✅ Nutzer entblockieren' : '🚫 Nutzer blockieren';
+    blockBtn.onclick = () => {
+      if (alreadyBlocked) { ZAMApi.chat.unblockUser(userId); showToast(`${userName} entblockiert.`); }
+      else { ZAMApi.chat.blockUser(userId); showToast(`🚫 ${userName} blockiert.`, 'success'); }
+      closeModal('modal-chat-options');
+      _renderMessages();
+    };
+  }
+  if (reportBtn) {
+    reportBtn.onclick = () => {
+      closeModal('modal-chat-options');
+      openReportModal(msgId, userId, userName);
+    };
+  }
+  if (deleteBtn) {
+    deleteBtn.onclick = () => {
+      deleteChatMsg(msgId);
+      closeModal('modal-chat-options');
+    };
+  }
+
+  $('#modal-chat-options')?.classList.add('open');
+}
+
+function openReportModal(msgId, userId, userName) {
+  _reportTarget = { msgId, userId, userName };
+  $$('input[name="report-reason"]').forEach(r => { r.checked = r.value === 'other'; });
+  const confirmBtn = $('#btn-report-confirm');
+  if (confirmBtn) {
+    confirmBtn.onclick = async () => {
+      const reason = $('input[name="report-reason"]:checked')?.value || 'other';
+      ZAMApi.chat.report('message', msgId, reason, userId);
+      closeModal('modal-report');
+      showToast('✅ Nachricht gemeldet. Danke!', 'success');
+    };
+  }
+  $('#modal-report')?.classList.add('open');
+}
+
+function deleteChatMsg(msgId) {
+  if (!_currentRoomId) return;
+  ZAMApi.chat.deleteMessage(_currentRoomId, msgId);
+  _renderMessages();
+  showToast('Nachricht gelöscht.', 'success');
+}
+
+function _updateChatUnreadBadge() {
+  const count  = ZAMApi.chat.unreadCount();
+  const badge  = $('#chat-tab-badge');
+  if (badge) {
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+    badge.textContent   = count > 9 ? '9+' : count;
+  }
 }
 
 // =============================================
@@ -1084,7 +1496,21 @@ function showApp() {
 
   renderAll();
   state.currentPage = '';
-  navigateTo('home');
+
+  // Check if map.html redirected us to open a private chat
+  const pendingChat = sessionStorage.getItem('open_chat_room');
+  if (pendingChat) {
+    sessionStorage.removeItem('open_chat_room');
+    try {
+      const room = JSON.parse(pendingChat);
+      navigateTo('community');
+      setTimeout(() => openChatRoom(room.id, room.name), 300);
+    } catch { navigateTo('home'); }
+  } else {
+    navigateTo(location.hash === '#community' ? 'community' : 'home');
+  }
+
+  setTimeout(() => checkBadgesAfterAction(), 900);
 }
 
 function authNavigate(page) {
@@ -1100,6 +1526,7 @@ function renderAll() {
   renderDeals();
   renderMerchants();
   renderProfile();
+  renderChallenges();
   generateQRGrid();
 }
 
@@ -1433,6 +1860,8 @@ function init() {
   initComments();
   initNewPost();
   initProfileEdit();
+  initCommunityTabs();
+  initChatInput();
   initAuth();
 }
 

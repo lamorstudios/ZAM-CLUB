@@ -575,6 +575,17 @@ const spinRewards = [
 ];
 
 // ============================================================
+// TABLE: challenges (monthly)
+// ============================================================
+const challenges = [
+  { id: 'ch_001', title: 'Händler-Entdecker',  description: 'Checke bei 3 verschiedenen Händlern ein', icon: '🏪', target: 3, stat: 'visits',          reward_pts: 100 },
+  { id: 'ch_002', title: 'Deal-Sammler',        description: 'Speichere oder sichere 5 Deals',          icon: '🏷️', target: 5, stat: 'deals_saved',     reward_pts: 150 },
+  { id: 'ch_003', title: 'Event-Fan',           description: 'Nimm an 2 Events teil',                   icon: '🎟️', target: 2, stat: 'events_attended', reward_pts: 120 },
+  { id: 'ch_004', title: 'Community-Starter',   description: 'Teile deinen ersten Beitrag',              icon: '💬', target: 1, stat: 'posts_created',   reward_pts:  75 },
+  { id: 'ch_005', title: 'Spin-Profi',          description: '5× am Glücksrad drehen',                  icon: '🎰', target: 5, stat: 'spins',            reward_pts:  80 },
+];
+
+// ============================================================
 // Global namespace
 // Supabase-Migration: ersetze jeden Wert durch einen API-Call.
 //
@@ -590,4 +601,5 @@ window.ZAMData = {
   deals,             // → supabase.from('deals').select()
   communityPosts,    // → supabase.from('community_posts').select('*, profiles(*)')
   spinRewards,       // → supabase.from('spin_rewards').select()
+  challenges,        // → supabase.from('challenges').select()
 };

@@ -193,10 +193,35 @@
   <section id="page-community" class="page" role="main">
     <div class="page-header">
       <h1>Community 👥</h1>
-      <button class="header-icon-btn" aria-label="Neuer Beitrag" onclick="openNewPostModal()">✏️</button>
+      <button class="header-icon-btn" id="community-header-btn" aria-label="Neuer Beitrag" onclick="communityHeaderAction()">✏️</button>
     </div>
-    <div class="page-content" id="community-feed">
-      <!-- Rendered by app.js -->
+
+    <!-- Sub-tabs: Wall | Chat -->
+    <div class="community-tabs">
+      <button class="community-tab active" data-ctab="wall">📰 Wall</button>
+      <button class="community-tab" data-ctab="chat">
+        💬 Chat
+        <span class="chat-tab-badge" id="chat-tab-badge" style="display:none">1</span>
+      </button>
+    </div>
+
+    <!-- Wall panel -->
+    <div class="community-panel active" id="cpanel-wall">
+      <div class="page-content" id="community-feed">
+        <!-- Rendered by app.js -->
+      </div>
+    </div>
+
+    <!-- Chat panel -->
+    <div class="community-panel" id="cpanel-chat">
+      <div class="online-banner">
+        <span class="online-dot-anim"></span>
+        <span id="online-count-text">Lädt…</span>
+      </div>
+      <div class="chat-rooms-section-label">Globale Räume</div>
+      <div class="chat-rooms-list" id="chat-rooms-global"></div>
+      <div class="chat-rooms-section-label" style="margin-top:8px">Event Chats</div>
+      <div class="chat-rooms-list" id="chat-rooms-events"></div>
     </div>
   </section>
 
@@ -309,10 +334,21 @@
         </div>
       </div>
 
+      <!-- Challenges -->
+      <div class="challenges-section">
+        <div class="challenges-section-title">🎯 Monatliche Challenges</div>
+        <div id="challenges-list">
+          <!-- Rendered by app.js -->
+        </div>
+      </div>
+
     </div>
 
-    <!-- Settings Teaser -->
-    <div style="padding: 16px 16px 8px">
+    <!-- Role-based actions -->
+    <div id="profile-role-actions" style="padding: 0 16px 4px"></div>
+
+    <!-- Settings -->
+    <div style="padding: 16px 16px 4px">
       <button class="btn btn-ghost btn-full" onclick="openProfileEdit()">
         ✏️ Profil bearbeiten
       </button>
@@ -329,6 +365,25 @@
     </div>
 
   </section>
+
+  <!-- =====================
+       CHAT ROOM VIEW (app-level overlay, slides over all pages)
+  ========================== -->
+  <div class="chat-room-view" id="chat-room-view" role="dialog" aria-label="Chat-Raum">
+    <div class="chat-room-header">
+      <button class="chat-back-btn" onclick="closeChatRoom()" aria-label="Zurück">←</button>
+      <div class="chat-room-title-block">
+        <div class="chat-room-name" id="chat-room-name">Allgemein</div>
+        <div class="online-indicator-small" id="chat-online-small">● 0 online</div>
+      </div>
+      <button class="chat-options-btn" id="chat-options-btn" onclick="openChatOptions()" aria-label="Optionen">⋯</button>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-bar">
+      <input type="text" id="chat-input" class="chat-input-field" placeholder="Nachricht schreiben…" maxlength="500" autocomplete="off" />
+      <button id="chat-send-btn" class="chat-send-btn" aria-label="Senden">➤</button>
+    </div>
+  </div>
 
   <!-- =====================
        BOTTOM NAVIGATION
@@ -350,6 +405,10 @@
       <span class="nav-icon">🏷️</span>
       <span>Deals</span>
     </button>
+    <a class="nav-tab nav-tab-map" href="map.html" aria-label="Live Map">
+      <span class="nav-icon">📍</span>
+      <span>Map</span>
+    </a>
     <button class="nav-tab" data-page="profile" aria-label="Profil">
       <span class="nav-icon">👤</span>
       <span>Profil</span>
@@ -367,20 +426,16 @@
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">🎰 Daily Spin</div>
-    <div class="modal-subtitle">Drehe das Glücksrad und gewinne Punkte!</div>
+    <div class="modal-subtitle">Wähle eine Karte und gewinne Punkte!</div>
 
-    <div class="spin-wheel-container">
-      <div style="position:relative;display:inline-block">
-        <div class="spin-pointer">▼</div>
-        <div class="spin-wheel" id="spin-wheel">
-          <div class="spin-wheel-center">⭐</div>
-        </div>
-      </div>
+    <div class="spin-cards-grid" id="spin-cards-grid" aria-label="Glückskarten">
+      <!-- rendered by app.js -->
+    </div>
 
-      <div class="spin-result" id="spin-result">
-        <div class="spin-result-points" id="spin-result-points">+50</div>
-        <div class="spin-result-label" id="spin-result-label">Punkte gewonnen!</div>
-      </div>
+    <div class="spin-result" id="spin-result" style="display:none">
+      <div class="spin-result-icon" id="spin-result-icon">🎉</div>
+      <div class="spin-result-points" id="spin-result-points">+50</div>
+      <div class="spin-result-label" id="spin-result-label">Punkte gewonnen!</div>
     </div>
 
     <button class="btn btn-primary btn-full" id="btn-spin-go">🎰 Jetzt drehen!</button>
@@ -394,7 +449,11 @@
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">📷 QR Check-in</div>
-    <div class="modal-subtitle">Zeige diesen Code beim Eingang oder einem Partnergeschäft.</div>
+    <div class="modal-subtitle">Wähle einen Shop und checke ein.</div>
+
+    <div class="qr-merchant-tabs" id="qr-merchant-tabs">
+      <!-- rendered by app.js -->
+    </div>
 
     <div class="qr-placeholder">
       <div class="qr-grid" id="qr-grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:3px;width:176px;height:176px"></div>
@@ -402,7 +461,7 @@
 
     <div style="text-align:center;margin-bottom:16px">
       <div style="font-size:0.75rem;color:var(--color-text-muted)">Mitglieds-ID</div>
-      <div style="font-family:monospace;font-size:1rem;font-weight:700;letter-spacing:0.15em;margin-top:4px">ZAM-JM-001840</div>
+      <div style="font-family:monospace;font-size:1rem;font-weight:700;letter-spacing:0.15em;margin-top:4px" id="qr-member-id">ZAM-JM-001840</div>
     </div>
 
     <div id="qr-checkin-status" style="text-align:center;font-size:0.78rem;color:var(--color-text-muted);margin-bottom:14px">
@@ -529,6 +588,37 @@
     <div class="modal-title">🔖 Gespeicherte Deals</div>
     <div id="saved-deals-list" style="flex:1;overflow-y:auto;padding:0 4px 8px"></div>
     <button class="btn btn-ghost btn-full" data-close-modal="modal-saved-deals" style="margin-top:12px">Schließen</button>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div class="modal-overlay" id="modal-report" role="dialog" aria-modal="true" aria-label="Inhalt melden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🚩 Inhalt melden</div>
+    <div class="modal-subtitle">Warum möchtest du diesen Inhalt melden?</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin:14px 0 18px">
+      <label class="report-option"><input type="radio" name="report-reason" value="spam"> Spam oder Werbung</label>
+      <label class="report-option"><input type="radio" name="report-reason" value="hate"> Hassrede oder Belästigung</label>
+      <label class="report-option"><input type="radio" name="report-reason" value="inappropriate"> Unangemessene Inhalte</label>
+      <label class="report-option"><input type="radio" name="report-reason" value="other" checked> Sonstiges</label>
+    </div>
+    <button class="btn btn-primary btn-full" id="btn-report-confirm">Melden</button>
+    <button class="btn btn-ghost btn-full" data-close-modal="modal-report" style="margin-top:8px">Abbrechen</button>
+  </div>
+</div>
+
+<!-- Chat Options / Block Modal -->
+<div class="modal-overlay" id="modal-chat-options" role="dialog" aria-modal="true" aria-label="Nachrichtenoptionen">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="chat-options-title">Optionen</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin:14px 0">
+      <button class="btn btn-ghost btn-full" id="btn-chat-block-user">🚫 Nutzer blockieren</button>
+      <button class="btn btn-ghost btn-full" id="btn-chat-report-msg">🚩 Nachricht melden</button>
+      <button class="btn btn-ghost btn-full btn-danger" id="btn-chat-delete-msg" style="display:none">🗑 Nachricht löschen (Admin)</button>
+    </div>
+    <button class="btn btn-ghost btn-full" data-close-modal="modal-chat-options" style="margin-top:4px">Abbrechen</button>
   </div>
 </div>
 
