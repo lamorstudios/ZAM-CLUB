@@ -1005,6 +1005,7 @@ async function renderProfile() {
   renderBadges();
   renderRoleActions();
   await renderSavedSummary();
+  renderChallenges();
 }
 
 async function renderSavedSummary() {
@@ -1266,6 +1267,7 @@ function showApp() {
   renderAll();
   state.currentPage = '';
   navigateTo('home');
+  setTimeout(() => checkBadgesAfterAction(), 900);
 }
 
 function authNavigate(page) {
@@ -1281,6 +1283,7 @@ function renderAll() {
   renderDeals();
   renderMerchants();
   renderProfile();
+  renderChallenges();
   generateQRGrid();
 }
 
