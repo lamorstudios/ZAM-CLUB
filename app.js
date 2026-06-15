@@ -1083,6 +1083,9 @@ function renderRoleActions() {
       <button class="btn btn-ghost btn-full" onclick="navigateTo('admin-dashboard')" style="margin-bottom:8px">
         📊 Center Analytics
       </button>
+      <button class="btn btn-ghost btn-full" onclick="navigateTo('admin-dashboard');setTimeout(()=>document.getElementById('admin-merchants-container')?.scrollIntoView({behavior:'smooth'}),400)" style="margin-bottom:8px">
+        🏪 Händler verwalten
+      </button>
       <button class="btn btn-ghost btn-full" onclick="navigateTo('admin-revenue')" style="margin-bottom:8px">
         💰 Umsatzübersicht
       </button>
@@ -1115,9 +1118,9 @@ function renderRoleActions() {
       </button>`;
   } else {
     container.innerHTML = `
-      <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-onboarding')" style="margin-bottom:8px">
-        🏪 Händler werden
-      </button>`;
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;text-align:center;margin-bottom:8px">
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.6">Händlerzugang ist nur auf Einladung<br>durch das ZAM Center Management möglich.</div>
+      </div>`;
   }
 }
 
@@ -2748,6 +2751,17 @@ function seedDemoNotifications() {
 // Phase 12 — Merchant Dashboard
 // =============================================
 function renderMerchantDashboard() {
+  const user = ZAMApi.auth.currentUser();
+  if (user && user.merchant_status === 'pending') {
+    const grid = document.getElementById('merchant-kpi-grid');
+    if (grid) grid.innerHTML = `
+      <div style="grid-column:1/-1;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:14px;padding:20px;text-align:center">
+        <div style="font-size:2rem;margin-bottom:10px">⏳</div>
+        <div style="font-size:0.92rem;font-weight:700;color:#fbbf24;margin-bottom:8px">Zugang wird geprüft</div>
+        <div style="font-size:0.74rem;color:rgba(255,255,255,0.5);line-height:1.6">Dein Händlerzugang wurde beantragt und wird<br>vom ZAM Center Management geprüft.<br>Du erhältst eine Benachrichtigung sobald dein Zugang freigeschaltet ist.</div>
+      </div>`;
+    return;
+  }
   const me = ZAMApi.auth.currentUser();
   if (!me || me.role !== 'merchant') return;
 
@@ -2861,6 +2875,125 @@ function redeemVoucher() {
 // =============================================
 // Phase 12 — Admin Dashboard
 // =============================================
+/* ── Admin: Händler verwalten ── */
+function _getMerchantInvites() {
+  return JSON.parse(localStorage.getItem('zam_merchant_invites') || '[]');
+}
+function _saveMerchantInvites(list) {
+  localStorage.setItem('zam_merchant_invites', JSON.stringify(list));
+}
+function _getPendingMerchants() {
+  return JSON.parse(localStorage.getItem('zam_pending_merchants') || '[]');
+}
+function _savePendingMerchants(list) {
+  localStorage.setItem('zam_pending_merchants', JSON.stringify(list));
+}
+
+function renderAdminMerchants(containerId) {
+  const ct = document.getElementById(containerId);
+  if (!ct) return;
+  const invites = _getMerchantInvites();
+  const pending = _getPendingMerchants();
+
+  ct.innerHTML = `
+    <div style="margin-bottom:20px">
+      <h3 style="font-size:0.9rem;font-weight:700;color:#e2e8f0;margin-bottom:12px">➕ Händler einladen</h3>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input id="inv-shopname" placeholder="Shopname *" class="input-field" style="background:var(--surface-2);border:1px solid rgba(139,92,246,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none"/>
+        <input id="inv-email" type="email" placeholder="Händler E-Mail *" class="input-field" style="background:var(--surface-2);border:1px solid rgba(139,92,246,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none"/>
+        <input id="inv-contact" placeholder="Ansprechpartner *" class="input-field" style="background:var(--surface-2);border:1px solid rgba(139,92,246,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none"/>
+        <select id="inv-category" style="background:var(--surface-2);border:1px solid rgba(139,92,246,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none">
+          <option value="">Kategorie wählen…</option>
+          <option>Mode</option><option>Gastronomie</option><option>Elektronik</option><option>Drogerie</option><option>Sport</option><option>Lebensmittel</option><option>Bücher &amp; Medien</option><option>Kosmetik &amp; Beauty</option><option>Dienstleistungen</option><option>Sonstiges</option>
+        </select>
+        <select id="inv-zone" style="background:var(--surface-2);border:1px solid rgba(139,92,246,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none">
+          <option value="mk2_1">MK 2(1) – Nahversorgung / Gastro</option>
+          <option value="mk2_2">MK 2(2) – Zentrenrelevante Sortimente</option>
+          <option value="mk2_3">MK 2(3) – Zentrenrelevante Sortimente</option>
+          <option value="mk2_4">MK 2(4) – Nahversorgung</option>
+          <option value="plaza">Mahatma-Gandhi-Platz</option>
+        </select>
+        <div id="inv-error" style="display:none;font-size:0.74rem;color:#f87171;padding:6px 0"></div>
+        <button onclick="adminSendMerchantInvite()" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.84rem;font-weight:700;font-family:var(--font);cursor:pointer">
+          📧 Händler einladen
+        </button>
+      </div>
+    </div>
+
+    ${pending.length ? `
+    <div style="margin-bottom:20px">
+      <h3 style="font-size:0.9rem;font-weight:700;color:#fbbf24;margin-bottom:10px">⏳ Händler freigeben (${pending.length})</h3>
+      ${pending.map(m => `
+        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:12px 14px;margin-bottom:8px">
+          <div style="font-size:0.84rem;font-weight:700;color:#e2e8f0;margin-bottom:2px">${escHtml(m.shopname)}</div>
+          <div style="font-size:0.7rem;color:rgba(255,255,255,0.45);margin-bottom:10px">${escHtml(m.email)} · ${escHtml(m.category||'')} · ${escHtml(m.zone||'')}</div>
+          <div style="display:flex;gap:6px">
+            <button onclick="adminApproveMerchant('${escHtml(m.id)}')" style="flex:1;background:rgba(5,150,105,0.15);border:1px solid rgba(52,211,153,0.35);border-radius:8px;padding:8px;color:#34d399;font-size:0.76rem;font-weight:700;font-family:var(--font);cursor:pointer">✅ Freigeben</button>
+            <button onclick="adminRejectMerchant('${escHtml(m.id)}')" style="flex:1;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:8px;color:#f87171;font-size:0.76rem;font-weight:700;font-family:var(--font);cursor:pointer">❌ Ablehnen</button>
+          </div>
+        </div>`).join('')}
+    </div>` : ''}
+
+    <div>
+      <h3 style="font-size:0.9rem;font-weight:700;color:#e2e8f0;margin-bottom:10px">📋 Eingeladene Händler (${invites.length})</h3>
+      ${invites.length === 0 ? `<div style="font-size:0.74rem;color:rgba(255,255,255,0.3);text-align:center;padding:16px 0">Noch keine Einladungen</div>` :
+        invites.map(inv => `
+          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(139,92,246,0.15);border-radius:12px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px">
+            <div style="flex:1">
+              <div style="font-size:0.82rem;font-weight:700;color:#e2e8f0">${escHtml(inv.shopname)}</div>
+              <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);margin-top:2px">${escHtml(inv.email)} · ${escHtml(inv.category||'')} · ${escHtml(inv.zone||'')}</div>
+              <div style="font-size:0.65rem;color:rgba(255,255,255,0.25);margin-top:2px">Eingeladen: ${new Date(inv.ts).toLocaleDateString('de-DE')}</div>
+            </div>
+            <div style="font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:6px;${inv.status==='approved'?'background:rgba(5,150,105,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3)':inv.status==='rejected'?'background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)':'background:rgba(245,158,11,0.1);color:#fbbf24;border:1px solid rgba(245,158,11,0.25)'}">
+              ${inv.status==='approved'?'Aktiv':inv.status==='rejected'?'Abgelehnt':'Ausstehend'}
+            </div>
+          </div>`).join('')}
+    </div>`;
+}
+
+function adminSendMerchantInvite() {
+  const shopname = document.getElementById('inv-shopname')?.value.trim();
+  const email    = document.getElementById('inv-email')?.value.trim();
+  const contact  = document.getElementById('inv-contact')?.value.trim();
+  const category = document.getElementById('inv-category')?.value;
+  const zone     = document.getElementById('inv-zone')?.value;
+  const errEl    = document.getElementById('inv-error');
+  if (!shopname || !email || !contact) {
+    if (errEl) { errEl.textContent = 'Bitte Shopname, E-Mail und Ansprechpartner ausfüllen.'; errEl.style.display = 'block'; }
+    return;
+  }
+  const invites = _getMerchantInvites();
+  invites.push({ id: 'inv_' + Date.now(), shopname, email, contact, category, zone, status: 'pending', ts: new Date().toISOString() });
+  _saveMerchantInvites(invites);
+  if (errEl) errEl.style.display = 'none';
+  ['inv-shopname','inv-email','inv-contact'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  showToast('📧 Einladung für ' + shopname + ' vorbereitet!');
+  renderAdminMerchants('admin-merchants-container');
+}
+
+function adminApproveMerchant(id) {
+  const pending = _getPendingMerchants();
+  const idx = pending.findIndex(m => m.id === id);
+  if (idx === -1) return;
+  const m = pending.splice(idx, 1)[0];
+  _savePendingMerchants(pending);
+  const invites = _getMerchantInvites();
+  invites.push({ ...m, status: 'approved', approvedTs: new Date().toISOString() });
+  _saveMerchantInvites(invites);
+  showToast('✅ ' + m.shopname + ' wurde freigeschaltet!');
+  renderAdminMerchants('admin-merchants-container');
+}
+
+function adminRejectMerchant(id) {
+  const pending = _getPendingMerchants();
+  const idx = pending.findIndex(m => m.id === id);
+  if (idx === -1) return;
+  const m = pending.splice(idx, 1)[0];
+  _savePendingMerchants(pending);
+  showToast('❌ ' + m.shopname + ' wurde abgelehnt.');
+  renderAdminMerchants('admin-merchants-container');
+}
+
 function renderAdminDashboard() {
   ZAMApi.analytics.seedDemo();
   const days = parseInt(document.getElementById('admin-period')?.value || '30');
@@ -2912,6 +3045,7 @@ function renderAdminDashboard() {
   renderAdminTopList('admin-top-events',    stats.topEvents,    '🎉', 'Event',   'Aufrufe');
 
   renderAdminPushStats();
+  renderAdminMerchants('admin-merchants-container');
 }
 
 function renderAdminTopList(elId, list, icon, singular, metric) {
