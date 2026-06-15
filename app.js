@@ -1091,9 +1091,6 @@ function renderRoleActions() {
       </button>
       <button class="btn btn-ghost btn-full" onclick="navigateTo('admin-ai-insights')" style="margin-bottom:8px">
         🤖 KI-Insights
-      </button>
-      <button class="btn btn-ghost btn-full" onclick="navigateTo('admin-dashboard');setTimeout(()=>document.getElementById('admin-merchants-container')?.scrollIntoView({behavior:'smooth'}),450)" style="margin-bottom:8px">
-        🏪 Händler verwalten
       </button>`;
     ZAMApi.admin.unreadCount().then(count => {
       const badge = $('#admin-notif-badge');
@@ -2722,7 +2719,8 @@ function saveNotifSetting(key, val) {
 
 // ── Event Reminder Scheduling ─────────────────────────────────
 function scheduleEventReminders() {
-  const events = (typeof ZAMApi !== 'undefined' && ZAMApi.events) ? ZAMApi.events.list() : [];
+  const _evData = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const events = (_evData.events || ZAMData?.events || []);
   const now = Date.now();
   events.forEach(ev => {
     if (!ev.date) return;
@@ -3426,7 +3424,8 @@ function markInvoicePaid(id) { ZAMApi.billing.markPaid(id); showToast('✅ Rechn
 
 // — Merchant Dashboard: Sponsored —
 function renderSponsoredSection(type) {
-  const items = type === 'deal' ? ZAMApi.deals.list() : ZAMApi.events.list();
+  const _sponsG = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const items = type === 'deal' ? (_sponsG.deals || ZAMData?.deals || []) : (_sponsG.events || ZAMData?.events || []);
   const uid = ZAMApi.auth.currentUser()?.id;
   const myItems = items.filter(i => i.merchant_id === uid);
   if (!myItems.length) return `<div class="dash-empty">Keine eigenen ${type==='deal'?'Deals':'Events'} vorhanden</div>`;
@@ -3555,8 +3554,9 @@ function renderDemoMode() {
 
   // KPI Cards
   const users = ZAMApi.auth ? (() => { try { return (JSON.parse(localStorage.getItem('zamclub_global') || '{}')).accounts?.length || 0; } catch { return 0; } })() : 0;
-  const events = ZAMApi.events.list().length;
-  const deals = ZAMApi.deals.list().length;
+  const _demoG = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const events = (_demoG.events || ZAMData?.events || []).length;
+  const deals = (_demoG.deals || ZAMData?.deals || []).length;
   const commStats = ZAMApi.analytics.getCommunityStats();
   const kpiGrid = document.getElementById('demo-kpi-grid');
   if (kpiGrid) kpiGrid.innerHTML = [
@@ -3694,9 +3694,11 @@ function esc(str) {
 
 function aiGenerateAnswer(q) {
   const lower = q.toLowerCase();
-  const events = ZAMApi.events.list().filter(e => e.status !== 'cancelled');
-  const deals = ZAMApi.deals.list().filter(d => d.status !== 'expired');
-  const merchants = ZAMApi.merchants ? ZAMApi.merchants.list() : [];
+  // Use synchronous localStorage data to avoid async issues
+  const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const events = (g.events || ZAMData?.events || []).filter(e => e.status !== 'cancelled');
+  const deals = (g.deals || ZAMData?.deals || []).filter(d => d.status !== 'expired');
+  const merchants = g.merchants || ZAMData?.merchants || [];
   const user = ZAMApi.auth.currentUser();
   const prefs = user ? aiGetUserPrefs(user.id) : {};
 

@@ -130,7 +130,7 @@ const ZAMApi = {
         username:               ZAMData.currentUser.username,
         initials:               ZAMData.currentUser.initials,
         avatar_url:             null,
-        role:                   'user',
+        role:                   'admin',
         level:                  ZAMData.currentUser.level,
         points:                 _uLoad('demo_julia', 'points', ZAMData.currentUser.points),
         member_since_formatted: ZAMData.currentUser.member_since_formatted,
