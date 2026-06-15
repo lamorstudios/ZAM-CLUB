@@ -517,7 +517,7 @@ function renderPostCard(post, idx) {
         <span class="action-icon">${post.is_liked ? '❤️' : '🤍'}</span>
         <span class="like-count">${post.likes}</span>
       </button>
-      <button class="post-action-btn">
+      <button class="post-action-btn" data-comments-post="${post.id}">
         <span class="action-icon">💬</span>
         <span>${post.comments}</span>
       </button>
@@ -529,6 +529,8 @@ function renderPostCard(post, idx) {
   `;
 
   div.querySelector('.post-action-btn').addEventListener('click', () => toggleLike(idx, div));
+  const commentsBtn = div.querySelector('[data-comments-post]');
+  if (commentsBtn) commentsBtn.addEventListener('click', () => openComments(post.id, post.author.name));
   return div;
 }
 
@@ -824,9 +826,7 @@ function renderMerchantCard(merchant, idx) {
   `;
 
   div.querySelector('.merchant-card-header').addEventListener('click', () => {
-    const isExpanded = div.classList.contains('expanded');
-    $$('.merchant-card').forEach(c => c.classList.remove('expanded'));
-    if (!isExpanded) div.classList.add('expanded');
+    openMerchantDetail(merchant.id);
   });
 
   return div;
@@ -953,7 +953,351 @@ function initButtonAnimations() {
 }
 
 // =============================================
-// Init
+// Auth Flow
+// =============================================
+function initAuth() {
+  const authShell = $('#auth-shell');
+  const appShell  = $('#app-shell');
+
+  if (ZAMApi.auth.isLoggedIn()) {
+    const user = ZAMApi.auth.currentUser();
+    // Sync logged-in user data into ZAMData
+    ZAMData.currentUser.display_name           = user.display_name;
+    ZAMData.currentUser.username               = user.username;
+    ZAMData.currentUser.initials               = user.initials;
+    ZAMData.currentUser.points                 = user.points;
+    ZAMData.currentUser.member_since_formatted = user.member_since_formatted;
+    if (user.stats) ZAMData.currentUser.stats  = user.stats;
+    showApp();
+  } else {
+    showAuthShell('login');
+  }
+
+  // Login
+  const loginBtn = $('#btn-login');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', async () => {
+      const email    = $('#login-email')?.value?.trim();
+      const password = $('#login-password')?.value;
+      const errEl    = $('#login-error');
+      errEl.style.display = 'none';
+      loginBtn.textContent = 'Anmelden…';
+      loginBtn.disabled    = true;
+      try {
+        await ZAMApi.auth.signIn(email, password);
+        showApp();
+      } catch(e) {
+        errEl.textContent    = e.message;
+        errEl.style.display  = 'block';
+        loginBtn.textContent = 'Anmelden';
+        loginBtn.disabled    = false;
+      }
+    });
+  }
+
+  // Demo Login
+  const demoBtn = $('#btn-demo-login');
+  if (demoBtn) {
+    demoBtn.addEventListener('click', async () => {
+      await ZAMApi.auth.signIn('demo@zamclub.de', 'demo1234');
+      showApp();
+    });
+  }
+
+  // Register
+  const regBtn = $('#btn-register');
+  if (regBtn) {
+    regBtn.addEventListener('click', async () => {
+      const name     = $('#reg-name')?.value?.trim();
+      const username = $('#reg-username')?.value?.trim();
+      const email    = $('#reg-email')?.value?.trim();
+      const pw       = $('#reg-password')?.value;
+      const pw2      = $('#reg-password2')?.value;
+      const errEl    = $('#register-error');
+      errEl.style.display = 'none';
+      if (pw !== pw2) {
+        errEl.textContent   = 'Passwörter stimmen nicht überein.';
+        errEl.style.display = 'block';
+        return;
+      }
+      regBtn.textContent = 'Konto erstellen…';
+      regBtn.disabled    = true;
+      try {
+        await ZAMApi.auth.signUp(email, pw, username, name);
+        showApp();
+      } catch(e) {
+        errEl.textContent   = e.message;
+        errEl.style.display = 'block';
+        regBtn.textContent  = 'Konto erstellen';
+        regBtn.disabled     = false;
+      }
+    });
+  }
+
+  // Forgot password
+  const forgotBtn = $('#btn-forgot');
+  if (forgotBtn) {
+    forgotBtn.addEventListener('click', async () => {
+      const email = $('#forgot-email')?.value?.trim();
+      const errEl = $('#forgot-error');
+      errEl.style.display = 'none';
+      forgotBtn.textContent = 'Senden…';
+      forgotBtn.disabled    = true;
+      try {
+        await ZAMApi.auth.resetPassword(email);
+        $('#forgot-form').style.display  = 'none';
+        $('#forgot-success').style.display = 'block';
+      } catch(e) {
+        errEl.textContent     = e.message;
+        errEl.style.display   = 'block';
+        forgotBtn.textContent = 'Link senden';
+        forgotBtn.disabled    = false;
+      }
+    });
+  }
+
+  // Logout buttons in profile
+  $$('[data-logout]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await ZAMApi.auth.signOut();
+      showAuthShell('login');
+    });
+  });
+}
+
+function showAuthShell(page = 'login') {
+  const authShell = $('#auth-shell');
+  const appShell  = $('#app-shell');
+  if (authShell) authShell.style.display = 'block';
+  if (appShell)  appShell.style.display  = 'none';
+  authNavigate(page);
+}
+
+function showApp() {
+  const authShell = $('#auth-shell');
+  const appShell  = $('#app-shell');
+  if (authShell) authShell.style.display = 'none';
+  if (appShell)  appShell.style.display  = 'block';
+  renderAll();
+}
+
+function authNavigate(page) {
+  $$('.auth-page').forEach(p => p.classList.remove('active'));
+  const target = $(`#page-${page}`);
+  if (target) target.classList.add('active');
+}
+
+function renderAll() {
+  renderHome();
+  renderCommunity();
+  renderEvents();
+  renderDeals();
+  renderMerchants();
+  renderProfile();
+  generateQRGrid();
+}
+
+// =============================================
+// Comments
+// =============================================
+let _currentCommentPostId = null;
+
+function openComments(postId, postTitle) {
+  _currentCommentPostId = postId;
+  const titleEl = $('#comments-modal-title');
+  if (titleEl) titleEl.textContent = 'Kommentare';
+
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const initialsEl = $('#comment-user-initials');
+  if (initialsEl) initialsEl.textContent = user.initials || 'JM';
+
+  loadComments(postId);
+
+  const overlay = $('#modal-comments');
+  if (overlay) overlay.classList.add('open');
+}
+
+async function loadComments(postId) {
+  const listEl  = $('#comments-list');
+  const emptyEl = $('#comments-empty');
+  if (!listEl) return;
+
+  const comments = await ZAMApi.posts.getComments(postId);
+
+  listEl.innerHTML = '';
+  if (comments.length === 0) {
+    const empty = el('div', 'comments-empty');
+    empty.innerHTML = '<span>💬</span><p>Noch keine Kommentare. Sei der Erste!</p>';
+    listEl.appendChild(empty);
+    return;
+  }
+
+  comments.forEach(c => {
+    const item = el('div', 'comment-item');
+    item.innerHTML = `
+      <div class="comment-avatar" style="background:${c.author.avatar_color || '#8b5cf6'}">${c.author.initials}</div>
+      <div class="comment-body">
+        <div class="comment-author">${c.author.name}</div>
+        <div class="comment-text">${c.content}</div>
+        <div class="comment-time">${c.time_ago}</div>
+      </div>
+    `;
+    listEl.appendChild(item);
+  });
+
+  listEl.scrollTop = listEl.scrollHeight;
+}
+
+function initComments() {
+  const submitBtn  = $('#comment-submit');
+  const inputEl    = $('#comment-input');
+  if (!submitBtn || !inputEl) return;
+
+  const send = async () => {
+    const content = inputEl.value.trim();
+    if (!content || !_currentCommentPostId) return;
+    submitBtn.disabled = true;
+    inputEl.value      = '';
+
+    const comment = await ZAMApi.posts.addComment(_currentCommentPostId, content);
+
+    const listEl = $('#comments-list');
+    // Remove empty state if present
+    const emptyEl = listEl?.querySelector('.comments-empty');
+    if (emptyEl) emptyEl.remove();
+
+    if (listEl) {
+      const item = el('div', 'comment-item');
+      item.innerHTML = `
+        <div class="comment-avatar" style="background:${comment.author.avatar_color || '#8b5cf6'}">${comment.author.initials}</div>
+        <div class="comment-body">
+          <div class="comment-author">${comment.author.name}</div>
+          <div class="comment-text">${comment.content}</div>
+          <div class="comment-time">gerade eben</div>
+        </div>
+      `;
+      listEl.appendChild(item);
+      listEl.scrollTop = listEl.scrollHeight;
+    }
+    submitBtn.disabled = false;
+    inputEl.focus();
+  };
+
+  submitBtn.addEventListener('click', send);
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+}
+
+// =============================================
+// New Post Modal
+// =============================================
+function openNewPostModal() {
+  const overlay = $('#modal-new-post');
+  if (overlay) overlay.classList.add('open');
+}
+
+function initNewPost() {
+  const textarea  = $('#new-post-text');
+  const charCount = $('#post-char-count');
+  const submitBtn = $('#btn-post-submit');
+  const errEl     = $('#new-post-error');
+  if (!textarea) return;
+
+  textarea.addEventListener('input', () => {
+    if (charCount) charCount.textContent = textarea.value.length;
+  });
+
+  submitBtn?.addEventListener('click', async () => {
+    const content = textarea.value.trim();
+    if (!content) {
+      if (errEl) { errEl.textContent = 'Bitte schreib etwas.'; errEl.style.display = 'block'; }
+      return;
+    }
+    submitBtn.disabled    = true;
+    submitBtn.textContent = 'Einreichen…';
+    try {
+      await ZAMApi.posts.create(content);
+      closeModal('modal-new-post');
+      textarea.value = '';
+      if (charCount) charCount.textContent = '0';
+      showToast('✅ Beitrag eingereicht! Wird geprüft und bald veröffentlicht.', 'success');
+    } catch(e) {
+      if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+    }
+    submitBtn.disabled    = false;
+    submitBtn.textContent = 'Beitrag einreichen';
+  });
+}
+
+// =============================================
+// Merchant Detail
+// =============================================
+async function openMerchantDetail(merchantId) {
+  const merchant = await ZAMApi.merchants.get(merchantId);
+  if (!merchant) return;
+
+  const contentEl = $('#merchant-detail-content');
+  if (!contentEl) return;
+
+  // Deals & Events dieses Händlers
+  const allDeals  = await ZAMApi.deals.list();
+  const allEvents = await ZAMApi.events.list();
+  const mDeals    = allDeals.filter(d => d.merchant_id === merchantId).slice(0, 3);
+  const mEvents   = allEvents.filter(e => e.merchant_id === merchantId).slice(0, 2);
+
+  const tagsHtml  = merchant.tags.map(t => `<span class="post-tag">${t}</span>`).join('');
+  const dealsHtml = mDeals.length
+    ? mDeals.map(d => `<div class="merchant-mini-card"><div class="merchant-mini-card-title">${d.discount} — ${d.title}</div><div class="merchant-mini-card-sub">${d.expiry_formatted}</div></div>`).join('')
+    : '<div style="color:var(--text-muted);font-size:0.82rem">Derzeit keine aktiven Deals</div>';
+  const eventsHtml = mEvents.length
+    ? mEvents.map(e => `<div class="merchant-mini-card"><div class="merchant-mini-card-title">${e.title}</div><div class="merchant-mini-card-sub">📅 ${e.date_formatted} · ${e.location}</div></div>`).join('')
+    : '<div style="color:var(--text-muted);font-size:0.82rem">Derzeit keine Events</div>';
+
+  contentEl.innerHTML = `
+    <div class="merchant-detail-header">
+      <div class="merchant-detail-icon">${merchant.icon}</div>
+      <div>
+        <div class="merchant-detail-name">${merchant.name}</div>
+        <div class="category-tag" style="background:${merchant.category_color}22;color:${merchant.category_color};margin-top:4px">${merchant.category}</div>
+      </div>
+    </div>
+
+    <div class="merchant-detail-section">
+      <div class="merchant-detail-section-title">Info</div>
+      <div class="merchant-detail-info-row"><span>📍</span><span>${merchant.location}</span></div>
+      <div class="merchant-detail-info-row"><span>⏰</span><span>${merchant.hours}</span></div>
+      <div class="merchant-detail-info-row"><span>📞</span><span>${merchant.phone}</span></div>
+      <div class="merchant-detail-info-row"><span>⭐</span><span>${merchant.rating} (${merchant.review_count} Bewertungen)</span></div>
+    </div>
+
+    <div class="merchant-detail-section">
+      <div class="merchant-detail-section-title">Beschreibung</div>
+      <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.55;margin:0">${merchant.description}</p>
+    </div>
+
+    <div class="merchant-detail-section">
+      <div class="merchant-detail-section-title">Tags</div>
+      <div class="post-tags">${tagsHtml}</div>
+    </div>
+
+    <div class="merchant-detail-section">
+      <div class="merchant-detail-section-title">Aktuelle Aktionen</div>
+      <div class="merchant-deals-list">${dealsHtml}</div>
+    </div>
+
+    <div class="merchant-detail-section">
+      <div class="merchant-detail-section-title">Events</div>
+      <div class="merchant-events-list" style="margin-bottom:4px">${eventsHtml}</div>
+    </div>
+  `;
+
+  const overlay = $('#modal-merchant');
+  if (overlay) overlay.classList.add('open');
+}
+
+// =============================================
+// Init (updated)
 // =============================================
 function init() {
   // Load persisted points
@@ -962,17 +1306,8 @@ function init() {
 
   // Merge admin-created items with mock data
   const adminData = JSON.parse(localStorage.getItem('zamclub_admin') || '{}');
-  if (adminData.events?.length)  ZAMData.events  = [...ZAMData.events,  ...adminData.events];
-  if (adminData.deals?.length)   ZAMData.deals   = [...ZAMData.deals,   ...adminData.deals];
-
-  // Render all pages
-  renderHome();
-  renderCommunity();
-  renderEvents();
-  renderDeals();
-  renderMerchants();
-  renderProfile();
-  generateQRGrid();
+  if (adminData.events?.length) ZAMData.events = [...ZAMData.events, ...adminData.events];
+  if (adminData.deals?.length)  ZAMData.deals  = [...ZAMData.deals,  ...adminData.deals];
 
   // Init interactions
   initNavigation();
@@ -981,10 +1316,11 @@ function init() {
   initQRCheckin();
   initEventFilters();
   initButtonAnimations();
+  initComments();
+  initNewPost();
 
-  // Show home
-  state.currentPage = '';
-  navigateTo('home');
+  // Auth — decides whether to show app or auth screens
+  initAuth();
 }
 
 document.readyState === 'loading'

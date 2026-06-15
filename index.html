@@ -17,7 +17,106 @@
 </head>
 <body>
 
-<div id="app-shell">
+<!-- =====================
+     AUTH SHELL (shown when not logged in)
+========================== -->
+<div id="auth-shell">
+
+  <!-- Login -->
+  <section id="page-login" class="auth-page active">
+    <div class="auth-brand">
+      <div class="auth-logo">ZAM</div>
+      <div class="auth-tagline">Club · Freiham</div>
+    </div>
+    <div class="auth-card">
+      <h2 class="auth-title">Willkommen zurück</h2>
+      <div class="auth-error" id="login-error" style="display:none"></div>
+      <div class="input-group">
+        <label class="input-label">E-Mail</label>
+        <input type="email" id="login-email" class="input-field" placeholder="deine@email.de" autocomplete="email" />
+      </div>
+      <div class="input-group">
+        <label class="input-label">Passwort</label>
+        <input type="password" id="login-password" class="input-field" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn btn-primary btn-full" id="btn-login" style="margin-top:4px">Anmelden</button>
+      <button class="btn btn-ghost btn-full auth-demo-btn" id="btn-demo-login">🎯 Demo einloggen (Präsentation)</button>
+      <div class="auth-links">
+        <button class="auth-link" onclick="authNavigate('register')">Noch kein Konto? <strong>Registrieren</strong></button>
+        <button class="auth-link" onclick="authNavigate('forgot')">Passwort vergessen?</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Registrierung -->
+  <section id="page-register" class="auth-page">
+    <div class="auth-back-row">
+      <button class="auth-back-btn" onclick="authNavigate('login')">← Zurück</button>
+    </div>
+    <div class="auth-brand auth-brand-small">
+      <div class="auth-logo">ZAM</div>
+    </div>
+    <div class="auth-card">
+      <h2 class="auth-title">Konto erstellen</h2>
+      <div class="auth-error" id="register-error" style="display:none"></div>
+      <div class="input-group">
+        <label class="input-label">Dein Name</label>
+        <input type="text" id="reg-name" class="input-field" placeholder="Julia Maier" autocomplete="name" />
+      </div>
+      <div class="input-group">
+        <label class="input-label">Benutzername</label>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">@</span>
+          <input type="text" id="reg-username" class="input-field input-with-prefix" placeholder="juliamaier" autocomplete="username" />
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">E-Mail</label>
+        <input type="email" id="reg-email" class="input-field" placeholder="julia@example.de" autocomplete="email" />
+      </div>
+      <div class="input-group">
+        <label class="input-label">Passwort</label>
+        <input type="password" id="reg-password" class="input-field" placeholder="mind. 6 Zeichen" autocomplete="new-password" />
+      </div>
+      <div class="input-group">
+        <label class="input-label">Passwort wiederholen</label>
+        <input type="password" id="reg-password2" class="input-field" placeholder="••••••••" autocomplete="new-password" />
+      </div>
+      <button class="btn btn-primary btn-full" id="btn-register" style="margin-top:4px">Konto erstellen</button>
+      <div class="auth-links">
+        <button class="auth-link" onclick="authNavigate('login')">Bereits Mitglied? <strong>Anmelden</strong></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Passwort vergessen -->
+  <section id="page-forgot" class="auth-page">
+    <div class="auth-back-row">
+      <button class="auth-back-btn" onclick="authNavigate('login')">← Zurück</button>
+    </div>
+    <div class="auth-brand auth-brand-small">
+      <div class="auth-logo">ZAM</div>
+    </div>
+    <div class="auth-card">
+      <h2 class="auth-title">Passwort zurücksetzen</h2>
+      <div class="auth-error" id="forgot-error" style="display:none"></div>
+      <div id="forgot-success" style="display:none" class="auth-success">
+        ✅ Wir haben dir einen Link geschickt. Bitte prüfe dein Postfach.
+      </div>
+      <div id="forgot-form">
+        <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:18px;line-height:1.5">Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link zum Zurücksetzen.</p>
+        <div class="input-group">
+          <label class="input-label">E-Mail</label>
+          <input type="email" id="forgot-email" class="input-field" placeholder="deine@email.de" />
+        </div>
+        <button class="btn btn-primary btn-full" id="btn-forgot" style="margin-top:4px">Link senden</button>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /#auth-shell -->
+
+<div id="app-shell" style="display:none">
 
   <!-- =====================
        HOME PAGE
@@ -94,7 +193,7 @@
   <section id="page-community" class="page" role="main">
     <div class="page-header">
       <h1>Community 👥</h1>
-      <button class="header-icon-btn" aria-label="Neuer Beitrag" onclick="showToast('Bald verfügbar: Eigene Beiträge schreiben!')">✏️</button>
+      <button class="header-icon-btn" aria-label="Neuer Beitrag" onclick="openNewPostModal()">✏️</button>
     </div>
     <div class="page-content" id="community-feed">
       <!-- Rendered by app.js -->
@@ -329,8 +428,58 @@
   </div>
 </div>
 
+<!-- Comments Modal -->
+<div class="modal-overlay" id="modal-comments" role="dialog" aria-modal="true" aria-label="Kommentare">
+  <div class="modal-sheet modal-sheet-tall">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="comments-modal-title">Kommentare</div>
+    <div class="comments-list" id="comments-list">
+      <div class="comments-empty" id="comments-empty">
+        <span>💬</span>
+        <p>Noch keine Kommentare. Sei der Erste!</p>
+      </div>
+    </div>
+    <div class="comments-input-row">
+      <div class="comment-avatar-small" id="comment-user-initials">JM</div>
+      <input type="text" id="comment-input" class="comment-input" placeholder="Kommentar schreiben…" maxlength="300" />
+      <button id="comment-submit" class="comment-submit-btn" aria-label="Senden">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- Merchant Detail Modal -->
+<div class="modal-overlay" id="modal-merchant" role="dialog" aria-modal="true" aria-label="Shop-Details">
+  <div class="modal-sheet modal-sheet-tall">
+    <div class="modal-handle"></div>
+    <div id="merchant-detail-content">
+      <!-- Wird dynamisch befüllt -->
+    </div>
+    <button class="btn btn-ghost btn-full" data-close-modal="modal-merchant" style="margin:0 0 8px">Schließen</button>
+  </div>
+</div>
+
+<!-- Post erstellen Modal -->
+<div class="modal-overlay" id="modal-new-post" role="dialog" aria-modal="true" aria-label="Neuer Beitrag">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ Neuer Beitrag</div>
+    <div class="modal-subtitle">Teile dein Erlebnis mit der Community</div>
+    <textarea id="new-post-text" class="input-field post-textarea" placeholder="Was möchtest du teilen?" maxlength="500" rows="4"></textarea>
+    <div style="text-align:right;font-size:0.72rem;color:var(--text-muted);margin-top:4px">
+      <span id="post-char-count">0</span>/500
+    </div>
+    <div class="auth-error" id="new-post-error" style="display:none;margin-top:8px"></div>
+    <div style="padding:12px 0 4px;font-size:0.78rem;color:var(--text-muted)">
+      💡 Beiträge werden vor der Veröffentlichung geprüft.
+    </div>
+    <button class="btn btn-primary btn-full" id="btn-post-submit" style="margin-top:8px">Beitrag einreichen</button>
+    <button class="btn btn-ghost btn-full" data-close-modal="modal-new-post" style="margin-top:8px">Abbrechen</button>
+  </div>
+</div>
+
 <!-- Scripts (load data first, then app logic) -->
 <script src="data.js"></script>
+<script src="api.js"></script>
 <script src="app.js"></script>
 
 </body>

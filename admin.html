@@ -421,6 +421,10 @@
       🏪 Händler-Aktionen
       <span class="count" id="count-promos">0</span>
     </button>
+    <button class="tab-btn" data-tab="moderation" role="tab">
+      ✅ Freigabe
+      <span class="count" id="count-moderation" style="background:#f59e0b;color:#000">0</span>
+    </button>
   </nav>
 
   <!-- ══════════════════════════════════════════
@@ -608,6 +612,23 @@
       <div class="card-title">📋 Aktive Händler-Aktionen</div>
       <div class="section-title" id="promo-list-label">Lädt…</div>
       <div class="item-list" id="promos-list"></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: FREIGABE / MODERATION -->
+  <div class="tab-panel" id="tab-moderation">
+    <div class="card">
+      <div class="card-title">✅ Ausstehende Freigaben</div>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:16px">Hier erscheinen Community-Posts, Deals und Events, die auf Freigabe warten. Freigegebene Inhalte sind sofort in der App sichtbar.</p>
+
+      <div class="section-title">Community-Posts</div>
+      <div class="item-list" id="mod-posts-list"></div>
+
+      <div class="section-title" style="margin-top:20px">Deals</div>
+      <div class="item-list" id="mod-deals-list"></div>
+
+      <div class="section-title" style="margin-top:20px">Events</div>
+      <div class="item-list" id="mod-events-list"></div>
     </div>
   </div>
 
@@ -1049,11 +1070,100 @@ document.getElementById('form-promos').addEventListener('submit', function(e) {
 });
 
 // ═══════════════════════════════════════════════
+// MODERATION
+// ═══════════════════════════════════════════════
+const APP_KEY = 'zamclub_v1';
+
+function appStore(key, fb = []) {
+  try { return JSON.parse(localStorage.getItem(APP_KEY) || '{}')[key] ?? fb; }
+  catch { return fb; }
+}
+function appStoreSet(key, value) {
+  try {
+    const d = JSON.parse(localStorage.getItem(APP_KEY) || '{}');
+    d[key] = value;
+    localStorage.setItem(APP_KEY, JSON.stringify(d));
+  } catch {}
+}
+
+function statusBadge(status) {
+  const map = { pending: { bg: '#f59e0b22', color: '#f59e0b', label: 'Ausstehend' }, approved: { bg: '#10b98122', color: '#10b981', label: 'Freigegeben' }, rejected: { bg: '#ef444422', color: '#ef4444', label: 'Abgelehnt' } };
+  const s = map[status] || map.pending;
+  return `<span style="background:${s.bg};color:${s.color};border:1px solid ${s.color}44;border-radius:6px;padding:2px 8px;font-size:0.72rem;font-weight:700">${s.label}</span>`;
+}
+
+function renderModerationList(containerId, items, typeLabel, approveFn, rejectFn) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!items || items.length === 0) {
+    el.innerHTML = '<div style="color:#888;font-size:0.82rem;padding:8px 0">Keine Einträge vorhanden.</div>';
+    return;
+  }
+  el.innerHTML = items.map(item => `
+    <div style="background:#111118;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <strong style="font-size:0.88rem">${item.title || item.content?.slice(0,60) || item.name || '(Kein Titel)'}</strong>
+        ${statusBadge(item.status || 'pending')}
+      </div>
+      ${item.content ? `<div style="font-size:0.8rem;color:#aaa;margin-bottom:8px;line-height:1.4">${item.content.slice(0,120)}${item.content.length>120?'…':''}</div>` : ''}
+      ${item.author ? `<div style="font-size:0.75rem;color:#888;margin-bottom:8px">👤 ${item.author.name || ''}</div>` : ''}
+      ${item.expiry_formatted ? `<div style="font-size:0.75rem;color:#888;margin-bottom:8px">🗓 ${item.expiry_formatted}</div>` : ''}
+      ${item.date_formatted ? `<div style="font-size:0.75rem;color:#888;margin-bottom:8px">📅 ${item.date_formatted}</div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:10px">
+        ${(item.status||'pending') === 'pending' ? `
+          <button onclick="${approveFn}('${item.id}')" style="background:#10b98122;color:#10b981;border:1px solid #10b98144;border-radius:6px;padding:6px 14px;font-size:0.78rem;cursor:pointer;font-weight:600">✅ Freigeben</button>
+          <button onclick="${rejectFn}('${item.id}')" style="background:#ef444422;color:#ef4444;border:1px solid #ef444444;border-radius:6px;padding:6px 14px;font-size:0.78rem;cursor:pointer;font-weight:600">❌ Ablehnen</button>
+        ` : `<span style="font-size:0.78rem;color:#888">Bereits bearbeitet</span>`}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderModeration() {
+  const posts  = appStore('pending_posts', []);
+  const deals  = appStore('pending_deals', []);
+  const events = appStore('pending_events', []);
+
+  renderModerationList('mod-posts-list',  posts,  'Post',  'approvePost',  'rejectPost');
+  renderModerationList('mod-deals-list',  deals,  'Deal',  'approveDeal',  'rejectDeal');
+  renderModerationList('mod-events-list', events, 'Event', 'approveEvent', 'rejectEvent');
+
+  const total = posts.filter(p => p.status === 'pending').length +
+                deals.filter(d => d.status === 'pending').length +
+                events.filter(e => e.status === 'pending').length;
+  const countEl = document.getElementById('count-moderation');
+  if (countEl) countEl.textContent = total;
+}
+
+function _updatePendingStatus(key, id, status) {
+  const items = appStore(key, []);
+  const i = items.findIndex(x => x.id === id);
+  if (i !== -1) items[i].status = status;
+  appStoreSet(key, items);
+}
+
+function approvePost(id)  { _updatePendingStatus('pending_posts',  id, 'approved'); renderModeration(); }
+function rejectPost(id)   { _updatePendingStatus('pending_posts',  id, 'rejected'); renderModeration(); }
+function approveDeal(id)  { _updatePendingStatus('pending_deals',  id, 'approved'); renderModeration(); }
+function rejectDeal(id)   { _updatePendingStatus('pending_deals',  id, 'rejected'); renderModeration(); }
+function approveEvent(id) { _updatePendingStatus('pending_events', id, 'approved'); renderModeration(); }
+function rejectEvent(id)  { _updatePendingStatus('pending_events', id, 'rejected'); renderModeration(); }
+
+// Tab wechsel → Moderation nachladen
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  const existing = btn.onclick;
+  btn.addEventListener('click', () => {
+    if (btn.dataset.tab === 'moderation') renderModeration();
+  });
+});
+
+// ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
 renderEventsList();
 renderDealsList();
 renderPromosList();
+renderModeration();
 updateCounts();
 </script>
 </body>
