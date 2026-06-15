@@ -1075,6 +1075,234 @@ async function renderBadges() {
 }
 
 // =============================================
+// Community sub-tabs
+// =============================================
+function initCommunityTabs() {
+  $$('.community-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('.community-tab').forEach(t => t.classList.remove('active'));
+      $$('.community-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      $(`#cpanel-${tab.dataset.ctab}`)?.classList.add('active');
+      const hBtn = $('#community-header-btn');
+      if (hBtn) hBtn.style.visibility = tab.dataset.ctab === 'wall' ? '' : 'hidden';
+      if (tab.dataset.ctab === 'chat') renderChatRooms();
+    });
+  });
+}
+
+function communityHeaderAction() {
+  const activeTab = $('.community-tab.active')?.dataset.ctab;
+  if (!activeTab || activeTab === 'wall') openNewPostModal();
+}
+
+// =============================================
+// Chat — Room List
+// =============================================
+function renderChatRooms() {
+  const { global, events } = ZAMApi.chat.rooms();
+  const onlineCount = ZAMApi.chat.onlineCount();
+  const onlineEl = $('#online-count-text');
+  if (onlineEl) onlineEl.textContent = `${onlineCount} Nutzer aktuell online`;
+
+  _renderRoomList('#chat-rooms-global', global);
+  _renderRoomList('#chat-rooms-events', events);
+}
+
+function _renderRoomList(selector, rooms) {
+  const container = $(selector);
+  if (!container) return;
+  container.innerHTML = rooms.map(r => `
+    <div class="chat-room-card" onclick="openChatRoom('${r.id}','${r.name.replace(/'/g,"\\'")}')">
+      <div class="chat-room-card-icon">${r.icon}</div>
+      <div class="chat-room-card-info">
+        <div class="chat-room-card-name">${r.name}</div>
+        <div class="chat-room-card-sub">${r.description || ''}</div>
+      </div>
+      <span class="chat-room-arrow">›</span>
+    </div>`).join('');
+}
+
+// =============================================
+// Chat — Room View
+// =============================================
+let _currentRoomId   = null;
+let _currentRoomName = '';
+let _chatPollTimer   = null;
+let _chatMsgCount    = 0;
+let _reportTarget    = null; // { msgId, userId, userName }
+
+function openChatRoom(roomId, roomName) {
+  _currentRoomId   = roomId;
+  _currentRoomName = roomName;
+
+  const view   = $('#chat-room-view');
+  const nameEl = $('#chat-room-name');
+  if (!view) return;
+  if (nameEl) nameEl.textContent = roomName;
+
+  // Online count
+  const count     = ZAMApi.chat.onlineCount();
+  const onlineEl  = $('#chat-online-small');
+  if (onlineEl) onlineEl.textContent = `● ${count} online`;
+
+  // Seed + render
+  ZAMApi.chat.seedDemoMessages(roomId);
+  _renderMessages();
+  ZAMApi.chat.markRoomRead(roomId);
+  _updateChatUnreadBadge();
+
+  view.classList.add('open');
+  setTimeout(() => $('#chat-input')?.focus(), 320);
+
+  // Poll for new messages every 2.5 s (simulates Supabase Realtime)
+  clearInterval(_chatPollTimer);
+  _chatPollTimer = setInterval(_pollMessages, 2500);
+}
+
+function closeChatRoom() {
+  $('#chat-room-view')?.classList.remove('open');
+  clearInterval(_chatPollTimer);
+  _chatPollTimer = null;
+  _currentRoomId = null;
+  _chatMsgCount  = 0;
+}
+
+function _renderMessages() {
+  const container = $('#chat-messages');
+  if (!container || !_currentRoomId) return;
+
+  const msgs = ZAMApi.chat.messages(_currentRoomId);
+  const uid  = ZAMApi.auth.currentUser()?.id;
+  const user = ZAMApi.auth.currentUser();
+  const isAdmin = user?.role === 'admin';
+  _chatMsgCount = msgs.length;
+
+  container.innerHTML = msgs.map(m => {
+    const isOwn = m.user_id === uid;
+    const time  = new Date(m.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    return `
+      <div class="chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}" data-msg-id="${m.id}">
+        ${!isOwn ? `<div class="chat-msg-avatar" style="background:${m.author.color || '#8b5cf6'}">${m.author.initials || '?'}</div>` : ''}
+        <div class="chat-msg-bubble-wrap">
+          ${!isOwn ? `<div class="chat-msg-name">${m.author.name}</div>` : ''}
+          <div class="chat-msg-bubble">${m.content}</div>
+          <div class="chat-msg-time">
+            ${time}
+            ${!isOwn ? `<button class="chat-report-btn" onclick="openChatOptions('${m.id}','${m.user_id}','${(m.author.name||'').replace(/'/g,"\\'")}',${isAdmin})" aria-label="Optionen">⋯</button>` : ''}
+            ${isOwn && isAdmin ? `<button class="chat-report-btn" onclick="deleteChatMsg('${m.id}')" aria-label="Löschen">🗑</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function _pollMessages() {
+  if (!_currentRoomId) return;
+  const msgs = ZAMApi.chat.messages(_currentRoomId);
+  if (msgs.length > _chatMsgCount) {
+    _renderMessages();
+  }
+}
+
+async function sendChatMessage() {
+  const input = $('#chat-input');
+  if (!input || !_currentRoomId) return;
+  const content = input.value.trim();
+  if (!content) return;
+  input.value = '';
+  input.focus();
+
+  ZAMApi.chat.sendMessage(_currentRoomId, content);
+  _renderMessages();
+
+  // +2 Punkte für aktive Teilnahme (still, kein Toast-Spam)
+  ZAMApi.points.add(2, 'chat_message', 'Chat-Nachricht');
+}
+
+function initChatInput() {
+  const sendBtn = $('#chat-send-btn');
+  const input   = $('#chat-input');
+  if (sendBtn) sendBtn.addEventListener('click', sendChatMessage);
+  if (input) {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+    });
+  }
+}
+
+// =============================================
+// Chat — Moderation
+// =============================================
+function openChatOptions(msgId, userId, userName, isAdmin = false) {
+  _reportTarget = { msgId, userId, userName };
+  const titleEl     = $('#chat-options-title');
+  const deleteBtn   = $('#btn-chat-delete-msg');
+  if (titleEl)   titleEl.textContent = `Optionen · ${userName}`;
+  if (deleteBtn) deleteBtn.style.display = isAdmin ? '' : 'none';
+
+  const blockBtn  = $('#btn-chat-block-user');
+  const reportBtn = $('#btn-chat-report-msg');
+  if (blockBtn) {
+    const alreadyBlocked = ZAMApi.chat.isBlocked(userId);
+    blockBtn.textContent = alreadyBlocked ? '✅ Nutzer entblockieren' : '🚫 Nutzer blockieren';
+    blockBtn.onclick = () => {
+      if (alreadyBlocked) { ZAMApi.chat.unblockUser(userId); showToast(`${userName} entblockiert.`); }
+      else { ZAMApi.chat.blockUser(userId); showToast(`🚫 ${userName} blockiert.`, 'success'); }
+      closeModal('modal-chat-options');
+      _renderMessages();
+    };
+  }
+  if (reportBtn) {
+    reportBtn.onclick = () => {
+      closeModal('modal-chat-options');
+      openReportModal(msgId, userId, userName);
+    };
+  }
+  if (deleteBtn) {
+    deleteBtn.onclick = () => {
+      deleteChatMsg(msgId);
+      closeModal('modal-chat-options');
+    };
+  }
+
+  $('#modal-chat-options')?.classList.add('open');
+}
+
+function openReportModal(msgId, userId, userName) {
+  _reportTarget = { msgId, userId, userName };
+  $$('input[name="report-reason"]').forEach(r => { r.checked = r.value === 'other'; });
+  const confirmBtn = $('#btn-report-confirm');
+  if (confirmBtn) {
+    confirmBtn.onclick = async () => {
+      const reason = $('input[name="report-reason"]:checked')?.value || 'other';
+      ZAMApi.chat.report('message', msgId, reason, userId);
+      closeModal('modal-report');
+      showToast('✅ Nachricht gemeldet. Danke!', 'success');
+    };
+  }
+  $('#modal-report')?.classList.add('open');
+}
+
+function deleteChatMsg(msgId) {
+  if (!_currentRoomId) return;
+  ZAMApi.chat.deleteMessage(_currentRoomId, msgId);
+  _renderMessages();
+  showToast('Nachricht gelöscht.', 'success');
+}
+
+function _updateChatUnreadBadge() {
+  const count  = ZAMApi.chat.unreadCount();
+  const badge  = $('#chat-tab-badge');
+  if (badge) {
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+    badge.textContent   = count > 9 ? '9+' : count;
+  }
+}
+
+// =============================================
 // Modals
 // =============================================
 function closeModal(modalId) {
@@ -1619,6 +1847,8 @@ function init() {
   initComments();
   initNewPost();
   initProfileEdit();
+  initCommunityTabs();
+  initChatInput();
   initAuth();
 }
 

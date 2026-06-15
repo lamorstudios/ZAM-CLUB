@@ -731,6 +731,165 @@ const ZAMApi = {
   },
 
   // ──────────────────────────────────────────────────────────
+  // CHAT
+  // Supabase: supabase.from('chat_messages').on('INSERT', cb).subscribe()
+  // ──────────────────────────────────────────────────────────
+  chat: {
+    // Room definitions (static + event-based)
+    // Supabase: .from('chat_rooms').select('*').order('type').order('created_at')
+    rooms() {
+      const global = [
+        { id: 'room_allgemein', name: 'Allgemein',        icon: '💬', type: 'global', description: 'Allgemeine Unterhaltungen' },
+        { id: 'room_food',      name: 'Essen & Gastro',   icon: '🍕', type: 'global', description: 'Restaurants, Cafés & Foodtrends' },
+        { id: 'room_events',    name: 'Events',           icon: '📅', type: 'global', description: 'Veranstaltungen & Aktivitäten' },
+        { id: 'room_deals',     name: 'Deals & Aktionen', icon: '🏷️', type: 'global', description: 'Angebote & Empfehlungen' },
+      ];
+      const eventRooms = (ZAMData.events || []).slice(0, 4).map(e => ({
+        id: `room_evt_${e.id}`,
+        name: e.title,
+        icon: '📅',
+        type: 'event',
+        event_id: e.id,
+        description: `${e.date_formatted} · ${e.location}`,
+      }));
+      return { global, events: eventRooms };
+    },
+
+    // Load messages for a room (localStorage, filter blocked users)
+    // Supabase: .from('chat_messages').select('*, profiles(*)').eq('room_id', roomId).order('created_at').limit(60)
+    messages(roomId) {
+      try {
+        const key   = `zamclub_chat_${roomId}`;
+        const msgs  = JSON.parse(localStorage.getItem(key) || '[]');
+        const blocked = _s('blocked_users', []);
+        return msgs.filter(m => !m.is_deleted && !blocked.includes(m.user_id)).slice(-60);
+      } catch { return []; }
+    },
+
+    // Send a message
+    // Supabase: .from('chat_messages').insert({ room_id, user_id, content })
+    sendMessage(roomId, content) {
+      const user = ZAMApi.auth.currentUser();
+      if (!user) throw new Error('Nicht eingeloggt.');
+      content = content.trim();
+      if (!content) return null;
+      const msg = {
+        id: _uuid(), room_id: roomId, user_id: user.id,
+        author: { name: user.display_name, initials: user.initials, color: user.avatar_color || '#8b5cf6' },
+        content, created_at: _now(), is_deleted: false,
+      };
+      const key  = `zamclub_chat_${roomId}`;
+      const msgs = JSON.parse(localStorage.getItem(key) || '[]');
+      msgs.push(msg);
+      localStorage.setItem(key, JSON.stringify(msgs.slice(-200)));
+      return msg;
+    },
+
+    // Delete a message (admin or own)
+    // Supabase: .from('chat_messages').update({ is_deleted: true, deleted_by: uid }).eq('id', msgId)
+    deleteMessage(roomId, msgId) {
+      const key  = `zamclub_chat_${roomId}`;
+      const msgs = JSON.parse(localStorage.getItem(key) || '[]');
+      const m    = msgs.find(x => x.id === msgId);
+      if (m) { m.is_deleted = true; localStorage.setItem(key, JSON.stringify(msgs)); }
+    },
+
+    // Report a message or user
+    // Supabase: .from('reports').insert({ reporter_id, content_type, content_id, reason })
+    report(contentType, contentId, reason = '', reportedUserId = null) {
+      const reports = _gLoad('reports', []);
+      reports.unshift({ id: _uuid(), reporter_id: _uid(), content_type: contentType, content_id: contentId, reported_user_id: reportedUserId, reason, created_at: _now() });
+      _gSet('reports', reports.slice(0, 500));
+    },
+
+    // Block / unblock a user
+    // Supabase: .from('blocked_users').insert({ blocker_id, blocked_id })
+    blockUser(userId) {
+      const blocked = _s('blocked_users', []);
+      if (!blocked.includes(userId)) { blocked.push(userId); _set('blocked_users', blocked); }
+    },
+    unblockUser(userId) {
+      _set('blocked_users', _s('blocked_users', []).filter(id => id !== userId));
+    },
+    isBlocked(userId) { return _s('blocked_users', []).includes(userId); },
+
+    // Ban a user (admin only)
+    // Supabase: .from('profiles').update({ is_banned: true }).eq('id', userId)
+    banUser(userId) {
+      const banned = _gLoad('banned_users', []);
+      if (!banned.includes(userId)) { banned.push(userId); _gSet('banned_users', banned); }
+    },
+
+    // Online user simulation
+    // Supabase: presence via supabase.channel('room').track({ user_id, online_at })
+    onlineUsers() {
+      return [
+        { id: 'usr_042', name: 'Mia K.',   initials: 'MK', color: '#7c3aed', status: 'online' },
+        { id: 'usr_017', name: 'Felix B.', initials: 'FB', color: '#10b981', status: 'online' },
+        { id: 'usr_088', name: 'Sarah L.', initials: 'SL', color: '#ec4899', status: 'online' },
+        { id: 'usr_031', name: 'Tom W.',   initials: 'TW', color: '#f59e0b', status: 'recent' },
+        { id: 'usr_055', name: 'Anna P.',  initials: 'AP', color: '#3b82f6', status: 'recent' },
+      ];
+    },
+
+    onlineCount() {
+      // Simulated: 6-14 users online. Stable per minute so it doesn't flicker wildly.
+      const base = Math.floor(Date.now() / 60000) % 9;
+      return base + 6;
+    },
+
+    // Unread count
+    unreadCount() { return _s('chat_unread', 0); },
+    markRoomRead(roomId) {
+      const unread = _s('chat_unread_rooms', {});
+      delete unread[roomId];
+      _set('chat_unread_rooms', unread);
+      _set('chat_unread', Object.values(unread).reduce((a, b) => a + b, 0));
+    },
+    addUnread(roomId, count = 1) {
+      const unread = _s('chat_unread_rooms', {});
+      unread[roomId] = (unread[roomId] || 0) + count;
+      _set('chat_unread_rooms', unread);
+      _set('chat_unread', Object.values(unread).reduce((a, b) => a + b, 0));
+    },
+
+    // Seed demo messages into an empty room
+    seedDemoMessages(roomId) {
+      const key = `zamclub_chat_${roomId}`;
+      if (localStorage.getItem(key)) return;
+      const now = Date.now();
+      const seeds = {
+        room_allgemein: [
+          { uid: 'usr_042', a: { name: 'Mia K.',   initials: 'MK', color: '#7c3aed' }, c: 'Hey Leute! 👋 Freue mich auf den Sommer-Markt diese Woche!', ago: 18 },
+          { uid: 'usr_017', a: { name: 'Felix B.', initials: 'FB', color: '#10b981' }, c: 'Ich bin schon gespannt! Kommt jemand zum Yoga-Event?', ago: 12 },
+          { uid: 'usr_088', a: { name: 'Sarah L.', initials: 'SL', color: '#ec4899' }, c: 'Bin dabei! Das Morgen-Yoga im Atrium war letztes Mal mega 🧘‍♀️', ago: 7 },
+        ],
+        room_food: [
+          { uid: 'usr_031', a: { name: 'Tom W.',   initials: 'TW', color: '#f59e0b' }, c: 'Hat jemand den neuen Hummus bei Levante Kitchen probiert? 🤤', ago: 30 },
+          { uid: 'usr_088', a: { name: 'Sarah L.', initials: 'SL', color: '#ec4899' }, c: 'JA! Der ist der beste den ich je gegessen habe!! 🥙', ago: 22 },
+          { uid: 'usr_042', a: { name: 'Mia K.',   initials: 'MK', color: '#7c3aed' }, c: 'Danke – steht jetzt auf meiner Liste für morgen 😍', ago: 15 },
+        ],
+        room_events: [
+          { uid: 'usr_055', a: { name: 'Anna P.',  initials: 'AP', color: '#3b82f6' }, c: 'Wer kommt zum Sommer-Markt am Samstag? Wir könnten uns treffen!', ago: 45 },
+          { uid: 'usr_017', a: { name: 'Felix B.', initials: 'FB', color: '#10b981' }, c: 'Ich komme auf jeden Fall! Ab wann bist du da?', ago: 38 },
+          { uid: 'usr_055', a: { name: 'Anna P.',  initials: 'AP', color: '#3b82f6' }, c: 'Ich plane ab 11 Uhr – dann beim Food-Truck-Bereich 🎉', ago: 20 },
+        ],
+        room_deals: [
+          { uid: 'usr_031', a: { name: 'Tom W.',   initials: 'TW', color: '#f59e0b' }, c: '7 Tage gratis Gym war SO eine gute Entscheidung – jetzt hab ich Jahresmitgliedschaft 😅', ago: 60 },
+          { uid: 'usr_042', a: { name: 'Mia K.',   initials: 'MK', color: '#7c3aed' }, c: 'Haha ja das kenne ich! Die Rooftop-Sauna ist einfach unschlagbar 💪', ago: 52 },
+        ],
+      };
+      const roomSeeds = seeds[roomId] || [];
+      const msgs = roomSeeds.map((s, i) => ({
+        id: `seed_${i}`, room_id: roomId, user_id: s.uid, author: s.a,
+        content: s.c, created_at: new Date(now - s.ago * 60000).toISOString(),
+        is_deleted: false,
+      }));
+      localStorage.setItem(key, JSON.stringify(msgs));
+    },
+  },
+
+  // ──────────────────────────────────────────────────────────
   // BADGES
   // ──────────────────────────────────────────────────────────
   badges: {
