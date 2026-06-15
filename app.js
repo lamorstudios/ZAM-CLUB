@@ -3240,50 +3240,82 @@ function onLogoTap() {
 
 // Seed real ZAM content (called once on first launch)
 function seedZAMContent() {
-  const seeded = localStorage.getItem('zam_seeded_v2');
+  const seeded = localStorage.getItem('zam_seeded_v3');
   if (seeded) return;
 
   const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const now = Date.now();
 
-  // Merchants
-  const merchants = g.merchants || [];
+  // ── Merchants (real ZAM Freiham shops) ──
   const zamMerchants = [
-    { id: 'merchant_nb', name: 'New Balance Store', category: 'Mode', zone: 'mk2_1', description: 'Premium Sportswear & Lifestyle', points_multiplier: 2 },
-    { id: 'merchant_edeka', name: 'EDEKA Freiham', category: 'Lebensmittel', zone: 'mk2_1', description: 'Frische Lebensmittel und mehr', points_multiplier: 1 },
-    { id: 'merchant_dm', name: 'dm Drogerie', category: 'Drogerie', zone: 'mk2_2', description: 'Alles für Beauty & Gesundheit', points_multiplier: 1 },
-    { id: 'merchant_cafe', name: 'Café ZAM', category: 'Gastronomie', zone: 'mk2_2', description: 'Kaffee, Kuchen & Mittagsmenüs', points_multiplier: 1 },
-    { id: 'merchant_saturn', name: 'MediaMarkt', category: 'Elektronik', zone: 'mk2_3', description: 'Technik & Unterhaltungselektronik', points_multiplier: 1 },
+    { id: 'mer_001', name: 'Café Freiham', logo: '☕', category: 'Café & Bäckerei', zone: 'mk2_1', description: 'Frische Backwaren, Bio-Kaffee und ein großer Außensitzbereich.', hours: 'Mo–Sa 07:30–20:00, So 09:00–18:00', phone: '+49 89 4521-0110' },
+    { id: 'mer_002', name: 'Odeya Fashion', logo: '👗', category: 'Mode & Accessoires', zone: 'mk2_2', description: 'Kuratierte Mode aus nachhaltiger Produktion – von lässig bis elegant.', hours: 'Mo–Sa 10:00–20:00', phone: '+49 89 4521-0214' },
+    { id: 'mer_003', name: 'Levante Kitchen', logo: '🥙', category: 'Restaurant', zone: 'mk2_1', description: 'Mediterran-levantinische Küche mit frischen Zutaten.', hours: 'Mo–So 11:00–21:30', phone: '+49 89 4521-0321' },
+    { id: 'mer_004', name: 'Westside Gym', logo: '💪', category: 'Sport & Wellness', zone: 'mk2_3', description: '200+ Geräte, 30+ Kursformate, Rooftop-Sauna.', hours: 'Mo–Fr 06:00–23:00, Sa–So 08:00–21:00', phone: '+49 89 4521-0430' },
+    { id: 'mer_005', name: 'Welt der Bücher', logo: '📚', category: 'Bücher & Kreatives', zone: 'mk2_2', description: 'Über 35.000 Titel, Leselounge und wöchentliche Autoren-Lesungen.', hours: 'Mo–Sa 09:30–20:00', phone: '+49 89 4521-0108' },
+    { id: 'mer_006', name: 'Freiham Apotheke', logo: '💊', category: 'Gesundheit & Beauty', zone: 'mk2_4', description: 'Kompetente Beratung, breites Naturkosmetik-Sortiment.', hours: 'Mo–Sa 08:00–20:00', phone: '+49 89 4521-0103' },
+    { id: 'mer_007', name: 'dm Drogerie', logo: '🛁', category: 'Drogerie', zone: 'mk2_2', description: 'Alles für Beauty, Gesundheit und Haushalt.', hours: 'Mo–Sa 08:00–20:00', phone: '' },
+    { id: 'mer_008', name: 'EDEKA Freiham', logo: '🛒', category: 'Lebensmittel', zone: 'mk2_1', description: 'Frische Lebensmittel, regionale Produkte, großes Sortiment.', hours: 'Mo–Sa 07:00–22:00', phone: '' },
   ];
+  const merchants = g.merchants || [];
   zamMerchants.forEach(m => { if (!merchants.find(x => x.id === m.id)) merchants.push({ ...m, status: 'active', created_at: new Date().toISOString() }); });
   g.merchants = merchants;
 
-  // Events
-  const events = g.events || [];
-  const now = Date.now();
+  // ── Events (real ZAM event types) ──
   const zamEvents = [
-    { id: 'ev_summer', title: 'Sommermarkt Freiham', description: 'Lokale Händler, Musik und Essen auf dem Gandhi-Platz', date: new Date(now + 7 * 864e5).toISOString(), location: 'Mahatma-Gandhi-Platz', zone: 'plaza', merchant_id: null, points: 50, max_participants: 500 },
-    { id: 'ev_yoga', title: 'Yoga im Park', description: 'Kostenloser Yoga-Kurs für alle ZAM Club Mitglieder', date: new Date(now + 3 * 864e5).toISOString(), location: 'Bildungscampus Freiham', zone: 'mk2_3', merchant_id: null, points: 30, max_participants: 50 },
-    { id: 'ev_launch', title: 'New Balance Launch Event', description: 'Neue Kollektion – exklusiv für ZAM Club Mitglieder', date: new Date(now + 14 * 864e5).toISOString(), location: 'New Balance Store', zone: 'mk2_1', merchant_id: 'merchant_nb', points: 75, max_participants: 100 },
+    { id: 'ev_001', title: 'Morgen-Yoga im Atrium', category: 'Sport & Wellness', date: new Date(now + 3*864e5).toISOString(), location: 'Atrium, Erdgeschoss', zone: 'mk2_2', merchant_id: 'mer_004', description: 'Starte deinen Tag mit Energie – Yoga für alle Levels unter dem Glasdach des ZAM.', points: 60, max_participants: 40, registrations: [] },
+    { id: 'ev_002', title: 'Freiham Sommer-Markt', category: 'Food & Lifestyle', date: new Date(now + 7*864e5).toISOString(), location: 'Vorplatz ZAM / Gandhi-Platz', zone: 'plaza', merchant_id: null, description: 'Regionale Erzeuger, Foodtrucks und Live-Musik. 40+ Aussteller, Eintritt frei!', points: 80, max_participants: 500, registrations: [] },
+    { id: 'ev_003', title: 'Kids Kreativ-Werkstatt', category: 'Familie', date: new Date(now + 10*864e5).toISOString(), location: 'Kinderbereich, OG 1', zone: 'mk2_2', merchant_id: null, description: 'Basteln, malen, stempeln für Kinder von 4–10 Jahren. Alle Materialien inklusive.', points: 35, max_participants: 18, registrations: [] },
+    { id: 'ev_004', title: 'Live-Konzert: Sommernacht-Beats', category: 'Kultur & Musik', date: new Date(now + 14*864e5).toISOString(), location: 'Hauptbühne, EG', zone: 'plaza', merchant_id: null, description: 'Soul, Jazz & Singer-Songwriter aus München – drei Acts live auf der ZAM-Bühne. Eintritt frei!', points: 45, max_participants: 300, registrations: [] },
+    { id: 'ev_005', title: 'Nachhaltigkeits-Workshop', category: 'Community', date: new Date(now + 19*864e5).toISOString(), location: 'Eventfläche, OG 2', zone: 'mk2_2', merchant_id: null, description: 'Repair Café, Zero-Waste-Tipps und offene Nachbarschaftsrunde. Kostenlos, ohne Anmeldung.', points: 50, max_participants: 60, registrations: [] },
   ];
-  zamEvents.forEach(ev => { if (!events.find(x => x.id === ev.id)) events.push({ ...ev, status: 'active', registrations: [], created_at: new Date().toISOString() }); });
+  const events = g.events || [];
+  zamEvents.forEach(ev => { if (!events.find(x => x.id === ev.id)) events.push({ ...ev, status: 'active', created_at: new Date().toISOString() }); });
   g.events = events;
 
-  // Deals
-  const deals = g.deals || [];
+  // ── Deals (real ZAM deals) ──
   const zamDeals = [
-    { id: 'deal_nb20', title: '20% auf alle Schuhe', description: 'Exklusiv für ZAM Club Mitglieder', merchant_id: 'merchant_nb', merchant_name: 'New Balance Store', discount: '20%', category: 'Mode', expires_at: new Date(now + 30 * 864e5).toISOString(), points_reward: 25 },
-    { id: 'deal_cafe', title: 'Kaffee + Kuchen für 4,50€', description: 'Täglich ab 14 Uhr', merchant_id: 'merchant_cafe', merchant_name: 'Café ZAM', discount: '–25%', category: 'Gastronomie', expires_at: new Date(now + 60 * 864e5).toISOString(), points_reward: 10 },
-    { id: 'deal_dm', title: 'dm: 3-für-2 auf Eigenmarken', description: 'Gültig auf alle Eigenmarken', merchant_id: 'merchant_dm', merchant_name: 'dm Drogerie', discount: '3für2', category: 'Drogerie', expires_at: new Date(now + 14 * 864e5).toISOString(), points_reward: 15 },
-    { id: 'deal_mm', title: 'Gratis Beratung + 10% Rabatt', description: 'Bei jedem Kauf über 50€', merchant_id: 'merchant_saturn', merchant_name: 'MediaMarkt', discount: '10%', category: 'Elektronik', expires_at: new Date(now + 21 * 864e5).toISOString(), points_reward: 20 },
+    { id: 'deal_001', title: '2. Heißgetränk nur 1 Euro', merchant_id: 'mer_001', merchant_name: 'Café Freiham', store_icon: '☕', discount: '2. für 1€', category: 'Food & Drinks', description: 'Kauf ein Heißgetränk, bezahl fürs zweite nur 1€. Gilt auf alle Kaffee- und Tee-Spezialitäten.', expires_at: new Date(now + 15*864e5).toISOString(), points_reward: 20, is_hot: true },
+    { id: 'deal_002', title: '20% auf nachhaltige Labels', merchant_id: 'mer_002', merchant_name: 'Odeya Fashion', store_icon: '👗', discount: '20%', category: 'Mode', description: 'Exklusiv für ZAM-Club-Mitglieder: 20% Rabatt auf alle Nachhaltigkeits-Labels.', expires_at: new Date(now + 35*864e5).toISOString(), points_reward: 30, is_hot: false },
+    { id: 'deal_003', title: 'Gratis Hummus zu jedem Hauptgericht', merchant_id: 'mer_003', merchant_name: 'Levante Kitchen', store_icon: '🥙', discount: 'Gratis', category: 'Restaurant', description: 'Als ZAM-Club-Mitglied: Hummus mit Pita gratis zum Hauptgericht. Mo–Fr 11–15 Uhr.', expires_at: new Date(now + 14*864e5).toISOString(), points_reward: 25, is_hot: true },
+    { id: 'deal_004', title: '7 Tage kostenlos trainieren', merchant_id: 'mer_004', merchant_name: 'Westside Gym', store_icon: '💪', discount: '7 Tage', category: 'Sport', description: 'Teste den Westside Gym eine Woche gratis – alle Geräte, alle Kurse, Sauna inklusive.', expires_at: new Date(now + 46*864e5).toISOString(), points_reward: 100, is_hot: true },
+    { id: 'deal_005', title: '10% auf alle Neuerscheinungen', merchant_id: 'mer_005', merchant_name: 'Welt der Bücher', store_icon: '📚', discount: '10%', category: 'Bücher', description: 'Alle Neuerscheinungen des Monats mit 10% Mitgliederrabatt – inklusive Vorbestellungen.', expires_at: new Date(now + 15*864e5).toISOString(), points_reward: 15, is_hot: false },
+    { id: 'deal_006', title: 'Sonnenschutz-Set: 3 für 2', merchant_id: 'mer_006', merchant_name: 'Freiham Apotheke', store_icon: '💊', discount: '3 für 2', category: 'Gesundheit', description: 'Sommer-Special: 3 Sonnenschutz-Produkte kaufen, günstigstes ist gratis.', expires_at: new Date(now + 30*864e5).toISOString(), points_reward: 20, is_hot: false },
   ];
+  const deals = g.deals || [];
   zamDeals.forEach(d => { if (!deals.find(x => x.id === d.id)) deals.push({ ...d, status: 'active', created_at: new Date().toISOString() }); });
-  g.deals = zamDeals.filter(d => !deals.find(x => x.id === d.id && x !== d)).concat(deals);
+  g.deals = deals;
 
-  // Seed analytics demo data
+  // ── Demo Users (for community & map) ──
+  const accounts = g.accounts || [];
+  const demoUsers = [
+    { id: 'demo_mia', email: 'mia@demo.zam', name: 'Mia K.', username: 'miak', role: 'user', level: 'gold', points: 2340 },
+    { id: 'demo_felix', email: 'felix@demo.zam', name: 'Felix B.', username: 'felixb', role: 'user', level: 'silver', points: 890 },
+    { id: 'demo_sarah', email: 'sarah@demo.zam', name: 'Sarah L.', username: 'sarahl', role: 'user', level: 'platinum', points: 3820 },
+    { id: 'demo_tom', email: 'tom@demo.zam', name: 'Tom W.', username: 'tomw', role: 'user', level: 'bronze', points: 240 },
+    { id: 'demo_anna', email: 'anna@demo.zam', name: 'Anna P.', username: 'annap', role: 'merchant', level: 'gold', points: 1650 },
+  ];
+  demoUsers.forEach(u => { if (!accounts.find(a => a.id === u.id)) accounts.push({ ...u, created_at: new Date(now - Math.random()*30*864e5).toISOString(), last_active: new Date(now - Math.random()*2*864e5).toISOString() }); });
+  g.accounts = accounts;
+
+  // ── Demo Community Posts ──
+  const posts = g.posts || [];
+  const demoPosts = [
+    { id: 'post_d1', user_id: 'demo_mia', author_name: 'Mia K.', author_initials: 'MK', content: 'Der Sommermarkt letzte Woche war einfach mega 🌞 Die Foodtrucks vom Levante Kitchen waren das Highlight! Wann kommt der nächste?', likes: 24, comments: [], status: 'approved', created_at: new Date(now - 2*864e5).toISOString() },
+    { id: 'post_d2', user_id: 'demo_felix', author_name: 'Felix B.', author_initials: 'FB', content: 'Hat jemand schon den Westside Gym ausprobiert? Überlege eine Mitgliedschaft, der 7-Tage-Test klingt verlockend 💪', likes: 11, comments: [], status: 'approved', created_at: new Date(now - 1*864e5).toISOString() },
+    { id: 'post_d3', user_id: 'demo_sarah', author_name: 'Sarah L.', author_initials: 'SL', content: 'Kleiner Tipp: Morgen-Yoga im Atrium ist absolut empfehlenswert! Tolle Atmosphäre unter dem Glasdach ☀️ Noch Plätze frei!', likes: 38, comments: [], status: 'approved', created_at: new Date(now - 3600e3).toISOString() },
+  ];
+  demoPosts.forEach(p => { if (!posts.find(x => x.id === p.id)) posts.push(p); });
+  g.posts = posts;
+
+  // ── Analytics seed ──
   ZAMApi.analytics.seedDemo();
 
   localStorage.setItem('zamclub_global', JSON.stringify(g));
-  localStorage.setItem('zam_seeded_v2', '1');
+  localStorage.setItem('zam_seeded_v3', '1');
+  // Clean up old seed flags
+  localStorage.removeItem('zam_seeded_v2');
+  localStorage.removeItem('zam_content_seeded');
 }
 
 // =============================================
