@@ -856,7 +856,8 @@ const ZAMApi = {
     // Seed demo messages into an empty room
     seedDemoMessages(roomId) {
       const key = `zamclub_chat_${roomId}`;
-      if (localStorage.getItem(key)) return;
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      if (existing.length > 0) return;
       const now = Date.now();
       const seeds = {
         room_allgemein: [
