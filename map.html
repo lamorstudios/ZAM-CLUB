@@ -422,20 +422,116 @@ const MARKERS=[
   {type:'hotspot',id:'hs2',x:370,y:600,icon:'🔥',label:'Treffpunkt',color:'#ef4444',borderColor:'rgba(239,68,68,0.6)',title:'Treffpunkt Gandhi-Platz',desc:'Der beliebteste Treffpunkt im ZAM. Brunnen-Area lädt zum Verweilen ein.',extra:'👥 8 Personen hier'},
 ];
 
-// PAN/ZOOM
-let tx=0,ty=0,scale=1,dragging=false,lastX=0,lastY=0,pinching=false,lastDist=0;
+// PAN/ZOOM — clean, rAF-based, with momentum + proper pinch
+const MAP_W=520, MAP_H=800, MIN_S=0.35, MAX_S=4;
+let tx=0, ty=0, scale=1;
+let rafId=null, momRAF=null;
+let vx=0, vy=0;
+let dragging=false, lastX=0, lastY=0, lastT=0, hasMoved=false;
+let pinching=false, pinchDist=0, pinchCx=0, pinchCy=0;
+
 const wrap=document.getElementById('map-wrap');
 const stage=document.getElementById('map-stage');
+
 function applyT(){stage.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`}
-function clamp(){const W=wrap.clientWidth,H=wrap.clientHeight,mw=520*scale,mh=800*scale,p=60;tx=Math.min(p,Math.max(W-mw-p,tx));ty=Math.min(p,Math.max(H-mh-p,ty))}
-function mapZoom(f,cx,cy){cx=cx||wrap.clientWidth/2;cy=cy||wrap.clientHeight/2;const ns=Math.min(3.5,Math.max(0.4,scale*f));tx=cx-(cx-tx)*ns/scale;ty=cy-(cy-ty)*ns/scale;scale=ns;clamp();applyT()}
-wrap.addEventListener('mousedown',e=>{if(e.button)return;dragging=true;lastX=e.clientX;lastY=e.clientY});
-window.addEventListener('mousemove',e=>{if(!dragging)return;tx+=e.clientX-lastX;ty+=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;clamp();applyT()});
-window.addEventListener('mouseup',()=>dragging=false);
-wrap.addEventListener('wheel',e=>{e.preventDefault();mapZoom(e.deltaY<0?1.12:0.9,e.clientX,e.clientY)},{passive:false});
-wrap.addEventListener('touchstart',e=>{if(e.touches.length===1){dragging=true;lastX=e.touches[0].clientX;lastY=e.touches[0].clientY}if(e.touches.length===2){pinching=true;dragging=false;lastDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)}},{passive:true});
-wrap.addEventListener('touchmove',e=>{if(dragging&&e.touches.length===1){tx+=e.touches[0].clientX-lastX;ty+=e.touches[0].clientY-lastY;lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;clamp();applyT()}if(pinching&&e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);mapZoom(d/lastDist,(e.touches[0].clientX+e.touches[1].clientX)/2,(e.touches[0].clientY+e.touches[1].clientY)/2);lastDist=d}},{passive:true});
-wrap.addEventListener('touchend',e=>{if(!e.touches.length){dragging=false;pinching=false}},{passive:true});
+function scheduleT(){if(!rafId)rafId=requestAnimationFrame(()=>{rafId=null;applyT()})}
+
+function clamp(){
+  const W=wrap.clientWidth, H=wrap.clientHeight;
+  const mw=MAP_W*scale, mh=MAP_H*scale;
+  tx = mw<W ? (W-mw)/2 : Math.min(0, Math.max(W-mw, tx));
+  ty = mh<H ? (H-mh)/2 : Math.min(0, Math.max(H-mh, ty));
+}
+
+function mapZoom(f,cx,cy){
+  cx=cx??wrap.clientWidth/2; cy=cy??wrap.clientHeight/2;
+  const ns=Math.min(MAX_S,Math.max(MIN_S,scale*f));
+  if(ns===scale)return;
+  tx=cx-(cx-tx)*(ns/scale);
+  ty=cy-(cy-ty)*(ns/scale);
+  scale=ns; clamp(); scheduleT();
+}
+
+function cancelMomentum(){if(momRAF){cancelAnimationFrame(momRAF);momRAF=null}vx=0;vy=0}
+function startMomentum(){
+  cancelMomentum();
+  const decay=0.88;
+  (function step(){
+    vx*=decay; vy*=decay;
+    if(Math.abs(vx)<0.4&&Math.abs(vy)<0.4)return;
+    tx+=vx; ty+=vy; clamp(); scheduleT();
+    momRAF=requestAnimationFrame(step);
+  })();
+}
+
+// Mouse
+wrap.addEventListener('mousedown',e=>{
+  if(e.button)return;
+  cancelMomentum();
+  dragging=true; hasMoved=false;
+  lastX=e.clientX; lastY=e.clientY; lastT=Date.now(); vx=0; vy=0;
+});
+window.addEventListener('mousemove',e=>{
+  if(!dragging)return;
+  const dx=e.clientX-lastX, dy=e.clientY-lastY, dt=Date.now()-lastT||1;
+  tx+=dx; ty+=dy; clamp(); scheduleT();
+  vx=dx/(dt/16); vy=dy/(dt/16);
+  lastX=e.clientX; lastY=e.clientY; lastT=Date.now();
+  if(Math.abs(dx)+Math.abs(dy)>4)hasMoved=true;
+});
+window.addEventListener('mouseup',()=>{if(dragging){dragging=false;startMomentum()}});
+wrap.addEventListener('click',e=>{if(hasMoved)e.stopPropagation()},{capture:true});
+wrap.addEventListener('wheel',e=>{
+  e.preventDefault(); cancelMomentum();
+  mapZoom(e.deltaY<0?1.1:1/1.1,e.clientX,e.clientY);
+},{passive:false});
+
+// Touch
+wrap.addEventListener('touchstart',e=>{
+  cancelMomentum();
+  if(e.touches.length===1){
+    dragging=true; pinching=false; hasMoved=false;
+    lastX=e.touches[0].clientX; lastY=e.touches[0].clientY; lastT=Date.now(); vx=0; vy=0;
+  } else if(e.touches.length===2){
+    dragging=false; pinching=true; hasMoved=true;
+    pinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    pinchCx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+    pinchCy=(e.touches[0].clientY+e.touches[1].clientY)/2;
+  }
+},{passive:true});
+
+wrap.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(dragging&&e.touches.length===1){
+    const dx=e.touches[0].clientX-lastX, dy=e.touches[0].clientY-lastY, dt=Date.now()-lastT||1;
+    tx+=dx; ty+=dy; clamp(); scheduleT();
+    vx=dx/(dt/16); vy=dy/(dt/16);
+    lastX=e.touches[0].clientX; lastY=e.touches[0].clientY; lastT=Date.now();
+    if(Math.abs(dx)+Math.abs(dy)>4)hasMoved=true;
+  } else if(pinching&&e.touches.length===2){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    const cx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+    const cy=(e.touches[0].clientY+e.touches[1].clientY)/2;
+    // Pan with pinch midpoint
+    tx+=cx-pinchCx; ty+=cy-pinchCy;
+    // Zoom towards midpoint
+    const ns=Math.min(MAX_S,Math.max(MIN_S,scale*(d/pinchDist)));
+    tx=cx-(cx-tx)*(ns/scale); ty=cy-(cy-ty)*(ns/scale);
+    scale=ns; clamp(); scheduleT();
+    pinchDist=d; pinchCx=cx; pinchCy=cy;
+  }
+},{passive:false});
+
+wrap.addEventListener('touchend',e=>{
+  if(e.touches.length===0){
+    if(dragging)startMomentum();
+    dragging=false; pinching=false;
+  } else if(e.touches.length===1&&pinching){
+    // Back to single finger after pinch — reset cleanly
+    pinching=false; dragging=true; hasMoved=true;
+    lastX=e.touches[0].clientX; lastY=e.touches[0].clientY; lastT=Date.now(); vx=0; vy=0;
+  }
+},{passive:true});
 
 function initMap(){
   const W=wrap.clientWidth,H=wrap.clientHeight;
