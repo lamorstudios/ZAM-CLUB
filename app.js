@@ -1079,6 +1079,8 @@ function showApp() {
   if (authShell) authShell.style.display = 'none';
   if (appShell)  appShell.style.display  = 'block';
   renderAll();
+  state.currentPage = '';
+  navigateTo('home');
 }
 
 function authNavigate(page) {
