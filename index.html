@@ -309,6 +309,14 @@
         </div>
       </div>
 
+      <!-- Challenges -->
+      <div class="challenges-section">
+        <div class="challenges-section-title">🎯 Monatliche Challenges</div>
+        <div id="challenges-list">
+          <!-- Rendered by app.js -->
+        </div>
+      </div>
+
     </div>
 
     <!-- Role-based actions -->
@@ -370,20 +378,16 @@
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">🎰 Daily Spin</div>
-    <div class="modal-subtitle">Drehe das Glücksrad und gewinne Punkte!</div>
+    <div class="modal-subtitle">Wähle eine Karte und gewinne Punkte!</div>
 
-    <div class="spin-wheel-container">
-      <div style="position:relative;display:inline-block">
-        <div class="spin-pointer">▼</div>
-        <div class="spin-wheel" id="spin-wheel">
-          <div class="spin-wheel-center">⭐</div>
-        </div>
-      </div>
+    <div class="spin-cards-grid" id="spin-cards-grid" aria-label="Glückskarten">
+      <!-- rendered by app.js -->
+    </div>
 
-      <div class="spin-result" id="spin-result">
-        <div class="spin-result-points" id="spin-result-points">+50</div>
-        <div class="spin-result-label" id="spin-result-label">Punkte gewonnen!</div>
-      </div>
+    <div class="spin-result" id="spin-result" style="display:none">
+      <div class="spin-result-icon" id="spin-result-icon">🎉</div>
+      <div class="spin-result-points" id="spin-result-points">+50</div>
+      <div class="spin-result-label" id="spin-result-label">Punkte gewonnen!</div>
     </div>
 
     <button class="btn btn-primary btn-full" id="btn-spin-go">🎰 Jetzt drehen!</button>
@@ -397,7 +401,11 @@
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">📷 QR Check-in</div>
-    <div class="modal-subtitle">Zeige diesen Code beim Eingang oder einem Partnergeschäft.</div>
+    <div class="modal-subtitle">Wähle einen Shop und checke ein.</div>
+
+    <div class="qr-merchant-tabs" id="qr-merchant-tabs">
+      <!-- rendered by app.js -->
+    </div>
 
     <div class="qr-placeholder">
       <div class="qr-grid" id="qr-grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:3px;width:176px;height:176px"></div>
@@ -405,7 +413,7 @@
 
     <div style="text-align:center;margin-bottom:16px">
       <div style="font-size:0.75rem;color:var(--color-text-muted)">Mitglieds-ID</div>
-      <div style="font-family:monospace;font-size:1rem;font-weight:700;letter-spacing:0.15em;margin-top:4px">ZAM-JM-001840</div>
+      <div style="font-family:monospace;font-size:1rem;font-weight:700;letter-spacing:0.15em;margin-top:4px" id="qr-member-id">ZAM-JM-001840</div>
     </div>
 
     <div id="qr-checkin-status" style="text-align:center;font-size:0.78rem;color:var(--color-text-muted);margin-bottom:14px">

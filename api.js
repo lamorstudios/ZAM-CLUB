@@ -9,6 +9,17 @@
 
 'use strict';
 
+// ── Badge-Definitionen mit Auto-Unlock-Bedingungen ──────────────
+const BADGE_DEFS = [
+  { id: 'badge_zam_starter',   name: 'ZAM Starter',      icon: '🌟', color: '#8b5cf6', description: 'Im ZAM Club willkommen!',       check: ()       => true },
+  { id: 'badge_deal_hunter',   name: 'Deal Hunter',       icon: '🎯', color: '#10b981', description: '3 Deals gespeichert oder gesichert', check: (s) => (s.deals_used||0)+(s.deals_saved||0) >= 3 },
+  { id: 'badge_event_fan',     name: 'Event Fan',          icon: '🎟️', color: '#f59e0b', description: 'An 2 Events teilgenommen',      check: (s)      => (s.events_attended||0) >= 2 },
+  { id: 'badge_community',     name: 'Community Member',   icon: '💬', color: '#3b82f6', description: 'Ersten Beitrag geteilt',        check: (s)      => (s.posts_created||0) >= 1 },
+  { id: 'badge_daily_spinner', name: 'Daily Spinner',      icon: '🎰', color: '#a855f7', description: '3× am Glücksrad gedreht',       check: (s)      => (s.spins||0) >= 3 },
+  { id: 'badge_checkin_star',  name: 'Check-in Star',      icon: '📍', color: '#06b6d4', description: '5× eingecheckt',               check: (s)      => (s.visits||0) >= 5 },
+  { id: 'badge_platin_star',   name: 'Platin-Star',        icon: '💎', color: '#c084fc', description: '3.000 Punkte gesammelt',        check: (s, pts) => pts >= 3000 },
+];
+
 // ── Supabase Init (auskommentiert bis Zugangsdaten vorhanden) ──
 // import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 // const SUPABASE_URL      = 'https://DEIN-PROJEKT.supabase.co'
@@ -322,6 +333,9 @@ const ZAMApi = {
       posts.unshift(post);
       _gSet('all_posts', posts);
 
+      // Track post count for badges/challenges
+      const cStats = _s('stats', {}); cStats.posts_created = (cStats.posts_created||0) + 1; _set('stats', cStats);
+
       // Pending-Queue für Admin
       const pending = _gLoad('pending_posts', []);
       pending.unshift({ ...post });
@@ -454,7 +468,10 @@ const ZAMApi = {
 
     async save(dealId)  {
       const saved = _s('saved_deals', []);
-      if (!saved.includes(dealId)) { saved.push(dealId); _set('saved_deals', saved); }
+      if (!saved.includes(dealId)) {
+        saved.push(dealId); _set('saved_deals', saved);
+        const stats = _s('stats', {}); stats.deals_saved = (stats.deals_saved||0) + 1; _set('stats', stats);
+      }
     },
     async unsave(dealId) { _set('saved_deals', _s('saved_deals', []).filter(id => id !== dealId)); },
 
@@ -710,6 +727,55 @@ const ZAMApi = {
     },
     async markAllRead() {
       _gSet('admin_notifications', _gLoad('admin_notifications', []).map(n => ({ ...n, is_read: true })));
+    },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // BADGES
+  // ──────────────────────────────────────────────────────────
+  badges: {
+    async list() {
+      const earned = _s('earned_badges', []);
+      const dates  = _s('badge_dates',   {});
+      return BADGE_DEFS.map(b => ({ ...b, earned: earned.includes(b.id), earned_date: dates[b.id] || null }));
+    },
+
+    async checkAndUnlock() {
+      const stats = _s('stats', {});
+      const pts   = _s('points', ZAMData.currentUser.points || 0);
+      const earned  = _s('earned_badges', []);
+      const dates   = _s('badge_dates',   {});
+      const newBadges = [];
+      for (const b of BADGE_DEFS) {
+        if (!earned.includes(b.id) && b.check(stats, pts)) {
+          earned.push(b.id); dates[b.id] = _now(); newBadges.push(b);
+        }
+      }
+      if (newBadges.length) { _set('earned_badges', earned); _set('badge_dates', dates); }
+      return newBadges;
+    },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // CHALLENGES
+  // ──────────────────────────────────────────────────────────
+  challenges: {
+    async list() {
+      const stats   = _s('stats', {});
+      const claimed = _s('claimed_challenges', []);
+      return ZAMData.challenges.map(c => {
+        const progress = Math.min(stats[c.stat] || 0, c.target);
+        return { ...c, progress, pct: Math.round((progress / c.target) * 100), is_complete: progress >= c.target, is_claimed: claimed.includes(c.id) };
+      });
+    },
+    async claim(challengeId) {
+      const all = await this.list();
+      const c = all.find(x => x.id === challengeId);
+      if (!c || !c.is_complete || c.is_claimed) return null;
+      const claimed = _s('claimed_challenges', []);
+      claimed.push(challengeId); _set('claimed_challenges', claimed);
+      await ZAMApi.points.add(c.reward_pts, 'challenge_reward', `✅ Challenge: ${c.title}`);
+      return { points: c.reward_pts };
     },
   },
 
