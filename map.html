@@ -127,7 +127,10 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
         <span class="tb-title-main">ZAM WORLD MAP</span>
         <span class="tb-online" id="tb-online">32 Freunde online</span>
       </div>
-      <button class="tb-btn" onclick="openMapActiveUsers()" title="Aktive Nutzer" style="font-size:0.75rem;font-weight:700;color:#34d399;border-color:rgba(52,211,153,0.3)">👥</button>
+      <button id="online-pill-btn" onclick="openMapActiveUsers()" style="pointer-events:all;display:flex;align-items:center;gap:5px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.35);border-radius:20px;padding:5px 12px 5px 8px;cursor:pointer;font-family:Poppins,system-ui">
+        <span style="width:8px;height:8px;border-radius:50%;background:#34d399;display:inline-block;flex-shrink:0;box-shadow:0 0 6px #34d399"></span>
+        <span id="online-pill-count" style="font-size:0.72rem;font-weight:700;color:#34d399">21 online</span>
+      </button>
       <button class="tb-btn" id="nudge-bell" onclick="openNudgeInbox()">🔔<span id="nudge-badge"></span></button>
     </div>
 
@@ -387,18 +390,63 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
   </div>
 </div>
 
-<!-- Active Users Panel -->
-<div id="map-au-panel" style="display:none;position:fixed;inset:0;z-index:250;background:rgba(0,0,0,0.65);align-items:flex-end;justify-content:center;transition:background 0.25s" onclick="if(event.target===this)closeMapActiveUsers()">
-  <div style="width:100%;max-width:480px;background:#0d0d1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(139,92,246,0.3);padding:14px 16px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px));max-height:80vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.32s cubic-bezier(0.16,1,0.3,1)" id="map-au-inner">
-    <div style="width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,0.12);margin:0 auto 14px;flex-shrink:0"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
-      <div>
-        <div style="font-size:0.95rem;font-weight:700;color:#e2e8f0">👥 Aktive Nutzer</div>
-        <div id="map-au-count" style="font-size:0.65rem;color:#34d399;margin-top:2px;font-weight:600"></div>
+<!-- ═══ AKTIVE NUTZER PANEL (Bottom Sheet) ═══ -->
+<div id="au-overlay" onclick="if(event.target===this)closeMapActiveUsers()" style="display:none;position:fixed;inset:0;z-index:260;background:rgba(0,0,0,0.72)">
+  <div id="au-sheet" style="position:absolute;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:#0d0d1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(139,92,246,0.35);max-height:88vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.34s cubic-bezier(0.16,1,0.3,1);overflow:hidden">
+    <!-- Handle + Header -->
+    <div style="flex-shrink:0;padding:12px 16px 0">
+      <div style="width:40px;height:4px;border-radius:99px;background:rgba(255,255,255,0.14);margin:0 auto 14px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div style="font-size:1rem;font-weight:800;color:#e2e8f0">Aktive Nutzer im ZAM</div>
+          <div id="au-subtitle" style="font-size:0.68rem;color:#34d399;margin-top:3px;font-weight:600;display:flex;align-items:center;gap:5px">
+            <span style="width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block;box-shadow:0 0 5px #34d399"></span>
+            <span id="au-count-txt">8 Nutzer gerade aktiv</span>
+          </div>
+        </div>
+        <button onclick="closeMapActiveUsers()" style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:1.2rem;line-height:1;cursor:pointer;font-family:Poppins,system-ui">×</button>
       </div>
-      <button onclick="closeMapActiveUsers()" style="width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:1rem;font-family:Poppins,system-ui;cursor:pointer">×</button>
+      <!-- Tabs -->
+      <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:12px;padding:3px;margin-bottom:14px">
+        <button id="au-tab-users" onclick="auSwitchTab('users')" style="flex:1;border:none;border-radius:10px;padding:7px 4px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:Poppins,system-ui;background:rgba(139,92,246,0.25);color:#c4b5fd;transition:all 0.2s">👥 Nutzer</button>
+        <button id="au-tab-deals" onclick="auSwitchTab('deals')" style="flex:1;border:none;border-radius:10px;padding:7px 4px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:Poppins,system-ui;background:none;color:rgba(255,255,255,0.4);transition:all 0.2s">🤝 Gemeinsame Deals</button>
+      </div>
     </div>
-    <div id="map-au-list" style="overflow-y:auto;flex:1"></div>
+    <!-- Tab Content -->
+    <div id="au-tab-content" style="flex:1;overflow-y:auto;padding:0 14px 16px;padding-bottom:max(16px,env(safe-area-inset-bottom,16px))"></div>
+  </div>
+</div>
+
+<!-- ═══ DEAL REQUEST DIALOG ═══ -->
+<div id="deal-req-overlay" onclick="if(event.target===this)closeDealReqDialog()" style="display:none;position:fixed;inset:0;z-index:280;background:rgba(0,0,0,0.8);align-items:flex-end;justify-content:center">
+  <div id="deal-req-sheet" style="width:100%;max-width:480px;background:#0f0f20;border-radius:22px 22px 0 0;border-top:1px solid rgba(52,211,153,0.35);padding:16px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px));transform:translateY(100%);transition:transform 0.34s cubic-bezier(0.16,1,0.3,1)">
+    <div style="width:40px;height:4px;border-radius:99px;background:rgba(255,255,255,0.12);margin:0 auto 16px"></div>
+    <div style="font-size:0.95rem;font-weight:800;color:#e2e8f0;margin-bottom:4px">🤝 Deal-Anfrage senden</div>
+    <div id="deal-req-to" style="font-size:0.72rem;color:rgba(255,255,255,0.45);margin-bottom:16px"></div>
+    <!-- Deal picker -->
+    <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:8px">Deal auswählen</div>
+    <div id="deal-picker" style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px">
+      <label class="deal-pick-opt" style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer">
+        <input type="radio" name="deal-pick" value="pitsburger" style="accent-color:#8b5cf6">
+        <div><div style="font-size:0.82rem;font-weight:700;color:#e2e8f0">🍔 Pitsburger – 2 für 1 Menü</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">2 Hauptgerichte zum Preis von 1</div></div>
+      </label>
+      <label class="deal-pick-opt" style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer">
+        <input type="radio" name="deal-pick" value="gelato" style="accent-color:#8b5cf6">
+        <div><div style="font-size:0.82rem;font-weight:700;color:#e2e8f0">🍦 Gelato – 2 Kugeln, 1 gratis</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">Beim Café Freiham</div></div>
+      </label>
+      <label class="deal-pick-opt" style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer">
+        <input type="radio" name="deal-pick" value="asia" style="accent-color:#8b5cf6" checked>
+        <div><div style="font-size:0.82rem;font-weight:700;color:#e2e8f0">🥢 Asia Lunch – Buddy Deal</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">Levante Kitchen, Mo–Fr</div></div>
+      </label>
+    </div>
+    <!-- Message -->
+    <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:6px">Nachricht (optional)</div>
+    <textarea id="deal-req-msg" placeholder="Hey, hast du Lust…" maxlength="120" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(139,92,246,0.25);color:#e2e8f0;border-radius:10px;padding:10px 12px;font-size:0.82rem;font-family:Poppins,system-ui;outline:none;resize:none;height:66px;box-sizing:border-box;margin-bottom:12px"></textarea>
+    <!-- Buttons -->
+    <div style="display:flex;gap:8px">
+      <button onclick="sendDealRequest()" style="flex:2;background:linear-gradient(135deg,#059669,#34d399);color:#fff;border:none;border-radius:12px;padding:12px;font-size:0.85rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">Anfrage senden ✓</button>
+      <button onclick="closeDealReqDialog()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:rgba(255,255,255,0.45);font-size:0.82rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">Abbrechen</button>
+    </div>
   </div>
 </div>
 
@@ -688,7 +736,9 @@ function locateMe(){const z=localStorage.getItem('zam_map_zone')||'mk2_1';const 
 function consentOk(){document.getElementById('consent').style.display='none';localStorage.setItem('zam_map_consent','yes');toggleStatus()}
 function consentNo(){document.getElementById('consent').style.display='none';localStorage.setItem('zam_map_consent','view')}
 
-// ── Active Users Panel ──
+// ══════════════════════════════════════════
+// AKTIVE NUTZER & DEAL MATCHING
+// ══════════════════════════════════════════
 const MAP_DEMO_USERS_EXTENDED = [
   {id:'u1',name:'Mia K.',initials:'MK',color:'#7c3aed',bg:'#2d1b69',zone:'mk2_1',status:'☕ Beim Kaffee'},
   {id:'u2',name:'Felix B.',initials:'FB',color:'#059669',bg:'#064e3b',zone:'mk2_2',status:'🤝 Suche 2-für-1'},
@@ -703,101 +753,303 @@ const ZONE_COLORS_MAP={mk2_1:'#d97706',mk2_2:'#7c3aed',mk2_3:'#059669',mk2_4:'#2
 const ZONE_LABELS_MAP={mk2_1:'MK 2(1)',mk2_2:'MK 2(2)',mk2_3:'MK 2(3)',mk2_4:'MK 2(4)',plaza:'Gandhi-Platz'};
 const DEAL_STATUSES_MAP=['🍔 Hungrig','🤝 Suche 2-für-1','🎉 Wer kommt mit?','🛍️ Suche Begleitung'];
 
-let _mapAUPanelOpen=false;
+let _auCurrentTab = 'users';
+let _dealReqTarget = null;
 
-function openMapActiveUsers(){
-  const panel=document.getElementById('map-au-panel');
-  const inner=document.getElementById('map-au-inner');
-  if(!panel||!inner)return;
-  _mapAUPanelOpen=true;
-  panel.style.display='flex';
-  requestAnimationFrame(()=>{inner.style.transform='translateY(0)'});
-  _renderMapAUList(MAP_DEMO_USERS_EXTENDED);
-  document.getElementById('map-au-count').textContent=MAP_DEMO_USERS_EXTENDED.length+' Nutzer online';
+/* ── Open / Close Panel ── */
+function openMapActiveUsers() {
+  const ov = document.getElementById('au-overlay');
+  const sh = document.getElementById('au-sheet');
+  if (!ov || !sh) return;
+  ov.style.display = 'block';
+  requestAnimationFrame(() => { sh.style.transform = 'translateY(0)'; });
+  auSwitchTab('users');
+  // Animate pill
+  const count = MAP_DEMO_USERS_EXTENDED.length;
+  document.getElementById('au-count-txt').textContent = count + ' Nutzer gerade aktiv';
+  document.getElementById('online-pill-count').textContent = count + ' online';
 }
 
-function closeMapActiveUsers(){
-  const panel=document.getElementById('map-au-panel');
-  const inner=document.getElementById('map-au-inner');
-  if(!panel||!inner)return;
-  _mapAUPanelOpen=false;
-  inner.style.transform='translateY(100%)';
-  setTimeout(()=>{panel.style.display='none'},320);
+function closeMapActiveUsers() {
+  const ov = document.getElementById('au-overlay');
+  const sh = document.getElementById('au-sheet');
+  if (!ov || !sh) return;
+  sh.style.transform = 'translateY(100%)';
+  setTimeout(() => { ov.style.display = 'none'; }, 340);
 }
 
-function _renderMapAUList(users){
-  const list=document.getElementById('map-au-list');
-  if(!list)return;
-  const api=window.ZAMApi;
-  list.innerHTML=users.map(u=>{
-    const zc=ZONE_COLORS_MAP[u.zone]||'#8b5cf6';
-    const zl=ZONE_LABELS_MAP[u.zone]||u.zone;
-    const connected=api?api.nudges.isConnected(u.id):false;
-    const pending=api?api.nudges.hasPendingNudgeTo(u.id):false;
-    let btn;
-    if(connected) btn=`<button onclick="mapAUChat('${u.id}','${u.name}','${u.initials}')" style="${mapAUBtnStyle('#7c3aed')}">💬</button>`;
-    else if(pending) btn=`<button disabled style="${mapAUBtnStyle('#555')}opacity:0.4">⏳</button>`;
-    else btn=`<button onclick="mapAUNudge('${u.id}','${u.name}')" style="${mapAUBtnStyle('#7c3aed')}">👋</button>`;
-    return `<div style="display:flex;align-items:center;gap:9px;padding:9px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(139,92,246,0.1);border-radius:12px;margin-bottom:7px;cursor:pointer" onclick="mapAUZoom('${u.id}')">
-      <div style="width:38px;height:38px;border-radius:50%;background:${u.bg};border:2px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:700;color:#fff;flex-shrink:0;position:relative">
+/* ── Tab switching ── */
+function auSwitchTab(tab) {
+  _auCurrentTab = tab;
+  const tUsers = document.getElementById('au-tab-users');
+  const tDeals = document.getElementById('au-tab-deals');
+  const activeStyle = 'flex:1;border:none;border-radius:10px;padding:7px 4px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:Poppins,system-ui;background:rgba(139,92,246,0.25);color:#c4b5fd;transition:all 0.2s';
+  const idleStyle   = 'flex:1;border:none;border-radius:10px;padding:7px 4px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:Poppins,system-ui;background:none;color:rgba(255,255,255,0.4);transition:all 0.2s';
+  tUsers.style.cssText = tab === 'users' ? activeStyle : idleStyle;
+  tDeals.style.cssText = tab === 'deals' ? activeStyle : idleStyle;
+  if (tab === 'users') _renderAUUserList();
+  else _renderAUDealsTab();
+}
+
+/* ── User List ── */
+function _renderAUUserList() {
+  const ct = document.getElementById('au-tab-content');
+  if (!ct) return;
+  const api = window.ZAMApi;
+
+  ct.innerHTML = MAP_DEMO_USERS_EXTENDED.map(u => {
+    const zc = ZONE_COLORS_MAP[u.zone] || '#8b5cf6';
+    const zl = ZONE_LABELS_MAP[u.zone] || u.zone;
+    const isMatch = DEAL_STATUSES_MAP.includes(u.status);
+    const connected = api ? api.nudges.isConnected(u.id) : false;
+    const pending   = api ? api.nudges.hasPendingNudgeTo(u.id) : false;
+
+    const matchBadge = isMatch
+      ? `<div style="display:inline-flex;align-items:center;gap:3px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:6px;padding:2px 7px;font-size:0.6rem;font-weight:700;color:#34d399;margin-top:4px">${u.status}</div>`
+      : '';
+
+    let nudgeBtn;
+    if (connected)    nudgeBtn = `<button onclick="auOpenChat('${u.id}','${_esc(u.name)}','${u.initials}')" style="${_auBtnS('#7c3aed')}">💬 Chat</button>`;
+    else if (pending) nudgeBtn = `<button disabled style="${_auBtnS('#555')}opacity:0.45;cursor:default">⏳</button>`;
+    else              nudgeBtn = `<button onclick="auNudge('${u.id}','${_esc(u.name)}')" style="${_auBtnS('#7c3aed')}">👋</button>`;
+
+    const dealBtn = isMatch
+      ? `<button onclick="openDealReqDialog('${u.id}','${_esc(u.name)}','${u.initials}','${u.bg||u.color}')" style="${_auBtnS('#059669')}color:#34d399;border-color:rgba(52,211,153,0.4)">🤝 2-für-1</button>`
+      : '';
+
+    return `<div style="display:flex;align-items:flex-start;gap:10px;padding:11px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(139,92,246,0.1);border-radius:14px;margin-bottom:8px">
+      <!-- Avatar -->
+      <div style="position:relative;flex-shrink:0;width:44px;height:44px;border-radius:50%;background:${u.bg||u.color};border:2.5px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;color:#fff;cursor:pointer" onclick="auZoomAndProfile('${u.id}')">
         ${u.initials}
-        <span style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:#34d399;border:1.5px solid #0d0d18"></span>
+        <span style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:#34d399;border:2px solid #0d0d1e"></span>
       </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:0.82rem;font-weight:700;color:#e2e8f0">${u.name}</div>
-        <div style="font-size:0.66rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.status}</div>
-        <div style="font-size:0.58rem;color:rgba(255,255,255,0.28);margin-top:2px"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${zc};margin-right:3px;vertical-align:middle"></span>${zl}</div>
+      <!-- Info -->
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="auZoomAndProfile('${u.id}')">
+        <div style="font-size:0.85rem;font-weight:700;color:#e2e8f0">${_esc(u.name)}</div>
+        <div style="font-size:0.66rem;color:rgba(255,255,255,0.4);margin-top:2px;display:flex;align-items:center;gap:4px">
+          <span style="width:7px;height:7px;border-radius:50%;background:${zc};display:inline-block;flex-shrink:0"></span>${_esc(zl)}
+        </div>
+        ${matchBadge}
       </div>
-      ${btn}
+      <!-- Actions -->
+      <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+        <button onclick="auZoomAndProfile('${u.id}')" style="${_auBtnS('#6d28d9')}">Profil</button>
+        ${nudgeBtn}
+        ${dealBtn}
+      </div>
     </div>`;
   }).join('');
 }
 
-function mapAUBtnStyle(col){return `background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:8px;padding:6px 10px;font-size:0.8rem;color:#c4b5fd;cursor:pointer;flex-shrink:0;font-family:${ZONES?'Poppins,system-ui':'system-ui'};`}
+function _auBtnS(col) {
+  return `background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.28);border-radius:8px;padding:5px 10px;font-size:0.68rem;font-weight:700;color:#c4b5fd;cursor:pointer;font-family:Poppins,system-ui;white-space:nowrap;display:block;width:100%;text-align:center;`;
+}
 
-function mapAUZoom(userId){
-  const u=MAP_DEMO_USERS_EXTENDED.find(x=>x.id===userId);
-  if(!u)return;
+function _esc(s) { return String(s).replace(/'/g,"\\'"); }
+
+function auZoomAndProfile(userId) {
+  const u = MAP_DEMO_USERS_EXTENDED.find(x => x.id === userId);
+  if (!u) return;
   zoomToUser(u);
   closeMapActiveUsers();
-  setTimeout(()=>openUserPopup(u),400);
+  setTimeout(() => openUserPopup(u), 450);
 }
 
-function mapAUNudge(id,name){
-  const api=window.ZAMApi;
-  if(api){api.nudges.send(id,name)}
-  const panel=document.getElementById('map-au-panel');
-  if(panel){
-    const toast=document.createElement('div');
-    toast.textContent=`👋 ${name} angestupst!`;
-    toast.style.cssText='position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:#1a0533;border:1px solid rgba(139,92,246,0.4);color:#c4b5fd;border-radius:10px;padding:8px 16px;font-size:0.76rem;font-weight:600;font-family:Poppins,system-ui;z-index:600';
-    document.body.appendChild(toast);
-    setTimeout(()=>toast.remove(),2500);
-  }
-  _renderMapAUList(MAP_DEMO_USERS_EXTENDED);
+function auNudge(id, name) {
+  const api = window.ZAMApi;
+  if (api) api.nudges.send(id, name);
+  _showMapToast('👋 ' + name + ' angestupst!');
+  _renderAUUserList();
 }
 
-function mapAUChat(userId,userName,initials){
+function auOpenChat(userId, userName, initials) {
   closeMapActiveUsers();
-  sessionStorage.setItem('open_private_chat',JSON.stringify({userId,userName,initials,avatarUrl:null}));
-  window.location.href='index.html#community';
+  sessionStorage.setItem('open_private_chat', JSON.stringify({userId, userName, initials, avatarUrl: null}));
+  window.location.href = 'index.html#community';
 }
 
-function zoomToUser(u){
-  const p=ZONE_POS[u.zone][u.posIdx||0];
-  if(!p)return;
-  const W=wrap.clientWidth,H=wrap.clientHeight;
-  const targetScale=2.2;
-  scale=targetScale;
-  tx=W/2-p.x*scale;
-  ty=H/2-p.y*scale;
-  clamp();
-  // Animate smoothly
-  const start={tx,ty,scale};
-  stage.style.transition='transform 0.5s cubic-bezier(0.16,1,0.3,1)';
-  applyT();
-  setTimeout(()=>{stage.style.transition=''},600);
+/* ── Zoom to user position ── */
+function zoomToUser(u) {
+  const posArr = ZONE_POS[u.zone];
+  if (!posArr) return;
+  const p = posArr[u.posIdx !== undefined ? u.posIdx : 0] || posArr[0];
+  if (!p) return;
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  const targetScale = Math.min(2.8, MAX_S);
+  const newTx = W/2 - p.x * targetScale;
+  const newTy = H/2 - p.y * targetScale;
+  // Animate via CSS transition
+  stage.style.transition = 'transform 0.6s cubic-bezier(0.16,1,0.3,1)';
+  scale = targetScale; tx = newTx; ty = newTy;
+  clamp(); applyT();
+  setTimeout(() => { stage.style.transition = ''; }, 700);
 }
+
+/* ── Deal Request Dialog ── */
+function openDealReqDialog(userId, userName, initials, bg) {
+  _dealReqTarget = { userId, userName, initials, bg };
+  const ov = document.getElementById('deal-req-overlay');
+  const sh = document.getElementById('deal-req-sheet');
+  const toEl = document.getElementById('deal-req-to');
+  if (!ov || !sh) return;
+  if (toEl) toEl.innerHTML = `An: <strong style="color:#e2e8f0">${_esc(userName)}</strong>`;
+  // Reset
+  document.getElementById('deal-req-msg').value = '';
+  const radios = document.querySelectorAll('input[name="deal-pick"]');
+  if (radios.length) radios[2].checked = true;
+  ov.style.display = 'flex';
+  requestAnimationFrame(() => { sh.style.transform = 'translateY(0)'; });
+}
+
+function closeDealReqDialog() {
+  const ov = document.getElementById('deal-req-overlay');
+  const sh = document.getElementById('deal-req-sheet');
+  if (!ov || !sh) return;
+  sh.style.transform = 'translateY(100%)';
+  setTimeout(() => { ov.style.display = 'none'; }, 340);
+}
+
+function sendDealRequest() {
+  if (!_dealReqTarget) return;
+  const radio = document.querySelector('input[name="deal-pick"]:checked');
+  const dealVal = radio ? radio.value : 'asia';
+  const dealLabels = { pitsburger:'🍔 Pitsburger – 2 für 1 Menü', gelato:'🍦 Gelato – 2 Kugeln, 1 gratis', asia:'🥢 Asia Lunch – Buddy Deal' };
+  const dealLabel = dealLabels[dealVal] || dealVal;
+  const msg = document.getElementById('deal-req-msg').value.trim();
+  const ts = new Date().toISOString();
+
+  // Store in localStorage
+  const key = 'zam_shared_deals';
+  const all = JSON.parse(localStorage.getItem(key) || '[]');
+  all.push({
+    id: 'dr_' + Date.now(),
+    type: 'sent',
+    toId: _dealReqTarget.userId,
+    toName: _dealReqTarget.userName,
+    toInitials: _dealReqTarget.initials,
+    deal: dealLabel,
+    msg,
+    status: 'pending',
+    ts,
+  });
+  localStorage.setItem(key, JSON.stringify(all));
+
+  // Simulate received reply from other side
+  setTimeout(() => {
+    const all2 = JSON.parse(localStorage.getItem(key) || '[]');
+    all2.push({
+      id: 'dr_r_' + Date.now(),
+      type: 'received',
+      fromId: _dealReqTarget.userId,
+      fromName: _dealReqTarget.userName,
+      fromInitials: _dealReqTarget.initials,
+      deal: dealLabel,
+      msg: 'Ja gerne! Ich bin beim ' + (ZONE_LABELS_MAP[MAP_DEMO_USERS_EXTENDED.find(x=>x.id===_dealReqTarget.userId)?.zone] || 'ZAM') + '.',
+      status: 'accepted',
+      ts: new Date(Date.now() + 3000).toISOString(),
+    });
+    localStorage.setItem(key, JSON.stringify(all2));
+  }, 3000);
+
+  closeDealReqDialog();
+  closeMapActiveUsers();
+
+  // Show confirmation popup
+  setTimeout(() => {
+    document.getElementById('pop-content').innerHTML = `
+      <div style="text-align:center;padding:12px 0">
+        <div style="font-size:2.5rem;margin-bottom:10px">✅</div>
+        <div style="font-size:1rem;font-weight:800;color:#fff;margin-bottom:6px">Anfrage gesendet!</div>
+        <div style="font-size:0.76rem;color:rgba(255,255,255,0.5);line-height:1.55;margin-bottom:6px">
+          <strong style="color:#34d399">${_esc(_dealReqTarget.userName)}</strong> wurde für<br>
+          <strong style="color:#e2e8f0">${dealLabel}</strong><br>angefragt.
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:8px;padding:5px 12px;font-size:0.68rem;color:#34d399;font-weight:600;margin-top:4px;margin-bottom:14px">
+          ⏳ Wartet auf Antwort…
+        </div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-bottom:16px">Antwort kommt in wenigen Sekunden</div>
+        <button onclick="closePopup();openMapActiveUsers();auSwitchTab('deals')" style="width:100%;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border-radius:10px;padding:11px;color:#fff;font-size:0.82rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer;border:none;margin-bottom:8px">Gemeinsame Deals ansehen</button>
+        <button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:11px;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">Schließen</button>
+      </div>`;
+    showPopup();
+  }, 100);
+
+  _dealReqTarget = null;
+}
+
+/* ── Gemeinsame Deals Tab ── */
+function _renderAUDealsTab() {
+  const ct = document.getElementById('au-tab-content');
+  if (!ct) return;
+  const all = JSON.parse(localStorage.getItem('zam_shared_deals') || '[]');
+
+  if (!all.length) {
+    ct.innerHTML = `
+      <div style="text-align:center;padding:32px 16px">
+        <div style="font-size:2.5rem;margin-bottom:12px">🤝</div>
+        <div style="font-size:0.92rem;font-weight:700;color:#e2e8f0;margin-bottom:8px">Noch keine gemeinsamen Deals</div>
+        <div style="font-size:0.74rem;color:rgba(255,255,255,0.4);line-height:1.6;margin-bottom:20px">Finde Nutzer mit dem Status<br>„Suche 2-für-1" und frage an!</div>
+        <button onclick="auSwitchTab('users')" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:12px;padding:10px 20px;font-size:0.8rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">Nutzer ansehen</button>
+      </div>`;
+    return;
+  }
+
+  const statusColors = { pending:'#f59e0b', accepted:'#34d399', declined:'#ef4444' };
+  const statusLabels = { pending:'⏳ Wartet auf Antwort', accepted:'✅ Angenommen', declined:'❌ Abgelehnt' };
+
+  ct.innerHTML = ['sent','received','accepted'].map(group => {
+    const items = all.filter(d => {
+      if (group === 'accepted') return d.status === 'accepted';
+      return d.type === group && d.status !== 'accepted';
+    });
+    if (!items.length) return '';
+    const groupLabels = { sent:'📤 Gesendet', received:'📥 Erhalten', accepted:'🎉 Angenommen' };
+    return `<div style="margin-bottom:16px">
+      <div style="font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.3);margin-bottom:8px">${groupLabels[group]}</div>
+      ${items.map(d => {
+        const name = d.type==='sent' ? d.toName : d.fromName;
+        const initials = d.type==='sent' ? d.toInitials : d.fromInitials;
+        const sc = statusColors[d.status] || '#8b5cf6';
+        const sl = statusLabels[d.status] || d.status;
+        const time = new Date(d.ts).toLocaleTimeString('de',{hour:'2-digit',minute:'2-digit'});
+        return `<div style="padding:12px 13px;background:rgba(255,255,255,0.04);border:1px solid rgba(139,92,246,0.12);border-radius:14px;margin-bottom:7px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6d28d9,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:800;color:#fff;flex-shrink:0">${initials||'?'}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:0.82rem;font-weight:700;color:#e2e8f0">${_esc(name||'')}</div>
+              <div style="font-size:0.63rem;color:rgba(255,255,255,0.35)">${time}</div>
+            </div>
+            <div style="background:${sc}18;border:1px solid ${sc}44;border-radius:6px;padding:2px 8px;font-size:0.6rem;font-weight:700;color:${sc};white-space:nowrap">${sl}</div>
+          </div>
+          <div style="font-size:0.75rem;font-weight:700;color:#c4b5fd;margin-bottom:4px">${_esc(d.deal||'')}</div>
+          ${d.msg ? `<div style="font-size:0.7rem;color:rgba(255,255,255,0.4);font-style:italic">"${_esc(d.msg)}"</div>` : ''}
+          ${d.status==='accepted' ? `<button onclick="closeDealAndGo()" style="margin-top:10px;width:100%;background:linear-gradient(135deg,#059669,#34d399);color:#fff;border:none;border-radius:9px;padding:9px;font-size:0.76rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">🎟️ Jetzt gemeinsam einlösen</button>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+function closeDealAndGo() {
+  closeMapActiveUsers();
+  _showMapToast('🎟️ Deal wird eingelöst – viel Spaß!');
+}
+
+/* ── Toast ── */
+function _showMapToast(msg) {
+  let t = document.getElementById('map-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'map-toast';
+    t.style.cssText = 'position:fixed;bottom:130px;left:50%;transform:translateX(-50%);background:#1a0533;border:1px solid rgba(139,92,246,0.45);color:#c4b5fd;border-radius:12px;padding:9px 18px;font-size:0.76rem;font-weight:600;font-family:Poppins,system-ui;z-index:600;white-space:nowrap;pointer-events:none;transition:opacity 0.3s';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2500);
+}
+
 
 // Deal Match inside marker popup
 function openMarkerPopupWithMatch(m){
@@ -886,7 +1138,16 @@ function blockMapUser(id,name){
 
 window.addEventListener('DOMContentLoaded',()=>{
   initMap();
-  setInterval(()=>{const n=28+Math.floor(Math.random()*10);document.getElementById('tb-online').textContent=`${n} Freunde online`},12000);
+  // Animate online count
+  function updateOnlineCount() {
+    const n = MAP_DEMO_USERS_EXTENDED.length + Math.floor(Math.random()*8);
+    const el = document.getElementById('tb-online');
+    const pill = document.getElementById('online-pill-count');
+    if (el) el.textContent = n + ' Freunde online';
+    if (pill) pill.textContent = n + ' online';
+  }
+  updateOnlineCount();
+  setInterval(updateOnlineCount, 12000);
   if(localStorage.getItem('zam_map_consent')) document.getElementById('consent').style.display='none';
 });
 </script>
