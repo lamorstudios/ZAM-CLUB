@@ -879,6 +879,7 @@ function renderDealCard(deal, idx) {
     <div class="deal-card-footer">
       <div class="deal-expiry">🗓 ${deal.expiry_formatted}</div>
       <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" style="background:rgba(5,150,105,0.12);border:1px solid rgba(5,150,105,0.25);border-radius:8px;padding:5px 10px;font-size:0.66rem;font-weight:600;color:#34d399;font-family:var(--font);cursor:pointer;flex-shrink:0">👥 Gemeinsam</button>
         <button class="${deal.is_claimed ? 'btn btn-sm claimed' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
           ${deal.is_claimed ? '✓ Eingelöst' : 'Gutschein sichern'}
         </button>
@@ -3757,6 +3758,189 @@ function renderAdminAIInsights(containerId) {
     <div class="ai-insight-title">${ins.title}</div>
     <div class="ai-insight-text">${ins.text}</div>
   </div>`).join('');
+}
+
+// =============================================
+// PHASE 18: Aktive Nutzer, Status & Deal Matching
+// =============================================
+
+const AU_ZONE_COLORS = { mk2_1: '#d97706', mk2_2: '#7c3aed', mk2_3: '#059669', mk2_4: '#2563eb', plaza: '#8b5cf6' };
+const AU_ZONE_LABELS = { mk2_1: 'MK 2(1)', mk2_2: 'MK 2(2)', mk2_3: 'MK 2(3)', mk2_4: 'MK 2(4)', plaza: 'Gandhi-Platz' };
+const AU_DEAL_STATUSES = ['🍔 Hungrig', '🤝 Suche 2-für-1', '🎉 Wer kommt mit?', '🛍️ Suche Begleitung'];
+
+function getActiveUsers() {
+  const me = ZAMApi.auth.currentUser();
+  const ud = me ? JSON.parse(localStorage.getItem(`zamclub_u_${me.id}`) || '{}') : {};
+  const blocked = ud.blocked_users || [];
+  const avatarColors = ['#6d28d9', '#059669', '#d97706', '#2563eb', '#7c3aed', '#8b5cf6'];
+  const demoSeed = [
+    { id: 'demo_mia',   name: 'Mia K.',   status: '☕ Beim Kaffee',      zone: 'mk2_1' },
+    { id: 'demo_felix', name: 'Felix B.',  status: '🤝 Suche 2-für-1',   zone: 'mk2_2' },
+    { id: 'demo_sarah', name: 'Sarah L.',  status: '🛒 Shopping',          zone: 'mk2_2' },
+    { id: 'demo_tom',   name: 'Tom W.',    status: '🍔 Hungrig',           zone: 'mk2_3' },
+    { id: 'demo_anna',  name: 'Anna P.',   status: '🎉 Beim Event',        zone: 'plaza' },
+    { id: 'au_leo',     name: 'Leo M.',    status: '🛍️ Suche Begleitung',  zone: 'mk2_4' },
+    { id: 'au_emma',    name: 'Emma R.',   status: '🎉 Wer kommt mit?',    zone: 'plaza'  },
+    { id: 'au_max',     name: 'Max S.',    status: '☕ Beim Kaffee',       zone: 'mk2_1' },
+  ];
+  return demoSeed
+    .filter(u => u.id !== me?.id && !blocked.includes(u.id))
+    .map((u, i) => ({
+      ...u,
+      initials: u.name.split(' ').map(w => w[0]).join('').toUpperCase(),
+      color: avatarColors[i % avatarColors.length],
+    }));
+}
+
+function openActiveUsersPanel(context) {
+  const sheet = $('#active-users-sheet');
+  const inner = $('#active-users-sheet-inner');
+  if (!sheet || !inner) return;
+
+  // Reset hidden status section
+  const myStatusRow = $('#my-status-row');
+  if (myStatusRow) myStatusRow.style.display = '';
+
+  const users = getActiveUsers();
+  const countEl = $('#active-users-count');
+  if (countEl) countEl.textContent = `${users.length} Nutzer gerade aktiv`;
+
+  // My current status display
+  const me = ZAMApi.auth.currentUser();
+  const myStatus = me ? (localStorage.getItem(`zam_app_status_${me.id}`) || '') : '';
+  const myStatusEl = $('#my-current-status');
+  if (myStatusEl) myStatusEl.textContent = myStatus ? `Dein Status: ${myStatus}` : 'Kein Status gesetzt';
+
+  _renderActiveUsersList(users);
+
+  sheet.style.display = 'flex';
+  requestAnimationFrame(() => {
+    inner.style.transform = 'translateX(-50%) translateY(0)';
+  });
+}
+
+function _renderActiveUsersList(users) {
+  const list = $('#active-users-list');
+  if (!list) return;
+  const me = ZAMApi.auth.currentUser();
+  if (!users.length) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);font-size:0.78rem">Keine aktiven Nutzer gefunden</div>';
+    return;
+  }
+  list.innerHTML = users.map(u => {
+    const zoneColor = AU_ZONE_COLORS[u.zone] || '#8b5cf6';
+    const zoneLabel = AU_ZONE_LABELS[u.zone] || u.zone;
+    const connected = me ? ZAMApi.nudges.isConnected(u.id) : false;
+    const hasPending = me ? ZAMApi.nudges.hasPendingNudgeTo(u.id) : false;
+    let actionBtn;
+    if (connected) {
+      actionBtn = `<button class="au-action-btn" onclick="openPCFromActiveUsers('${u.id}','${esc(u.name)}','${u.initials}')">💬 Chat</button>`;
+    } else if (hasPending) {
+      actionBtn = `<button class="au-action-btn" style="opacity:0.5;cursor:default">⏳ Gesendet</button>`;
+    } else {
+      actionBtn = `<button class="au-action-btn" onclick="nudgeFromActiveUsers('${u.id}','${esc(u.name)}')">👋 Anstupsen</button>`;
+    }
+    return `<div class="au-user-row">
+      <div class="au-avatar" style="background:${u.color}">${u.initials}<span class="au-online-dot"></span></div>
+      <div class="au-info">
+        <div class="au-name">${esc(u.name)}</div>
+        <div class="au-status">${esc(u.status)}</div>
+        <div style="margin-top:3px;font-size:0.62rem;color:rgba(255,255,255,0.3)">
+          <span class="au-zone-dot" style="background:${zoneColor}"></span>${esc(zoneLabel)}
+        </div>
+      </div>
+      <div class="au-actions">${actionBtn}</div>
+    </div>`;
+  }).join('');
+}
+
+function closeActiveUsersSheet() {
+  const sheet = $('#active-users-sheet');
+  const inner = $('#active-users-sheet-inner');
+  if (!sheet || !inner) return;
+  inner.style.transform = 'translateX(-50%) translateY(100%)';
+  setTimeout(() => { sheet.style.display = 'none'; }, 320);
+}
+
+function setMyAppStatus(status) {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) { showToast('Bitte zuerst anmelden'); return; }
+  if (status) {
+    localStorage.setItem(`zam_app_status_${me.id}`, status);
+    showToast(`Status gesetzt: ${status}`);
+  } else {
+    localStorage.removeItem(`zam_app_status_${me.id}`);
+    showToast('Status entfernt');
+  }
+  const myStatusEl = $('#my-current-status');
+  if (myStatusEl) myStatusEl.textContent = status ? `Dein Status: ${status}` : 'Kein Status gesetzt';
+}
+
+function nudgeFromActiveUsers(userId, userName) {
+  const result = ZAMApi.nudges.send(userId, userName);
+  showToast(result ? `👋 ${userName} wurde angestupst!` : 'Anfrage bereits gesendet');
+  // Re-render to show pending state
+  _renderActiveUsersList(getActiveUsers());
+}
+
+function openPCFromActiveUsers(userId, userName, initials) {
+  closeActiveUsersSheet();
+  setTimeout(() => openPrivateChat(userId, userName, initials, null), 350);
+}
+
+function openDealMatch(dealId, dealTitle) {
+  const sheet = $('#active-users-sheet');
+  const inner = $('#active-users-sheet-inner');
+  if (!sheet || !inner) return;
+
+  // Hide my-status section, show deal context
+  const myStatusRow = $('#my-status-row');
+  if (myStatusRow) myStatusRow.style.display = 'none';
+
+  const users = getActiveUsers().filter(u => AU_DEAL_STATUSES.includes(u.status));
+  const countEl = $('#active-users-count');
+  if (countEl) countEl.textContent = `${users.length} Nutzer suchen einen Deal-Partner`;
+
+  const list = $('#active-users-list');
+  if (list) {
+    const header = `<div style="background:rgba(5,150,105,0.1);border:1px solid rgba(5,150,105,0.2);border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:0.78rem;color:#34d399;font-weight:600">🏷️ ${esc(dealTitle)}</div>`;
+    if (!users.length) {
+      list.innerHTML = header + `<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.35);font-size:0.75rem;line-height:1.5">Niemand sucht gerade einen Deal-Partner.<br><br>Setze deinen Status auf<br>„🤝 Suche 2-für-1" um sichtbar zu werden!</div>
+        <button class="btn btn-ghost btn-full" onclick="setMyAppStatus('🤝 Suche 2-für-1')" style="margin-top:8px">Status setzen</button>`;
+    } else {
+      list.innerHTML = header + users.map(u => `<div class="deal-match-row">
+        <div style="width:38px;height:38px;border-radius:50%;background:${u.color};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0">${u.initials}</div>
+        <div style="flex:1;min-width:0;margin-left:10px">
+          <div style="font-size:0.82rem;font-weight:600;color:#e2e8f0">${esc(u.name)}</div>
+          <div style="font-size:0.68rem;color:rgba(255,255,255,0.4)">${esc(u.status)}</div>
+        </div>
+        <button class="deal-match-btn" onclick="requestDealPartner('${u.id}','${esc(u.name)}',\`${esc(dealTitle)}\`)">Anfragen</button>
+      </div>`).join('');
+    }
+  }
+
+  sheet.style.display = 'flex';
+  requestAnimationFrame(() => { inner.style.transform = 'translateX(-50%) translateY(0)'; });
+}
+
+function requestDealPartner(userId, userName, dealTitle) {
+  ZAMApi.nudges.send(userId, userName);
+  ZAMApi.notifications.add({
+    type: 'deal',
+    title: 'Deal-Anfrage',
+    body: `${ZAMApi.auth.currentUser()?.display_name || 'Jemand'} möchte "${dealTitle}" gemeinsam einlösen`,
+    icon: '🏷️',
+  });
+  showToast(`✅ Anfrage an ${userName} gesendet!`, 'success');
+  // Update button
+  const btns = $$('.deal-match-btn');
+  btns.forEach(btn => {
+    if (btn.getAttribute('onclick')?.includes(userId)) {
+      btn.textContent = '✓ Gesendet';
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+    }
+  });
 }
 
 function seedZAMContent() {

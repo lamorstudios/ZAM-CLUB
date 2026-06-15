@@ -87,6 +87,8 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
 .pop-sheet{width:100%;max-width:480px;background:#0f0f1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(139,92,246,0.3);padding:10px 18px 24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));transform:translateY(100%);transition:transform .3s cubic-bezier(0.16,1,0.3,1)}
 #popup-bg.open .pop-sheet{transform:translateY(0)}
 .pop-handle{width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,0.12);margin:0 auto 14px}
+/* Active Users Panel */
+#map-au-panel.open #map-au-inner{transform:translateY(0)}
 /* CONSENT */
 #consent{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.85);display:flex;align-items:flex-end;justify-content:center}
 .consent-sheet{width:100%;max-width:480px;background:#0f0f1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(139,92,246,0.3);padding:20px 20px 32px}
@@ -125,7 +127,7 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
         <span class="tb-title-main">ZAM WORLD MAP</span>
         <span class="tb-online" id="tb-online">32 Freunde online</span>
       </div>
-      <button class="tb-btn">⚙️</button>
+      <button class="tb-btn" onclick="openMapActiveUsers()" title="Aktive Nutzer" style="font-size:0.75rem;font-weight:700;color:#34d399;border-color:rgba(52,211,153,0.3)">👥</button>
       <button class="tb-btn" id="nudge-bell" onclick="openNudgeInbox()">🔔<span id="nudge-badge"></span></button>
     </div>
 
@@ -368,6 +370,9 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
           <button class="stchip" onclick="setStatus('☕ Kaffee')">☕ Kaffee</button>
           <button class="stchip" onclick="setStatus('👋 Suche Leute')">👋 Suche Leute</button>
           <button class="stchip" onclick="setStatus('✨ Neu hier')">✨ Neu hier</button>
+          <button class="stchip" style="border-color:rgba(52,211,153,0.35);color:#34d399" onclick="setStatus('🤝 Suche 2-für-1')">🤝 Suche 2-für-1</button>
+          <button class="stchip" style="border-color:rgba(52,211,153,0.35);color:#34d399" onclick="setStatus('🍔 Hungrig')">🍔 Hungrig</button>
+          <button class="stchip" style="border-color:rgba(52,211,153,0.35);color:#34d399" onclick="setStatus('🎉 Wer kommt mit?')">🎉 Wer kommt mit?</button>
         </div>
         <button class="btn-save" onclick="saveStatus()">Speichern</button>
       </div>
@@ -379,6 +384,21 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
   <div class="pop-sheet">
     <div class="pop-handle"></div>
     <div id="pop-content"></div>
+  </div>
+</div>
+
+<!-- Active Users Panel -->
+<div id="map-au-panel" style="display:none;position:fixed;inset:0;z-index:250;background:rgba(0,0,0,0.65);align-items:flex-end;justify-content:center;transition:background 0.25s" onclick="if(event.target===this)closeMapActiveUsers()">
+  <div style="width:100%;max-width:480px;background:#0d0d1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(139,92,246,0.3);padding:14px 16px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px));max-height:80vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.32s cubic-bezier(0.16,1,0.3,1)" id="map-au-inner">
+    <div style="width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,0.12);margin:0 auto 14px;flex-shrink:0"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
+      <div>
+        <div style="font-size:0.95rem;font-weight:700;color:#e2e8f0">👥 Aktive Nutzer</div>
+        <div id="map-au-count" style="font-size:0.65rem;color:#34d399;margin-top:2px;font-weight:600"></div>
+      </div>
+      <button onclick="closeMapActiveUsers()" style="width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:1rem;font-family:Poppins,system-ui;cursor:pointer">×</button>
+    </div>
+    <div id="map-au-list" style="overflow-y:auto;flex:1"></div>
   </div>
 </div>
 
@@ -667,6 +687,202 @@ function locateMe(){const z=localStorage.getItem('zam_map_zone')||'mk2_1';const 
 
 function consentOk(){document.getElementById('consent').style.display='none';localStorage.setItem('zam_map_consent','yes');toggleStatus()}
 function consentNo(){document.getElementById('consent').style.display='none';localStorage.setItem('zam_map_consent','view')}
+
+// ── Active Users Panel ──
+const MAP_DEMO_USERS_EXTENDED = [
+  {id:'u1',name:'Mia K.',initials:'MK',color:'#7c3aed',bg:'#2d1b69',zone:'mk2_1',status:'☕ Beim Kaffee'},
+  {id:'u2',name:'Felix B.',initials:'FB',color:'#059669',bg:'#064e3b',zone:'mk2_2',status:'🤝 Suche 2-für-1'},
+  {id:'u3',name:'Sarah L.',initials:'SL',color:'#d97706',bg:'#78350f',zone:'mk2_1',status:'🛒 Shopping'},
+  {id:'u4',name:'Tom W.',initials:'TW',color:'#7c3aed',bg:'#2d1b69',zone:'mk2_2',status:'🍔 Hungrig'},
+  {id:'u5',name:'Anna P.',initials:'AP',color:'#8b5cf6',bg:'#1e1b4b',zone:'plaza',status:'🎉 Beim Event'},
+  {id:'u6',name:'Leo M.',initials:'LM',color:'#2563eb',bg:'#1e3a8a',zone:'mk2_4',status:'🛍️ Suche Begleitung'},
+  {id:'u7',name:'Emma R.',initials:'ER',color:'#8b5cf6',bg:'#1e1b4b',zone:'plaza',status:'🎉 Wer kommt mit?'},
+  {id:'u8',name:'Max S.',initials:'MS',color:'#d97706',bg:'#78350f',zone:'mk2_1',status:'🍽️ Beim Mittagessen'},
+];
+const ZONE_COLORS_MAP={mk2_1:'#d97706',mk2_2:'#7c3aed',mk2_3:'#059669',mk2_4:'#2563eb',plaza:'#8b5cf6'};
+const ZONE_LABELS_MAP={mk2_1:'MK 2(1)',mk2_2:'MK 2(2)',mk2_3:'MK 2(3)',mk2_4:'MK 2(4)',plaza:'Gandhi-Platz'};
+const DEAL_STATUSES_MAP=['🍔 Hungrig','🤝 Suche 2-für-1','🎉 Wer kommt mit?','🛍️ Suche Begleitung'];
+
+let _mapAUPanelOpen=false;
+
+function openMapActiveUsers(){
+  const panel=document.getElementById('map-au-panel');
+  const inner=document.getElementById('map-au-inner');
+  if(!panel||!inner)return;
+  _mapAUPanelOpen=true;
+  panel.style.display='flex';
+  requestAnimationFrame(()=>{inner.style.transform='translateY(0)'});
+  _renderMapAUList(MAP_DEMO_USERS_EXTENDED);
+  document.getElementById('map-au-count').textContent=MAP_DEMO_USERS_EXTENDED.length+' Nutzer online';
+}
+
+function closeMapActiveUsers(){
+  const panel=document.getElementById('map-au-panel');
+  const inner=document.getElementById('map-au-inner');
+  if(!panel||!inner)return;
+  _mapAUPanelOpen=false;
+  inner.style.transform='translateY(100%)';
+  setTimeout(()=>{panel.style.display='none'},320);
+}
+
+function _renderMapAUList(users){
+  const list=document.getElementById('map-au-list');
+  if(!list)return;
+  const api=window.ZAMApi;
+  list.innerHTML=users.map(u=>{
+    const zc=ZONE_COLORS_MAP[u.zone]||'#8b5cf6';
+    const zl=ZONE_LABELS_MAP[u.zone]||u.zone;
+    const connected=api?api.nudges.isConnected(u.id):false;
+    const pending=api?api.nudges.hasPendingNudgeTo(u.id):false;
+    let btn;
+    if(connected) btn=`<button onclick="mapAUChat('${u.id}','${u.name}','${u.initials}')" style="${mapAUBtnStyle('#7c3aed')}">💬</button>`;
+    else if(pending) btn=`<button disabled style="${mapAUBtnStyle('#555')}opacity:0.4">⏳</button>`;
+    else btn=`<button onclick="mapAUNudge('${u.id}','${u.name}')" style="${mapAUBtnStyle('#7c3aed')}">👋</button>`;
+    return `<div style="display:flex;align-items:center;gap:9px;padding:9px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(139,92,246,0.1);border-radius:12px;margin-bottom:7px;cursor:pointer" onclick="mapAUZoom('${u.id}')">
+      <div style="width:38px;height:38px;border-radius:50%;background:${u.bg};border:2px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:700;color:#fff;flex-shrink:0;position:relative">
+        ${u.initials}
+        <span style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:#34d399;border:1.5px solid #0d0d18"></span>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.82rem;font-weight:700;color:#e2e8f0">${u.name}</div>
+        <div style="font-size:0.66rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.status}</div>
+        <div style="font-size:0.58rem;color:rgba(255,255,255,0.28);margin-top:2px"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${zc};margin-right:3px;vertical-align:middle"></span>${zl}</div>
+      </div>
+      ${btn}
+    </div>`;
+  }).join('');
+}
+
+function mapAUBtnStyle(col){return `background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:8px;padding:6px 10px;font-size:0.8rem;color:#c4b5fd;cursor:pointer;flex-shrink:0;font-family:${ZONES?'Poppins,system-ui':'system-ui'};`}
+
+function mapAUZoom(userId){
+  const u=MAP_DEMO_USERS_EXTENDED.find(x=>x.id===userId);
+  if(!u)return;
+  zoomToUser(u);
+  closeMapActiveUsers();
+  setTimeout(()=>openUserPopup(u),400);
+}
+
+function mapAUNudge(id,name){
+  const api=window.ZAMApi;
+  if(api){api.nudges.send(id,name)}
+  const panel=document.getElementById('map-au-panel');
+  if(panel){
+    const toast=document.createElement('div');
+    toast.textContent=`👋 ${name} angestupst!`;
+    toast.style.cssText='position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:#1a0533;border:1px solid rgba(139,92,246,0.4);color:#c4b5fd;border-radius:10px;padding:8px 16px;font-size:0.76rem;font-weight:600;font-family:Poppins,system-ui;z-index:600';
+    document.body.appendChild(toast);
+    setTimeout(()=>toast.remove(),2500);
+  }
+  _renderMapAUList(MAP_DEMO_USERS_EXTENDED);
+}
+
+function mapAUChat(userId,userName,initials){
+  closeMapActiveUsers();
+  sessionStorage.setItem('open_private_chat',JSON.stringify({userId,userName,initials,avatarUrl:null}));
+  window.location.href='index.html#community';
+}
+
+function zoomToUser(u){
+  const p=ZONE_POS[u.zone][u.posIdx||0];
+  if(!p)return;
+  const W=wrap.clientWidth,H=wrap.clientHeight;
+  const targetScale=2.2;
+  scale=targetScale;
+  tx=W/2-p.x*scale;
+  ty=H/2-p.y*scale;
+  clamp();
+  // Animate smoothly
+  const start={tx,ty,scale};
+  stage.style.transition='transform 0.5s cubic-bezier(0.16,1,0.3,1)';
+  applyT();
+  setTimeout(()=>{stage.style.transition=''},600);
+}
+
+// Deal Match inside marker popup
+function openMarkerPopupWithMatch(m){
+  if(m.type!=='deal'){openMarkerPopup(m);return;}
+  const tl='Deal';
+  const matchUsers=MAP_DEMO_USERS_EXTENDED.filter(u=>DEAL_STATUSES_MAP.includes(u.status)).slice(0,3);
+  const matchHtml=matchUsers.length?`
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.07)">
+      <div style="font-size:0.66rem;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">👥 Gemeinsam einlösen</div>
+      ${matchUsers.map(u=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <div style="width:30px;height:30px;border-radius:50%;background:${u.bg};border:1.5px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:700;color:#fff;flex-shrink:0">${u.initials}</div>
+        <div style="flex:1;font-size:0.72rem;color:#e2e8f0">${u.name} <span style="color:rgba(255,255,255,0.4);font-size:0.62rem">· ${u.status}</span></div>
+        <button onclick="mapAUNudge('${u.id}','${u.name}')" style="background:rgba(5,150,105,0.15);border:1px solid rgba(5,150,105,0.3);border-radius:7px;padding:4px 10px;font-size:0.66rem;font-weight:700;color:#34d399;cursor:pointer;font-family:Poppins,system-ui">Anfragen</button>
+      </div>`).join('')}
+    </div>`:
+    `<div style="margin-top:10px;font-size:0.7rem;color:rgba(255,255,255,0.35);text-align:center">Niemand sucht gerade einen Deal-Partner</div>`;
+
+  document.getElementById('pop-content').innerHTML=`
+    <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
+      <div style="width:48px;height:48px;border-radius:14px;background:rgba(0,0,0,0.4);border:2px solid ${m.borderColor};display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">${m.icon}</div>
+      <div><div style="font-size:0.62rem;font-weight:700;color:${m.color};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px">${tl}</div><div style="font-size:0.92rem;font-weight:700;color:#fff;line-height:1.3">${m.title}</div></div>
+    </div>
+    <p style="font-size:0.76rem;color:rgba(255,255,255,0.6);line-height:1.55;margin-bottom:8px">${m.desc}</p>
+    <div style="font-size:0.7rem;color:${m.color};font-weight:600;margin-bottom:10px">${m.extra}</div>
+    ${matchHtml}
+    <button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer;margin-top:12px">Schließen</button>`;
+  showPopup();
+}
+
+// Override renderMarkers to use new popup for deals
+function renderMarkers(){
+  const L=document.getElementById('marker-layer');L.innerHTML='';
+  MARKERS.forEach(m=>{
+    const el=document.createElement('div');el.className='map-marker';el.style.left=m.x+'px';el.style.top=m.y+'px';
+    el.innerHTML=`<div style="position:relative"><div class="mk-pin" style="background:rgba(0,0,0,0.7);border-color:${m.borderColor}">${m.icon}</div><div class="mk-pulse" style="border-color:${m.color}"></div></div><div class="mk-lbl" style="color:${m.color}">${m.label}</div>`;
+    el.onclick=()=>openMarkerPopupWithMatch(m);L.appendChild(el);
+  });
+}
+
+// Update openUserPopup to add security buttons
+function openUserPopup(u){
+  const z=ZONES[u.zone]||{label:u.zone,color:'#8b5cf6'};
+  const api=window.ZAMApi;
+  const connected  = api ? api.nudges.isConnected(u.id) : false;
+  const hasPending = api ? api.nudges.hasPendingNudgeTo(u.id) : false;
+  let actionBtn='';
+  if(connected){
+    actionBtn=`<button onclick="pcFromMap('${u.id}','${u.name}','${u.initials||u.name.slice(0,2).toUpperCase()}')" style="flex:1;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);border-radius:10px;padding:10px;color:#a78bfa;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">💬 Nachricht</button>`;
+  } else if(hasPending){
+    actionBtn=`<button disabled style="flex:1;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:10px;color:rgba(167,139,250,0.5);font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:not-allowed">⏳ Gesendet</button>`;
+  } else {
+    actionBtn=`<button onclick="nudgeUser('${u.id}','${u.name}')" style="flex:1;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);border-radius:10px;padding:10px;color:#a78bfa;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">👋 Anstupsen</button>`;
+  }
+  document.getElementById('pop-content').innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <div style="width:52px;height:52px;border-radius:50%;background:${u.bg||'#2d1b69'};border:3px solid ${u.color||'#7c3aed'};display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:#fff;flex-shrink:0">${u.initials||u.name.slice(0,2).toUpperCase()}</div>
+      <div>
+        <div style="font-size:1rem;font-weight:700;color:#fff">${u.name}</div>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:2px">${u.status||''}</div>
+        <div style="font-size:0.65rem;margin-top:3px;display:flex;align-items:center;gap:4px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${z.color};display:inline-block"></span>
+          <span style="color:rgba(255,255,255,0.4)">${z.label}</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      ${actionBtn}
+      <button onclick="closePopup()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">Schließen</button>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="reportMapUser('${u.id}','${u.name}')" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:7px;color:rgba(255,255,255,0.3);font-size:0.68rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">🚩 Melden</button>
+      <button onclick="blockMapUser('${u.id}','${u.name}')" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:7px;color:rgba(255,255,255,0.3);font-size:0.68rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">🚫 Blockieren</button>
+    </div>`;
+  showPopup();
+}
+
+function reportMapUser(id,name){
+  document.getElementById('pop-content').innerHTML=`<div style="text-align:center;padding:10px 0"><div style="font-size:2rem;margin-bottom:10px">🚩</div><div style="font-size:0.95rem;font-weight:700;color:#fff;margin-bottom:6px">Meldung gesendet</div><div style="font-size:0.76rem;color:rgba(255,255,255,0.5)">${name} wurde dem Team gemeldet. Danke für dein Feedback.</div><button onclick="closePopup()" style="margin-top:16px;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.8rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">OK</button></div>`;
+  showPopup();
+}
+
+function blockMapUser(id,name){
+  document.getElementById('pop-content').innerHTML=`<div style="text-align:center;padding:10px 0"><div style="font-size:2rem;margin-bottom:10px">🚫</div><div style="font-size:0.95rem;font-weight:700;color:#fff;margin-bottom:6px">${name} blockiert</div><div style="font-size:0.76rem;color:rgba(255,255,255,0.5)">Du siehst diesen Nutzer nicht mehr auf der Karte.</div><button onclick="closePopup()" style="margin-top:16px;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.8rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">OK</button></div>`;
+  showPopup();
+}
 
 window.addEventListener('DOMContentLoaded',()=>{
   initMap();

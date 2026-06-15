@@ -234,7 +234,10 @@
   <section id="page-community" class="page" role="main">
     <div class="page-header">
       <h1>Community 👥</h1>
-      <button class="header-icon-btn" id="community-header-btn" aria-label="Neuer Beitrag" onclick="communityHeaderAction()">✏️</button>
+      <div style="display:flex;gap:6px">
+        <button class="header-icon-btn" onclick="openActiveUsersPanel('community')" aria-label="Aktive Nutzer" title="Aktive Nutzer">🟢</button>
+        <button class="header-icon-btn" id="community-header-btn" aria-label="Neuer Beitrag" onclick="communityHeaderAction()">✏️</button>
+      </div>
     </div>
 
     <!-- Sub-tabs: Wall | Chat | Kontakte | Anfragen -->
@@ -509,6 +512,7 @@
         <div class="chat-room-name" id="chat-room-name">Allgemein</div>
         <div class="online-indicator-small" id="chat-online-small">● 0 online</div>
       </div>
+      <button class="chat-options-btn" onclick="openActiveUsersPanel('chat')" aria-label="Aktive Nutzer">🟢</button>
       <button class="chat-options-btn" id="chat-options-btn" onclick="openChatOptions()" aria-label="Optionen">⋯</button>
     </div>
     <div class="chat-messages" id="chat-messages"></div>
@@ -1133,6 +1137,37 @@
   </div>
   <div style="padding:20px 16px 0;text-align:center">
     <button onclick="navigateTo('home')" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:14px;padding:14px 32px;font-size:0.9rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;width:100%;max-width:300px">App öffnen →</button>
+  </div>
+</div>
+
+<!-- =====================
+     PHASE 18: ACTIVE USERS SHEET
+========================== -->
+<div id="active-users-sheet" style="display:none;position:fixed;inset:0;z-index:350;background:rgba(0,0,0,0.7);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeActiveUsersSheet()">
+  <div id="active-users-sheet-inner" style="width:min(100vw,480px);background:#0f0f1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(139,92,246,0.3);padding:16px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px));max-height:82vh;overflow-y:auto;transform:translateX(-50%) translateY(100%);transition:transform 0.32s cubic-bezier(0.16,1,0.3,1);position:relative;left:50%">
+    <div style="width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,0.12);margin:0 auto 14px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-size:1rem;font-weight:700;color:#e2e8f0">👥 Aktive Nutzer</div>
+        <div id="active-users-count" style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px"></div>
+      </div>
+      <button onclick="closeActiveUsersSheet()" style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:1.1rem;font-family:var(--font);cursor:pointer">×</button>
+    </div>
+    <!-- My Status Section -->
+    <div id="my-status-row" style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:14px;padding:12px;margin-bottom:14px">
+      <div style="font-size:0.68rem;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Mein Status</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+        <button class="au-chip" onclick="setMyAppStatus('🍔 Hungrig')">🍔 Hungrig</button>
+        <button class="au-chip" onclick="setMyAppStatus('🤝 Suche 2-für-1')">🤝 Suche 2-für-1</button>
+        <button class="au-chip" onclick="setMyAppStatus('🎉 Wer kommt mit?')">🎉 Wer kommt mit?</button>
+        <button class="au-chip" onclick="setMyAppStatus('🛍️ Suche Begleitung')">🛍️ Suche Begleitung</button>
+        <button class="au-chip" onclick="setMyAppStatus('☕ Beim Kaffee')">☕ Beim Kaffee</button>
+        <button class="au-chip au-chip-ghost" onclick="setMyAppStatus('')">Kein Status</button>
+      </div>
+      <div id="my-current-status" style="font-size:0.72rem;color:#c4b5fd;min-height:16px"></div>
+    </div>
+    <!-- Active Users List -->
+    <div id="active-users-list"></div>
   </div>
 </div>
 
