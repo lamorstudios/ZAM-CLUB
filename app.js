@@ -201,6 +201,14 @@ function navigateTo(pageId) {
     renderMerchantBilling();
   } else if (pageId === 'admin-revenue') {
     renderAdminRevenue();
+  } else if (pageId === 'ai') {
+    renderAIConcierge();
+  } else if (pageId === 'recommendations') {
+    renderRecommendations();
+  } else if (pageId === 'merchant-ai') {
+    // static page, nothing to render dynamically
+  } else if (pageId === 'admin-ai-insights') {
+    renderAdminAIInsights('admin-ai-insights');
   }
 }
 
@@ -228,6 +236,7 @@ function renderHome() {
   if (nameEl) nameEl.textContent = firstName + '! 👋';
 
   updatePointsDisplay();
+  renderHomeRecs();
   renderHomeEvents();
   renderHomeDeals();
 }
@@ -1075,6 +1084,9 @@ function renderRoleActions() {
       </button>
       <button class="btn btn-ghost btn-full" onclick="navigateTo('admin-revenue')" style="margin-bottom:8px">
         💰 Umsatzübersicht
+      </button>
+      <button class="btn btn-ghost btn-full" onclick="navigateTo('admin-ai-insights')" style="margin-bottom:8px">
+        🤖 KI-Insights
       </button>`;
     ZAMApi.admin.unreadCount().then(count => {
       const badge = $('#admin-notif-badge');
@@ -1096,6 +1108,9 @@ function renderRoleActions() {
       </button>
       <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-billing')" style="margin-bottom:8px">
         🧾 Rechnungen
+      </button>
+      <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-ai')" style="margin-bottom:8px">
+        ✨ KI-Werkzeuge
       </button>`;
   } else {
     container.innerHTML = `
@@ -1205,7 +1220,16 @@ function openChatRoom(roomId, roomName) {
   _updateChatUnreadBadge();
 
   view.classList.add('open');
-  setTimeout(() => $('#chat-input')?.focus(), 320);
+  // Apply visual viewport height if keyboard is already open
+  if (window.visualViewport) {
+    view.style.height = window.visualViewport.height + 'px';
+    view.style.top = window.visualViewport.offsetTop + 'px';
+  }
+  setTimeout(() => {
+    $('#chat-input')?.focus();
+    const msgs = $('#chat-messages');
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  }, 320);
 
   // Poll for new messages every 2.5 s (simulates Supabase Realtime)
   clearInterval(_chatPollTimer);
@@ -1213,6 +1237,7 @@ function openChatRoom(roomId, roomName) {
 }
 
 function closeChatRoom() {
+  resetChatHeight('#chat-room-view');
   $('#chat-room-view')?.classList.remove('open');
   clearInterval(_chatPollTimer);
   _chatPollTimer = null;
@@ -2077,8 +2102,19 @@ function openPrivateChat(userId, userName, initials, avatarUrl) {
   ZAMApi.privateChat.markRead(_pcCurrentChatId);
   updateCommunityBadge();
 
-  $('#private-chat-view')?.classList.add('open');
-  setTimeout(() => $('#pc-input')?.focus(), 320);
+  const pcView = $('#private-chat-view');
+  if (pcView) {
+    pcView.classList.add('open');
+    if (window.visualViewport) {
+      pcView.style.height = window.visualViewport.height + 'px';
+      pcView.style.top = window.visualViewport.offsetTop + 'px';
+    }
+  }
+  setTimeout(() => {
+    $('#pc-input')?.focus();
+    const msgs = $('#pc-messages');
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  }, 320);
 
   // Poll for new messages
   clearInterval(_pcPollTimer);
@@ -2086,6 +2122,7 @@ function openPrivateChat(userId, userName, initials, avatarUrl) {
 }
 
 function closePrivateChat() {
+  resetChatHeight('#private-chat-view');
   $('#private-chat-view')?.classList.remove('open');
   clearInterval(_pcPollTimer);
   _pcPollTimer       = null;
@@ -2146,6 +2183,33 @@ function sendPrivateMessage() {
   input.focus();
   ZAMApi.privateChat.sendMessage(_pcCurrentChatId, text);
   _pcRenderMessages();
+}
+
+// ── Mobile keyboard-safe chat layout (VisualViewport API) ──
+function initChatKeyboardFix() {
+  if (!window.visualViewport) return;
+  const CHAT_SELECTORS = ['#chat-room-view', '#private-chat-view'];
+  function applyHeight() {
+    const vvh = window.visualViewport.height;
+    const vvt = window.visualViewport.offsetTop;
+    CHAT_SELECTORS.forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el && el.classList.contains('open')) {
+        el.style.height = vvh + 'px';
+        el.style.top = vvt + 'px';
+        // Scroll to bottom of messages on keyboard open
+        const msgs = el.querySelector('.chat-messages, .private-chat-messages');
+        if (msgs) requestAnimationFrame(() => { msgs.scrollTop = msgs.scrollHeight; });
+      }
+    });
+  }
+  window.visualViewport.addEventListener('resize', applyHeight);
+  window.visualViewport.addEventListener('scroll', applyHeight);
+}
+
+function resetChatHeight(selector) {
+  const el = document.querySelector(selector);
+  if (el) { el.style.height = ''; el.style.top = ''; }
 }
 
 function initPrivateChat() {
@@ -3239,6 +3303,427 @@ function onLogoTap() {
 }
 
 // Seed real ZAM content (called once on first launch)
+// =============================================
+// PHASE 17: KI Concierge & Empfehlungen
+// =============================================
+
+// ── AI Chat State ──
+let _aiMessages = []; // { role: 'bot'|'user', text, time }
+
+function renderAIConcierge() {
+  const win = $('#ai-chat-window');
+  if (!win) return;
+  // Preserve welcome bubble, append messages
+  const existing = win.querySelectorAll('.ai-bubble-user, .ai-bubble-bot.ai-msg');
+  existing.forEach(el => el.remove());
+  const now = new Date();
+  _aiMessages.forEach(msg => {
+    const div = document.createElement('div');
+    div.className = `ai-bubble ai-bubble-${msg.role} ai-msg`;
+    const timeStr = now.toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' });
+    if (msg.role === 'user') {
+      const user = ZAMApi.auth.currentUser() || {};
+      const initials = (user.display_name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      div.innerHTML = `<div class="ai-avatar-user">${initials}</div><div class="ai-bubble-body"><div class="ai-bubble-text">${esc(msg.text)}</div><div class="ai-bubble-time">${timeStr}</div></div>`;
+    } else {
+      div.innerHTML = `<div class="ai-avatar">Z</div><div class="ai-bubble-body"><div class="ai-bubble-text">${msg.html || esc(msg.text)}</div><div class="ai-bubble-time">${timeStr}</div></div>`;
+    }
+    win.appendChild(div);
+  });
+  win.scrollTop = win.scrollHeight;
+}
+
+function aiSend() {
+  const input = $('#ai-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  aiAsk(text);
+}
+
+function aiAsk(question) {
+  _aiMessages.push({ role: 'user', text: question });
+  renderAIConcierge();
+  // Show typing indicator
+  const win = $('#ai-chat-window');
+  let typingEl = null;
+  if (win) {
+    typingEl = document.createElement('div');
+    typingEl.className = 'ai-bubble ai-bubble-bot ai-typing-row';
+    typingEl.innerHTML = `<div class="ai-avatar">Z</div><div class="ai-typing"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>`;
+    win.appendChild(typingEl);
+    win.scrollTop = win.scrollHeight;
+  }
+  // Generate response (simulated with real data)
+  setTimeout(() => {
+    if (typingEl) typingEl.remove();
+    const answer = aiGenerateAnswer(question);
+    _aiMessages.push({ role: 'bot', html: answer });
+    renderAIConcierge();
+  }, 800 + Math.random() * 600);
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function aiGenerateAnswer(q) {
+  const lower = q.toLowerCase();
+  const events = ZAMApi.events.list().filter(e => e.status !== 'cancelled');
+  const deals = ZAMApi.deals.list().filter(d => d.status !== 'expired');
+  const merchants = ZAMApi.merchants ? ZAMApi.merchants.list() : [];
+  const user = ZAMApi.auth.currentUser();
+  const prefs = user ? aiGetUserPrefs(user.id) : {};
+
+  // Today's events
+  if (lower.includes('heute') && (lower.includes('event') || lower.includes('machen'))) {
+    const todayEvents = events.slice(0, 3);
+    if (!todayEvents.length) return 'Heute sind leider keine Events eingetragen. Schau morgen wieder rein!';
+    const list = todayEvents.map(e => `• <strong>${esc(e.title)}</strong> – ${esc(e.location || 'ZAM Freiham')}`).join('<br>');
+    return `Hier sind aktuelle Events im ZAM:<br><br>${list}<br><br>Tippe auf Events für alle Details! 🎉`;
+  }
+
+  // Food / Essen
+  if (lower.includes('essen') || lower.includes('food') || lower.includes('restaurant') || lower.includes('hunger')) {
+    const foodMerchants = merchants.filter(m => ['food', 'restaurant', 'café', 'gastronomie', 'küche', 'kitchen'].some(k => (m.category||'').toLowerCase().includes(k) || (m.name||'').toLowerCase().includes(k)));
+    if (foodMerchants.length) {
+      const list = foodMerchants.slice(0,3).map(m => `• <strong>${esc(m.name)}</strong> – ${esc(m.category || '')}`).join('<br>');
+      return `Im ZAM gibt es tolle Gastro-Angebote:<br><br>${list}<br><br>Guten Appetit! 🍽️`;
+    }
+    return 'Im ZAM Freiham findest du das <strong>Levante Kitchen</strong> für orientalische Küche und das <strong>Café Freiham</strong> für Kaffee & Snacks. 🍽️';
+  }
+
+  // Kaffee
+  if (lower.includes('kaffee') || lower.includes('café') || lower.includes('coffee')) {
+    const cafes = merchants.filter(m => ['café', 'coffee', 'kaffee'].some(k => (m.name||'').toLowerCase().includes(k) || (m.category||'').toLowerCase().includes(k)));
+    const name = cafes.length ? cafes[0].name : 'Café Freiham';
+    return `Für einen guten Kaffee empfehle ich dir <strong>${esc(name)}</strong> – dort gibt es auch frische Snacks und ein gemütliches Ambiente. ☕\n\nZone EG, Eingang Ost.`;
+  }
+
+  // Angebote / Deals
+  if (lower.includes('angebot') || lower.includes('deal') || lower.includes('rabatt') || lower.includes('sparen') || lower.includes('günstig')) {
+    if (!deals.length) return 'Aktuell sind keine Deals verfügbar. Schau bald wieder vorbei!';
+    const top = deals.slice(0, 3);
+    const list = top.map(d => `• <strong>${esc(d.title)}</strong> – ${esc(d.discount || '')} bei ${esc(d.merchant_name || '')}`).join('<br>');
+    return `Hier sind unsere Top-Angebote:<br><br>${list}<br><br>Alle Deals findest du im Deals-Bereich 🏷️`;
+  }
+
+  // Sport / Gym
+  if (lower.includes('sport') || lower.includes('gym') || lower.includes('fitness') || lower.includes('yoga')) {
+    return 'Für Sport & Fitness gibt es den <strong>Westside Gym</strong> im ZAM – mit 7-Tage-Schnuppermitgliedschaft! 💪<br><br>Außerdem findet regelmäßig Yoga im Atrium statt – schau in die Events!';
+  }
+
+  // Shopping / Mode
+  if (lower.includes('shopping') || lower.includes('mode') || lower.includes('kleidung') || lower.includes('shop')) {
+    return 'Für Mode und Shopping empfehle ich:<br><br>• <strong>Odeya Fashion</strong> – aktuelle Trends, EG<br>• <strong>New Balance Store</strong> – Sneaker & Sport-Mode, OG1<br><br>Tipp: Schau in die Deals für aktuelle Rabatte! 👗';
+  }
+
+  // Empfehlungen / personalisiert
+  if (lower.includes('empfehlung') || lower.includes('persönlich') || lower.includes('für mich')) {
+    if (!user) return 'Melde dich an, um personalisierte Empfehlungen zu erhalten! 👤';
+    const recs = aiGetPersonalizedRecs(user.id);
+    if (!recs.length) return 'Schau dir Events und Deals an – je mehr du nutzt, desto besser werden meine Empfehlungen! ✨';
+    const list = recs.slice(0,3).map(r => `• ${r.emoji} <strong>${esc(r.title)}</strong>`).join('<br>');
+    return `Basierend auf deinen Interessen empfehle ich:<br><br>${list}<br><br>Viel Spaß im ZAM! ✨`;
+  }
+
+  // Was kann ich machen / allgemein
+  if (lower.includes('machen') || lower.includes('erleben') || lower.includes('aktivität')) {
+    const eventCount = events.length;
+    const dealCount = deals.length;
+    return `Im ZAM Freiham erwartet dich:<br><br>🎉 <strong>${eventCount} aktive Events</strong><br>🏷️ <strong>${dealCount} Deals & Angebote</strong><br>🏪 <strong>6 Shops & Restaurants</strong><br>🗺️ <strong>Interaktive Karte</strong><br><br>Womit möchtest du beginnen?`;
+  }
+
+  // Öffnungszeiten
+  if (lower.includes('öffnung') || lower.includes('uhrzeit') || lower.includes('wann')) {
+    return 'Das ZAM Freiham ist <strong>Mo–Sa von 09:00–20:00 Uhr</strong> geöffnet.<br><br>Gastronomie hat teils abweichende Zeiten. 🕐';
+  }
+
+  // Parking / Anfahrt
+  if (lower.includes('parkplatz') || lower.includes('parken') || lower.includes('anfahrt') || lower.includes('s-bahn')) {
+    return 'Das ZAM Freiham erreichst du so:<br><br>🚆 <strong>S-Bahn:</strong> S8, Haltestelle Freiham<br>🚗 <strong>Auto:</strong> Tiefgarage mit über 500 Stellplätzen<br>🚌 <strong>Bus:</strong> Linien 161, 162<br><br>Adresse: Bodenseestraße 201, 81243 München';
+  }
+
+  // Default
+  return `Ich helfe gerne! Du kannst mich fragen:<br><br>• Was gibt es heute im ZAM?<br>• Aktuelle Angebote & Deals<br>• Wo kann ich essen?<br>• Meine persönlichen Empfehlungen<br><br>Was möchtest du wissen? 🤖`;
+}
+
+// ── User Preference Analysis ──
+function aiGetUserPrefs(userId) {
+  if (!userId) return {};
+  const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const ud = JSON.parse(localStorage.getItem(`zamclub_u_${userId}`) || '{}');
+  const savedDeals = ud.saved_deals || [];
+  const savedEvents = ud.saved_events || [];
+  const analytics = JSON.parse(localStorage.getItem('zamclub_analytics') || '{}');
+  const events = analytics.events || [];
+
+  // Count categories from saved items
+  const deals = (g.deals || []);
+  const eventsData = (g.events || []);
+
+  const cats = {};
+  savedDeals.forEach(id => {
+    const d = deals.find(x => x.id === id);
+    if (d && d.category) cats[d.category] = (cats[d.category] || 0) + 2;
+  });
+  savedEvents.forEach(id => {
+    const e = eventsData.find(x => x.id === id);
+    if (e && e.category) cats[e.category] = (cats[e.category] || 0) + 2;
+  });
+  // Activity-based
+  events.filter(e => e.user_id === userId).forEach(ev => {
+    if (ev.category) cats[ev.category] = (cats[ev.category] || 0) + 1;
+  });
+  return cats;
+}
+
+function aiGetPersonalizedRecs(userId) {
+  const prefs = aiGetUserPrefs(userId);
+  const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const events = (g.events || []).filter(e => e.status !== 'cancelled');
+  const deals = (g.deals || []).filter(d => d.status !== 'expired');
+  const sortedCats = Object.entries(prefs).sort((a,b) => b[1]-a[1]).map(([c]) => c);
+
+  const recs = [];
+  // Match events to preferred categories
+  events.forEach(e => {
+    const score = sortedCats.indexOf(e.category);
+    if (score !== -1) recs.push({ type: 'event', id: e.id, title: e.title, score: sortedCats.length - score, emoji: '🎉' });
+  });
+  deals.forEach(d => {
+    const score = sortedCats.indexOf(d.category);
+    if (score !== -1) recs.push({ type: 'deal', id: d.id, title: d.title, score: sortedCats.length - score, emoji: '🏷️' });
+  });
+  // If no prefs yet, show popular items
+  if (!recs.length) {
+    events.slice(0,2).forEach(e => recs.push({ type: 'event', id: e.id, title: e.title, score: 1, emoji: '🎉' }));
+    deals.slice(0,2).forEach(d => recs.push({ type: 'deal', id: d.id, title: d.title, score: 1, emoji: '🏷️' }));
+  }
+  return recs.sort((a,b) => b.score - a.score).slice(0, 6);
+}
+
+// ── Render Personalized Home Recommendations ──
+function renderHomeRecs() {
+  const user = ZAMApi.auth.currentUser();
+  const labelEl = $('#home-rec-label');
+  const scrollEl = $('#home-recs-scroll');
+  if (!scrollEl) return;
+
+  if (!user) { if (labelEl) labelEl.style.display = 'none'; scrollEl.innerHTML = ''; return; }
+
+  const recs = aiGetPersonalizedRecs(user.id);
+  if (!recs.length) { if (labelEl) labelEl.style.display = 'none'; scrollEl.innerHTML = ''; return; }
+
+  if (labelEl) labelEl.style.display = '';
+  const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  scrollEl.innerHTML = recs.slice(0, 5).map(r => {
+    if (r.type === 'event') {
+      const e = (g.events || []).find(x => x.id === r.id);
+      if (!e) return '';
+      return `<div class="event-card" style="min-width:200px;flex-shrink:0" onclick="navigateTo('events')">
+        <div class="event-card-header"><span class="event-tag">Empfohlen ✨</span></div>
+        <div class="event-card-content"><div class="event-card-title">${esc(e.title)}</div><div class="event-card-meta">📅 ${esc(e.date||'')}</div></div>
+      </div>`;
+    } else {
+      const d = (g.deals || []).find(x => x.id === r.id);
+      if (!d) return '';
+      return `<div class="deal-card" style="min-width:200px;flex-shrink:0" onclick="navigateTo('deals')">
+        <div class="deal-tag-row"><span class="deal-tag deal-tag-new">Empfohlen ✨</span></div>
+        <div class="deal-card-title">${esc(d.title)}</div>
+        <div class="deal-card-merchant">${esc(d.merchant_name||'')}</div>
+        <div class="deal-discount">${esc(d.discount||'')}</div>
+      </div>`;
+    }
+  }).join('');
+}
+
+// ── Full Recommendations Page ──
+function renderRecommendations() {
+  const el = $('#recommendations-content');
+  if (!el) return;
+  const user = ZAMApi.auth.currentUser();
+  if (!user) { el.innerHTML = emptyState('🔐', 'Anmeldung erforderlich', 'Melde dich an für personalisierte Empfehlungen.'); return; }
+
+  const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const allEvents = g.events || [];
+  const allDeals = g.deals || [];
+  const allPosts = (g.posts || []).filter(p => p.status === 'approved');
+  const accounts = g.accounts || [];
+  const ud = JSON.parse(localStorage.getItem(`zamclub_u_${user.id}`) || '{}');
+  const prefs = aiGetUserPrefs(user.id);
+  const recs = aiGetPersonalizedRecs(user.id);
+
+  const evRecs = recs.filter(r => r.type === 'event').map(r => allEvents.find(e => e.id === r.id)).filter(Boolean);
+  const dealRecs = recs.filter(r => r.type === 'deal').map(r => allDeals.find(d => d.id === r.id)).filter(Boolean);
+
+  // Popular posts
+  const topPosts = [...allPosts].sort((a,b) => (b.likes||0)-(a.likes||0)).slice(0,3);
+
+  // Suggested users (most active, not already connected)
+  const connections = ud.connections || [];
+  const suggestedUsers = accounts.filter(a => a.id !== user.id && !connections.includes(a.id) && a.role === 'user').slice(0, 3);
+
+  let html = '';
+
+  // Event recs
+  if (evRecs.length) {
+    html += `<div class="rec-section-title">🎉 Passende Events für dich</div><div class="rec-scroll">`;
+    html += evRecs.map(e => `<div class="rec-card" onclick="navigateTo('events')">
+      <div class="rec-card-header"><span class="rec-card-icon">🎉</span><div><div class="rec-card-tag">Event</div><div class="rec-card-title">${esc(e.title)}</div></div></div>
+      <div class="rec-card-body"><div class="rec-card-sub">📅 ${esc(e.date||'')} · ${esc(e.location||'ZAM Freiham')}</div></div>
+    </div>`).join('');
+    html += '</div>';
+  }
+
+  // Deal recs
+  if (dealRecs.length) {
+    html += `<div class="rec-section-title">🏷️ Angebote die dich interessieren</div><div class="rec-scroll">`;
+    html += dealRecs.map(d => `<div class="rec-card" onclick="navigateTo('deals')">
+      <div class="rec-card-header"><span class="rec-card-icon">🏷️</span><div><div class="rec-card-tag">Deal</div><div class="rec-card-title">${esc(d.title)}</div></div></div>
+      <div class="rec-card-body"><div class="rec-card-sub">${esc(d.discount||'')} · ${esc(d.merchant_name||'')}</div></div>
+    </div>`).join('');
+    html += '</div>';
+  }
+
+  // Trending posts
+  if (topPosts.length) {
+    html += `<div class="rec-section-title">🔥 Trending in der Community</div><div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:10px">`;
+    html += topPosts.map(p => `<div class="rec-card" onclick="navigateTo('community')">
+      <div class="rec-card-body" style="padding:12px 14px">
+        <div class="rec-card-tag">Community · ${p.likes||0} ❤️</div>
+        <div class="rec-card-title" style="font-size:0.82rem;font-weight:500">"${esc(p.content.slice(0,80))}${p.content.length>80?'…':''}"</div>
+        <div class="rec-card-sub" style="margin-top:4px">— ${esc(p.author_name||'')}</div>
+      </div>
+    </div>`).join('');
+    html += '</div>';
+  }
+
+  // Suggested users
+  if (suggestedUsers.length) {
+    html += `<div class="rec-section-title">👥 Vielleicht kennst du…</div><div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:8px">`;
+    html += suggestedUsers.map(u => {
+      const initials = (u.display_name||u.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      return `<div style="display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid rgba(139,92,246,0.12);border-radius:14px;padding:12px 14px">
+        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#6d28d9,#8b5cf6);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
+        <div style="flex:1"><div style="font-size:0.85rem;font-weight:600;color:#e2e8f0">${esc(u.display_name||u.name||'')}</div><div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">${esc(u.level||'Mitglied')}</div></div>
+        <button onclick="navigateTo('community')" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:8px;padding:6px 12px;font-size:0.72rem;font-weight:600;color:#c4b5fd;font-family:var(--font);cursor:pointer">Verbinden</button>
+      </div>`;
+    }).join('');
+    html += '</div>';
+  }
+
+  if (!html) html = emptyState('✨', 'Empfehlungen kommen bald', 'Nutz die App ein bisschen – dann lerne ich deine Vorlieben kennen!');
+  el.innerHTML = html;
+}
+
+// ── Merchant AI Text Generator ──
+function aiGenerateDeal() {
+  const product = ($('#ai-deal-product')?.value || '').trim();
+  const discount = ($('#ai-deal-discount')?.value || '').trim();
+  const result = $('#ai-deal-result');
+  if (!result) return;
+  if (!product) { showToast('Bitte Produkt eingeben'); return; }
+  const merchant = ZAMApi.auth.currentUser();
+  const shopName = merchant?.display_name || merchant?.name || 'Dein Shop';
+  const texts = [
+    `🔥 JETZT ${discount ? discount + ' SPAREN' : 'ANGEBOT SICHERN'}!\n\n${product} bei ${shopName} – nur für kurze Zeit!\n\nQualität, die überzeugt. Gönn dir was Besonderes im ZAM Freiham.\n\n✅ Exklusiv für ZAM Club Mitglieder`,
+    `✨ Heiß begehrt: ${product}\n\n${discount ? `Spare jetzt ${discount} ` : ''}bei ${shopName} im ZAM Freiham!\n\nBegrenzte Zeit – jetzt zugreifen und Punkte sammeln! 🏆\n\n#ZAMFreiham #Angebot`,
+    `🎁 Besonderes Angebot von ${shopName}:\n\n→ ${product}${discount ? `\n→ ${discount} Rabatt` : ''}\n→ Nur im ZAM Freiham Freiham!\n\nJetzt ZAM Club App öffnen und mehr erfahren! 📱`,
+  ];
+  const text = texts[Math.floor(Math.random() * texts.length)];
+  result.style.display = '';
+  result.innerHTML = `<div style="margin-bottom:8px">${text.replace(/\n/g,'<br>')}</div><button class="ai-gen-copy-btn" onclick="aiCopyText(this,'${encodeURIComponent(text)}')">📋 Kopieren</button>`;
+}
+
+function aiGenerateEvent() {
+  const name = ($('#ai-event-name')?.value || '').trim();
+  const date = ($('#ai-event-date')?.value || '').trim();
+  const result = $('#ai-event-result');
+  if (!result) return;
+  if (!name) { showToast('Bitte Event-Name eingeben'); return; }
+  const merchant = ZAMApi.auth.currentUser();
+  const shopName = merchant?.display_name || merchant?.name || 'Dein Shop';
+  const texts = [
+    `🎉 ${name.toUpperCase()}\n\n${date ? `📅 ${date}\n` : ''}📍 ZAM Freiham · ${shopName}\n\nSei dabei und erlebe einen unvergesslichen Tag!\n\nExklusiv für ZAM Club Mitglieder – jetzt anmelden und Punkte sammeln! 🏆`,
+    `✨ Einladung: ${name}\n\nWir freuen uns, dich zum ${name} einzuladen!${date ? `\n\n📅 Datum: ${date}` : ''}\n📍 Ort: ${shopName}, ZAM Freiham\n\nMelde dich jetzt in der ZAM Club App an. Begrenzte Plätze!`,
+  ];
+  const text = texts[Math.floor(Math.random() * texts.length)];
+  result.style.display = '';
+  result.innerHTML = `<div style="margin-bottom:8px">${text.replace(/\n/g,'<br>')}</div><button class="ai-gen-copy-btn" onclick="aiCopyText(this,'${encodeURIComponent(text)}')">📋 Kopieren</button>`;
+}
+
+function aiGenerateSocial() {
+  const topic = ($('#ai-social-topic')?.value || '').trim();
+  const platform = $('#ai-social-platform')?.value || 'instagram';
+  const result = $('#ai-social-result');
+  if (!result) return;
+  if (!topic) { showToast('Bitte Thema eingeben'); return; }
+  const merchant = ZAMApi.auth.currentUser();
+  const shopName = merchant?.display_name || merchant?.name || 'Dein Shop';
+  let text = '';
+  if (platform === 'instagram') {
+    text = `✨ ${topic} – jetzt bei ${shopName}!\n\nWir haben etwas Besonderes für euch 🙌 Schaut bei uns im ZAM Freiham vorbei!\n\n📍 ZAM Freiham, München\n📱 ZAM Club App für exklusive Angebote\n\n#ZAMFreiham #München #${topic.replace(/\s+/g,'')} #Shopping #Local`;
+  } else {
+    text = `🎉 Neuigkeiten von ${shopName}!\n\n${topic} – wir freuen uns, euch das mitteilen zu können!\n\nBesucht uns im ZAM Freiham und ladet die ZAM Club App herunter – dort gibt es exklusive Deals und Punkte für jeden Einkauf!\n\n📍 Bodenseestraße 201, München\n#ZAMFreiham`;
+  }
+  result.style.display = '';
+  result.innerHTML = `<div style="margin-bottom:8px">${text.replace(/\n/g,'<br>')}</div><button class="ai-gen-copy-btn" onclick="aiCopyText(this,'${encodeURIComponent(text)}')">📋 Kopieren</button>`;
+}
+
+function aiCopyText(btn, encoded) {
+  const text = decodeURIComponent(encoded);
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => showToast('Text kopiert! 📋')).catch(() => showToast('Kopieren fehlgeschlagen'));
+  else showToast('Kopieren nicht verfügbar');
+}
+
+// ── Admin AI Insights ──
+function renderAdminAIInsights(containerId) {
+  const el = $(containerId ? `#${containerId}` : '#admin-ai-insights');
+  if (!el) return;
+  const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const analytics = JSON.parse(localStorage.getItem('zamclub_analytics') || '{}');
+  const events = analytics.events || [];
+
+  const eventsData = g.events || [];
+  const deals = g.deals || [];
+  const accounts = g.accounts || [];
+
+  // Most popular event category
+  const catCounts = {};
+  eventsData.forEach(e => { if(e.category) catCounts[e.category] = (catCounts[e.category]||0) + (e.registrations||0); });
+  const topCat = Object.entries(catCounts).sort((a,b)=>b[1]-a[1])[0];
+
+  // Best deal category
+  const dealCats = {};
+  deals.forEach(d => { if(d.category) dealCats[d.category] = (dealCats[d.category]||0) + (d.saves||0); });
+  const topDealCat = Object.entries(dealCats).sort((a,b)=>b[1]-a[1])[0];
+
+  // Peak hour analysis
+  const hours = events.filter(e => e.event === 'zone_visit').map(e => new Date(e.ts).getHours());
+  const hourCounts = {};
+  hours.forEach(h => hourCounts[h] = (hourCounts[h]||0)+1);
+  const peakHour = Object.entries(hourCounts).sort((a,b)=>b[1]-a[1])[0];
+
+  // New members trend
+  const recent = accounts.filter(a => a.created_at && new Date(a.created_at) > new Date(Date.now() - 7*864e5));
+
+  const insights = [
+    topCat ? { icon: '🎯', title: 'Beliebteste Event-Kategorie', text: `"${topCat[0]}" Events haben die meisten Anmeldungen (${topCat[1]}). Plane mehr Events in dieser Kategorie!` } : null,
+    topDealCat ? { icon: '🏷️', title: 'Meistgesparte Deal-Kategorie', text: `Nutzer speichern besonders viele "${topDealCat[0]}" Deals. Gewinne mehr Händler aus dieser Kategorie!` } : null,
+    peakHour ? { icon: '⏰', title: 'Stoßzeit', text: `Die meiste App-Aktivität findet gegen ${peakHour[0]}:00 Uhr statt. Events & Deals zu dieser Zeit performen besser.` } : null,
+    { icon: '👥', title: 'Neue Mitglieder', text: `${recent.length} neue Mitglieder in den letzten 7 Tagen. ${recent.length > 5 ? 'Starkes Wachstum! 🚀' : 'Aktiviere mehr Marketing-Maßnahmen.'}` },
+    { icon: '💡', title: 'Community-Tipp', text: 'Nutzer die in der Community aktiv sind, besuchen das ZAM 2x häufiger. Fördere Community-Events!' },
+  ].filter(Boolean);
+
+  el.innerHTML = insights.map(ins => `<div class="ai-insight-card">
+    <div class="ai-insight-icon">${ins.icon}</div>
+    <div class="ai-insight-title">${ins.title}</div>
+    <div class="ai-insight-text">${ins.text}</div>
+  </div>`).join('');
+}
+
 function seedZAMContent() {
   const seeded = localStorage.getItem('zam_seeded_v3');
   if (seeded) return;
@@ -3337,6 +3822,7 @@ function init() {
   initChatInput();
   initPrivateChat();
   initUserReport();
+  initChatKeyboardFix();
   initAuth();
 }
 

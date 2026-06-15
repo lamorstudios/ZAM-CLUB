@@ -191,6 +191,23 @@
       </div>
     </div>
 
+    <!-- AI Concierge Banner -->
+    <div class="ai-home-banner" onclick="navigateTo('ai')">
+      <div class="ai-home-banner-icon">🤖</div>
+      <div class="ai-home-banner-text">
+        <div class="ai-home-banner-title">ZAM Assistent</div>
+        <div class="ai-home-banner-sub">Frag mich, was du im ZAM machen kannst!</div>
+      </div>
+      <div class="ai-home-banner-arrow">→</div>
+    </div>
+
+    <!-- Personalized Recommendations -->
+    <div class="section-label" id="home-rec-label" style="display:none">
+      <h2>Für dich ✨</h2>
+      <a href="#" onclick="navigateTo('recommendations');return false;">Alle →</a>
+    </div>
+    <div class="scroll-row" id="home-recs-scroll"></div>
+
     <!-- Current Events (horizontal scroll) -->
     <div class="section-label">
       <h2>Aktuelle Events</h2>
@@ -982,6 +999,112 @@
       <button onclick="redeemVoucher()" style="flex:1;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border-radius:10px;padding:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer;border:none">Einlösen</button>
       <button onclick="closeVoucherModal()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.82rem;font-weight:600;font-family:var(--font);cursor:pointer">Abbrechen</button>
     </div>
+  </div>
+</div>
+
+<!-- =====================
+     PHASE 17: ZAM KI CONCIERGE PAGE
+========================== -->
+<div id="page-ai" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('home')">←</button>
+    <h1 class="page-title">ZAM Assistent 🤖</h1>
+  </div>
+
+  <!-- Chat Window -->
+  <div class="ai-chat-window" id="ai-chat-window">
+    <!-- Welcome bubble -->
+    <div class="ai-bubble ai-bubble-bot">
+      <div class="ai-avatar">Z</div>
+      <div class="ai-bubble-body">
+        <div class="ai-bubble-text">Hallo! 👋 Ich bin dein persönlicher ZAM Assistent. Was kann ich für dich tun?</div>
+      </div>
+    </div>
+    <!-- Messages rendered by app.js -->
+  </div>
+
+  <!-- Quick Suggestions -->
+  <div class="ai-suggestions" id="ai-suggestions">
+    <button class="ai-chip" onclick="aiAsk('Was kann ich heute im ZAM machen?')">Was kann ich heute machen?</button>
+    <button class="ai-chip" onclick="aiAsk('Wo gibt es aktuell Angebote?')">Aktuelle Angebote</button>
+    <button class="ai-chip" onclick="aiAsk('Welche Events laufen heute?')">Events heute</button>
+    <button class="ai-chip" onclick="aiAsk('Wo kann ich essen gehen?')">Essen gehen</button>
+    <button class="ai-chip" onclick="aiAsk('Wo bekomme ich einen Kaffee?')">Kaffee trinken</button>
+    <button class="ai-chip" onclick="aiAsk('Was sind meine persönlichen Empfehlungen?')">Meine Empfehlungen</button>
+  </div>
+
+  <!-- Input -->
+  <div class="ai-input-bar">
+    <input type="text" id="ai-input" class="ai-input-field" placeholder="Frag den ZAM Assistenten…" maxlength="200" autocomplete="off" onkeydown="if(event.key==='Enter')aiSend()" />
+    <button class="ai-send-btn" onclick="aiSend()" aria-label="Senden">➤</button>
+  </div>
+</div>
+
+<!-- =====================
+     PHASE 17: RECOMMENDATIONS PAGE
+========================== -->
+<div id="page-recommendations" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('home')">←</button>
+    <h1 class="page-title">Für dich ✨</h1>
+  </div>
+  <div class="page-content" id="recommendations-content">
+    <!-- Rendered by app.js -->
+  </div>
+</div>
+
+<!-- =====================
+     PHASE 17: MERCHANT AI TOOLS PAGE
+========================== -->
+<div id="page-merchant-ai" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('merchant-dashboard')">←</button>
+    <h1 class="page-title">KI-Werkzeuge ✨</h1>
+  </div>
+  <div style="padding:16px">
+    <div class="ai-tool-card">
+      <div class="ai-tool-title">🏷️ Deal-Text generieren</div>
+      <div class="ai-tool-desc">Lass die KI einen überzeugenden Deal-Text für dein Angebot erstellen.</div>
+      <input class="input-field" id="ai-deal-product" placeholder="Produkt/Angebot (z.B. Café Latte)" style="margin-bottom:8px" />
+      <input class="input-field" id="ai-deal-discount" placeholder="Rabatt (z.B. 20%)" style="margin-bottom:8px" />
+      <button class="btn btn-primary btn-full" onclick="aiGenerateDeal()">Text generieren</button>
+      <div class="ai-gen-result" id="ai-deal-result" style="display:none"></div>
+    </div>
+
+    <div class="ai-tool-card" style="margin-top:12px">
+      <div class="ai-tool-title">🎉 Event-Beschreibung generieren</div>
+      <div class="ai-tool-desc">Erstelle eine ansprechende Beschreibung für dein Event.</div>
+      <input class="input-field" id="ai-event-name" placeholder="Event-Name (z.B. Sommerfest)" style="margin-bottom:8px" />
+      <input class="input-field" id="ai-event-date" placeholder="Datum (z.B. 20. Juli 2026)" style="margin-bottom:8px" />
+      <button class="btn btn-primary btn-full" onclick="aiGenerateEvent()">Text generieren</button>
+      <div class="ai-gen-result" id="ai-event-result" style="display:none"></div>
+    </div>
+
+    <div class="ai-tool-card" style="margin-top:12px">
+      <div class="ai-tool-title">📱 Social Media Text</div>
+      <div class="ai-tool-desc">Generiere Instagram & Facebook Posts für dein Geschäft.</div>
+      <input class="input-field" id="ai-social-topic" placeholder="Thema (z.B. neue Frühlingskollektion)" style="margin-bottom:8px" />
+      <select id="ai-social-platform" class="input-field" style="margin-bottom:8px">
+        <option value="instagram">Instagram</option>
+        <option value="facebook">Facebook</option>
+      </select>
+      <button class="btn btn-primary btn-full" onclick="aiGenerateSocial()">Text generieren</button>
+      <div class="ai-gen-result" id="ai-social-result" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================
+     PHASE 17: ADMIN AI INSIGHTS PAGE
+========================== -->
+<div id="page-admin-ai-insights" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('profile')">←</button>
+    <h1 class="page-title">KI-Insights 🤖</h1>
+  </div>
+  <div style="padding:16px">
+    <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:16px">Basierend auf deinen Plattform-Daten gibt die KI Handlungsempfehlungen:</div>
+    <div id="admin-ai-insights"></div>
   </div>
 </div>
 
