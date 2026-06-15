@@ -645,15 +645,15 @@ function renderMarkers(){
 function openUserPopup(u){
   const z=ZONES[u.zone];
   const api=window.ZAMApi;
-  const connected  = api ? api.nudges.isConnected(u.id) : false;
-  const hasPending = api ? api.nudges.hasPendingNudgeTo(u.id) : false;
+  const connected  = _nudgeConnected.has(u.id) || (api ? api.nudges.isConnected(u.id) : false);
+  const hasPending = !connected && (api ? api.nudges.hasPendingNudgeTo(u.id) : false);
   let actionBtn='';
   if(connected){
-    actionBtn=`<button onclick="pcFromMap('${u.id}','${u.name}','${u.initials||u.name.slice(0,2).toUpperCase()}')" style="flex:1;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);border-radius:10px;padding:10px;color:#a78bfa;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">💬 Nachricht</button>`;
+    actionBtn=`<button onclick="pcFromMap('${u.id}','${_esc(u.name)}','${u.initials||u.name.slice(0,2).toUpperCase()}')" style="flex:1;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:none;border-radius:10px;padding:10px;color:#fff;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">💬 Chat öffnen</button>`;
   } else if(hasPending){
     actionBtn=`<button disabled style="flex:1;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:10px;color:rgba(167,139,250,0.5);font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:not-allowed">⏳ Gesendet</button>`;
   } else {
-    actionBtn=`<button onclick="nudgeUser('${u.id}','${u.name}')" style="flex:1;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);border-radius:10px;padding:10px;color:#a78bfa;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">👋 Anstupsen</button>`;
+    actionBtn=`<button onclick="nudgeUser('${u.id}','${_esc(u.name)}')" style="flex:1;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);border-radius:10px;padding:10px;color:#a78bfa;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">👋 Anstupsen</button>`;
   }
   document.getElementById('pop-content').innerHTML=`
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
@@ -687,23 +687,60 @@ function openMarkerPopup(m){
   showPopup();
 }
 
-function showPopup(){const b=document.getElementById('popup-bg');b.style.display='flex';requestAnimationFrame(()=>b.classList.add('open'))}
-function closePopup(e){if(e&&e.target!==document.getElementById('popup-bg'))return;const b=document.getElementById('popup-bg');b.classList.remove('open');setTimeout(()=>b.style.display='none',300)}
+let _popHideTimer = null;
+function showPopup(){
+  if(_popHideTimer){clearTimeout(_popHideTimer);_popHideTimer=null;}
+  const b=document.getElementById('popup-bg');
+  b.style.display='flex';
+  requestAnimationFrame(()=>b.classList.add('open'));
+}
+function closePopup(e){
+  if(e&&e.target!==document.getElementById('popup-bg'))return;
+  const b=document.getElementById('popup-bg');
+  b.classList.remove('open');
+  _popHideTimer=setTimeout(()=>{b.style.display='none';_popHideTimer=null;},300);
+}
+
+/* ── Nudge helpers ── */
+const _nudgeConnected = new Set(JSON.parse(localStorage.getItem('zam_map_connected')||'[]'));
+function _saveConnected(){localStorage.setItem('zam_map_connected',JSON.stringify([..._nudgeConnected]));}
 
 function nudgeUser(id,name){
-  const api=window.ZAMApi;
-  let msg='';
-  if(api){
-    const result=api.nudges.send(id,name);
-    msg=result?`${name} wird benachrichtigt.`:'Anfrage bereits gesendet oder bereits verbunden.';
-  } else {
-    msg=`${name} wird benachrichtigt.`;
-  }
+  if(_nudgeConnected.has(id)){pcFromMap(id,name,(MAP_DEMO_USERS_EXTENDED.find(u=>u.id===id)||{}).initials||name.slice(0,2).toUpperCase());return;}
+  // Mark as pending
   closePopup();
   setTimeout(()=>{
-    document.getElementById('pop-content').innerHTML=`<div style="text-align:center;padding:10px 0"><div style="font-size:2rem;margin-bottom:10px">👋</div><div style="font-size:0.95rem;font-weight:700;color:#fff;margin-bottom:6px">Anstupsanfrage gesendet!</div><div style="font-size:0.76rem;color:rgba(255,255,255,0.5)">${msg}</div><button onclick="closePopup()" style="margin-top:16px;width:100%;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border-radius:10px;padding:10px;color:#fff;font-size:0.8rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">OK</button></div>`;
+    document.getElementById('pop-content').innerHTML=`
+      <div style="text-align:center;padding:10px 0">
+        <div style="font-size:2.2rem;margin-bottom:10px">👋</div>
+        <div style="font-size:0.95rem;font-weight:700;color:#fff;margin-bottom:6px">Anstupsanfrage gesendet!</div>
+        <div style="font-size:0.76rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:4px">
+          <strong style="color:#a78bfa">${_esc(name)}</strong> wird benachrichtigt.<br>Antwort kommt gleich…
+        </div>
+        <div id="nudge-waiting" style="margin-top:12px;font-size:0.7rem;color:rgba(255,255,255,0.3)">⏳ Warte auf Antwort…</div>
+        <button onclick="closePopup()" style="margin-top:16px;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.45);font-size:0.8rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">Schließen</button>
+      </div>`;
     showPopup();
-  },100);
+    // Simulate acceptance after 2.5s
+    setTimeout(()=>{
+      _nudgeConnected.add(id);
+      _saveConnected();
+      const waiting=document.getElementById('nudge-waiting');
+      if(waiting) waiting.innerHTML='✅ <strong style="color:#34d399">'+_esc(name)+'</strong> hat angenommen!';
+      // Swap Schließen button to Chat button
+      const btn=document.querySelector('#pop-content button');
+      if(btn){
+        btn.textContent='💬 Chat öffnen';
+        btn.style.background='linear-gradient(135deg,#6d28d9,#8b5cf6)';
+        btn.style.color='#fff';
+        btn.style.border='none';
+        btn.onclick=()=>{closePopup();pcFromMap(id,name,(MAP_DEMO_USERS_EXTENDED.find(u=>u.id===id)||{}).initials||name.slice(0,2).toUpperCase());};
+      }
+      // Update nudge badge
+      const badge=document.getElementById('nudge-badge');
+      if(badge) badge.style.display='block';
+    },2500);
+  },120);
 }
 
 function pcFromMap(userId,userName,initials){
@@ -817,8 +854,8 @@ function _renderAUUserList() {
     const zc = ZONE_COLORS_MAP[u.zone] || '#8b5cf6';
     const zl = ZONE_LABELS_MAP[u.zone] || u.zone;
     const isMatch = DEAL_STATUSES_MAP.includes(u.status);
-    const connected = api ? api.nudges.isConnected(u.id) : false;
-    const pending   = api ? api.nudges.hasPendingNudgeTo(u.id) : false;
+    const connected = _nudgeConnected.has(u.id) || (api ? api.nudges.isConnected(u.id) : false);
+    const pending   = !connected && (api ? api.nudges.hasPendingNudgeTo(u.id) : false);
 
     const matchBadge = isMatch
       ? `<div style="display:inline-flex;align-items:center;gap:3px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:6px;padding:2px 7px;font-size:0.6rem;font-weight:700;color:#34d399;margin-top:4px">${u.status}</div>`
@@ -874,8 +911,17 @@ function auZoomAndProfile(userId) {
 function auNudge(id, name) {
   const api = window.ZAMApi;
   if (api) api.nudges.send(id, name);
-  _showMapToast('👋 ' + name + ' angestupst!');
+  _showMapToast('👋 ' + name + ' angestupst! Warte auf Antwort…');
   _renderAUUserList();
+  // Simulate acceptance after 2.5s
+  setTimeout(() => {
+    _nudgeConnected.add(id);
+    _saveConnected();
+    _showMapToast('✅ ' + name + ' hat angenommen! Jetzt chatten.');
+    _renderAUUserList();
+    const badge = document.getElementById('nudge-badge');
+    if (badge) badge.style.display = 'block';
+  }, 2500);
 }
 
 function auOpenChat(userId, userName, initials) {
