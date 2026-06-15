@@ -163,3 +163,154 @@ CREATE VIEW public.my_connections AS
     CASE WHEN c.user_a = auth.uid() THEN c.user_b ELSE c.user_a END AS other_user_id
   FROM public.connections c
   WHERE c.user_a = auth.uid() OR c.user_b = auth.uid();
+
+-- ═══════════════════════════════════════════════════════════
+-- Phase 10 — Private Messages & Blocks
+-- ═══════════════════════════════════════════════════════════
+
+-- ── Private messages ─────────────────────────────────────
+CREATE TABLE public.private_messages (
+  id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  chat_id           UUID        NOT NULL REFERENCES public.private_chats(id) ON DELETE CASCADE,
+  sender_id         UUID        NOT NULL REFERENCES auth.users(id)            ON DELETE CASCADE,
+  content           TEXT        NOT NULL CHECK (char_length(content) BETWEEN 1 AND 500),
+  read_by_recipient BOOLEAN     NOT NULL DEFAULT false,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.private_messages ENABLE ROW LEVEL SECURITY;
+
+-- Only participants of the chat can read/insert messages
+CREATE POLICY "pm_select" ON public.private_messages
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.private_chat_participants pcp
+      WHERE pcp.chat_id = private_messages.chat_id
+        AND pcp.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "pm_insert" ON public.private_messages
+  FOR INSERT WITH CHECK (
+    sender_id = auth.uid()
+    AND EXISTS (
+      SELECT 1 FROM public.private_chat_participants pcp
+      WHERE pcp.chat_id = private_messages.chat_id
+        AND pcp.user_id = auth.uid()
+    )
+  );
+
+-- Recipient can mark as read
+CREATE POLICY "pm_update_read" ON public.private_messages
+  FOR UPDATE USING (
+    sender_id <> auth.uid()
+    AND EXISTS (
+      SELECT 1 FROM public.private_chat_participants pcp
+      WHERE pcp.chat_id = private_messages.chat_id
+        AND pcp.user_id = auth.uid()
+    )
+  );
+
+-- ── Blocks ───────────────────────────────────────────────
+CREATE TABLE public.blocks (
+  blocker_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  blocked_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (blocker_id, blocked_id)
+);
+
+ALTER TABLE public.blocks ENABLE ROW LEVEL SECURITY;
+
+-- Users can manage their own blocks
+CREATE POLICY "blocks_own" ON public.blocks
+  FOR ALL USING (blocker_id = auth.uid());
+
+-- Index for fast lookup
+CREATE INDEX idx_blocks_blocker ON public.blocks(blocker_id);
+CREATE INDEX idx_pm_chat_created ON public.private_messages(chat_id, created_at);
+
+-- ── push_subscriptions ───────────────────────────────────────────
+CREATE TABLE public.push_subscriptions (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  endpoint   TEXT NOT NULL,
+  p256dh     TEXT NOT NULL,
+  auth_key   TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, endpoint)
+);
+ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "push_own" ON public.push_subscriptions FOR ALL USING (user_id = auth.uid());
+
+-- ── notification_log ──────────────────────────────────────────────
+CREATE TABLE public.notification_log (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  type       TEXT NOT NULL,
+  title      TEXT NOT NULL,
+  body       TEXT,
+  sent_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  opened_at  TIMESTAMPTZ,
+  status     TEXT NOT NULL DEFAULT 'sent' -- 'sent' | 'opened' | 'failed'
+);
+ALTER TABLE public.notification_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "notif_log_own" ON public.notification_log FOR SELECT USING (user_id = auth.uid());
+
+-- ── notification_settings ─────────────────────────────────────────
+CREATE TABLE public.notification_settings (
+  user_id   UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  all_notif BOOLEAN NOT NULL DEFAULT true,
+  messages  BOOLEAN NOT NULL DEFAULT true,
+  nudges    BOOLEAN NOT NULL DEFAULT true,
+  events    BOOLEAN NOT NULL DEFAULT true,
+  deals     BOOLEAN NOT NULL DEFAULT true,
+  community BOOLEAN NOT NULL DEFAULT true,
+  badges    BOOLEAN NOT NULL DEFAULT true,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE public.notification_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "notif_settings_own" ON public.notification_settings FOR ALL USING (user_id = auth.uid());
+
+-- ── analytics_events ─────────────────────────────────────────────
+CREATE TABLE public.analytics_events (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  event_type  TEXT NOT NULL,
+  entity_id   UUID,
+  metadata    JSONB DEFAULT '{}',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_analytics_type_time ON public.analytics_events(event_type, created_at);
+CREATE INDEX idx_analytics_entity ON public.analytics_events(entity_id);
+ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "analytics_insert" ON public.analytics_events FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "analytics_admin_read" ON public.analytics_events FOR SELECT USING (
+  EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin')
+);
+
+-- ── vouchers ─────────────────────────────────────────────────────
+CREATE TABLE public.vouchers (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code         TEXT NOT NULL UNIQUE,
+  deal_id      UUID REFERENCES public.deals(id) ON DELETE CASCADE,
+  user_id      UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  status       TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','redeemed','expired')),
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  redeemed_at  TIMESTAMPTZ
+);
+ALTER TABLE public.vouchers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "voucher_own" ON public.vouchers FOR ALL USING (user_id = auth.uid());
+CREATE POLICY "voucher_merchant_redeem" ON public.vouchers FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'merchant')
+);
+
+-- ── merchant_premium ─────────────────────────────────────────────
+CREATE TABLE public.merchant_premium (
+  merchant_id  UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  tier         TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free','basic','premium','enterprise')),
+  features     JSONB DEFAULT '{"highlighted_deals": false, "top_placement": false, "sponsored": false}',
+  valid_until  TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE public.merchant_premium ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "premium_own" ON public.merchant_premium FOR SELECT USING (merchant_id = auth.uid());

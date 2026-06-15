@@ -1,0 +1,25 @@
+{
+  "name": "ZAM Club",
+  "short_name": "ZAM",
+  "description": "Die ZAM Community App – Shoppen, erleben und verbinden im ZAM Freiham",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#090910",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "lang": "de",
+  "categories": ["lifestyle", "shopping", "social"],
+  "icons": [
+    {"src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"},
+    {"src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ],
+  "shortcuts": [
+    {"name": "Map öffnen", "url": "/map.html", "icons": [{"src": "assets/icon.svg", "sizes": "any"}]},
+    {"name": "Events", "url": "/index.html#events", "icons": [{"src": "assets/icon.svg", "sizes": "any"}]},
+    {"name": "Deals", "url": "/index.html#deals", "icons": [{"src": "assets/icon.svg", "sizes": "any"}]}
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

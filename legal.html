@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="theme-color" content="#090910"/>
+  <title>ZAM Club – Rechtliches</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#090910;--surface:#111118;--surface2:#18181f;
+      --primary:#8b5cf6;--grad:linear-gradient(135deg,#6d28d9,#8b5cf6,#a78bfa);
+      --text:#e2e8f0;--muted:rgba(255,255,255,0.45);--border:rgba(255,255,255,0.07);
+      --font:'Poppins',system-ui,sans-serif;
+    }
+    body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;padding-bottom:60px}
+    a{color:#a78bfa;text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    /* Header */
+    .lgl-header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:12px}
+    .lgl-logo{font-size:1.3rem;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .lgl-back{background:none;border:1px solid rgba(139,92,246,0.3);color:#a78bfa;border-radius:20px;padding:6px 14px;font-size:0.75rem;font-weight:600;font-family:var(--font);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-left:auto}
+
+    /* Tab Nav */
+    .lgl-tabs{display:flex;gap:0;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .lgl-tabs::-webkit-scrollbar{display:none}
+    .lgl-tab{flex-shrink:0;padding:14px 18px;font-size:0.78rem;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:var(--font);white-space:nowrap;transition:color 0.2s,border-color 0.2s}
+    .lgl-tab.active{color:#8b5cf6;border-bottom-color:#8b5cf6}
+
+    /* Content */
+    .lgl-content{max-width:700px;margin:0 auto;padding:28px 20px}
+    .lgl-panel{display:none}
+    .lgl-panel.active{display:block}
+
+    h1{font-size:1.4rem;font-weight:800;color:#e2e8f0;margin-bottom:6px}
+    h2{font-size:1rem;font-weight:700;color:#c4b5fd;margin:24px 0 10px}
+    h3{font-size:0.88rem;font-weight:700;color:#e2e8f0;margin:18px 0 8px}
+    p{font-size:0.82rem;color:var(--muted);margin-bottom:12px}
+    ul,ol{font-size:0.82rem;color:var(--muted);padding-left:20px;margin-bottom:12px}
+    li{margin-bottom:6px}
+    .lgl-date{font-size:0.72rem;color:rgba(255,255,255,0.25);margin-bottom:24px}
+    .lgl-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
+    .lgl-highlight{background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:14px 16px;margin:16px 0;font-size:0.8rem;color:#c4b5fd}
+    .contact-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border)}
+    .contact-row:last-child{border-bottom:none}
+    .contact-lbl{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.3);width:90px;flex-shrink:0;padding-top:2px}
+    .contact-val{font-size:0.82rem;color:var(--text)}
+    strong{color:#e2e8f0;font-weight:600}
+  </style>
+</head>
+<body>
+
+<header class="lgl-header">
+  <div class="lgl-logo">ZAM</div>
+  <span style="font-size:0.8rem;color:var(--muted);font-weight:500">Club · Rechtliches</span>
+  <a href="index.html" class="lgl-back">← Zurück zur App</a>
+</header>
+
+<nav class="lgl-tabs">
+  <button class="lgl-tab active" data-panel="impressum">Impressum</button>
+  <button class="lgl-tab" data-panel="datenschutz">Datenschutz</button>
+  <button class="lgl-tab" data-panel="nutzung">Nutzungsbedingungen</button>
+  <button class="lgl-tab" data-panel="community">Community-Richtlinien</button>
+</nav>
+
+<div class="lgl-content">
+
+  <!-- IMPRESSUM -->
+  <div class="lgl-panel active" id="panel-impressum">
+    <h1>Impressum</h1>
+    <p class="lgl-date">Stand: Juni 2026</p>
+
+    <div class="lgl-card">
+      <h2 style="margin-top:0">Angaben gemäß § 5 TMG</h2>
+      <div class="contact-row">
+        <div class="contact-lbl">Betreiber</div>
+        <div class="contact-val"><strong>ZAM Freiham GmbH</strong></div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-lbl">Adresse</div>
+        <div class="contact-val">Bodenseestraße 201<br>81243 München</div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-lbl">Telefon</div>
+        <div class="contact-val">+49 89 4521-0</div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-lbl">E-Mail</div>
+        <div class="contact-val"><a href="mailto:info@zamfreiham.de">info@zamfreiham.de</a></div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-lbl">Website</div>
+        <div class="contact-val"><a href="https://zamfreiham.de" target="_blank">zamfreiham.de</a></div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-lbl">HRB</div>
+        <div class="contact-val">HRB 123456, Amtsgericht München</div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-lbl">USt-ID</div>
+        <div class="contact-val">DE 123456789</div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-lbl">Geschäfts&shy;führung</div>
+        <div class="contact-val">Max Mustermann</div>
+      </div>
+    </div>
+
+    <h2>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h2>
+    <div class="lgl-card">
+      <div class="contact-row"><div class="contact-lbl">Person</div><div class="contact-val">Max Mustermann</div></div>
+      <div class="contact-row"><div class="contact-lbl">Adresse</div><div class="contact-val">Bodenseestraße 201, 81243 München</div></div>
+    </div>
+
+    <h2>Haftungsausschluss</h2>
+    <p>Die Inhalte dieser App wurden mit größtmöglicher Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte kann keine Gewähr übernommen werden. Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte nach den allgemeinen Gesetzen verantwortlich.</p>
+
+    <h2>Urheberrecht</h2>
+    <p>Die durch die Seitenbetreiber erstellten Inhalte und Werke in dieser App unterliegen dem deutschen Urheberrecht. Beiträge Dritter sind als solche gekennzeichnet. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.</p>
+  </div>
+
+  <!-- DATENSCHUTZ -->
+  <div class="lgl-panel" id="panel-datenschutz">
+    <h1>Datenschutzerklärung</h1>
+    <p class="lgl-date">Stand: Juni 2026 · Gemäß DSGVO</p>
+
+    <div class="lgl-highlight">
+      📋 Diese App speichert Daten aktuell ausschließlich lokal auf deinem Gerät (localStorage). Es werden keine personenbezogenen Daten an externe Server übertragen.
+    </div>
+
+    <h2>1. Verantwortliche Stelle</h2>
+    <p>ZAM Freiham GmbH, Bodenseestraße 201, 81243 München<br>E-Mail: <a href="mailto:datenschutz@zamfreiham.de">datenschutz@zamfreiham.de</a></p>
+
+    <h2>2. Erhobene Daten</h2>
+    <h3>2.1 Registrierungsdaten</h3>
+    <ul>
+      <li>Name und Benutzername</li>
+      <li>E-Mail-Adresse</li>
+      <li>Verschlüsseltes Passwort</li>
+      <li>Zeitpunkt der Registrierung</li>
+    </ul>
+
+    <h3>2.2 Nutzungsdaten</h3>
+    <ul>
+      <li>Aufgerufene Events, Deals und Händlerprofile</li>
+      <li>Gesammelte Punkte und Abzeichen</li>
+      <li>Community-Beiträge und Kommentare</li>
+      <li>Check-in-Daten (freiwillig)</li>
+    </ul>
+
+    <h3>2.3 Standortdaten</h3>
+    <p>Standortdaten werden nur verarbeitet, wenn du deinen Status auf der Map freiwillig teilst. Du kannst dies jederzeit in den Datenschutz-Einstellungen deaktivieren.</p>
+
+    <h2>3. Zweck der Datenverarbeitung</h2>
+    <ul>
+      <li>Bereitstellung des Treueprogramms und der Community-Funktionen</li>
+      <li>Personalisierung von Deals und Events</li>
+      <li>Kommunikation über Aktivitäten im ZAM Freiham</li>
+      <li>Analyse zur Verbesserung der Plattform</li>
+    </ul>
+
+    <h2>4. Rechtsgrundlage</h2>
+    <p>Die Verarbeitung erfolgt auf Basis von Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung) und Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).</p>
+
+    <h2>5. Deine Rechte</h2>
+    <ul>
+      <li><strong>Auskunftsrecht</strong> (Art. 15 DSGVO)</li>
+      <li><strong>Berichtigungsrecht</strong> (Art. 16 DSGVO)</li>
+      <li><strong>Löschungsrecht</strong> (Art. 17 DSGVO)</li>
+      <li><strong>Einschränkung der Verarbeitung</strong> (Art. 18 DSGVO)</li>
+      <li><strong>Datenübertragbarkeit</strong> (Art. 20 DSGVO)</li>
+      <li><strong>Widerspruchsrecht</strong> (Art. 21 DSGVO)</li>
+    </ul>
+
+    <h2>6. Push-Benachrichtigungen</h2>
+    <p>Push-Benachrichtigungen werden nur nach ausdrücklicher Einwilligung versendet und können jederzeit in den App-Einstellungen deaktiviert werden.</p>
+
+    <h2>7. Datenlöschung</h2>
+    <p>Du kannst dein Konto und alle gespeicherten Daten jederzeit im Profil unter „Konto löschen" unwiderruflich entfernen. Lokale App-Daten können zusätzlich über die Browser-Einstellungen gelöscht werden.</p>
+
+    <h2>8. Kontakt Datenschutzbeauftragter</h2>
+    <p>Bei Fragen zum Datenschutz: <a href="mailto:datenschutz@zamfreiham.de">datenschutz@zamfreiham.de</a></p>
+  </div>
+
+  <!-- NUTZUNGSBEDINGUNGEN -->
+  <div class="lgl-panel" id="panel-nutzung">
+    <h1>Nutzungsbedingungen</h1>
+    <p class="lgl-date">Stand: Juni 2026</p>
+
+    <h2>1. Geltungsbereich</h2>
+    <p>Diese Nutzungsbedingungen gelten für die Nutzung der ZAM Club App (im Folgenden „App") der ZAM Freiham GmbH. Mit der Registrierung akzeptierst du diese Bedingungen.</p>
+
+    <h2>2. Registrierung und Konto</h2>
+    <ul>
+      <li>Du musst mindestens 16 Jahre alt sein, um ein Konto zu erstellen</li>
+      <li>Du bist für die Sicherheit deines Passworts selbst verantwortlich</li>
+      <li>Pro Person ist nur ein Konto erlaubt</li>
+      <li>Fake-Konten oder das Vortäuschen einer anderen Identität ist untersagt</li>
+    </ul>
+
+    <h2>3. Treueprogramm</h2>
+    <ul>
+      <li>Punkte sind nicht auf andere Konten übertragbar</li>
+      <li>Punkte haben keinen Bargeldwert</li>
+      <li>Wir behalten uns vor, Punkte bei Missbrauch zu entfernen</li>
+      <li>Deals und Angebote sind zeitlich begrenzt und können sich ändern</li>
+    </ul>
+
+    <h2>4. Community und Inhalte</h2>
+    <ul>
+      <li>Du bist für die von dir erstellten Inhalte selbst verantwortlich</li>
+      <li>Mit dem Posten räumst du uns ein nicht-exklusives Nutzungsrecht ein</li>
+      <li>Wir behalten uns das Recht vor, Inhalte ohne Angabe von Gründen zu entfernen</li>
+      <li>Es gelten die Community-Richtlinien</li>
+    </ul>
+
+    <h2>5. Händlerbereich</h2>
+    <ul>
+      <li>Händler sind für die Richtigkeit ihrer Angebote verantwortlich</li>
+      <li>Deals müssen den angegebenen Bedingungen entsprechen</li>
+      <li>Wir behalten uns vor, Händlerkonten bei Verstößen zu sperren</li>
+    </ul>
+
+    <h2>6. Haftungsbeschränkung</h2>
+    <p>Die ZAM Freiham GmbH haftet nicht für Schäden, die durch die Nutzung oder Nichtnutzung der bereitgestellten Informationen entstehen, sofern kein vorsätzliches oder grob fahrlässiges Handeln vorliegt.</p>
+
+    <h2>7. Änderungen</h2>
+    <p>Wir behalten uns vor, diese Bedingungen anzupassen. Wesentliche Änderungen werden dir per App-Benachrichtigung mitgeteilt. Die weitere Nutzung der App nach Inkrafttreten der Änderungen gilt als Zustimmung.</p>
+
+    <h2>8. Kündigung</h2>
+    <p>Du kannst dein Konto jederzeit in den Profileinstellungen löschen. Wir können Konten bei schwerwiegenden Verstößen gegen diese Bedingungen sperren.</p>
+
+    <h2>9. Anwendbares Recht</h2>
+    <p>Es gilt deutsches Recht. Gerichtsstand ist München.</p>
+  </div>
+
+  <!-- COMMUNITY-RICHTLINIEN -->
+  <div class="lgl-panel" id="panel-community">
+    <h1>Community-Richtlinien</h1>
+    <p class="lgl-date">Stand: Juni 2026</p>
+
+    <div class="lgl-highlight">
+      💜 Die ZAM Club Community ist ein offener, freundlicher Ort für alle Besucher:innen des ZAM Freiham. Wir freuen uns über einen respektvollen Umgang miteinander.
+    </div>
+
+    <h2>Das erwarten wir von dir</h2>
+
+    <div class="lgl-card">
+      <h3 style="margin-top:0;color:#22c55e">✅ Erlaubt</h3>
+      <ul style="margin-bottom:0">
+        <li>Ehrliche Erfahrungen und Empfehlungen teilen</li>
+        <li>Events und Aktionen aus dem ZAM bewerben</li>
+        <li>Fragen stellen und anderen helfen</li>
+        <li>Fotos aus dem ZAM posten (ohne erkennbare Personen ohne Einwilligung)</li>
+        <li>Konstruktives Feedback an Händler und das ZAM-Team</li>
+      </ul>
+    </div>
+
+    <div class="lgl-card" style="border-color:rgba(239,68,68,0.2)">
+      <h3 style="margin-top:0;color:#ef4444">❌ Nicht erlaubt</h3>
+      <ul style="margin-bottom:0">
+        <li>Beleidigungen, Diskriminierung oder Hassrede jeglicher Art</li>
+        <li>Spam, Werbung für externe Angebote ohne Genehmigung</li>
+        <li>Falsche Informationen oder absichtliche Fehlinformationen</li>
+        <li>Persönliche Daten anderer Nutzer:innen ohne Einwilligung teilen</li>
+        <li>Belästigung oder Stalking anderer Mitglieder</li>
+        <li>Pornografische, gewaltverherrlichende oder illegale Inhalte</li>
+        <li>Mehrfach-Accounts oder Identitätsbetrug</li>
+      </ul>
+    </div>
+
+    <h2>Melden und Moderieren</h2>
+    <p>Verstöße kannst du direkt über den Melde-Button (🚩) in der App melden. Unser Team prüft jeden Hinweis und handelt entsprechend.</p>
+
+    <h2>Konsequenzen bei Verstößen</h2>
+    <ul>
+      <li><strong>1. Verstoß:</strong> Verwarnung und Entfernung des Inhalts</li>
+      <li><strong>2. Verstoß:</strong> Vorübergehende Sperrung (7 Tage)</li>
+      <li><strong>3. Verstoß:</strong> Permanente Sperrung des Kontos</li>
+      <li>Bei schwerwiegenden Verstößen kann sofort gesperrt werden</li>
+    </ul>
+
+    <h2>Anstupsen-Funktion</h2>
+    <p>Das Anstupsen ist eine freundliche Möglichkeit, Kontakt aufzunehmen. Bitte respektiere, wenn jemand eine Verbindung ablehnt, und sende keine wiederholten Anfragen an dieselbe Person.</p>
+
+    <h2>Kontakt</h2>
+    <p>Bei Fragen zu den Richtlinien: <a href="mailto:community@zamfreiham.de">community@zamfreiham.de</a></p>
+  </div>
+
+</div>
+
+<script>
+// Tab navigation
+document.querySelectorAll('.lgl-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.lgl-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.lgl-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const panel = document.getElementById('panel-' + tab.dataset.panel);
+    if (panel) panel.classList.add('active');
+  });
+});
+
+// Deep link via hash
+const hash = location.hash.slice(1);
+if (hash) {
+  const btn = document.querySelector(`[data-panel="${hash}"]`);
+  if (btn) btn.click();
+}
+</script>
+</body>
+</html>

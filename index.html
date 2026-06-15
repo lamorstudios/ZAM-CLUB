@@ -14,18 +14,42 @@
   <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" /></noscript>
 
   <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="assets/icon.svg"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="ZAM Club"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
 </head>
 <body>
 
 <!-- =====================
      AUTH SHELL (shown when not logged in)
 ========================== -->
+<!-- Offline Banner -->
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#1e0a3c;border-bottom:1px solid rgba(139,92,246,0.4);padding:10px 16px;text-align:center;font-size:0.78rem;font-weight:600;color:#c4b5fd;font-family:'Poppins',sans-serif">
+  📡 Kein Internet – Du bist im Offline-Modus
+</div>
+
+<!-- PWA Install Banner -->
+<div id="pwa-install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:linear-gradient(135deg,#1a0533,#111118);border-top:1px solid rgba(139,92,246,0.3);padding:14px 16px;padding-bottom:max(14px,env(safe-area-inset-bottom,14px));font-family:'Poppins',sans-serif">
+  <div style="display:flex;align-items:center;gap:12px;max-width:480px;margin:0 auto">
+    <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">Z</div>
+    <div style="flex:1">
+      <div style="font-weight:700;font-size:0.85rem;color:#e2e8f0">ZAM Club installieren</div>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.5)">App auf dem Homescreen speichern</div>
+    </div>
+    <button onclick="installPWA()" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer">Installieren</button>
+    <button onclick="dismissInstallBanner()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;padding:4px">×</button>
+  </div>
+</div>
+
 <div id="auth-shell">
 
   <!-- Login -->
   <section id="page-login" class="auth-page active">
     <div class="auth-brand">
-      <div class="auth-logo">ZAM</div>
+      <div class="auth-logo" onclick="onLogoTap()" style="cursor:default;user-select:none">ZAM</div>
       <div class="auth-tagline">Club · Freiham</div>
     </div>
     <div class="auth-card">
@@ -167,6 +191,23 @@
       </div>
     </div>
 
+    <!-- AI Concierge Banner -->
+    <div class="ai-home-banner" onclick="navigateTo('ai')">
+      <div class="ai-home-banner-icon">🤖</div>
+      <div class="ai-home-banner-text">
+        <div class="ai-home-banner-title">ZAM Assistent</div>
+        <div class="ai-home-banner-sub">Frag mich, was du im ZAM machen kannst!</div>
+      </div>
+      <div class="ai-home-banner-arrow">→</div>
+    </div>
+
+    <!-- Personalized Recommendations -->
+    <div class="section-label" id="home-rec-label" style="display:none">
+      <h2>Für dich ✨</h2>
+      <a href="#" onclick="navigateTo('recommendations');return false;">Alle →</a>
+    </div>
+    <div class="scroll-row" id="home-recs-scroll"></div>
+
     <!-- Current Events (horizontal scroll) -->
     <div class="section-label">
       <h2>Aktuelle Events</h2>
@@ -193,15 +234,22 @@
   <section id="page-community" class="page" role="main">
     <div class="page-header">
       <h1>Community 👥</h1>
-      <button class="header-icon-btn" id="community-header-btn" aria-label="Neuer Beitrag" onclick="communityHeaderAction()">✏️</button>
+      <div style="display:flex;gap:6px">
+        <button class="header-icon-btn" onclick="openActiveUsersPanel('community')" aria-label="Aktive Nutzer" title="Aktive Nutzer">🟢</button>
+        <button class="header-icon-btn" id="community-header-btn" aria-label="Neuer Beitrag" onclick="communityHeaderAction()">✏️</button>
+      </div>
     </div>
 
-    <!-- Sub-tabs: Wall | Chat -->
+    <!-- Sub-tabs: Wall | Chat | Kontakte | Anfragen -->
     <div class="community-tabs">
       <button class="community-tab active" data-ctab="wall">📰 Wall</button>
       <button class="community-tab" data-ctab="chat">
         💬 Chat
         <span class="chat-tab-badge" id="chat-tab-badge" style="display:none">1</span>
+      </button>
+      <button class="community-tab" data-ctab="contacts">👥 Kontakte</button>
+      <button class="community-tab" data-ctab="nudges" id="nudges-tab-btn">
+        🤝 Anfragen
       </button>
     </div>
 
@@ -222,6 +270,20 @@
       <div class="chat-rooms-list" id="chat-rooms-global"></div>
       <div class="chat-rooms-section-label" style="margin-top:8px">Event Chats</div>
       <div class="chat-rooms-list" id="chat-rooms-events"></div>
+    </div>
+
+    <!-- Contacts panel -->
+    <div class="community-panel" id="cpanel-contacts">
+      <div class="contacts-list" id="contacts-list">
+        <!-- Rendered by app.js -->
+      </div>
+    </div>
+
+    <!-- Nudge Inbox (Anfragen) panel -->
+    <div class="community-panel" id="cpanel-nudges">
+      <div class="nudge-inbox-list" id="nudge-inbox-list">
+        <!-- Rendered by app.js -->
+      </div>
     </div>
   </section>
 
@@ -364,7 +426,81 @@
       </button>
     </div>
 
+    <!-- Legal Links -->
+    <div style="padding:8px 20px 24px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center">
+      <a href="legal.html#impressum" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Impressum</a>
+      <a href="legal.html#datenschutz" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Datenschutz</a>
+      <a href="legal.html#nutzung" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Nutzungsbedingungen</a>
+      <a href="legal.html#community" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Community-Richtlinien</a>
+    </div>
+    <div style="padding:0 20px 16px;text-align:center;font-size:0.65rem;color:rgba(255,255,255,0.15)">
+      ZAM Club · Version 1.0 · © 2026 ZAM Freiham GmbH
+    </div>
+
   </section>
+
+  <!-- =====================
+       NOTIFICATIONS PAGE
+  ========================== -->
+  <div id="page-notifications" class="page">
+    <div class="page-header">
+      <h1 class="page-title">Benachrichtigungen</h1>
+      <div style="display:flex;gap:8px">
+        <button class="icon-btn" onclick="ZAMApi.notifications.markAllRead();renderNotifications()" title="Alle gelesen">✓</button>
+        <button class="icon-btn" onclick="ZAMApi.notifications.clear();renderNotifications()" title="Alle löschen">🗑️</button>
+      </div>
+    </div>
+
+    <!-- Filter Chips -->
+    <div class="notif-filter-bar" id="notif-filter-bar">
+      <button class="nf-chip active" data-filter="all" onclick="setNotifFilter('all',this)">Alle</button>
+      <button class="nf-chip" data-filter="message" onclick="setNotifFilter('message',this)">💬 Nachrichten</button>
+      <button class="nf-chip" data-filter="nudge" onclick="setNotifFilter('nudge',this)">👋 Anstupsien</button>
+      <button class="nf-chip" data-filter="event" onclick="setNotifFilter('event',this)">🎉 Events</button>
+      <button class="nf-chip" data-filter="deal" onclick="setNotifFilter('deal',this)">🏷️ Deals</button>
+      <button class="nf-chip" data-filter="community" onclick="setNotifFilter('community',this)">👥 Community</button>
+    </div>
+
+    <!-- Push Permission Banner -->
+    <div id="push-permission-banner" class="push-banner" style="display:none">
+      <div class="push-banner-icon">🔔</div>
+      <div class="push-banner-text">
+        <strong>Push-Benachrichtigungen aktivieren</strong>
+        <p>Damit du nichts verpasst – Anstupsien, Nachrichten, Events.</p>
+      </div>
+      <button class="btn-push-allow" onclick="requestPushPermission()">Aktivieren</button>
+      <button class="btn-push-deny" onclick="dismissPushBanner()">Nicht jetzt</button>
+    </div>
+
+    <!-- Notification List -->
+    <div id="notif-list" class="notif-list"></div>
+
+    <!-- Notification Settings Link -->
+    <button class="notif-settings-btn" onclick="navigateTo('notif-settings')">⚙️ Benachrichtigungs-Einstellungen</button>
+  </div>
+
+  <!-- =====================
+       NOTIFICATION SETTINGS PAGE
+  ========================== -->
+  <div id="page-notif-settings" class="page">
+    <div class="page-header">
+      <button class="back-btn" onclick="navigateTo('notifications')">←</button>
+      <h1 class="page-title">Einstellungen</h1>
+    </div>
+    <div class="settings-section">
+      <h3 class="settings-section-title">Push-Benachrichtigungen</h3>
+      <div id="push-status-row" class="settings-row">
+        <span>Status</span><span id="push-status-val" style="color:#8b5cf6">Prüfen...</span>
+      </div>
+      <button id="btn-push-toggle" class="btn-settings-action" onclick="togglePushPermission()">Aktivieren</button>
+    </div>
+    <div class="settings-section" style="margin-top:16px">
+      <h3 class="settings-section-title">Kategorien</h3>
+      <div class="settings-toggle-list" id="notif-settings-list">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+  </div>
 
   <!-- =====================
        CHAT ROOM VIEW (app-level overlay, slides over all pages)
@@ -376,6 +512,7 @@
         <div class="chat-room-name" id="chat-room-name">Allgemein</div>
         <div class="online-indicator-small" id="chat-online-small">● 0 online</div>
       </div>
+      <button class="chat-options-btn" onclick="openActiveUsersPanel('chat')" aria-label="Aktive Nutzer">🟢</button>
       <button class="chat-options-btn" id="chat-options-btn" onclick="openChatOptions()" aria-label="Optionen">⋯</button>
     </div>
     <div class="chat-messages" id="chat-messages"></div>
@@ -396,6 +533,7 @@
     <button class="nav-tab" data-page="community" aria-label="Community">
       <span class="nav-icon">👥</span>
       <span>Community</span>
+      <span class="nav-community-badge" id="nav-community-badge" style="display:none"></span>
     </button>
     <button class="nav-tab" data-page="events" aria-label="Events">
       <span class="nav-icon">📅</span>
@@ -409,11 +547,51 @@
       <span class="nav-icon">📍</span>
       <span>Map</span>
     </a>
+    <button class="nav-tab" onclick="navigateTo('notifications')" id="nav-notifications" aria-label="Benachrichtigungen">
+      <span class="nav-icon">🔔</span>
+      <span>Alerts</span>
+      <span id="notif-nav-badge" class="nav-badge" style="display:none"></span>
+    </button>
     <button class="nav-tab" data-page="profile" aria-label="Profil">
       <span class="nav-icon">👤</span>
       <span>Profil</span>
     </button>
   </nav>
+
+  <!-- =====================
+       PRIVATE CHAT VIEW
+  ========================== -->
+  <div class="private-chat-view" id="private-chat-view" role="dialog" aria-label="Privater Chat">
+    <div class="private-chat-header">
+      <button class="chat-back-btn" onclick="closePrivateChat()" aria-label="Zurück">←</button>
+      <div class="private-chat-avatar" id="pc-header-avatar">?</div>
+      <div class="private-chat-header-info">
+        <div class="private-chat-header-name" id="pc-header-name">Nutzer</div>
+        <div class="private-chat-header-status" id="pc-header-status">● online</div>
+      </div>
+      <button class="private-chat-menu-btn" id="pc-menu-btn" aria-label="Optionen">⋮</button>
+    </div>
+    <div class="private-chat-messages" id="pc-messages"></div>
+    <div class="private-chat-input-bar">
+      <input type="text" id="pc-input" class="chat-input-field" placeholder="Nachricht schreiben…" maxlength="500" autocomplete="off" />
+      <button id="pc-send-btn" class="chat-send-btn" aria-label="Senden">➤</button>
+    </div>
+  </div>
+
+  <!-- User Profile Sheet -->
+  <div class="sheet-backdrop" id="profile-sheet-backdrop" onclick="closeUserProfileSheet()"></div>
+  <div class="user-profile-sheet" id="user-profile-sheet" role="dialog" aria-label="Nutzerprofil">
+    <div class="user-profile-sheet-handle"></div>
+    <div class="user-profile-sheet-header">
+      <div class="user-profile-sheet-avatar" id="ups-avatar">?</div>
+      <div class="user-profile-sheet-info">
+        <div class="user-profile-sheet-name" id="ups-name">Nutzer</div>
+        <div class="user-profile-sheet-username" id="ups-username"></div>
+      </div>
+    </div>
+    <div class="user-profile-sheet-actions" id="ups-actions"></div>
+    <div class="user-profile-sheet-danger" id="ups-danger"></div>
+  </div>
 
 </div><!-- /#app-shell -->
 
@@ -619,6 +797,377 @@
       <button class="btn btn-ghost btn-full btn-danger" id="btn-chat-delete-msg" style="display:none">🗑 Nachricht löschen (Admin)</button>
     </div>
     <button class="btn btn-ghost btn-full" data-close-modal="modal-chat-options" style="margin-top:4px">Abbrechen</button>
+  </div>
+</div>
+
+<!-- User Report Modal -->
+<div class="modal-overlay" id="modal-user-report" role="dialog" aria-modal="true" aria-label="Nutzer melden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🚩 Nutzer melden</div>
+    <div class="modal-subtitle" id="user-report-subtitle">Warum möchtest du diesen Nutzer melden?</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin:14px 0 18px">
+      <label class="report-option"><input type="radio" name="user-report-reason" value="spam"> Spam oder Werbung</label>
+      <label class="report-option"><input type="radio" name="user-report-reason" value="harassment"> Belästigung</label>
+      <label class="report-option"><input type="radio" name="user-report-reason" value="inappropriate"> Unangemessenes Verhalten</label>
+      <label class="report-option"><input type="radio" name="user-report-reason" value="other" checked> Sonstiges</label>
+    </div>
+    <button class="btn btn-primary btn-full" id="btn-user-report-confirm">Melden</button>
+    <button class="btn btn-ghost btn-full" data-close-modal="modal-user-report" style="margin-top:8px">Abbrechen</button>
+  </div>
+</div>
+
+<!-- =====================
+     MERCHANT DASHBOARD PAGE
+========================== -->
+<div id="page-merchant-dashboard" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('profile')">←</button>
+    <h1 class="page-title">Mein Dashboard</h1>
+    <div class="dash-period-select">
+      <select id="dash-period" onchange="renderMerchantDashboard()" style="background:var(--surface);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-family:var(--font)">
+        <option value="7">7 Tage</option>
+        <option value="30" selected>30 Tage</option>
+        <option value="90">90 Tage</option>
+      </select>
+    </div>
+  </div>
+  <div class="kpi-grid" id="merchant-kpi-grid"></div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🏷️ Deal Performance</h3>
+    <div id="merchant-deals-table" class="dash-table-wrap"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🎉 Event Performance</h3>
+    <div id="merchant-events-table" class="dash-table-wrap"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🎟️ Gutscheine</h3>
+    <div id="merchant-vouchers" class="dash-table-wrap"></div>
+    <button class="btn-dash-action" onclick="openVoucherRedeemer()">QR-Code einlösen</button>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">⚡ Sponsored Boosts</h3>
+    <div id="merchant-sponsored" class="dash-table-wrap"></div>
+    <button class="btn-dash-action" onclick="navigateTo('merchant-packages')">📦 Paket verwalten</button>
+  </div>
+  <div style="display:flex;gap:8px;padding:0 16px 16px">
+    <button class="btn-dash-action" style="flex:1" onclick="navigateTo('merchant-contracts')">📄 Verträge</button>
+    <button class="btn-dash-action" style="flex:1" onclick="navigateTo('merchant-billing')">🧾 Rechnungen</button>
+  </div>
+</div>
+
+<!-- =====================
+     PHASE 14: NEUE SEITEN
+========================== -->
+
+<!-- Händler Onboarding -->
+<div id="page-merchant-onboarding" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('profile')">←</button>
+    <h1 class="page-title">Händler werden</h1>
+  </div>
+  <div style="padding:20px 16px">
+    <div class="onboarding-steps">
+      <div class="ob-step active" data-step="1">1<span>Profil</span></div>
+      <div class="ob-step-line"></div>
+      <div class="ob-step" data-step="2">2<span>Details</span></div>
+      <div class="ob-step-line"></div>
+      <div class="ob-step" data-step="3">3<span>Paket</span></div>
+    </div>
+    <div id="ob-step-1" class="ob-panel active">
+      <h3 class="ob-step-title">Händlerprofil anlegen</h3>
+      <div class="input-group"><label class="input-label">Shop-Name *</label><input type="text" id="ob-name" class="input-field" placeholder="z.B. Mein Shop Freiham"/></div>
+      <div class="input-group"><label class="input-label">Kategorie *</label>
+        <select id="ob-category" class="input-field" style="background:var(--surface-2);color:#e2e8f0">
+          <option value="">Bitte wählen…</option>
+          <option>Mode</option><option>Elektronik</option><option>Gastronomie</option><option>Drogerie</option><option>Sport</option><option>Lebensmittel</option><option>Bücher &amp; Medien</option><option>Schmuck &amp; Accessoires</option><option>Kosmetik &amp; Beauty</option><option>Dienstleistungen</option><option>Sonstiges</option>
+        </select>
+      </div>
+      <div class="input-group"><label class="input-label">Kurzbeschreibung *</label><textarea id="ob-description" class="input-field" rows="3" placeholder="Was macht euren Shop besonders?" maxlength="300"></textarea></div>
+      <div class="input-group"><label class="input-label">Zone im ZAM</label>
+        <select id="ob-zone" class="input-field" style="background:var(--surface-2);color:#e2e8f0">
+          <option value="mk2_1">MK 2(1) – Nahversorgung / Gastro</option>
+          <option value="mk2_2">MK 2(2) – Zentrenrelevante Sortimente</option>
+          <option value="mk2_3">MK 2(3) – Zentrenrelevante Sortimente</option>
+          <option value="mk2_4">MK 2(4) – Nahversorgung</option>
+          <option value="plaza">Mahatma-Gandhi-Platz</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="obNextStep(1)" style="margin-top:8px">Weiter →</button>
+    </div>
+    <div id="ob-step-2" class="ob-panel">
+      <h3 class="ob-step-title">Öffnungszeiten &amp; Kontakt</h3>
+      <div class="input-group"><label class="input-label">Öffnungszeiten</label><input type="text" id="ob-hours" class="input-field" placeholder="Mo–Sa 09:00–20:00"/></div>
+      <div class="input-group"><label class="input-label">Telefon (optional)</label><input type="tel" id="ob-phone" class="input-field" placeholder="+49 89 …"/></div>
+      <div class="input-group"><label class="input-label">Website (optional)</label><input type="url" id="ob-website" class="input-field" placeholder="https://meinshop.de"/></div>
+      <div class="input-group"><label class="input-label">Logo (Emoji, 1–2 Zeichen)</label><input type="text" id="ob-logo" class="input-field" placeholder="🏪" maxlength="2" style="font-size:1.5rem;text-align:center"/></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-ghost btn-full" onclick="obNextStep(0)">← Zurück</button>
+        <button class="btn btn-primary btn-full" onclick="obNextStep(2)">Weiter →</button>
+      </div>
+    </div>
+    <div id="ob-step-3" class="ob-panel">
+      <h3 class="ob-step-title">Paket wählen</h3>
+      <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);margin-bottom:16px">14 Tage kostenlos testen – keine Kreditkarte nötig.</p>
+      <div id="ob-plan-cards"></div>
+      <button class="btn btn-ghost btn-full" onclick="obNextStep(-1)" style="margin-top:8px">← Zurück</button>
+    </div>
+    <div class="auth-error" id="ob-error" style="display:none;margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- Pakete & Upgrades -->
+<div id="page-merchant-packages" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('merchant-dashboard')">←</button>
+    <h1 class="page-title">Mein Paket</h1>
+  </div>
+  <div style="padding:16px" id="packages-content"></div>
+</div>
+
+<!-- Verträge -->
+<div id="page-merchant-contracts" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('merchant-dashboard')">←</button>
+    <h1 class="page-title">Verträge</h1>
+  </div>
+  <div style="padding:16px" id="contracts-content"></div>
+</div>
+
+<!-- Rechnungen -->
+<div id="page-merchant-billing" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('merchant-dashboard')">←</button>
+    <h1 class="page-title">Rechnungen</h1>
+  </div>
+  <div style="padding:16px" id="billing-content"></div>
+</div>
+
+<!-- Admin Umsatzübersicht -->
+<div id="page-admin-revenue" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('profile')">←</button>
+    <h1 class="page-title">Umsatzübersicht</h1>
+  </div>
+  <div style="padding:16px" id="revenue-content"></div>
+</div>
+
+<!-- =====================
+     ADMIN DASHBOARD PAGE
+========================== -->
+<div id="page-admin-dashboard" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('profile')">←</button>
+    <h1 class="page-title">Center Analytics</h1>
+    <select id="admin-period" onchange="renderAdminDashboard()" style="background:var(--surface);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-family:var(--font)">
+      <option value="7">7 Tage</option>
+      <option value="30" selected>30 Tage</option>
+    </select>
+  </div>
+  <div class="kpi-grid" id="admin-kpi-grid"></div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">📈 Nutzer-Wachstum (7 Tage)</h3>
+    <div class="bar-chart" id="growth-chart"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🗺️ Beliebteste Zonen</h3>
+    <div id="zone-popularity"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">⭐ Top Händler</h3>
+    <div id="admin-top-merchants"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🏷️ Top Deals</h3>
+    <div id="admin-top-deals"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🎉 Top Events</h3>
+    <div id="admin-top-events"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🔔 Push Statistiken</h3>
+    <div id="admin-push-stats"></div>
+  </div>
+</div>
+
+<!-- Voucher Redeemer Modal -->
+<div id="voucher-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.8);align-items:flex-end;justify-content:center">
+  <div style="width:100%;max-width:480px;background:#0f0f1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(139,92,246,0.3);padding:20px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px))">
+    <div style="width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,0.12);margin:0 auto 16px"></div>
+    <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px">🎟️ Gutschein einlösen</h3>
+    <input id="voucher-code-input" placeholder="ZAM-XXXX-XXXX eingeben" style="width:100%;background:var(--surface-2);border:1px solid rgba(139,92,246,0.3);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.9rem;font-family:var(--font);outline:none;margin-bottom:10px"/>
+    <div id="voucher-result" style="font-size:0.78rem;margin-bottom:10px;min-height:20px;color:#c4b5fd"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="redeemVoucher()" style="flex:1;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border-radius:10px;padding:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer;border:none">Einlösen</button>
+      <button onclick="closeVoucherModal()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.82rem;font-weight:600;font-family:var(--font);cursor:pointer">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================
+     PHASE 17: ZAM KI CONCIERGE PAGE
+========================== -->
+<div id="page-ai" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('home')">←</button>
+    <h1 class="page-title">ZAM Assistent 🤖</h1>
+  </div>
+
+  <!-- Chat Window -->
+  <div class="ai-chat-window" id="ai-chat-window">
+    <!-- Welcome bubble -->
+    <div class="ai-bubble ai-bubble-bot">
+      <div class="ai-avatar">Z</div>
+      <div class="ai-bubble-body">
+        <div class="ai-bubble-text">Hallo! 👋 Ich bin dein persönlicher ZAM Assistent. Was kann ich für dich tun?</div>
+      </div>
+    </div>
+    <!-- Messages rendered by app.js -->
+  </div>
+
+  <!-- Quick Suggestions -->
+  <div class="ai-suggestions" id="ai-suggestions">
+    <button class="ai-chip" onclick="aiAsk('Was kann ich heute im ZAM machen?')">Was kann ich heute machen?</button>
+    <button class="ai-chip" onclick="aiAsk('Wo gibt es aktuell Angebote?')">Aktuelle Angebote</button>
+    <button class="ai-chip" onclick="aiAsk('Welche Events laufen heute?')">Events heute</button>
+    <button class="ai-chip" onclick="aiAsk('Wo kann ich essen gehen?')">Essen gehen</button>
+    <button class="ai-chip" onclick="aiAsk('Wo bekomme ich einen Kaffee?')">Kaffee trinken</button>
+    <button class="ai-chip" onclick="aiAsk('Was sind meine persönlichen Empfehlungen?')">Meine Empfehlungen</button>
+  </div>
+
+  <!-- Input -->
+  <div class="ai-input-bar">
+    <input type="text" id="ai-input" class="ai-input-field" placeholder="Frag den ZAM Assistenten…" maxlength="200" autocomplete="off" onkeydown="if(event.key==='Enter')aiSend()" />
+    <button class="ai-send-btn" onclick="aiSend()" aria-label="Senden">➤</button>
+  </div>
+</div>
+
+<!-- =====================
+     PHASE 17: RECOMMENDATIONS PAGE
+========================== -->
+<div id="page-recommendations" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('home')">←</button>
+    <h1 class="page-title">Für dich ✨</h1>
+  </div>
+  <div class="page-content" id="recommendations-content">
+    <!-- Rendered by app.js -->
+  </div>
+</div>
+
+<!-- =====================
+     PHASE 17: MERCHANT AI TOOLS PAGE
+========================== -->
+<div id="page-merchant-ai" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('merchant-dashboard')">←</button>
+    <h1 class="page-title">KI-Werkzeuge ✨</h1>
+  </div>
+  <div style="padding:16px">
+    <div class="ai-tool-card">
+      <div class="ai-tool-title">🏷️ Deal-Text generieren</div>
+      <div class="ai-tool-desc">Lass die KI einen überzeugenden Deal-Text für dein Angebot erstellen.</div>
+      <input class="input-field" id="ai-deal-product" placeholder="Produkt/Angebot (z.B. Café Latte)" style="margin-bottom:8px" />
+      <input class="input-field" id="ai-deal-discount" placeholder="Rabatt (z.B. 20%)" style="margin-bottom:8px" />
+      <button class="btn btn-primary btn-full" onclick="aiGenerateDeal()">Text generieren</button>
+      <div class="ai-gen-result" id="ai-deal-result" style="display:none"></div>
+    </div>
+
+    <div class="ai-tool-card" style="margin-top:12px">
+      <div class="ai-tool-title">🎉 Event-Beschreibung generieren</div>
+      <div class="ai-tool-desc">Erstelle eine ansprechende Beschreibung für dein Event.</div>
+      <input class="input-field" id="ai-event-name" placeholder="Event-Name (z.B. Sommerfest)" style="margin-bottom:8px" />
+      <input class="input-field" id="ai-event-date" placeholder="Datum (z.B. 20. Juli 2026)" style="margin-bottom:8px" />
+      <button class="btn btn-primary btn-full" onclick="aiGenerateEvent()">Text generieren</button>
+      <div class="ai-gen-result" id="ai-event-result" style="display:none"></div>
+    </div>
+
+    <div class="ai-tool-card" style="margin-top:12px">
+      <div class="ai-tool-title">📱 Social Media Text</div>
+      <div class="ai-tool-desc">Generiere Instagram & Facebook Posts für dein Geschäft.</div>
+      <input class="input-field" id="ai-social-topic" placeholder="Thema (z.B. neue Frühlingskollektion)" style="margin-bottom:8px" />
+      <select id="ai-social-platform" class="input-field" style="margin-bottom:8px">
+        <option value="instagram">Instagram</option>
+        <option value="facebook">Facebook</option>
+      </select>
+      <button class="btn btn-primary btn-full" onclick="aiGenerateSocial()">Text generieren</button>
+      <div class="ai-gen-result" id="ai-social-result" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================
+     PHASE 17: ADMIN AI INSIGHTS PAGE
+========================== -->
+<div id="page-admin-ai-insights" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('profile')">←</button>
+    <h1 class="page-title">KI-Insights 🤖</h1>
+  </div>
+  <div style="padding:16px">
+    <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:16px">Basierend auf deinen Plattform-Daten gibt die KI Handlungsempfehlungen:</div>
+    <div id="admin-ai-insights"></div>
+  </div>
+</div>
+
+<!-- =====================
+     DEMO / PITCH PAGE
+========================== -->
+<div id="page-demo" class="page" style="background:var(--bg);min-height:100vh;padding-bottom:100px">
+  <div style="background:linear-gradient(135deg,#1a0533,#0d0d1a);padding:28px 20px 24px;text-align:center;border-bottom:1px solid rgba(139,92,246,0.2)">
+    <div style="font-size:2.2rem;font-weight:900;background:linear-gradient(135deg,#8b5cf6,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.02em">ZAM Club</div>
+    <div style="font-size:0.82rem;color:rgba(255,255,255,0.5);margin-top:4px">Live Demo · Freiham München</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px">
+      <span class="demo-pulse-dot"></span>
+      <span style="font-size:0.72rem;color:#8b5cf6;font-weight:600">Live-Daten</span>
+    </div>
+  </div>
+  <div style="padding:20px 16px 0">
+    <div class="demo-kpi-grid" id="demo-kpi-grid"></div>
+    <div style="margin-top:20px">
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.35);margin-bottom:12px">Live-Aktivität</div>
+      <div id="demo-activity-feed"></div>
+    </div>
+    <div style="margin-top:20px">
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.35);margin-bottom:12px">Zonen-Heatmap</div>
+      <div id="demo-zone-heatmap"></div>
+    </div>
+  </div>
+  <div style="padding:20px 16px 0;text-align:center">
+    <button onclick="navigateTo('home')" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:14px;padding:14px 32px;font-size:0.9rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;width:100%;max-width:300px">App öffnen →</button>
+  </div>
+</div>
+
+<!-- =====================
+     PHASE 18: ACTIVE USERS SHEET
+========================== -->
+<div id="active-users-sheet" style="display:none;position:fixed;inset:0;z-index:350;background:rgba(0,0,0,0.7);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeActiveUsersSheet()">
+  <div id="active-users-sheet-inner" style="width:min(100vw,480px);background:#0f0f1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(139,92,246,0.3);padding:16px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px));max-height:82vh;overflow-y:auto;transform:translateX(-50%) translateY(100%);transition:transform 0.32s cubic-bezier(0.16,1,0.3,1);position:relative;left:50%">
+    <div style="width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,0.12);margin:0 auto 14px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-size:1rem;font-weight:700;color:#e2e8f0">👥 Aktive Nutzer</div>
+        <div id="active-users-count" style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px"></div>
+      </div>
+      <button onclick="closeActiveUsersSheet()" style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:1.1rem;font-family:var(--font);cursor:pointer">×</button>
+    </div>
+    <!-- My Status Section -->
+    <div id="my-status-row" style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:14px;padding:12px;margin-bottom:14px">
+      <div style="font-size:0.68rem;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Mein Status</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+        <button class="au-chip" onclick="setMyAppStatus('🍔 Hungrig')">🍔 Hungrig</button>
+        <button class="au-chip" onclick="setMyAppStatus('🤝 Suche 2-für-1')">🤝 Suche 2-für-1</button>
+        <button class="au-chip" onclick="setMyAppStatus('🎉 Wer kommt mit?')">🎉 Wer kommt mit?</button>
+        <button class="au-chip" onclick="setMyAppStatus('🛍️ Suche Begleitung')">🛍️ Suche Begleitung</button>
+        <button class="au-chip" onclick="setMyAppStatus('☕ Beim Kaffee')">☕ Beim Kaffee</button>
+        <button class="au-chip au-chip-ghost" onclick="setMyAppStatus('')">Kein Status</button>
+      </div>
+      <div id="my-current-status" style="font-size:0.72rem;color:#c4b5fd;min-height:16px"></div>
+    </div>
+    <!-- Active Users List -->
+    <div id="active-users-list"></div>
   </div>
 </div>
 

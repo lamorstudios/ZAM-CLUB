@@ -34,6 +34,7 @@ const BADGE_DEFS = [
 const _commentStore = {};
 
 function _uuid() { return 'demo_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function _notifUid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 function _now()  { return new Date().toISOString(); }
 function _todayKey() { return new Date().toISOString().slice(0, 10); }
 
@@ -940,7 +941,7 @@ const ZAMApi = {
   },
 
   // ──────────────────────────────────────────────────────────
-  // NUDGES & CONNECTIONS (Phase 8)
+  // NUDGES & CONNECTIONS (Phase 10)
   // ──────────────────────────────────────────────────────────
   nudges: {
     privateChatRoomId(userId) {
@@ -971,79 +972,234 @@ const ZAMApi = {
       const me = ZAMApi.auth.currentUser();
       if (!me) return null;
       if (this.hasPendingNudgeTo(toUserId) || this.isConnected(toUserId)) return null;
-      const nudgeId = _uuid();
-      const nudge = { id: nudgeId, from_id: me.id, from_name: me.name || me.username, to_id: toUserId, to_name: toUserName, status: 'pending', created_at: _now() };
+      const nudgeId  = _uuid();
+      const fromName = me.display_name || me.username || me.name || 'Jemand';
+      const nudge = {
+        id: nudgeId, from_id: me.id, from_name: fromName,
+        from_initials: me.initials || '?', from_avatar: me.avatar_url || null,
+        to_id: toUserId, to_name: toUserName, status: 'pending', created_at: _now(),
+      };
       const nudges = _gLoad('nudges', []);
       nudges.push(nudge);
       _gSet('nudges', nudges);
-      // Add notification to recipient's per-user store
-      const recipientKey = `zamclub_u_${toUserId}`;
+      // Add to recipient's nudge_inbox
       try {
-        const rData = JSON.parse(localStorage.getItem(recipientKey) || '{}');
-        const rNotifs = rData.nudge_notifications || [];
-        rNotifs.unshift({ id: nudgeId, from_id: me.id, from_name: me.name || me.username, created_at: _now() });
-        rData.nudge_notifications = rNotifs.slice(0, 20);
-        localStorage.setItem(recipientKey, JSON.stringify(rData));
+        const rData = JSON.parse(localStorage.getItem(_uKey(toUserId)) || '{}');
+        const inbox  = rData.nudge_inbox || [];
+        inbox.unshift({ id: nudgeId, from_id: me.id, from_name: fromName, from_initials: me.initials || '?', from_avatar: me.avatar_url || null, created_at: _now() });
+        rData.nudge_inbox = inbox.slice(0, 30);
+        localStorage.setItem(_uKey(toUserId), JSON.stringify(rData));
       } catch {}
       return nudgeId;
     },
 
-    myNudges() {
-      const pending = _s('nudge_notifications', []);
-      const nudges  = _gLoad('nudges', []);
-      return pending.map(n => {
+    // Pending nudges I received (from my nudge_inbox)
+    myPending() {
+      const inbox  = _s('nudge_inbox', []);
+      const nudges = _gLoad('nudges', []);
+      return inbox.map(n => {
         const global = nudges.find(g => g.id === n.id);
         return { ...n, status: global ? global.status : 'pending' };
       }).filter(n => n.status === 'pending');
     },
 
+    // Nudges I sent that are still pending
+    mySent() {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return [];
+      return _gLoad('nudges', []).filter(n => n.from_id === me.id);
+    },
+
+    // Legacy alias
+    myNudges() { return this.myPending(); },
+
     accept(nudgeId) {
       const me = ZAMApi.auth.currentUser();
       if (!me) return;
-      // Update global nudge status
       const nudges = _gLoad('nudges', []);
       const nudge  = nudges.find(n => n.id === nudgeId);
       if (nudge) {
         nudge.status = 'accepted';
         _gSet('nudges', nudges);
-        // Create connection
+        // Create connection (canonical order: user_a < user_b)
         const connections = _gLoad('connections', []);
         const alreadyConnected = connections.some(c =>
           (c.user_a === nudge.from_id && c.user_b === nudge.to_id) ||
           (c.user_a === nudge.to_id   && c.user_b === nudge.from_id)
         );
         if (!alreadyConnected) {
-          connections.push({ id: _uuid(), user_a: nudge.from_id, user_b: nudge.to_id, connected_at: _now() });
+          const [ua, ub] = [nudge.from_id, nudge.to_id].sort();
+          connections.push({ id: _uuid(), user_a: ua, user_b: ub, connected_at: _now() });
           _gSet('connections', connections);
         }
         // Notify the sender
-        const senderKey = `zamclub_u_${nudge.from_id}`;
         try {
-          const sData = JSON.parse(localStorage.getItem(senderKey) || '{}');
+          const toName = me.display_name || nudge.to_name || 'Jemand';
+          const sData  = JSON.parse(localStorage.getItem(_uKey(nudge.from_id)) || '{}');
           const sNotifs = sData.notifications || [];
-          sNotifs.unshift({ id: _uuid(), title: 'Anstupsen angenommen!', body: `${nudge.to_name || 'Jemand'} hat deinen Anstoß angenommen. Du kannst jetzt chatten!`, type: 'nudge_accepted', is_read: false, created_at: _now() });
+          sNotifs.unshift({
+            id: _uuid(), title: 'Anstupsen angenommen!',
+            body: `${toName} hat deinen Anstoß angenommen. Ihr könnt jetzt chatten!`,
+            type: 'nudge_accepted', is_read: false, created_at: _now(),
+            related_user_id: me.id, related_user_name: toName,
+          });
           sData.notifications = sNotifs.slice(0, 50);
-          localStorage.setItem(senderKey, JSON.stringify(sData));
+          localStorage.setItem(_uKey(nudge.from_id), JSON.stringify(sData));
         } catch {}
       }
-      // Remove from own nudge_notifications
-      const myNotifs = _s('nudge_notifications', []).filter(n => n.id !== nudgeId);
-      _set('nudge_notifications', myNotifs);
+      // Remove from own nudge_inbox
+      _set('nudge_inbox', (_s('nudge_inbox', [])).filter(n => n.id !== nudgeId));
     },
 
     reject(nudgeId) {
       const nudges = _gLoad('nudges', []);
       const nudge  = nudges.find(n => n.id === nudgeId);
       if (nudge) { nudge.status = 'rejected'; _gSet('nudges', nudges); }
-      const myNotifs = _s('nudge_notifications', []).filter(n => n.id !== nudgeId);
-      _set('nudge_notifications', myNotifs);
+      _set('nudge_inbox', (_s('nudge_inbox', [])).filter(n => n.id !== nudgeId));
     },
   },
 
   // ──────────────────────────────────────────────────────────
-  // NOTIFICATIONS
+  // CONNECTIONS (Phase 10)
+  // ──────────────────────────────────────────────────────────
+  connections: {
+    all() {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return [];
+      const connections = _gLoad('connections', []);
+      const accounts    = _gLoad('accounts',    []);
+      const nudges      = _gLoad('nudges',       []);
+      return connections
+        .filter(c => c.user_a === me.id || c.user_b === me.id)
+        .map(c => {
+          const otherId = c.user_a === me.id ? c.user_b : c.user_a;
+          const acct    = accounts.find(a => a.profile.id === otherId);
+          const profile = acct ? acct.profile : null;
+          const nudge   = nudges.find(n =>
+            (n.from_id === otherId && n.to_id === me.id) ||
+            (n.from_id === me.id  && n.to_id === otherId)
+          );
+          return {
+            connection_id: c.id,
+            user_id:      otherId,
+            display_name: profile?.display_name || nudge?.from_name || nudge?.to_name || 'Nutzer',
+            username:     profile?.username || '',
+            initials:     profile?.initials || nudge?.from_initials || otherId.slice(0, 2).toUpperCase(),
+            avatar_url:   profile?.avatar_url || nudge?.from_avatar || null,
+            level:        profile?.level || 'bronze',
+            connected_at: c.connected_at,
+          };
+        });
+    },
+
+    remove(connectionId) {
+      _gSet('connections', _gLoad('connections', []).filter(c => c.id !== connectionId));
+    },
+
+    block(userId) {
+      const blocked = _s('blocked', []);
+      if (!blocked.includes(userId)) { blocked.push(userId); _set('blocked', blocked); }
+      ZAMApi.chat.blockUser(userId);
+    },
+
+    report(userId, reason = 'other') {
+      const me = ZAMApi.auth.currentUser();
+      const reports = _gLoad('reports', []);
+      reports.unshift({ id: _uuid(), reporter_id: me?.id, reported_user_id: userId, content_type: 'user', reason, created_at: _now() });
+      _gSet('reports', reports.slice(0, 500));
+    },
+
+    isBlocked(userId) { return _s('blocked', []).includes(userId); },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // PRIVATE CHAT (Phase 10)
+  // ──────────────────────────────────────────────────────────
+  privateChat: {
+    _chatKey(chatId) { return `zamclub_pc_${chatId}`; },
+
+    getOrCreate(otherUserId) {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return null;
+      const pair   = [me.id, otherUserId].sort().join('_');
+      const chatId = `pc_${pair}`;
+      const chats  = _gLoad('private_chats', {});
+      if (!chats[chatId]) {
+        chats[chatId] = { id: chatId, participants: [me.id, otherUserId], created_at: _now() };
+        _gSet('private_chats', chats);
+      }
+      return chatId;
+    },
+
+    getMessages(chatId) {
+      try { return JSON.parse(localStorage.getItem(this._chatKey(chatId)) || '[]'); }
+      catch { return []; }
+    },
+
+    sendMessage(chatId, text) {
+      const me = ZAMApi.auth.currentUser();
+      if (!me || !text.trim()) return null;
+      const msg = {
+        id: _uuid(), chat_id: chatId, sender_id: me.id,
+        sender_name:     me.display_name || me.username || 'Ich',
+        sender_initials: me.initials || '?',
+        sender_avatar:   me.avatar_url || null,
+        content: text.trim(), read_by_recipient: false, created_at: _now(),
+      };
+      const msgs = this.getMessages(chatId);
+      msgs.push(msg);
+      localStorage.setItem(this._chatKey(chatId), JSON.stringify(msgs.slice(-200)));
+
+      // Notify the other participant
+      const chats  = _gLoad('private_chats', {});
+      const chat   = chats[chatId];
+      if (chat) {
+        const otherId = chat.participants.find(p => p !== me.id);
+        if (otherId) {
+          try {
+            const oData  = JSON.parse(localStorage.getItem(_uKey(otherId)) || '{}');
+            const unread = oData.pc_unread || {};
+            unread[chatId] = (unread[chatId] || 0) + 1;
+            oData.pc_unread = unread;
+            const notifs = oData.notifications || [];
+            notifs.unshift({
+              id: _uuid(), type: 'private_message',
+              title: `Neue Nachricht von ${msg.sender_name}`,
+              body: text.trim().slice(0, 80),
+              chat_id: chatId, sender_id: me.id, is_read: false, created_at: _now(),
+            });
+            oData.notifications = notifs.slice(0, 50);
+            localStorage.setItem(_uKey(otherId), JSON.stringify(oData));
+          } catch {}
+        }
+      }
+      return msg;
+    },
+
+    markRead(chatId) {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return;
+      const msgs = this.getMessages(chatId).map(m => ({
+        ...m, read_by_recipient: m.sender_id !== me.id ? true : m.read_by_recipient,
+      }));
+      localStorage.setItem(this._chatKey(chatId), JSON.stringify(msgs));
+      const unread = _s('pc_unread', {});
+      delete unread[chatId];
+      _set('pc_unread', unread);
+    },
+
+    unreadCount(chatId) { return (_s('pc_unread', {}))[chatId] || 0; },
+
+    totalUnread() {
+      return Object.values(_s('pc_unread', {})).reduce((a, b) => a + b, 0);
+    },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // NOTIFICATIONS (Phase 11 — Notification Center)
   // ──────────────────────────────────────────────────────────
   notifications: {
+    // Legacy admin notifications (keep working)
     async list()         { return _s('notifications', []); },
     async markRead(id)   {
       const n = _s('notifications', []);
@@ -1056,8 +1212,322 @@ const ZAMApi = {
       n.unshift({ id: _uuid(), title, body, type, action_url: actionUrl, is_read: false, created_at: _now() });
       _set('notifications', n.slice(0, 50));
     },
+
+    // ── Settings ─────────────────────────────────────────────
+    getSettings() {
+      const uid = _uid();
+      if (!uid) return {all:true,messages:true,nudges:true,events:true,deals:true,community:true,badges:true};
+      return _uLoad(uid, 'notif_settings', {all:true,messages:true,nudges:true,events:true,deals:true,community:true,badges:true});
+    },
+    saveSettings(s) {
+      const uid = _uid();
+      if (uid) _uSet(uid, 'notif_settings', s);
+    },
+
+    // ── History ───────────────────────────────────────────────
+    getAll() {
+      const uid = _uid();
+      return uid ? _uLoad(uid, 'notif_history', []) : [];
+    },
+    add(notif) {
+      const uid = _uid();
+      if (!uid) return;
+      const h = _uLoad(uid, 'notif_history', []);
+      h.unshift({...notif, id: notif.id || _notifUid(), read: false, createdAt: Date.now()});
+      if (h.length > 100) h.splice(100);
+      _uSet(uid, 'notif_history', h);
+      _uSet(uid, 'notif_unread_count', (parseInt(_uLoad(uid, 'notif_unread_count', 0))||0) + 1);
+    },
+    markReadById(id) {
+      const uid = _uid();
+      if (!uid) return;
+      const h = _uLoad(uid, 'notif_history', []);
+      const n = h.find(x => x.id === id);
+      if (n && !n.read) {
+        n.read = true;
+        _uSet(uid, 'notif_history', h);
+        const c = Math.max(0, (parseInt(_uLoad(uid, 'notif_unread_count', 0))||0) - 1);
+        _uSet(uid, 'notif_unread_count', c);
+      }
+    },
+    markAllRead() {
+      const uid = _uid();
+      if (!uid) return;
+      const h = _uLoad(uid, 'notif_history', []).map(n => ({...n, read: true}));
+      _uSet(uid, 'notif_history', h);
+      _uSet(uid, 'notif_unread_count', 0);
+    },
+    unreadCount() {
+      const uid = _uid();
+      return uid ? (parseInt(_uLoad(uid, 'notif_unread_count', 0))||0) : 0;
+    },
+    deleteById(id) {
+      const uid = _uid();
+      if (!uid) return;
+      const h = _uLoad(uid, 'notif_history', []).filter(x => x.id !== id);
+      _uSet(uid, 'notif_history', h);
+    },
+    clear() {
+      const uid = _uid();
+      if (!uid) return;
+      _uSet(uid, 'notif_history', []);
+      _uSet(uid, 'notif_unread_count', 0);
+    },
+
+    // ── Admin stats (global) ──────────────────────────────────
+    recordSent(type) {
+      const s = _gLoad('push_stats', {sent:0, opened:0, ignored:0, byType:{}});
+      s.sent++; s.byType[type] = (s.byType[type]||0)+1;
+      _gSet('push_stats', s);
+    },
+    recordOpened() {
+      const s = _gLoad('push_stats', {sent:0, opened:0, ignored:0, byType:{}});
+      s.opened++; _gSet('push_stats', s);
+    },
+    getAdminStats() { return _gLoad('push_stats', {sent:0, opened:0, ignored:0, byType:{}}); },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // ANALYTICS (Phase 12)
+  // ──────────────────────────────────────────────────────────
+  analytics: {
+    trackDealView(dealId, merchantId) { _track('deal_view', {dealId, merchantId}); },
+    trackDealSave(dealId, merchantId) { _track('deal_save', {dealId, merchantId}); },
+    trackDealRedeem(dealId, merchantId) { _track('deal_redeem', {dealId, merchantId}); },
+    trackEventView(eventId, merchantId) { _track('event_view', {eventId, merchantId}); },
+    trackEventJoin(eventId) { _track('event_join', {eventId}); },
+    trackEventCheckin(eventId) { _track('event_checkin', {eventId}); },
+    trackMerchantView(merchantId) { _track('merchant_view', {merchantId}); },
+    trackPostView(postId) { _track('post_view', {postId}); },
+    trackPostLike(postId) { _track('post_like', {postId}); },
+    trackZoneVisit(zone) { _track('zone_visit', {zone}); },
+
+    getAllEvents() {
+      return JSON.parse(localStorage.getItem('zamclub_analytics') || '[]');
+    },
+
+    _since(days) { return Date.now() - days * 86400000; },
+    _filter(type, since) {
+      return this.getAllEvents().filter(e => e.type === type && e.t > since);
+    },
+
+    getMerchantStats(merchantId, days = 30) {
+      const since = this._since(days);
+      const all = this.getAllEvents().filter(e => e.t > since && e.merchantId === merchantId);
+      return {
+        profileViews:     all.filter(e => e.type === 'merchant_view').length,
+        dealViews:        all.filter(e => e.type === 'deal_view').length,
+        dealSaves:        all.filter(e => e.type === 'deal_save').length,
+        dealRedemptions:  all.filter(e => e.type === 'deal_redeem').length,
+        eventViews:       all.filter(e => e.type === 'event_view').length,
+        eventJoins:       all.filter(e => e.type === 'event_join').length,
+        eventCheckins:    all.filter(e => e.type === 'event_checkin').length,
+      };
+    },
+
+    getDealStats(dealId, days = 30) {
+      const since = this._since(days);
+      const all = this.getAllEvents().filter(e => e.t > since && e.dealId === dealId);
+      return {
+        views:       all.filter(e => e.type === 'deal_view').length,
+        saves:       all.filter(e => e.type === 'deal_save').length,
+        redemptions: all.filter(e => e.type === 'deal_redeem').length,
+      };
+    },
+
+    getEventStats(eventId, days = 90) {
+      const since = this._since(days);
+      const all = this.getAllEvents().filter(e => e.t > since && e.eventId === eventId);
+      return {
+        views:    all.filter(e => e.type === 'event_view').length,
+        joins:    all.filter(e => e.type === 'event_join').length,
+        checkins: all.filter(e => e.type === 'event_checkin').length,
+      };
+    },
+
+    getCommunityStats(days = 30) {
+      const since = this._since(days);
+      const accounts = _gLoad('accounts', []);
+      const recentAccounts = accounts.filter(a => a.createdAt > since);
+      const allEvents = this.getAllEvents();
+      const recentEvents = allEvents.filter(e => e.t > since);
+
+      const activeUsers = new Set(recentEvents.map(e => e.userId).filter(Boolean)).size;
+
+      const zoneVisits = {};
+      recentEvents.filter(e => e.type === 'zone_visit').forEach(e => {
+        zoneVisits[e.zone] = (zoneVisits[e.zone] || 0) + 1;
+      });
+
+      const dealViews = {};
+      recentEvents.filter(e => e.type === 'deal_view').forEach(e => {
+        if (e.dealId) dealViews[e.dealId] = (dealViews[e.dealId] || 0) + 1;
+      });
+      const topDeals = Object.entries(dealViews).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+      const eventViews = {};
+      recentEvents.filter(e => e.type === 'event_view').forEach(e => {
+        if (e.eventId) eventViews[e.eventId] = (eventViews[e.eventId] || 0) + 1;
+      });
+      const topEvents = Object.entries(eventViews).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+      const merchantViews = {};
+      recentEvents.filter(e => e.type === 'merchant_view').forEach(e => {
+        if (e.merchantId) merchantViews[e.merchantId] = (merchantViews[e.merchantId] || 0) + 1;
+      });
+      const topMerchants = Object.entries(merchantViews).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+      const growth = [];
+      for (let i = 6; i >= 0; i--) {
+        const dayStart = Date.now() - i * 86400000;
+        const dayEnd = dayStart + 86400000;
+        const count = accounts.filter(a => a.createdAt >= dayStart && a.createdAt < dayEnd).length;
+        const d = new Date(dayStart);
+        growth.push({ label: `${d.getDate()}.${d.getMonth()+1}`, count });
+      }
+
+      return {
+        totalUsers: accounts.length,
+        newUsers: recentAccounts.length,
+        activeUsers,
+        totalEvents: allEvents.length,
+        zoneVisits,
+        topDeals,
+        topEvents,
+        topMerchants,
+        growth,
+      };
+    },
+
+    getZoneHeatmap() {
+      const since = this._since(7);
+      const events = this.getAllEvents().filter(e => e.t > since && e.type === 'zone_visit');
+      const heat = {mk2_1: 0, mk2_2: 0, mk2_3: 0, mk2_4: 0, plaza: 0};
+      events.forEach(e => { if (heat[e.zone] !== undefined) heat[e.zone]++; });
+      return heat;
+    },
+
+    seedDemo() {
+      const key = 'zamclub_analytics';
+      if (localStorage.getItem(key + '_seeded')) return;
+      const zones = ['mk2_1','mk2_2','mk2_3','mk2_4','plaza'];
+      const merchants = ['m1','m2','m3','m4','m5'];
+      const deals = ['d1','d2','d3','d4','d5'];
+      const events = ['ev1','ev2','ev3'];
+      const now = Date.now();
+      const seed = [];
+      for (let i = 0; i < 200; i++) {
+        const daysAgo = Math.floor(Math.random() * 30);
+        const t = now - daysAgo * 86400000 - Math.random() * 3600000;
+        const types = ['zone_visit','deal_view','deal_save','deal_redeem','event_view','event_join','merchant_view','post_like'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        const zone = zones[Math.floor(Math.random() * zones.length)];
+        const merchantId = merchants[Math.floor(Math.random() * merchants.length)];
+        const dealId = deals[Math.floor(Math.random() * deals.length)];
+        const eventId = events[Math.floor(Math.random() * events.length)];
+        seed.push({ t, type, zone, merchantId, dealId, eventId });
+      }
+      localStorage.setItem(key, JSON.stringify(seed));
+      localStorage.setItem(key + '_seeded', '1');
+    },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // VOUCHERS (Phase 12)
+  // ──────────────────────────────────────────────────────────
+  vouchers: {
+    generate(dealId, userId) {
+      const code = 'ZAM-' + Math.random().toString(36).slice(2,6).toUpperCase() + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
+      const vouchers = _gLoad('vouchers', []);
+      const v = {
+        id: Date.now().toString(36),
+        code,
+        dealId,
+        userId,
+        createdAt: Date.now(),
+        redeemedAt: null,
+        status: 'active',
+      };
+      vouchers.push(v);
+      _gSet('vouchers', vouchers);
+      return v;
+    },
+    getMyVouchers() {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return [];
+      return _gLoad('vouchers', []).filter(v => v.userId === me.id);
+    },
+    redeem(code) {
+      const vouchers = _gLoad('vouchers', []);
+      const v = vouchers.find(x => x.code === code && x.status === 'active');
+      if (!v) return {ok: false, error: 'Ungültiger oder bereits eingelöster Code'};
+      v.status = 'redeemed';
+      v.redeemedAt = Date.now();
+      _gSet('vouchers', vouchers);
+      ZAMApi.analytics.trackDealRedeem(v.dealId, null);
+      return {ok: true, voucher: v};
+    },
+    getAll() { return _gLoad('vouchers', []); },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // PUSH (Phase 11)
+  // ──────────────────────────────────────────────────────────
+  push: {
+    async requestPermission() {
+      if (!('Notification' in window)) return 'unsupported';
+      if (Notification.permission === 'granted') return 'granted';
+      if (Notification.permission === 'denied') return 'denied';
+      const result = await Notification.requestPermission();
+      return result;
+    },
+    getPermission() {
+      if (!('Notification' in window)) return 'unsupported';
+      return Notification.permission;
+    },
+    async register() {
+      if (!('serviceWorker' in navigator)) return null;
+      try {
+        const reg = await navigator.serviceWorker.register('/sw.js');
+        await navigator.serviceWorker.ready;
+        return reg;
+      } catch(e) { console.warn('SW register failed', e); return null; }
+    },
+    async send(title, body, options = {}) {
+      const settings = ZAMApi.notifications.getSettings();
+      const typeMap = {message:'messages', nudge:'nudges', event:'events', deal:'deals', badge:'badges', community:'community'};
+      const settingKey = typeMap[options.type] || 'all';
+      if (!settings.all || settings[settingKey] === false) return;
+      ZAMApi.notifications.recordSent(options.type || 'info');
+      ZAMApi.notifications.add({
+        type: options.type || 'info',
+        title, body,
+        url: options.url || '/',
+      });
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      const reg = await navigator.serviceWorker.ready.catch(() => null);
+      if (reg) {
+        reg.showNotification(title, {
+          body, icon: '/assets/zam-map.jpg',
+          tag: options.tag || 'zam',
+          data: {url: options.url || '/', type: options.type},
+          vibrate: [200, 100, 200],
+        });
+      } else {
+        new Notification(title, {body, icon: '/assets/zam-map.jpg'});
+      }
+    },
   },
 };
+
+// ── Analytics Tracking Helper ─────────────────────────────────
+function _track(eventType, data) {
+  const key = 'zamclub_analytics';
+  const events = JSON.parse(localStorage.getItem(key) || '[]');
+  events.push({ t: Date.now(), type: eventType, ...data });
+  if (events.length > 1000) events.splice(0, events.length - 1000);
+  localStorage.setItem(key, JSON.stringify(events));
+}
 
 // ── Hilfsfunktionen ───────────────────────────────────────────
 function _updateGlobalStatus(pendingKey, listKey, itemId, status, reason = '') {
@@ -1087,6 +1557,127 @@ function _markAdminNotifHandled(type, refId) {
 function _levelLabel(level) {
   return { bronze: 'Bronze Member', silver: 'Silber Member', gold: 'Gold Member', platinum: 'Platin Member' }[level] || 'Member';
 }
+
+// ──────────────────────────────────────────────────────────
+// PRIVACY (Phase 13)
+// ──────────────────────────────────────────────────────────
+ZAMApi.privacy = {
+  getSettings() {
+    const uid = _uid();
+    if (!uid) return { showOnMap: true, showStatus: true, allowNudges: true };
+    const u = _uLoad(uid);
+    return u.privacy || { showOnMap: true, showStatus: true, allowNudges: true };
+  },
+  saveSettings(settings) {
+    const uid = _uid();
+    if (!uid) return;
+    const u = _uLoad(uid);
+    u.privacy = { ...this.getSettings(), ...settings };
+    _uSave(uid, u);
+  },
+  canSeeOnMap(userId) {
+    if (!userId) return false;
+    const u = _uLoad(userId);
+    const priv = u.privacy || {};
+    if (priv.showOnMap === false) return false;
+    if (ZAMApi.connections.isBlocked(userId)) return false;
+    return true;
+  },
+};
+
+// ──────────────────────────────────────────────────────────
+// PACKAGES (Phase 14)
+// ──────────────────────────────────────────────────────────
+ZAMApi.packages = {
+  PLANS: {
+    basic:    { id:'basic',    name:'Basic',    price:49,  currency:'€/Monat', features:['Händlerprofil','Bis zu 3 Angebote','Community-Sichtbarkeit'] },
+    premium:  { id:'premium',  name:'Premium',  price:99,  currency:'€/Monat', features:['Händlerprofil','Unbegrenzte Angebote','Events erstellen','Statistiken & Analytics','Push-Benachrichtigungen'] },
+    business: { id:'business', name:'Business', price:199, currency:'€/Monat', features:['Alles aus Premium','Hervorgehobene Platzierungen','Sponsored Deals & Events','Prioritäts-Support','Individuelle Beratung'] },
+  },
+  getMyPlan() {
+    const uid = _uid(); if (!uid) return null;
+    const c = _gLoad('contracts', []).find(c => c.merchant_id === uid && c.status === 'active');
+    return c ? this.PLANS[c.plan_id] : null;
+  },
+  canAccess(feature) {
+    const plan = this.getMyPlan(); if (!plan) return false;
+    const A = { basic:['profile','deals'], premium:['profile','deals','events','analytics','push'], business:['profile','deals','events','analytics','push','sponsored','highlights'] };
+    return (A[plan.id] || []).includes(feature);
+  },
+};
+
+// ──────────────────────────────────────────────────────────
+// CONTRACTS (Phase 14)
+// ──────────────────────────────────────────────────────────
+ZAMApi.contracts = {
+  getAll() { return _gLoad('contracts', []); },
+  getMine() { const uid = _uid(); return _gLoad('contracts', []).filter(c => c.merchant_id === uid); },
+  getActive() { const uid = _uid(); return _gLoad('contracts', []).find(c => c.merchant_id === uid && c.status === 'active'); },
+  create(planId, months = 1) {
+    const uid = _uid(); if (!uid) return { ok: false, error: 'Nicht angemeldet' };
+    const plan = ZAMApi.packages.PLANS[planId]; if (!plan) return { ok: false, error: 'Ungültiges Paket' };
+    const contracts = _gLoad('contracts', []);
+    contracts.forEach(c => { if (c.merchant_id === uid && c.status === 'active') c.status = 'cancelled'; });
+    const now = new Date(), end = new Date(now);
+    end.setMonth(end.getMonth() + months);
+    const contract = { id: _uuid(), merchant_id: uid, plan_id: planId, plan_name: plan.name, price: plan.price * months, months, status: 'trial', started_at: now.toISOString(), ends_at: end.toISOString(), created_at: now.toISOString() };
+    contracts.push(contract); _gSet('contracts', contracts);
+    return { ok: true, contract };
+  },
+  activate(contractId) {
+    const contracts = _gLoad('contracts', []), c = contracts.find(x => x.id === contractId);
+    if (!c) return { ok: false }; c.status = 'active'; _gSet('contracts', contracts); return { ok: true };
+  },
+  cancel(contractId) {
+    const contracts = _gLoad('contracts', []), c = contracts.find(x => x.id === contractId);
+    if (!c) return { ok: false }; c.status = 'cancelled'; _gSet('contracts', contracts); return { ok: true };
+  },
+  statusLabel(s) { return { active:'Aktiv', trial:'Testphase', expired:'Abgelaufen', cancelled:'Gekündigt' }[s] || s; },
+  statusColor(s) { return { active:'#22c55e', trial:'#f59e0b', expired:'#ef4444', cancelled:'rgba(255,255,255,0.3)' }[s] || '#fff'; },
+};
+
+// ──────────────────────────────────────────────────────────
+// BILLING (Phase 14)
+// ──────────────────────────────────────────────────────────
+ZAMApi.billing = {
+  getAll() { return _gLoad('invoices', []); },
+  getMine() { const uid = _uid(); return _gLoad('invoices', []).filter(i => i.merchant_id === uid); },
+  generate(contractId) {
+    const c = _gLoad('contracts', []).find(x => x.id === contractId); if (!c) return null;
+    const inv = { id: 'INV-' + Date.now().toString(36).toUpperCase(), merchant_id: c.merchant_id, contract_id: contractId, plan_name: c.plan_name, amount: c.price, status: 'pending', issued_at: new Date().toISOString(), due_at: new Date(Date.now() + 14*864e5).toISOString() };
+    const invoices = _gLoad('invoices', []); invoices.push(inv); _gSet('invoices', invoices); return inv;
+  },
+  markPaid(invoiceId) {
+    const invoices = _gLoad('invoices', []), inv = invoices.find(x => x.id === invoiceId);
+    if (inv) { inv.status = 'paid'; inv.paid_at = new Date().toISOString(); } _gSet('invoices', invoices); return inv;
+  },
+};
+
+// ──────────────────────────────────────────────────────────
+// SPONSORED (Phase 14)
+// ──────────────────────────────────────────────────────────
+ZAMApi.sponsored = {
+  boost(type, itemId, days = 7) {
+    if (!ZAMApi.packages.canAccess('sponsored')) return { ok: false, error: 'Business-Paket erforderlich' };
+    const boosts = _gLoad('sponsored_boosts', []);
+    boosts.push({ id: _uuid(), type, item_id: itemId, merchant_id: _uid(), days, starts_at: new Date().toISOString(), ends_at: new Date(Date.now() + days*864e5).toISOString(), active: true });
+    _gSet('sponsored_boosts', boosts); return { ok: true };
+  },
+  getActive(type) {
+    const now = Date.now();
+    return _gLoad('sponsored_boosts', []).filter(b => b.type === type && b.active && new Date(b.ends_at) > now);
+  },
+  isBoosted(type, itemId) { return this.getActive(type).some(b => b.item_id === itemId); },
+  getAdminStats() {
+    const contracts = _gLoad('contracts', []);
+    const active = contracts.filter(c => c.status === 'active');
+    const trial = contracts.filter(c => c.status === 'trial');
+    const revenue = active.reduce((s, c) => s + (c.price || 0), 0);
+    const plans = { basic: 0, premium: 0, business: 0 };
+    active.forEach(c => { if (plans[c.plan_id] !== undefined) plans[c.plan_id]++; });
+    return { totalContracts: contracts.length, activeContracts: active.length, trialContracts: trial.length, monthlyRevenue: revenue, plans, activeSponsorships: _gLoad('sponsored_boosts', []).filter(b => b.active).length };
+  },
+};
 
 window.ZAMApi = ZAMApi;
 window._levelLabel = _levelLabel;
