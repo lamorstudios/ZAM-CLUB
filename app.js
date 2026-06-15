@@ -1086,7 +1086,9 @@ function initCommunityTabs() {
       $(`#cpanel-${tab.dataset.ctab}`)?.classList.add('active');
       const hBtn = $('#community-header-btn');
       if (hBtn) hBtn.style.visibility = tab.dataset.ctab === 'wall' ? '' : 'hidden';
-      if (tab.dataset.ctab === 'chat') renderChatRooms();
+      if (tab.dataset.ctab === 'chat')     renderChatRooms();
+      if (tab.dataset.ctab === 'contacts') renderContacts();
+      if (tab.dataset.ctab === 'nudges')   renderNudgeInbox();
     });
   });
 }
@@ -1511,6 +1513,8 @@ function showApp() {
   }
 
   setTimeout(() => checkBadgesAfterAction(), 900);
+  startNotifPolling();
+  checkMapRedirect();
 }
 
 function authNavigate(page) {
@@ -1848,6 +1852,546 @@ function initProfileEdit() {
 }
 
 // =============================================
+// Phase 10 — Contacts Panel
+// =============================================
+function renderContacts() {
+  const container = $('#contacts-list');
+  if (!container) return;
+  const contacts = ZAMApi.connections.all();
+
+  if (contacts.length === 0) {
+    container.innerHTML = `
+      <div class="contacts-empty">
+        <div class="contacts-empty-icon">👥</div>
+        <div>Noch keine Kontakte</div>
+        <div style="margin-top:6px;font-size:0.78rem">Andere ZAM-Besucher auf der Map anstupsen!</div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = '';
+  contacts.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'contact-item';
+    const unread = ZAMApi.privateChat.unreadCount(ZAMApi.privateChat.getOrCreate(c.user_id));
+    item.innerHTML = `
+      <div class="contact-avatar" style="background:${_avatarColor(c.user_id)}">
+        ${c.avatar_url ? `<img src="${c.avatar_url}" alt="${c.initials}" />` : c.initials}
+        <div class="contact-online-dot"></div>
+      </div>
+      <div class="contact-info">
+        <div class="contact-name">${c.display_name}</div>
+        <div class="contact-username">${c.username || ''}</div>
+      </div>
+      ${unread > 0 ? `<span class="pc-unread-badge">${unread}</span>` : ''}
+      <button class="contact-action-btn" data-uid="${c.user_id}" data-name="${c.display_name}" aria-label="Chat öffnen">💬</button>
+    `;
+    item.querySelector('.contact-action-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      openPrivateChat(c.user_id, c.display_name, c.initials, c.avatar_url);
+    });
+    item.addEventListener('click', () => {
+      openPrivateChat(c.user_id, c.display_name, c.initials, c.avatar_url);
+    });
+    container.appendChild(item);
+  });
+}
+
+function _avatarColor(userId) {
+  const colors = ['#8b5cf6', '#7c3aed', '#10b981', '#3b82f6', '#ec4899', '#f59e0b', '#06b6d4'];
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
+// =============================================
+// Phase 10 — Nudge Inbox Panel
+// =============================================
+function renderNudgeInbox() {
+  const container = $('#nudge-inbox-list');
+  if (!container) return;
+  const pending = ZAMApi.nudges.myPending();
+
+  // Update tab badge
+  const tabBtn = $('#nudges-tab-btn');
+  if (tabBtn) {
+    let badge = tabBtn.querySelector('.tab-badge');
+    if (pending.length > 0) {
+      if (!badge) { badge = document.createElement('span'); badge.className = 'tab-badge'; tabBtn.appendChild(badge); }
+      badge.textContent = pending.length > 9 ? '9+' : pending.length;
+    } else if (badge) {
+      badge.remove();
+    }
+  }
+
+  if (pending.length === 0) {
+    container.innerHTML = `
+      <div class="contacts-empty">
+        <div class="contacts-empty-icon">🤝</div>
+        <div>Keine Anfragen</div>
+        <div style="margin-top:6px;font-size:0.78rem">Warte auf Anstupsanfragen von anderen Nutzern.</div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = '';
+  pending.forEach(n => {
+    const item = document.createElement('div');
+    item.className = 'nudge-item';
+    const timeStr = _relativeTime(n.created_at);
+    item.innerHTML = `
+      <div class="nudge-item-avatar" style="background:${_avatarColor(n.from_id)}">
+        ${n.from_initials || n.from_id.slice(0, 2).toUpperCase()}
+      </div>
+      <div class="nudge-item-info">
+        <div class="nudge-item-name">${n.from_name || 'Jemand'} hat dich angestupst</div>
+        <div class="nudge-item-time">${timeStr}</div>
+      </div>
+      <div class="nudge-item-actions">
+        <button class="nudge-accept-btn" data-id="${n.id}">✓</button>
+        <button class="nudge-reject-btn" data-id="${n.id}">✕</button>
+      </div>
+    `;
+    item.querySelector('.nudge-accept-btn').addEventListener('click', () => {
+      ZAMApi.nudges.accept(n.id);
+      showToast(`🤝 Verbunden mit ${n.from_name}!`, 'connection');
+      renderNudgeInbox();
+      updateCommunityBadge();
+    });
+    item.querySelector('.nudge-reject-btn').addEventListener('click', () => {
+      ZAMApi.nudges.reject(n.id);
+      renderNudgeInbox();
+      updateCommunityBadge();
+    });
+    container.appendChild(item);
+  });
+}
+
+function _relativeTime(isoStr) {
+  if (!isoStr) return '';
+  const diff = Date.now() - new Date(isoStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1)  return 'gerade eben';
+  if (mins < 60) return `vor ${mins} Min.`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)  return `vor ${hrs} Std.`;
+  return `vor ${Math.floor(hrs / 24)} Tagen`;
+}
+
+// =============================================
+// Phase 10 — Private Chat
+// =============================================
+let _pcCurrentChatId   = null;
+let _pcCurrentUserId   = null;
+let _pcCurrentUserName = '';
+let _pcMsgCount        = 0;
+let _pcPollTimer       = null;
+
+function openPrivateChat(userId, userName, initials, avatarUrl) {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) { showToast('Bitte anmelden um zu chatten.'); return; }
+
+  _pcCurrentUserId   = userId;
+  _pcCurrentUserName = userName;
+  _pcCurrentChatId   = ZAMApi.privateChat.getOrCreate(userId);
+
+  // Fill header
+  const avatarEl = $('#pc-header-avatar');
+  const nameEl   = $('#pc-header-name');
+  if (avatarEl) {
+    if (avatarUrl) {
+      avatarEl.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" />`;
+      avatarEl.style.background = 'none';
+    } else {
+      avatarEl.textContent = initials || userName.slice(0, 2).toUpperCase();
+      avatarEl.style.background = _avatarColor(userId);
+    }
+  }
+  if (nameEl) nameEl.textContent = userName;
+
+  // Render messages + mark read
+  _pcRenderMessages();
+  ZAMApi.privateChat.markRead(_pcCurrentChatId);
+  updateCommunityBadge();
+
+  $('#private-chat-view')?.classList.add('open');
+  setTimeout(() => $('#pc-input')?.focus(), 320);
+
+  // Poll for new messages
+  clearInterval(_pcPollTimer);
+  _pcPollTimer = setInterval(_pcPollMessages, 2500);
+}
+
+function closePrivateChat() {
+  $('#private-chat-view')?.classList.remove('open');
+  clearInterval(_pcPollTimer);
+  _pcPollTimer       = null;
+  _pcCurrentChatId   = null;
+  _pcCurrentUserId   = null;
+  _pcMsgCount        = 0;
+  renderContacts(); // refresh unread badges
+}
+
+function _pcRenderMessages() {
+  const container = $('#pc-messages');
+  if (!container || !_pcCurrentChatId) return;
+  const msgs = ZAMApi.privateChat.getMessages(_pcCurrentChatId);
+  const uid  = ZAMApi.auth.currentUser()?.id;
+  _pcMsgCount = msgs.length;
+
+  if (msgs.length === 0) {
+    container.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:0.82rem;margin:auto">Noch keine Nachrichten.<br>Schreib als Erster! 👋</div>`;
+    return;
+  }
+
+  container.innerHTML = msgs.map(m => {
+    const isOwn = m.sender_id === uid;
+    const time  = new Date(m.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    return `
+      <div class="chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}">
+        ${!isOwn ? `<div class="chat-msg-avatar" style="background:${_avatarColor(m.sender_id)}">${m.sender_initials || '?'}</div>` : ''}
+        <div class="chat-msg-bubble-wrap">
+          ${!isOwn ? `<div class="chat-msg-name">${m.sender_name}</div>` : ''}
+          <div class="chat-msg-bubble">${_escapeHtml(m.content)}</div>
+          <div class="chat-msg-time">${time}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function _escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function _pcPollMessages() {
+  if (!_pcCurrentChatId) return;
+  const msgs = ZAMApi.privateChat.getMessages(_pcCurrentChatId);
+  if (msgs.length > _pcMsgCount) {
+    _pcRenderMessages();
+    ZAMApi.privateChat.markRead(_pcCurrentChatId);
+  }
+}
+
+function sendPrivateMessage() {
+  const input = $('#pc-input');
+  if (!input || !_pcCurrentChatId) return;
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.focus();
+  ZAMApi.privateChat.sendMessage(_pcCurrentChatId, text);
+  _pcRenderMessages();
+}
+
+function initPrivateChat() {
+  const sendBtn = $('#pc-send-btn');
+  const input   = $('#pc-input');
+  if (sendBtn) sendBtn.addEventListener('click', sendPrivateMessage);
+  if (input) {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPrivateMessage(); }
+    });
+  }
+  // Context menu button
+  const menuBtn = $('#pc-menu-btn');
+  if (menuBtn) {
+    menuBtn.addEventListener('click', () => {
+      if (_pcCurrentUserId) openUserContextMenu(_pcCurrentUserId, _pcCurrentUserName, menuBtn);
+    });
+  }
+}
+
+// =============================================
+// Phase 10 — User Profile Sheet
+// =============================================
+let _upsTargetUser = null;
+
+function openUserProfileSheet(userId, userName, initials, avatarUrl) {
+  _upsTargetUser = { userId, userName, initials, avatarUrl };
+
+  const avatarEl   = $('#ups-avatar');
+  const nameEl     = $('#ups-name');
+  const usernameEl = $('#ups-username');
+  if (avatarEl) {
+    if (avatarUrl) {
+      avatarEl.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" />`;
+      avatarEl.style.background = 'none';
+    } else {
+      avatarEl.textContent = initials || userName.slice(0, 2).toUpperCase();
+      avatarEl.style.background = _avatarColor(userId);
+    }
+  }
+  if (nameEl) nameEl.textContent = userName;
+
+  // Build action buttons
+  const actionsEl = $('#ups-actions');
+  if (actionsEl) {
+    actionsEl.innerHTML = '';
+    const connected  = ZAMApi.nudges.isConnected(userId);
+    const hasPending = ZAMApi.nudges.hasPendingNudgeTo(userId);
+
+    if (connected) {
+      const msgBtn = document.createElement('button');
+      msgBtn.className = 'btn btn-primary btn-full';
+      msgBtn.innerHTML = '💬 Nachricht schreiben';
+      msgBtn.addEventListener('click', () => {
+        closeUserProfileSheet();
+        openPrivateChat(userId, userName, initials, avatarUrl);
+        navigateTo('community');
+      });
+      actionsEl.appendChild(msgBtn);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'btn btn-ghost btn-full';
+      removeBtn.textContent = '🔗 Verbindung entfernen';
+      removeBtn.addEventListener('click', () => {
+        const conn = ZAMApi.connections.all().find(c => c.user_id === userId);
+        if (conn) {
+          ZAMApi.connections.remove(conn.connection_id);
+          showToast('Verbindung entfernt.');
+        }
+        closeUserProfileSheet();
+      });
+      actionsEl.appendChild(removeBtn);
+    } else if (hasPending) {
+      const pendingBtn = document.createElement('button');
+      pendingBtn.className = 'btn btn-ghost btn-full';
+      pendingBtn.textContent = '⏳ Anstupsanfrage gesendet';
+      pendingBtn.disabled = true;
+      actionsEl.appendChild(pendingBtn);
+    } else {
+      const nudgeBtn = document.createElement('button');
+      nudgeBtn.className = 'btn btn-primary btn-full';
+      nudgeBtn.innerHTML = '👋 Anstupsen';
+      nudgeBtn.addEventListener('click', () => {
+        const result = ZAMApi.nudges.send(userId, userName);
+        if (result) {
+          showToast(`👋 Anstupsanfrage an ${userName} gesendet!`, 'nudge');
+        } else {
+          showToast('Anfrage bereits gesendet oder bereits verbunden.');
+        }
+        closeUserProfileSheet();
+      });
+      actionsEl.appendChild(nudgeBtn);
+    }
+  }
+
+  // Danger zone
+  const dangerEl = $('#ups-danger');
+  if (dangerEl) {
+    dangerEl.innerHTML = '';
+    const blockBtn = document.createElement('button');
+    blockBtn.textContent = ZAMApi.connections.isBlocked(userId) ? '✅ Entblockieren' : '🚫 Blockieren';
+    blockBtn.addEventListener('click', () => {
+      if (ZAMApi.connections.isBlocked(userId)) {
+        ZAMApi.chat.unblockUser(userId);
+        showToast(`${userName} entblockiert.`);
+      } else {
+        ZAMApi.connections.block(userId);
+        showToast(`🚫 ${userName} blockiert.`);
+      }
+      closeUserProfileSheet();
+    });
+    const reportBtn = document.createElement('button');
+    reportBtn.textContent = '🚩 Melden';
+    reportBtn.addEventListener('click', () => {
+      closeUserProfileSheet();
+      openUserReportModal(userId, userName);
+    });
+    dangerEl.appendChild(blockBtn);
+    dangerEl.appendChild(reportBtn);
+  }
+
+  $('#profile-sheet-backdrop')?.classList.add('open');
+  $('#user-profile-sheet')?.classList.add('open');
+}
+
+function closeUserProfileSheet() {
+  $('#profile-sheet-backdrop')?.classList.remove('open');
+  $('#user-profile-sheet')?.classList.remove('open');
+  _upsTargetUser = null;
+}
+
+// =============================================
+// Phase 10 — User Report Modal
+// =============================================
+let _userReportTarget = null;
+
+function openUserReportModal(userId, userName) {
+  _userReportTarget = { userId, userName };
+  const subtitle = $('#user-report-subtitle');
+  if (subtitle) subtitle.textContent = `Warum möchtest du ${userName} melden?`;
+  $$('input[name="user-report-reason"]').forEach(r => { r.checked = r.value === 'other'; });
+  $('#modal-user-report')?.classList.add('open');
+}
+
+function initUserReport() {
+  const confirmBtn = $('#btn-user-report-confirm');
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', () => {
+      if (!_userReportTarget) return;
+      const reason = $('input[name="user-report-reason"]:checked')?.value || 'other';
+      ZAMApi.connections.report(_userReportTarget.userId, reason);
+      closeModal('modal-user-report');
+      showToast('✅ Nutzer gemeldet. Danke!', 'success');
+      _userReportTarget = null;
+    });
+  }
+}
+
+// =============================================
+// Phase 10 — Context Menu (⋮ in private chat header)
+// =============================================
+let _activeContextMenu = null;
+
+function openUserContextMenu(userId, userName, anchorEl) {
+  // Close any existing
+  if (_activeContextMenu) { _activeContextMenu.remove(); _activeContextMenu = null; return; }
+
+  const menu = document.createElement('div');
+  menu.className = 'context-menu';
+  menu.innerHTML = `
+    <div class="context-menu-item" id="cmenu-remove">🔗 Verbindung entfernen</div>
+    <div class="context-menu-item danger" id="cmenu-block">🚫 Blockieren</div>
+    <div class="context-menu-item danger" id="cmenu-report">🚩 Melden</div>
+  `;
+
+  // Position relative to parent container
+  const parentEl = anchorEl.closest('.private-chat-header') || anchorEl.parentElement;
+  parentEl.style.position = 'relative';
+  parentEl.appendChild(menu);
+  _activeContextMenu = menu;
+
+  menu.querySelector('#cmenu-remove').addEventListener('click', () => {
+    const conn = ZAMApi.connections.all().find(c => c.user_id === userId);
+    if (conn) ZAMApi.connections.remove(conn.connection_id);
+    showToast('Verbindung entfernt.');
+    closePrivateChat();
+    menu.remove(); _activeContextMenu = null;
+    renderContacts();
+  });
+  menu.querySelector('#cmenu-block').addEventListener('click', () => {
+    ZAMApi.connections.block(userId);
+    showToast(`🚫 ${userName} blockiert.`);
+    closePrivateChat();
+    menu.remove(); _activeContextMenu = null;
+  });
+  menu.querySelector('#cmenu-report').addEventListener('click', () => {
+    menu.remove(); _activeContextMenu = null;
+    closePrivateChat();
+    openUserReportModal(userId, userName);
+  });
+
+  // Click-outside to close
+  const onOutside = (e) => {
+    if (!menu.contains(e.target) && e.target !== anchorEl) {
+      menu.remove(); _activeContextMenu = null;
+      document.removeEventListener('click', onOutside, true);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', onOutside, true), 50);
+}
+
+// =============================================
+// Phase 10 — Notification Polling & Badges
+// =============================================
+let _notifPollTimer   = null;
+let _lastNudgeCount   = 0;
+let _lastPcUnread     = 0;
+
+function startNotifPolling() {
+  if (_notifPollTimer) return;
+  _notifPollTimer = setInterval(_pollNotifications, 5000);
+  _pollNotifications(); // run immediately
+}
+
+function _pollNotifications() {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) return;
+
+  // Check nudge inbox
+  const nudgePending = ZAMApi.nudges.myPending();
+  if (nudgePending.length > _lastNudgeCount && nudgePending.length > 0) {
+    const newest = nudgePending[0];
+    showToast(`👋 ${newest.from_name} hat dich angestupst!`, 'nudge');
+  }
+  _lastNudgeCount = nudgePending.length;
+
+  // Check private message unread
+  const pcUnread = ZAMApi.privateChat.totalUnread();
+  if (pcUnread > _lastPcUnread && pcUnread > 0) {
+    // Find which chat has new messages
+    const unreadMap = JSON.parse(localStorage.getItem(`zamclub_u_${me.id}`) || '{}').pc_unread || {};
+    const chatIds   = Object.keys(unreadMap);
+    if (chatIds.length > 0) {
+      // Try to identify sender from messages
+      const chatId = chatIds[0];
+      const msgs   = ZAMApi.privateChat.getMessages(chatId);
+      const lastMsg = msgs.filter(m => m.sender_id !== me.id).pop();
+      if (lastMsg) showToast(`💬 Neue Nachricht von ${lastMsg.sender_name}`, 'message');
+    }
+  }
+  _lastPcUnread = pcUnread;
+
+  updateCommunityBadge();
+}
+
+function updateCommunityBadge() {
+  const nudgePending = ZAMApi.nudges.myPending().length;
+  const pcUnread     = ZAMApi.privateChat.totalUnread();
+  const total        = nudgePending + pcUnread;
+
+  const badge = $('#nav-community-badge');
+  if (badge) {
+    if (total > 0) {
+      badge.textContent    = total > 9 ? '9+' : total;
+      badge.style.display  = 'flex';
+    } else {
+      badge.style.display  = 'none';
+    }
+  }
+
+  // Also update nudges-tab badge
+  const nudgesTabBtn = $('#nudges-tab-btn');
+  if (nudgesTabBtn) {
+    let tabBadge = nudgesTabBtn.querySelector('.tab-badge');
+    if (nudgePending > 0) {
+      if (!tabBadge) { tabBadge = document.createElement('span'); tabBadge.className = 'tab-badge'; nudgesTabBtn.appendChild(tabBadge); }
+      tabBadge.textContent = nudgePending > 9 ? '9+' : nudgePending;
+    } else if (tabBadge) {
+      tabBadge.remove();
+    }
+  }
+}
+
+// =============================================
+// Phase 10 — Deep link from map.html
+// =============================================
+function checkMapRedirect() {
+  // Check if map redirected us to open a private chat
+  const pcTarget = sessionStorage.getItem('open_private_chat');
+  if (pcTarget) {
+    sessionStorage.removeItem('open_private_chat');
+    try {
+      const target = JSON.parse(pcTarget);
+      navigateTo('community');
+      setTimeout(() => {
+        // Switch to contacts tab
+        $$('.community-tab').forEach(t => t.classList.remove('active'));
+        $$('.community-panel').forEach(p => p.classList.remove('active'));
+        const contactsTab = $('.community-tab[data-ctab="contacts"]');
+        if (contactsTab) contactsTab.classList.add('active');
+        $('#cpanel-contacts')?.classList.add('active');
+        renderContacts();
+        setTimeout(() => openPrivateChat(target.userId, target.userName, target.initials, target.avatarUrl), 200);
+      }, 300);
+    } catch {}
+  }
+}
+
+// =============================================
 // Init
 // =============================================
 function init() {
@@ -1862,6 +2406,8 @@ function init() {
   initProfileEdit();
   initCommunityTabs();
   initChatInput();
+  initPrivateChat();
+  initUserReport();
   initAuth();
 }
 

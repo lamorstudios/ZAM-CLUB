@@ -362,12 +362,12 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
           </select>
         </div>
         <div class="st-chips">
-          <button class="stchip" onclick="setStatus('🛒 Shopping')">🛒 Shopping</button>
-          <button class="stchip" onclick="setStatus('☕ Kaffee')">☕ Kaffee</button>
-          <button class="stchip" onclick="setStatus('🍽️ Beim Essen')">🍽️ Beim Essen</button>
+          <button class="stchip" onclick="setStatus('🍔 Beim Essen')">🍔 Beim Essen</button>
           <button class="stchip" onclick="setStatus('🎉 Beim Event')">🎉 Beim Event</button>
+          <button class="stchip" onclick="setStatus('🛍️ Shopping')">🛍️ Shopping</button>
+          <button class="stchip" onclick="setStatus('☕ Kaffee')">☕ Kaffee</button>
           <button class="stchip" onclick="setStatus('👋 Suche Leute')">👋 Suche Leute</button>
-          <button class="stchip" onclick="setStatus('😎 Chillen')">😎 Chillen</button>
+          <button class="stchip" onclick="setStatus('✨ Neu hier')">✨ Neu hier</button>
         </div>
         <button class="btn-save" onclick="saveStatus()">Speichern</button>
       </div>
@@ -567,6 +567,17 @@ function renderMarkers(){
 
 function openUserPopup(u){
   const z=ZONES[u.zone];
+  const api=window.ZAMApi;
+  const connected  = api ? api.nudges.isConnected(u.id) : false;
+  const hasPending = api ? api.nudges.hasPendingNudgeTo(u.id) : false;
+  let actionBtn='';
+  if(connected){
+    actionBtn=`<button onclick="pcFromMap('${u.id}','${u.name}','${u.initials||u.name.slice(0,2).toUpperCase()}')" style="flex:1;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);border-radius:10px;padding:10px;color:#a78bfa;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">💬 Nachricht</button>`;
+  } else if(hasPending){
+    actionBtn=`<button disabled style="flex:1;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:10px;color:rgba(167,139,250,0.5);font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:not-allowed">⏳ Gesendet</button>`;
+  } else {
+    actionBtn=`<button onclick="nudgeUser('${u.id}','${u.name}')" style="flex:1;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);border-radius:10px;padding:10px;color:#a78bfa;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">👋 Anstupsen</button>`;
+  }
   document.getElementById('pop-content').innerHTML=`
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
       <div style="width:52px;height:52px;border-radius:50%;background:${u.bg};border:3px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:#fff;flex-shrink:0">${u.initials}</div>
@@ -580,7 +591,7 @@ function openUserPopup(u){
       </div>
     </div>
     <div style="display:flex;gap:8px">
-      <button onclick="nudgeUser('${u.id}','${u.name}')" style="flex:1;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);border-radius:10px;padding:10px;color:#a78bfa;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">👋 Anstupsen</button>
+      ${actionBtn}
       <button onclick="closePopup()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">Schließen</button>
     </div>`;
   showPopup();
@@ -603,11 +614,25 @@ function showPopup(){const b=document.getElementById('popup-bg');b.style.display
 function closePopup(e){if(e&&e.target!==document.getElementById('popup-bg'))return;const b=document.getElementById('popup-bg');b.classList.remove('open');setTimeout(()=>b.style.display='none',300)}
 
 function nudgeUser(id,name){
+  const api=window.ZAMApi;
+  let msg='';
+  if(api){
+    const result=api.nudges.send(id,name);
+    msg=result?`${name} wird benachrichtigt.`:'Anfrage bereits gesendet oder bereits verbunden.';
+  } else {
+    msg=`${name} wird benachrichtigt.`;
+  }
   closePopup();
   setTimeout(()=>{
-    document.getElementById('pop-content').innerHTML=`<div style="text-align:center;padding:10px 0"><div style="font-size:2rem;margin-bottom:10px">👋</div><div style="font-size:0.95rem;font-weight:700;color:#fff;margin-bottom:6px">Anstupsie gesendet!</div><div style="font-size:0.76rem;color:rgba(255,255,255,0.5)">${name} wird benachrichtigt.</div><button onclick="closePopup()" style="margin-top:16px;width:100%;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border-radius:10px;padding:10px;color:#fff;font-size:0.8rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">OK</button></div>`;
+    document.getElementById('pop-content').innerHTML=`<div style="text-align:center;padding:10px 0"><div style="font-size:2rem;margin-bottom:10px">👋</div><div style="font-size:0.95rem;font-weight:700;color:#fff;margin-bottom:6px">Anstupsanfrage gesendet!</div><div style="font-size:0.76rem;color:rgba(255,255,255,0.5)">${msg}</div><button onclick="closePopup()" style="margin-top:16px;width:100%;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border-radius:10px;padding:10px;color:#fff;font-size:0.8rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">OK</button></div>`;
     showPopup();
   },100);
+}
+
+function pcFromMap(userId,userName,initials){
+  // Redirect to index.html with open_private_chat in sessionStorage
+  sessionStorage.setItem('open_private_chat',JSON.stringify({userId,userName,initials,avatarUrl:null}));
+  window.location.href='index.html#community';
 }
 
 function openNudgeInbox(){

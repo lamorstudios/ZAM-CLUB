@@ -940,7 +940,7 @@ const ZAMApi = {
   },
 
   // ──────────────────────────────────────────────────────────
-  // NUDGES & CONNECTIONS (Phase 8)
+  // NUDGES & CONNECTIONS (Phase 10)
   // ──────────────────────────────────────────────────────────
   nudges: {
     privateChatRoomId(userId) {
@@ -971,72 +971,226 @@ const ZAMApi = {
       const me = ZAMApi.auth.currentUser();
       if (!me) return null;
       if (this.hasPendingNudgeTo(toUserId) || this.isConnected(toUserId)) return null;
-      const nudgeId = _uuid();
-      const nudge = { id: nudgeId, from_id: me.id, from_name: me.name || me.username, to_id: toUserId, to_name: toUserName, status: 'pending', created_at: _now() };
+      const nudgeId  = _uuid();
+      const fromName = me.display_name || me.username || me.name || 'Jemand';
+      const nudge = {
+        id: nudgeId, from_id: me.id, from_name: fromName,
+        from_initials: me.initials || '?', from_avatar: me.avatar_url || null,
+        to_id: toUserId, to_name: toUserName, status: 'pending', created_at: _now(),
+      };
       const nudges = _gLoad('nudges', []);
       nudges.push(nudge);
       _gSet('nudges', nudges);
-      // Add notification to recipient's per-user store
-      const recipientKey = `zamclub_u_${toUserId}`;
+      // Add to recipient's nudge_inbox
       try {
-        const rData = JSON.parse(localStorage.getItem(recipientKey) || '{}');
-        const rNotifs = rData.nudge_notifications || [];
-        rNotifs.unshift({ id: nudgeId, from_id: me.id, from_name: me.name || me.username, created_at: _now() });
-        rData.nudge_notifications = rNotifs.slice(0, 20);
-        localStorage.setItem(recipientKey, JSON.stringify(rData));
+        const rData = JSON.parse(localStorage.getItem(_uKey(toUserId)) || '{}');
+        const inbox  = rData.nudge_inbox || [];
+        inbox.unshift({ id: nudgeId, from_id: me.id, from_name: fromName, from_initials: me.initials || '?', from_avatar: me.avatar_url || null, created_at: _now() });
+        rData.nudge_inbox = inbox.slice(0, 30);
+        localStorage.setItem(_uKey(toUserId), JSON.stringify(rData));
       } catch {}
       return nudgeId;
     },
 
-    myNudges() {
-      const pending = _s('nudge_notifications', []);
-      const nudges  = _gLoad('nudges', []);
-      return pending.map(n => {
+    // Pending nudges I received (from my nudge_inbox)
+    myPending() {
+      const inbox  = _s('nudge_inbox', []);
+      const nudges = _gLoad('nudges', []);
+      return inbox.map(n => {
         const global = nudges.find(g => g.id === n.id);
         return { ...n, status: global ? global.status : 'pending' };
       }).filter(n => n.status === 'pending');
     },
 
+    // Nudges I sent that are still pending
+    mySent() {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return [];
+      return _gLoad('nudges', []).filter(n => n.from_id === me.id);
+    },
+
+    // Legacy alias
+    myNudges() { return this.myPending(); },
+
     accept(nudgeId) {
       const me = ZAMApi.auth.currentUser();
       if (!me) return;
-      // Update global nudge status
       const nudges = _gLoad('nudges', []);
       const nudge  = nudges.find(n => n.id === nudgeId);
       if (nudge) {
         nudge.status = 'accepted';
         _gSet('nudges', nudges);
-        // Create connection
+        // Create connection (canonical order: user_a < user_b)
         const connections = _gLoad('connections', []);
         const alreadyConnected = connections.some(c =>
           (c.user_a === nudge.from_id && c.user_b === nudge.to_id) ||
           (c.user_a === nudge.to_id   && c.user_b === nudge.from_id)
         );
         if (!alreadyConnected) {
-          connections.push({ id: _uuid(), user_a: nudge.from_id, user_b: nudge.to_id, connected_at: _now() });
+          const [ua, ub] = [nudge.from_id, nudge.to_id].sort();
+          connections.push({ id: _uuid(), user_a: ua, user_b: ub, connected_at: _now() });
           _gSet('connections', connections);
         }
         // Notify the sender
-        const senderKey = `zamclub_u_${nudge.from_id}`;
         try {
-          const sData = JSON.parse(localStorage.getItem(senderKey) || '{}');
+          const toName = me.display_name || nudge.to_name || 'Jemand';
+          const sData  = JSON.parse(localStorage.getItem(_uKey(nudge.from_id)) || '{}');
           const sNotifs = sData.notifications || [];
-          sNotifs.unshift({ id: _uuid(), title: 'Anstupsen angenommen!', body: `${nudge.to_name || 'Jemand'} hat deinen Anstoß angenommen. Du kannst jetzt chatten!`, type: 'nudge_accepted', is_read: false, created_at: _now() });
+          sNotifs.unshift({
+            id: _uuid(), title: 'Anstupsen angenommen!',
+            body: `${toName} hat deinen Anstoß angenommen. Ihr könnt jetzt chatten!`,
+            type: 'nudge_accepted', is_read: false, created_at: _now(),
+            related_user_id: me.id, related_user_name: toName,
+          });
           sData.notifications = sNotifs.slice(0, 50);
-          localStorage.setItem(senderKey, JSON.stringify(sData));
+          localStorage.setItem(_uKey(nudge.from_id), JSON.stringify(sData));
         } catch {}
       }
-      // Remove from own nudge_notifications
-      const myNotifs = _s('nudge_notifications', []).filter(n => n.id !== nudgeId);
-      _set('nudge_notifications', myNotifs);
+      // Remove from own nudge_inbox
+      _set('nudge_inbox', (_s('nudge_inbox', [])).filter(n => n.id !== nudgeId));
     },
 
     reject(nudgeId) {
       const nudges = _gLoad('nudges', []);
       const nudge  = nudges.find(n => n.id === nudgeId);
       if (nudge) { nudge.status = 'rejected'; _gSet('nudges', nudges); }
-      const myNotifs = _s('nudge_notifications', []).filter(n => n.id !== nudgeId);
-      _set('nudge_notifications', myNotifs);
+      _set('nudge_inbox', (_s('nudge_inbox', [])).filter(n => n.id !== nudgeId));
+    },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // CONNECTIONS (Phase 10)
+  // ──────────────────────────────────────────────────────────
+  connections: {
+    all() {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return [];
+      const connections = _gLoad('connections', []);
+      const accounts    = _gLoad('accounts',    []);
+      const nudges      = _gLoad('nudges',       []);
+      return connections
+        .filter(c => c.user_a === me.id || c.user_b === me.id)
+        .map(c => {
+          const otherId = c.user_a === me.id ? c.user_b : c.user_a;
+          const acct    = accounts.find(a => a.profile.id === otherId);
+          const profile = acct ? acct.profile : null;
+          const nudge   = nudges.find(n =>
+            (n.from_id === otherId && n.to_id === me.id) ||
+            (n.from_id === me.id  && n.to_id === otherId)
+          );
+          return {
+            connection_id: c.id,
+            user_id:      otherId,
+            display_name: profile?.display_name || nudge?.from_name || nudge?.to_name || 'Nutzer',
+            username:     profile?.username || '',
+            initials:     profile?.initials || nudge?.from_initials || otherId.slice(0, 2).toUpperCase(),
+            avatar_url:   profile?.avatar_url || nudge?.from_avatar || null,
+            level:        profile?.level || 'bronze',
+            connected_at: c.connected_at,
+          };
+        });
+    },
+
+    remove(connectionId) {
+      _gSet('connections', _gLoad('connections', []).filter(c => c.id !== connectionId));
+    },
+
+    block(userId) {
+      const blocked = _s('blocked', []);
+      if (!blocked.includes(userId)) { blocked.push(userId); _set('blocked', blocked); }
+      ZAMApi.chat.blockUser(userId);
+    },
+
+    report(userId, reason = 'other') {
+      const me = ZAMApi.auth.currentUser();
+      const reports = _gLoad('reports', []);
+      reports.unshift({ id: _uuid(), reporter_id: me?.id, reported_user_id: userId, content_type: 'user', reason, created_at: _now() });
+      _gSet('reports', reports.slice(0, 500));
+    },
+
+    isBlocked(userId) { return _s('blocked', []).includes(userId); },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // PRIVATE CHAT (Phase 10)
+  // ──────────────────────────────────────────────────────────
+  privateChat: {
+    _chatKey(chatId) { return `zamclub_pc_${chatId}`; },
+
+    getOrCreate(otherUserId) {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return null;
+      const pair   = [me.id, otherUserId].sort().join('_');
+      const chatId = `pc_${pair}`;
+      const chats  = _gLoad('private_chats', {});
+      if (!chats[chatId]) {
+        chats[chatId] = { id: chatId, participants: [me.id, otherUserId], created_at: _now() };
+        _gSet('private_chats', chats);
+      }
+      return chatId;
+    },
+
+    getMessages(chatId) {
+      try { return JSON.parse(localStorage.getItem(this._chatKey(chatId)) || '[]'); }
+      catch { return []; }
+    },
+
+    sendMessage(chatId, text) {
+      const me = ZAMApi.auth.currentUser();
+      if (!me || !text.trim()) return null;
+      const msg = {
+        id: _uuid(), chat_id: chatId, sender_id: me.id,
+        sender_name:     me.display_name || me.username || 'Ich',
+        sender_initials: me.initials || '?',
+        sender_avatar:   me.avatar_url || null,
+        content: text.trim(), read_by_recipient: false, created_at: _now(),
+      };
+      const msgs = this.getMessages(chatId);
+      msgs.push(msg);
+      localStorage.setItem(this._chatKey(chatId), JSON.stringify(msgs.slice(-200)));
+
+      // Notify the other participant
+      const chats  = _gLoad('private_chats', {});
+      const chat   = chats[chatId];
+      if (chat) {
+        const otherId = chat.participants.find(p => p !== me.id);
+        if (otherId) {
+          try {
+            const oData  = JSON.parse(localStorage.getItem(_uKey(otherId)) || '{}');
+            const unread = oData.pc_unread || {};
+            unread[chatId] = (unread[chatId] || 0) + 1;
+            oData.pc_unread = unread;
+            const notifs = oData.notifications || [];
+            notifs.unshift({
+              id: _uuid(), type: 'private_message',
+              title: `Neue Nachricht von ${msg.sender_name}`,
+              body: text.trim().slice(0, 80),
+              chat_id: chatId, sender_id: me.id, is_read: false, created_at: _now(),
+            });
+            oData.notifications = notifs.slice(0, 50);
+            localStorage.setItem(_uKey(otherId), JSON.stringify(oData));
+          } catch {}
+        }
+      }
+      return msg;
+    },
+
+    markRead(chatId) {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return;
+      const msgs = this.getMessages(chatId).map(m => ({
+        ...m, read_by_recipient: m.sender_id !== me.id ? true : m.read_by_recipient,
+      }));
+      localStorage.setItem(this._chatKey(chatId), JSON.stringify(msgs));
+      const unread = _s('pc_unread', {});
+      delete unread[chatId];
+      _set('pc_unread', unread);
+    },
+
+    unreadCount(chatId) { return (_s('pc_unread', {}))[chatId] || 0; },
+
+    totalUnread() {
+      return Object.values(_s('pc_unread', {})).reduce((a, b) => a + b, 0);
     },
   },
 

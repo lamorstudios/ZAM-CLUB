@@ -196,12 +196,16 @@
       <button class="header-icon-btn" id="community-header-btn" aria-label="Neuer Beitrag" onclick="communityHeaderAction()">✏️</button>
     </div>
 
-    <!-- Sub-tabs: Wall | Chat -->
+    <!-- Sub-tabs: Wall | Chat | Kontakte | Anfragen -->
     <div class="community-tabs">
       <button class="community-tab active" data-ctab="wall">📰 Wall</button>
       <button class="community-tab" data-ctab="chat">
         💬 Chat
         <span class="chat-tab-badge" id="chat-tab-badge" style="display:none">1</span>
+      </button>
+      <button class="community-tab" data-ctab="contacts">👥 Kontakte</button>
+      <button class="community-tab" data-ctab="nudges" id="nudges-tab-btn">
+        🤝 Anfragen
       </button>
     </div>
 
@@ -222,6 +226,20 @@
       <div class="chat-rooms-list" id="chat-rooms-global"></div>
       <div class="chat-rooms-section-label" style="margin-top:8px">Event Chats</div>
       <div class="chat-rooms-list" id="chat-rooms-events"></div>
+    </div>
+
+    <!-- Contacts panel -->
+    <div class="community-panel" id="cpanel-contacts">
+      <div class="contacts-list" id="contacts-list">
+        <!-- Rendered by app.js -->
+      </div>
+    </div>
+
+    <!-- Nudge Inbox (Anfragen) panel -->
+    <div class="community-panel" id="cpanel-nudges">
+      <div class="nudge-inbox-list" id="nudge-inbox-list">
+        <!-- Rendered by app.js -->
+      </div>
     </div>
   </section>
 
@@ -396,6 +414,7 @@
     <button class="nav-tab" data-page="community" aria-label="Community">
       <span class="nav-icon">👥</span>
       <span>Community</span>
+      <span class="nav-community-badge" id="nav-community-badge" style="display:none"></span>
     </button>
     <button class="nav-tab" data-page="events" aria-label="Events">
       <span class="nav-icon">📅</span>
@@ -414,6 +433,41 @@
       <span>Profil</span>
     </button>
   </nav>
+
+  <!-- =====================
+       PRIVATE CHAT VIEW
+  ========================== -->
+  <div class="private-chat-view" id="private-chat-view" role="dialog" aria-label="Privater Chat">
+    <div class="private-chat-header">
+      <button class="chat-back-btn" onclick="closePrivateChat()" aria-label="Zurück">←</button>
+      <div class="private-chat-avatar" id="pc-header-avatar">?</div>
+      <div class="private-chat-header-info">
+        <div class="private-chat-header-name" id="pc-header-name">Nutzer</div>
+        <div class="private-chat-header-status" id="pc-header-status">● online</div>
+      </div>
+      <button class="private-chat-menu-btn" id="pc-menu-btn" aria-label="Optionen">⋮</button>
+    </div>
+    <div class="private-chat-messages" id="pc-messages"></div>
+    <div class="private-chat-input-bar">
+      <input type="text" id="pc-input" class="chat-input-field" placeholder="Nachricht schreiben…" maxlength="500" autocomplete="off" />
+      <button id="pc-send-btn" class="chat-send-btn" aria-label="Senden">➤</button>
+    </div>
+  </div>
+
+  <!-- User Profile Sheet -->
+  <div class="sheet-backdrop" id="profile-sheet-backdrop" onclick="closeUserProfileSheet()"></div>
+  <div class="user-profile-sheet" id="user-profile-sheet" role="dialog" aria-label="Nutzerprofil">
+    <div class="user-profile-sheet-handle"></div>
+    <div class="user-profile-sheet-header">
+      <div class="user-profile-sheet-avatar" id="ups-avatar">?</div>
+      <div class="user-profile-sheet-info">
+        <div class="user-profile-sheet-name" id="ups-name">Nutzer</div>
+        <div class="user-profile-sheet-username" id="ups-username"></div>
+      </div>
+    </div>
+    <div class="user-profile-sheet-actions" id="ups-actions"></div>
+    <div class="user-profile-sheet-danger" id="ups-danger"></div>
+  </div>
 
 </div><!-- /#app-shell -->
 
@@ -619,6 +673,23 @@
       <button class="btn btn-ghost btn-full btn-danger" id="btn-chat-delete-msg" style="display:none">🗑 Nachricht löschen (Admin)</button>
     </div>
     <button class="btn btn-ghost btn-full" data-close-modal="modal-chat-options" style="margin-top:4px">Abbrechen</button>
+  </div>
+</div>
+
+<!-- User Report Modal -->
+<div class="modal-overlay" id="modal-user-report" role="dialog" aria-modal="true" aria-label="Nutzer melden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🚩 Nutzer melden</div>
+    <div class="modal-subtitle" id="user-report-subtitle">Warum möchtest du diesen Nutzer melden?</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin:14px 0 18px">
+      <label class="report-option"><input type="radio" name="user-report-reason" value="spam"> Spam oder Werbung</label>
+      <label class="report-option"><input type="radio" name="user-report-reason" value="harassment"> Belästigung</label>
+      <label class="report-option"><input type="radio" name="user-report-reason" value="inappropriate"> Unangemessenes Verhalten</label>
+      <label class="report-option"><input type="radio" name="user-report-reason" value="other" checked> Sonstiges</label>
+    </div>
+    <button class="btn btn-primary btn-full" id="btn-user-report-confirm">Melden</button>
+    <button class="btn btn-ghost btn-full" data-close-modal="modal-user-report" style="margin-top:8px">Abbrechen</button>
   </div>
 </div>
 

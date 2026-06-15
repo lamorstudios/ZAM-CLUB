@@ -163,3 +163,68 @@ CREATE VIEW public.my_connections AS
     CASE WHEN c.user_a = auth.uid() THEN c.user_b ELSE c.user_a END AS other_user_id
   FROM public.connections c
   WHERE c.user_a = auth.uid() OR c.user_b = auth.uid();
+
+-- ═══════════════════════════════════════════════════════════
+-- Phase 10 — Private Messages & Blocks
+-- ═══════════════════════════════════════════════════════════
+
+-- ── Private messages ─────────────────────────────────────
+CREATE TABLE public.private_messages (
+  id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  chat_id           UUID        NOT NULL REFERENCES public.private_chats(id) ON DELETE CASCADE,
+  sender_id         UUID        NOT NULL REFERENCES auth.users(id)            ON DELETE CASCADE,
+  content           TEXT        NOT NULL CHECK (char_length(content) BETWEEN 1 AND 500),
+  read_by_recipient BOOLEAN     NOT NULL DEFAULT false,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.private_messages ENABLE ROW LEVEL SECURITY;
+
+-- Only participants of the chat can read/insert messages
+CREATE POLICY "pm_select" ON public.private_messages
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.private_chat_participants pcp
+      WHERE pcp.chat_id = private_messages.chat_id
+        AND pcp.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "pm_insert" ON public.private_messages
+  FOR INSERT WITH CHECK (
+    sender_id = auth.uid()
+    AND EXISTS (
+      SELECT 1 FROM public.private_chat_participants pcp
+      WHERE pcp.chat_id = private_messages.chat_id
+        AND pcp.user_id = auth.uid()
+    )
+  );
+
+-- Recipient can mark as read
+CREATE POLICY "pm_update_read" ON public.private_messages
+  FOR UPDATE USING (
+    sender_id <> auth.uid()
+    AND EXISTS (
+      SELECT 1 FROM public.private_chat_participants pcp
+      WHERE pcp.chat_id = private_messages.chat_id
+        AND pcp.user_id = auth.uid()
+    )
+  );
+
+-- ── Blocks ───────────────────────────────────────────────
+CREATE TABLE public.blocks (
+  blocker_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  blocked_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (blocker_id, blocked_id)
+);
+
+ALTER TABLE public.blocks ENABLE ROW LEVEL SECURITY;
+
+-- Users can manage their own blocks
+CREATE POLICY "blocks_own" ON public.blocks
+  FOR ALL USING (blocker_id = auth.uid());
+
+-- Index for fast lookup
+CREATE INDEX idx_blocks_blocker ON public.blocks(blocker_id);
+CREATE INDEX idx_pm_chat_created ON public.private_messages(chat_id, created_at);

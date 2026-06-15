@@ -1765,3 +1765,257 @@ a.nav-tab-map { text-decoration: none; }
 .report-option:has(input:checked) { border-color: var(--primary); background: rgba(139,92,246,0.08); }
 .report-option input { accent-color: var(--primary); }
 .btn-danger { color: var(--red) !important; border-color: rgba(239,68,68,0.25) !important; }
+
+/* ═══════════════════════════════════════════════
+   PHASE 10 — Nudges, Contacts & Private Chat
+   ═══════════════════════════════════════════════ */
+
+/* ── Community tabs extended (Kontakte / Anfragen) ── */
+.community-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 14px; }
+.community-tabs::-webkit-scrollbar { display: none; }
+.community-tab { flex-shrink: 0; white-space: nowrap; }
+
+/* Badge on tab */
+.tab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--red); color: #fff;
+  font-size: 0.58rem; font-weight: 700;
+  width: 16px; height: 16px; border-radius: 50%;
+  margin-left: 5px; vertical-align: middle;
+}
+
+/* ── Contacts list ── */
+.contacts-list { padding: 0 16px; }
+.contact-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 14px; margin-bottom: 8px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  cursor: pointer; transition: all 0.18s var(--std);
+  -webkit-tap-highlight-color: transparent;
+}
+.contact-item:active { transform: scale(0.98); background: var(--surface-3); }
+.contact-avatar {
+  width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  background: var(--primary); display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 700; color: #fff; position: relative;
+}
+.contact-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.contact-online-dot {
+  position: absolute; bottom: 1px; right: 1px;
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--green); border: 2px solid var(--surface-2);
+}
+.contact-info { flex: 1; min-width: 0; }
+.contact-name { font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.contact-username { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+.contact-action-btn {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.25);
+  color: var(--primary-light); font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.14s var(--spring);
+}
+.contact-action-btn:active { transform: scale(0.88); background: rgba(139,92,246,0.25); }
+
+/* Contacts empty state */
+.contacts-empty {
+  text-align: center; padding: 40px 20px;
+  color: var(--muted); font-size: 0.86rem; line-height: 1.6;
+}
+.contacts-empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+/* ── Nudge Inbox (Anfragen) ── */
+.nudge-inbox-list { padding: 0 16px; }
+.nudge-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px; border-radius: 14px; margin-bottom: 10px;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.nudge-item-avatar {
+  width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  background: var(--primary); display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 700; color: #fff;
+}
+.nudge-item-info { flex: 1; min-width: 0; }
+.nudge-item-name  { font-size: 0.88rem; font-weight: 600; }
+.nudge-item-time  { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+.nudge-item-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.nudge-accept-btn, .nudge-reject-btn {
+  padding: 7px 14px; border-radius: 99px; font-size: 0.78rem; font-weight: 700;
+  border: none; cursor: pointer; transition: all 0.14s var(--spring);
+}
+.nudge-accept-btn {
+  background: var(--primary); color: #fff;
+}
+.nudge-accept-btn:active { transform: scale(0.92); }
+.nudge-reject-btn {
+  background: var(--surface-3); color: var(--muted);
+  border: 1px solid var(--border);
+}
+.nudge-reject-btn:active { transform: scale(0.92); }
+
+/* ── Private Chat View (full-screen overlay) ── */
+.private-chat-view {
+  position: fixed;
+  top: 0; left: 50%; width: min(100vw, var(--app-w));
+  transform: translateX(-50%) translateX(100vw);
+  height: 100dvh;
+  background: var(--bg);
+  z-index: 201;  /* above chat-room-view */
+  display: flex; flex-direction: column;
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.private-chat-view.open { transform: translateX(-50%) translateX(0); }
+
+.private-chat-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px 12px;
+  padding-top: max(14px, env(safe-area-inset-top, 14px));
+  border-bottom: 1px solid rgba(139,92,246,0.25);
+  background: var(--surface-2);
+  flex-shrink: 0;
+  box-shadow: 0 1px 12px rgba(0,0,0,0.3);
+}
+.private-chat-avatar {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: var(--primary); display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; color: #fff; position: relative;
+}
+.private-chat-header-info { flex: 1; min-width: 0; }
+.private-chat-header-name {
+  font-size: 0.95rem; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.private-chat-header-status { font-size: 0.7rem; color: #10b981; margin-top: 2px; }
+.private-chat-menu-btn {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--muted); font-size: 1.3rem;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.private-chat-messages {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 14px 14px 10px;
+  display: flex; flex-direction: column; gap: 10px;
+  overscroll-behavior: contain;
+}
+/* Reuse .chat-msg, .chat-msg-own, etc. from existing chat styles */
+
+.private-chat-input-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  padding-bottom: max(14px, calc(14px + env(safe-area-inset-bottom, 0px)));
+  border-top: 1px solid rgba(139,92,246,0.2);
+  background: var(--surface-2);
+  flex-shrink: 0;
+}
+
+/* ── User Profile Popup / Sheet ── */
+.user-profile-sheet {
+  position: fixed; bottom: 0; left: 50%; width: min(100vw, var(--app-w));
+  transform: translateX(-50%) translateY(100%);
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid rgba(139,92,246,0.2);
+  z-index: 300;
+  transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0 0 max(20px, env(safe-area-inset-bottom, 20px));
+  max-height: 80dvh; overflow-y: auto;
+}
+.user-profile-sheet.open { transform: translateX(-50%) translateY(0); }
+.user-profile-sheet-handle {
+  width: 40px; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,0.12); margin: 12px auto 0;
+}
+.user-profile-sheet-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 20px 14px;
+}
+.user-profile-sheet-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--primary); display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.user-profile-sheet-info { flex: 1; min-width: 0; }
+.user-profile-sheet-name { font-size: 1.05rem; font-weight: 700; }
+.user-profile-sheet-username { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+.user-profile-sheet-actions {
+  display: flex; flex-direction: column; gap: 8px; padding: 0 16px 8px;
+}
+.user-profile-sheet-danger {
+  display: flex; gap: 8px; padding: 0 16px 4px;
+}
+.user-profile-sheet-danger button {
+  flex: 1; padding: 10px 8px; border-radius: 10px;
+  background: var(--surface-2); border: 1px solid rgba(239,68,68,0.2);
+  color: var(--red); font-size: 0.78rem; font-weight: 600;
+  font-family: var(--font); cursor: pointer;
+  transition: all 0.14s;
+}
+.user-profile-sheet-danger button:active { background: rgba(239,68,68,0.08); }
+
+/* Sheet backdrop */
+.sheet-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 299; opacity: 0; pointer-events: none;
+  transition: opacity 0.28s;
+}
+.sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+
+/* ── Context menu (⋮) ── */
+.context-menu {
+  position: absolute; right: 12px; top: 48px;
+  background: var(--surface-2); border: 1px solid var(--border-2);
+  border-radius: 12px; overflow: hidden;
+  z-index: 350; min-width: 170px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: ctxIn 0.16s var(--spring);
+}
+@keyframes ctxIn { from { opacity:0; transform: scale(0.88) translateY(-8px); } to { opacity:1; transform: scale(1) translateY(0); } }
+.context-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; font-size: 0.84rem; cursor: pointer;
+  transition: background 0.12s; border-bottom: 1px solid var(--border);
+}
+.context-menu-item:last-child { border-bottom: none; }
+.context-menu-item:active { background: var(--surface-3); }
+.context-menu-item.danger { color: var(--red); }
+
+/* ── Notification toasts (typed) ── */
+.toast.nudge    { border-left: 3px solid var(--primary); }
+.toast.message  { border-left: 3px solid var(--blue); }
+.toast.connection { border-left: 3px solid var(--green); }
+
+/* ── Community-tab notification badge ── */
+.nav-community-badge {
+  position: absolute; top: 4px; right: 4px;
+  background: var(--red); color: #fff;
+  font-size: 0.55rem; font-weight: 700;
+  min-width: 16px; height: 16px; border-radius: 99px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px;
+}
+.nav-tab { position: relative; }
+
+/* ── Status chips on map/profile ── */
+.status-chips {
+  display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 0;
+}
+.status-chip {
+  padding: 6px 12px; border-radius: 99px; font-size: 0.78rem; font-weight: 600;
+  background: var(--surface-2); border: 1px solid var(--border);
+  cursor: pointer; transition: all 0.15s var(--spring);
+  -webkit-tap-highlight-color: transparent;
+}
+.status-chip:active, .status-chip.active {
+  background: rgba(139,92,246,0.15); border-color: var(--primary); color: var(--primary-light);
+}
+
+/* ── Private chat unread badge ── */
+.pc-unread-badge {
+  background: var(--red); color: #fff;
+  font-size: 0.62rem; font-weight: 700;
+  padding: 1px 6px; border-radius: 99px;
+  margin-left: auto; flex-shrink: 0;
+}
