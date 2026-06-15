@@ -865,55 +865,25 @@
 <div id="page-merchant-onboarding" class="page">
   <div class="page-header">
     <button class="back-btn" onclick="navigateTo('profile')">←</button>
-    <h1 class="page-title">Händler werden</h1>
+    <h1 class="page-title">Händlerzugang</h1>
   </div>
-  <div style="padding:20px 16px">
-    <div class="onboarding-steps">
-      <div class="ob-step active" data-step="1">1<span>Profil</span></div>
-      <div class="ob-step-line"></div>
-      <div class="ob-step" data-step="2">2<span>Details</span></div>
-      <div class="ob-step-line"></div>
-      <div class="ob-step" data-step="3">3<span>Paket</span></div>
-    </div>
-    <div id="ob-step-1" class="ob-panel active">
-      <h3 class="ob-step-title">Händlerprofil anlegen</h3>
-      <div class="input-group"><label class="input-label">Shop-Name *</label><input type="text" id="ob-name" class="input-field" placeholder="z.B. Mein Shop Freiham"/></div>
-      <div class="input-group"><label class="input-label">Kategorie *</label>
-        <select id="ob-category" class="input-field" style="background:var(--surface-2);color:#e2e8f0">
-          <option value="">Bitte wählen…</option>
-          <option>Mode</option><option>Elektronik</option><option>Gastronomie</option><option>Drogerie</option><option>Sport</option><option>Lebensmittel</option><option>Bücher &amp; Medien</option><option>Schmuck &amp; Accessoires</option><option>Kosmetik &amp; Beauty</option><option>Dienstleistungen</option><option>Sonstiges</option>
-        </select>
-      </div>
-      <div class="input-group"><label class="input-label">Kurzbeschreibung *</label><textarea id="ob-description" class="input-field" rows="3" placeholder="Was macht euren Shop besonders?" maxlength="300"></textarea></div>
-      <div class="input-group"><label class="input-label">Zone im ZAM</label>
-        <select id="ob-zone" class="input-field" style="background:var(--surface-2);color:#e2e8f0">
-          <option value="mk2_1">MK 2(1) – Nahversorgung / Gastro</option>
-          <option value="mk2_2">MK 2(2) – Zentrenrelevante Sortimente</option>
-          <option value="mk2_3">MK 2(3) – Zentrenrelevante Sortimente</option>
-          <option value="mk2_4">MK 2(4) – Nahversorgung</option>
-          <option value="plaza">Mahatma-Gandhi-Platz</option>
-        </select>
-      </div>
-      <button class="btn btn-primary btn-full" onclick="obNextStep(1)" style="margin-top:8px">Weiter →</button>
-    </div>
-    <div id="ob-step-2" class="ob-panel">
-      <h3 class="ob-step-title">Öffnungszeiten &amp; Kontakt</h3>
-      <div class="input-group"><label class="input-label">Öffnungszeiten</label><input type="text" id="ob-hours" class="input-field" placeholder="Mo–Sa 09:00–20:00"/></div>
-      <div class="input-group"><label class="input-label">Telefon (optional)</label><input type="tel" id="ob-phone" class="input-field" placeholder="+49 89 …"/></div>
-      <div class="input-group"><label class="input-label">Website (optional)</label><input type="url" id="ob-website" class="input-field" placeholder="https://meinshop.de"/></div>
-      <div class="input-group"><label class="input-label">Logo (Emoji, 1–2 Zeichen)</label><input type="text" id="ob-logo" class="input-field" placeholder="🏪" maxlength="2" style="font-size:1.5rem;text-align:center"/></div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn btn-ghost btn-full" onclick="obNextStep(0)">← Zurück</button>
-        <button class="btn btn-primary btn-full" onclick="obNextStep(2)">Weiter →</button>
+  <div style="padding:40px 24px;text-align:center">
+    <div style="font-size:3rem;margin-bottom:16px">🔒</div>
+    <h2 style="font-size:1.1rem;font-weight:800;color:#e2e8f0;margin-bottom:10px">Nur auf Einladung</h2>
+    <p style="font-size:0.8rem;color:rgba(255,255,255,0.45);line-height:1.7;margin-bottom:24px">
+      Händlerzugänge werden ausschließlich vom<br>
+      <strong style="color:#c4b5fd">ZAM Center Management</strong> vergeben.<br><br>
+      Bitte wende dich direkt an das Center Management,<br>wenn du als Händler teilnehmen möchtest.
+    </p>
+    <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:14px;padding:16px 20px;margin-bottom:24px;text-align:left">
+      <div style="font-size:0.76rem;font-weight:700;color:#c4b5fd;margin-bottom:6px">📞 Kontakt Center Management</div>
+      <div style="font-size:0.74rem;color:rgba(255,255,255,0.5);line-height:1.7">
+        ZAM Freiham<br>
+        Mahatma-Gandhi-Platz 1<br>
+        81379 München
       </div>
     </div>
-    <div id="ob-step-3" class="ob-panel">
-      <h3 class="ob-step-title">Paket wählen</h3>
-      <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);margin-bottom:16px">14 Tage kostenlos testen – keine Kreditkarte nötig.</p>
-      <div id="ob-plan-cards"></div>
-      <button class="btn btn-ghost btn-full" onclick="obNextStep(-1)" style="margin-top:8px">← Zurück</button>
-    </div>
-    <div class="auth-error" id="ob-error" style="display:none;margin-top:12px"></div>
+    <button onclick="navigateTo('profile')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 24px;color:rgba(255,255,255,0.5);font-size:0.82rem;font-weight:600;font-family:var(--font);cursor:pointer">← Zurück</button>
   </div>
 </div>
 
@@ -989,6 +959,10 @@
   <div class="dash-section">
     <h3 class="dash-section-title">🔔 Push Statistiken</h3>
     <div id="admin-push-stats"></div>
+  </div>
+  <div class="dash-section">
+    <h3 class="dash-section-title">🏪 Händler verwalten</h3>
+    <div id="admin-merchants-container"></div>
   </div>
 </div>
 
