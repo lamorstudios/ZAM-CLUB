@@ -1556,8 +1556,8 @@ ul, ol { list-style: none; }
 /* ── Badge unlock toast ── */
 .badge-unlock-toast {
   position: fixed;
-  bottom: calc(var(--nav-h) + 18px); left: 50%;
-  transform: translateX(-50%) translateY(16px);
+  top: 20px; left: 50%;
+  transform: translateX(-50%) translateY(-16px);
   background: linear-gradient(135deg, #6d28d9, #a855f7);
   color: #fff; border-radius: 16px; padding: 12px 18px;
   display: flex; align-items: center; gap: 10px;
@@ -1568,6 +1568,7 @@ ul, ol { list-style: none; }
   max-width: calc(min(100vw, var(--app-w)) - 40px);
 }
 .badge-unlock-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.badge-unlock-toast { z-index: 10000; }
 .badge-toast-icon { font-size: 1.8rem; flex-shrink: 0; }
 .badge-toast-text { font-size: 0.8rem; }
 .badge-toast-text strong { display: block; font-size: 0.9rem; margin-bottom: 1px; }

@@ -304,7 +304,9 @@ async function toggleSave(type, id, btnEl) {
     }
     showToast(type === 'event' ? '🔖 Event gespeichert!' : '🔖 Deal gespeichert! +5 Punkte', 'success');
     if (type === 'deal') {
-      await addPoints(5, 'deal_saved', 'Deal gespeichert');
+      // Award points silently (toast already shown above)
+      await ZAMApi.points.add(5, 'deal_saved', 'Deal gespeichert');
+      updatePointsDisplay(true);
       await checkBadgesAfterAction();
       renderChallenges();
     }
