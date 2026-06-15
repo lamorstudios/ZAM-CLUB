@@ -514,7 +514,7 @@ const communityPosts = [
       avatar_color: '#ec4899',
       level:        'Platin Member',
     },
-    content:    'Tipp für alle Foodie-Club-Mitglieder: Das Business Lunch bei Levante Kitchen (Tagesgericht + Getränk 10,90 €) ist der beste Mittagstisch in ganz Freiham. Heute gab's Shakshuka mit frischem Pita – einfach unfassbar gut 🍳',
+    content:    'Tipp für alle Foodie-Club-Mitglieder: Das Business Lunch bei Levante Kitchen (Tagesgericht + Getränk 10,90 €) ist der beste Mittagstisch in ganz Freiham. Heute gab es Shakshuka mit frischem Pita – einfach unfassbar gut 🍳',
     tags:       ['LevanteKitchen', 'ZAMDeals', 'Freiham'],
     image_url:  null,
     likes:      54,
