@@ -184,7 +184,7 @@ function initNavigation() {
 // Home Page
 // =============================================
 function renderHome() {
-  const { currentUser } = ZAMData;
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
   const hour = new Date().getHours();
   let greeting = 'Guten Tag';
   if (hour < 12) greeting = 'Guten Morgen';
@@ -194,10 +194,8 @@ function renderHome() {
   if (greetingEl) greetingEl.textContent = greeting + ',';
 
   const nameEl = $('#home-username');
-  if (nameEl) nameEl.textContent = currentUser.display_name.split(' ')[0] + '! 👋';
-
-  const pointsEl = $('#home-points-value');
-  if (pointsEl) animateNumber(pointsEl, 0, currentUser.points, 1200);
+  const firstName = (user.display_name || 'Gast').split(' ')[0];
+  if (nameEl) nameEl.textContent = firstName + '! 👋';
 
   updatePointsDisplay();
   renderHomeEvents();
@@ -215,13 +213,13 @@ function animateNumber(el, from, to, duration) {
   requestAnimationFrame(step);
 }
 
-function renderHomeEvents() {
+async function renderHomeEvents() {
   const container = $('#home-events-scroll');
   if (!container) return;
   container.innerHTML = '';
-
-  ZAMData.events.forEach(evt => {
-    const saved = isSaved('event', evt.id);
+  const events = await ZAMApi.events.list();
+  events.slice(0, 5).forEach(evt => {
+    const saved = ZAMApi.events.isSaved(evt.id);
     const card = el('div', 'event-card-mini card-dark');
     card.style.setProperty('--accent-color', evt.category_color);
     card.innerHTML = `
@@ -248,19 +246,19 @@ function renderHomeEvents() {
   });
 }
 
-function renderHomeDeals() {
+async function renderHomeDeals() {
   const container = $('#home-deals-scroll');
   if (!container) return;
   container.innerHTML = '';
-
-  ZAMData.deals.forEach(deal => {
-    const saved = isSaved('deal', deal.id);
+  const deals = await ZAMApi.deals.list();
+  deals.slice(0, 5).forEach(deal => {
+    const saved = ZAMApi.deals.isSaved(deal.id);
     const card = el('div', 'deal-card-mini card-dark');
     card.innerHTML = `
       ${deal.is_hot ? '<div class="hot-badge">🔥 Hot</div>' : ''}
-      <div class="store-icon">${deal.store_icon}</div>
+      <div class="store-icon">${deal.store_icon || deal.icon || '🏪'}</div>
       <div class="discount-badge">${deal.discount}</div>
-      <div class="store-name">${deal.store_name}</div>
+      <div class="store-name">${deal.store_name || deal.merchant_name || ''}</div>
       <div class="deal-title">${deal.title}</div>
       <button class="bookmark-btn ${saved ? 'saved' : ''}" data-id="${deal.id}" data-type="deal" style="margin-top:8px" aria-label="Merken">
         ${saved ? '🔖 Gespeichert' : '🏷️ Merken'}
@@ -279,35 +277,36 @@ function renderHomeDeals() {
 // Save / Bookmark System
 // =============================================
 function isSaved(type, id) {
-  const saved = Storage.get(`saved_${type}s`, []);
-  return saved.includes(id);
+  if (type === 'event') return ZAMApi.events.isSaved(id);
+  if (type === 'deal')  return ZAMApi.deals.isSaved(id);
+  return false;
 }
 
-function toggleSave(type, id, btnEl) {
-  const key = `saved_${type}s`;
-  let saved = Storage.get(key, []);
-  const wasSaved = saved.includes(id);
+async function toggleSave(type, id, btnEl) {
+  const wasSaved = isSaved(type, id);
 
   if (wasSaved) {
-    saved = saved.filter(x => x !== id);
+    if (type === 'event') await ZAMApi.events.unsave(id);
+    else await ZAMApi.deals.unsave(id);
     if (btnEl) {
       btnEl.textContent = type === 'deal' ? '🏷️ Merken' : '🏷️';
       btnEl.classList.remove('saved');
     }
     showToast(type === 'event' ? 'Event entfernt' : 'Deal entfernt');
   } else {
-    saved.push(id);
+    if (type === 'event') await ZAMApi.events.save(id);
+    else await ZAMApi.deals.save(id);
     if (btnEl) {
       btnEl.textContent = type === 'deal' ? '🔖 Gespeichert' : '🔖';
       btnEl.classList.add('saved');
-      // Spring animation
       btnEl.style.transform = 'scale(1.3)';
       setTimeout(() => { btnEl.style.transform = ''; }, 250);
     }
     showToast(type === 'event' ? '🔖 Event gespeichert!' : '🔖 Deal gespeichert!', 'success');
   }
 
-  Storage.set(key, saved);
+  // Refresh saved summary in profile
+  renderSavedSummary();
 }
 
 // =============================================
@@ -319,46 +318,36 @@ function initDailySpin() {
   btn.addEventListener('click', openSpinModal);
 }
 
+function _spinKey() { return 'zamclub_spin_' + (ZAMApi.auth.currentUser()?.id || 'guest'); }
+function _checkinKey() { return 'zamclub_checkin_' + (ZAMApi.auth.currentUser()?.id || 'guest'); }
+function _todayStr() { return new Date().toISOString().slice(0, 10); }
+
 function openSpinModal() {
   const overlay = $('#modal-spin');
   if (!overlay) return;
-
-  const lastSpin = Storage.get('last_spin_date', null);
-  const alreadySpun = Storage.isToday(lastSpin);
-
+  const lastSpin = localStorage.getItem(_spinKey());
+  const alreadySpun = lastSpin === _todayStr();
   const wheel = $('#spin-wheel');
   const result = $('#spin-result');
   const spinBtn = $('#btn-spin-go');
-
   if (wheel) wheel.style.transform = '';
   if (result) result.classList.remove('show');
-
   if (spinBtn) {
     spinBtn.disabled = alreadySpun;
     spinBtn.textContent = alreadySpun ? '✓ Heute bereits gedreht' : '🎰 Jetzt drehen!';
     spinBtn.className = alreadySpun ? 'btn btn-full claimed' : 'btn btn-primary btn-full';
   }
-
-  // Show next available time if already spun
   const nextSpin = $('#spin-next-info');
-  if (nextSpin) {
-    nextSpin.textContent = alreadySpun ? '⏰ Nächste Drehung ab Mitternacht' : '';
-  }
-
+  if (nextSpin) nextSpin.textContent = alreadySpun ? '⏰ Nächste Drehung ab Mitternacht' : '';
   overlay.classList.add('open');
 }
 
-function doSpin() {
-  const alreadySpun = Storage.isToday(Storage.get('last_spin_date', null));
+async function doSpin() {
+  const alreadySpun = localStorage.getItem(_spinKey()) === _todayStr();
   if (alreadySpun) return;
-
   const spinBtn = $('#btn-spin-go');
-  if (spinBtn) {
-    spinBtn.disabled = true;
-    spinBtn.textContent = '⏳ Dreht…';
-  }
+  if (spinBtn) { spinBtn.disabled = true; spinBtn.textContent = '⏳ Dreht…'; }
 
-  // Weighted random reward
   const rand = Math.random();
   let cumulative = 0;
   let reward = ZAMData.spinRewards[0];
@@ -367,7 +356,6 @@ function doSpin() {
     if (rand <= cumulative) { reward = r; break; }
   }
 
-  // Animate wheel
   const wheel = $('#spin-wheel');
   if (wheel) {
     const deg = 1440 + Math.floor(Math.random() * 360);
@@ -375,8 +363,7 @@ function doSpin() {
     wheel.style.transform = `rotate(${deg}deg)`;
   }
 
-  setTimeout(() => {
-    // Show result
+  setTimeout(async () => {
     const resultEl = $('#spin-result');
     const resultPoints = $('#spin-result-points');
     const resultLabel = $('#spin-result-label');
@@ -384,15 +371,10 @@ function doSpin() {
     if (resultPoints) resultPoints.textContent = '+' + reward.points;
     if (resultLabel) resultLabel.textContent = reward.label + ' gewonnen! 🎉';
 
-    // Award points + persist
-    addPoints(reward.points, 'Daily Spin');
-    Storage.set('last_spin_date', Storage.todayKey());
+    await addPoints(reward.points, 'Daily Spin');
+    localStorage.setItem(_spinKey(), _todayStr());
 
-    if (spinBtn) {
-      spinBtn.textContent = '✓ Punkte gutgeschrieben';
-    }
-
-    // Update next-spin info
+    if (spinBtn) spinBtn.textContent = '✓ Punkte gutgeschrieben';
     const nextSpin = $('#spin-next-info');
     if (nextSpin) nextSpin.textContent = '⏰ Nächste Drehung ab Mitternacht';
   }, 2600);
@@ -410,62 +392,53 @@ function initQRCheckin() {
 function openQRModal() {
   const overlay = $('#modal-qr');
   if (!overlay) return;
-
-  const lastCheckin = Storage.get('last_checkin_date', null);
-  const alreadyCheckedIn = Storage.isToday(lastCheckin);
-
-  // Update the checkin button in the modal
+  const alreadyCheckedIn = localStorage.getItem(_checkinKey()) === _todayStr();
   const checkinBtn = $('#btn-qr-confirm');
   const checkinStatus = $('#qr-checkin-status');
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const memberId = `ZAM-${user.initials || 'MB'}-${String(user.points || 0).padStart(6, '0')}`;
+  const memberIdEl = document.querySelector('[style*="monospace"]');
 
   generateQRGrid();
-
   if (checkinBtn) {
     checkinBtn.disabled = alreadyCheckedIn;
     checkinBtn.textContent = alreadyCheckedIn ? '✓ Heute bereits eingecheckt' : '✅ Jetzt einchecken (+25 Punkte)';
-    checkinBtn.className = alreadyCheckedIn
-      ? 'btn btn-full claimed'
-      : 'btn btn-primary btn-full btn-pulse';
+    checkinBtn.className = alreadyCheckedIn ? 'btn btn-full claimed' : 'btn btn-primary btn-full btn-pulse';
   }
-
   if (checkinStatus) {
-    checkinStatus.textContent = alreadyCheckedIn
-      ? '⏰ Nächster Check-in morgen möglich'
-      : '📍 Zeige diesen Code an der Info-Theke';
+    checkinStatus.textContent = alreadyCheckedIn ? '⏰ Nächster Check-in morgen möglich' : '📍 Zeige diesen Code an der Info-Theke';
   }
-
   overlay.classList.add('open');
 }
 
-function doCheckin() {
-  const alreadyCheckedIn = Storage.isToday(Storage.get('last_checkin_date', null));
+async function doCheckin() {
+  const alreadyCheckedIn = localStorage.getItem(_checkinKey()) === _todayStr();
   if (alreadyCheckedIn) return;
 
-  Storage.set('last_checkin_date', Storage.todayKey());
+  localStorage.setItem(_checkinKey(), _todayStr());
 
-  // Increment visit count
-  const stats = Storage.get('stats', { ...ZAMData.currentUser.stats });
-  stats.visits = (stats.visits || 0) + 1;
-  Storage.set('stats', stats);
-  ZAMData.currentUser.stats.visits = stats.visits;
+  // Update stats
+  const user = ZAMApi.auth.currentUser();
+  if (user) {
+    const statsKey = `zamclub_u_${user.id}`;
+    try {
+      const d = JSON.parse(localStorage.getItem(statsKey) || '{}');
+      d.stats = d.stats || {};
+      d.stats.visits = (d.stats.visits || 0) + 1;
+      localStorage.setItem(statsKey, JSON.stringify(d));
+      ZAMData.currentUser.stats = d.stats;
+    } catch {}
+  }
 
-  addPoints(25, 'QR Check-in');
+  await addPoints(25, 'QR Check-in');
 
-  // Update modal
   const checkinBtn = $('#btn-qr-confirm');
   const checkinStatus = $('#qr-checkin-status');
-  if (checkinBtn) {
-    checkinBtn.disabled = true;
-    checkinBtn.textContent = '✓ Eingecheckt!';
-    checkinBtn.className = 'btn btn-full claimed';
-  }
-  if (checkinStatus) {
-    checkinStatus.textContent = '🎉 +25 Punkte wurden gutgeschrieben!';
-  }
+  if (checkinBtn) { checkinBtn.disabled = true; checkinBtn.textContent = '✓ Eingecheckt!'; checkinBtn.className = 'btn btn-full claimed'; }
+  if (checkinStatus) checkinStatus.textContent = '🎉 +25 Punkte wurden gutgeschrieben!';
 
-  // Update profile stats
   const visitsEl = $('#profile-stat-visits');
-  if (visitsEl) visitsEl.textContent = stats.visits;
+  if (visitsEl) visitsEl.textContent = ZAMData.currentUser.stats.visits;
 
   showToast('📍 Eingecheckt! +25 Punkte', 'success');
 }
@@ -486,48 +459,52 @@ function generateQRGrid() {
 // =============================================
 // Community Page
 // =============================================
-function renderCommunity() {
+async function renderCommunity() {
   const container = $('#community-feed');
   if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-muted)">Lädt…</div>';
+
+  const posts = await ZAMApi.posts.list();
+  state.posts = posts;
   container.innerHTML = '';
 
-  const likedPosts = Storage.get('liked_posts', []);
-  state.posts = ZAMData.communityPosts.map(p => ({
-    ...p,
-    isLiked: likedPosts.includes(p.id),
-    likes: p.likes + (likedPosts.includes(p.id) && !p.is_liked ? 1 : 0),
-  }));
-
-  state.posts.forEach((post, idx) => {
-    container.appendChild(renderPostCard(post, idx));
-  });
+  if (posts.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-muted)">Noch keine Beiträge.</div>';
+    return;
+  }
+  posts.forEach((post, idx) => container.appendChild(renderPostCard(post, idx)));
 }
 
 function renderPostCard(post, idx) {
   const div = el('div', 'community-post card-dark');
   div.dataset.postId = post.id;
+  const currentUser = ZAMApi.auth.currentUser();
+  const isOwn = currentUser && post.user_id === currentUser.id;
 
-  const tagsHtml = post.tags.map(t => `<span class="post-tag">${t}</span>`).join('');
+  const tagsHtml = (post.tags || []).map(t => `<span class="post-tag">${t}</span>`).join('');
+  const deleteBtn = isOwn ? `<button class="post-delete-btn" title="Löschen" aria-label="Beitrag löschen">🗑</button>` : '';
+  const statusBadge = post.status === 'pending' ? `<span style="font-size:0.68rem;color:#f59e0b;margin-left:6px">⏳ ausstehend</span>` : '';
 
   div.innerHTML = `
     <div class="post-header">
-      <div class="post-avatar" style="background:${post.author.avatar_color}">${post.author.initials}</div>
+      <div class="post-avatar" style="background:${post.author?.avatar_color || '#8b5cf6'}">${post.author?.initials || '?'}</div>
       <div class="post-author-info">
-        <div class="post-author-name">${post.author.name}</div>
-        <div class="post-author-level">${post.author.level}</div>
+        <div class="post-author-name">${post.author?.name || 'Unbekannt'}${statusBadge}</div>
+        <div class="post-author-level">${post.author?.level || 'Member'}</div>
       </div>
-      <div class="post-time">${post.time_ago}</div>
+      <div class="post-time">${post.time_ago || ''}</div>
+      ${deleteBtn}
     </div>
     <div class="post-content">${post.content}</div>
     <div class="post-tags">${tagsHtml}</div>
     <div class="post-actions">
       <button class="post-action-btn ${post.is_liked ? 'liked' : ''}" data-idx="${idx}">
         <span class="action-icon">${post.is_liked ? '❤️' : '🤍'}</span>
-        <span class="like-count">${post.likes}</span>
+        <span class="like-count">${post.likes || 0}</span>
       </button>
       <button class="post-action-btn" data-comments-post="${post.id}">
         <span class="action-icon">💬</span>
-        <span>${post.comments}</span>
+        <span>${post.comments || 0}</span>
       </button>
       <button class="post-action-btn" style="margin-left:auto">
         <span class="action-icon">↗️</span>
@@ -536,64 +513,63 @@ function renderPostCard(post, idx) {
     </div>
   `;
 
-  div.querySelector('.post-action-btn').addEventListener('click', () => toggleLike(idx, div));
+  div.querySelector('[data-idx]').addEventListener('click', () => toggleLike(idx, div));
   const commentsBtn = div.querySelector('[data-comments-post]');
-  if (commentsBtn) commentsBtn.addEventListener('click', () => openComments(post.id, post.author.name));
+  if (commentsBtn) commentsBtn.addEventListener('click', () => openComments(post.id, post.author?.name));
+  if (isOwn) {
+    const delBtn = div.querySelector('.post-delete-btn');
+    if (delBtn) delBtn.addEventListener('click', () => deletePost(post.id, div));
+  }
   return div;
 }
 
-function toggleLike(idx, cardEl) {
+async function deletePost(postId, cardEl) {
+  if (!confirm('Beitrag löschen?')) return;
+  try {
+    await ZAMApi.posts.delete(postId);
+    cardEl.style.opacity = '0';
+    cardEl.style.transition = 'opacity 0.3s';
+    setTimeout(() => cardEl.remove(), 300);
+    showToast('Beitrag gelöscht', 'success');
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function toggleLike(idx, cardEl) {
   const post = state.posts[idx];
   post.is_liked = !post.is_liked;
-  post.likes += post.is_liked ? 1 : -1;
+  post.likes = Math.max(0, (post.likes || 0) + (post.is_liked ? 1 : -1));
 
-  // Persist
-  let liked = Storage.get('liked_posts', []);
-  if (post.is_liked) liked.push(post.id);
-  else liked = liked.filter(id => id !== post.id);
-  Storage.set('liked_posts', liked);
+  if (post.is_liked) await ZAMApi.posts.like(post.id);
+  else await ZAMApi.posts.unlike(post.id);
 
-  const likeBtn = cardEl.querySelector('.post-action-btn');
-  const icon = likeBtn.querySelector('.action-icon');
-  const count = likeBtn.querySelector('.like-count');
-
-  likeBtn.classList.toggle('liked', post.is_liked);
-  icon.textContent = post.is_liked ? '❤️' : '🤍';
-  count.textContent = post.likes;
-
-  likeBtn.style.transform = 'scale(1.4)';
-  setTimeout(() => { likeBtn.style.transform = ''; }, 220);
+  const likeBtn = cardEl.querySelector('[data-idx]');
+  const icon = likeBtn?.querySelector('.action-icon');
+  const count = likeBtn?.querySelector('.like-count');
+  if (likeBtn) likeBtn.classList.toggle('liked', post.is_liked);
+  if (icon) icon.textContent = post.is_liked ? '❤️' : '🤍';
+  if (count) count.textContent = post.likes;
+  if (likeBtn) {
+    likeBtn.style.transform = 'scale(1.4)';
+    setTimeout(() => { likeBtn.style.transform = ''; }, 220);
+  }
 }
 
 // =============================================
 // Events Page
 // =============================================
-function renderEvents(filter = 'all') {
+async function renderEvents(filter = 'all') {
   state.eventFilter = filter;
-
-  const joinedEvents = Storage.get('joined_events', []);
-  const savedEvents = Storage.get('saved_events', []);
-
-  state.events = ZAMData.events.map(e => ({
-    ...e,
-    isJoined: joinedEvents.includes(e.id),
-    isSaved: savedEvents.includes(e.id),
-  }));
-
   const container = $('#events-list');
   if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-muted)">Lädt…</div>';
+
+  $$('.filter-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.filter === filter));
+
+  state.events = await ZAMApi.events.list(filter);
   container.innerHTML = '';
-
-  $$('.filter-tab').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.filter === filter);
-  });
-
-  let filtered = state.events;
-  if (filter === 'week') filtered = state.events.slice(0, 2);
-
-  filtered.forEach((evt, idx) => {
-    container.appendChild(renderEventCard(evt, idx));
-  });
+  state.events.forEach((evt, idx) => container.appendChild(renderEventCard(evt, idx)));
 }
 
 function renderEventCard(evt, idx) {
@@ -640,57 +616,47 @@ function renderEventCard(evt, idx) {
   return div;
 }
 
-function joinEvent(idx, cardEl) {
+async function joinEvent(idx, cardEl) {
   const evt = state.events[idx];
   if (evt.is_joined) return;
 
+  await ZAMApi.events.register(evt.id);
   evt.is_joined = true;
-  evt.spots_left = Math.max(0, evt.spots_left - 1);
-
-  // Persist
-  const joined = Storage.get('joined_events', []);
-  if (!joined.includes(evt.id)) joined.push(evt.id);
-  Storage.set('joined_events', joined);
+  evt.spots_left = Math.max(0, (evt.spots_left || 0) - 1);
 
   // Update stats
-  const stats = Storage.get('stats', { ...ZAMData.currentUser.stats });
-  stats.events_attended = (stats.events_attended || 0) + 1;
-  Storage.set('stats', stats);
-  ZAMData.currentUser.stats.events_attended = stats.events_attended;
+  const user = ZAMApi.auth.currentUser();
+  if (user) {
+    const statsKey = `zamclub_u_${user.id}`;
+    try {
+      const d = JSON.parse(localStorage.getItem(statsKey) || '{}');
+      d.stats = d.stats || {};
+      d.stats.events_attended = (d.stats.events_attended || 0) + 1;
+      localStorage.setItem(statsKey, JSON.stringify(d));
+      ZAMData.currentUser.stats = d.stats;
+    } catch {}
+  }
 
   const btn = cardEl.querySelector('.btn');
-  btn.className = 'btn btn-sm joined';
-  btn.textContent = '✓ Angemeldet';
+  if (btn) { btn.className = 'btn btn-sm joined'; btn.textContent = '✓ Angemeldet'; }
 
-  addPoints(evt.points_reward, evt.title);
-
-  // Update profile
+  await addPoints(evt.points_reward || 0, evt.title);
   const eventsEl = $('#profile-stat-events');
-  if (eventsEl) eventsEl.textContent = stats.events_attended;
-
-  showToast(`🎉 Angemeldet! +${evt.points_reward} Punkte`, 'success');
+  if (eventsEl) eventsEl.textContent = ZAMData.currentUser.stats?.events_attended || 0;
+  showToast(`🎉 Angemeldet! +${evt.points_reward || 0} Punkte`, 'success');
 }
 
 // =============================================
 // Deals Page
 // =============================================
-function renderDeals() {
-  const claimedDeals = Storage.get('claimed_deals', []);
-  const savedDeals = Storage.get('saved_deals', []);
-
-  state.deals = ZAMData.deals.map(d => ({
-    ...d,
-    isClaimed: claimedDeals.includes(d.id),
-    isSaved: savedDeals.includes(d.id),
-  }));
-
+async function renderDeals() {
   const container = $('#deals-list');
   if (!container) return;
-  container.innerHTML = '';
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-muted)">Lädt…</div>';
 
-  state.deals.forEach((deal, idx) => {
-    container.appendChild(renderDealCard(deal, idx));
-  });
+  state.deals = await ZAMApi.deals.list();
+  container.innerHTML = '';
+  state.deals.forEach((deal, idx) => container.appendChild(renderDealCard(deal, idx)));
 }
 
 function renderDealCard(deal, idx) {
@@ -737,45 +703,41 @@ function renderDealCard(deal, idx) {
   return div;
 }
 
-function claimDeal(idx, cardEl, deal) {
+async function claimDeal(idx, cardEl, deal) {
   const overlay = $('#modal-barcode');
   if (!overlay) return;
 
   const title = $('#modal-barcode-title');
   const subtitle = $('#modal-barcode-subtitle');
   const barcodeNum = $('#barcode-number');
-
   if (title) title.textContent = deal.title;
-  if (subtitle) subtitle.textContent = deal.store_name + ' · ' + deal.expiry_formatted;
-  if (barcodeNum) barcodeNum.textContent = deal.barcode;
+  if (subtitle) subtitle.textContent = (deal.store_name || '') + ' · ' + (deal.expiry_formatted || '');
+  if (barcodeNum) barcodeNum.textContent = deal.barcode || '0000-0000-0000';
 
   generateBarcode();
   overlay.classList.add('open');
 
-  // Persist
-  const claimed = Storage.get('claimed_deals', []);
-  if (!claimed.includes(deal.id)) claimed.push(deal.id);
-  Storage.set('claimed_deals', claimed);
+  await ZAMApi.deals.redeem(deal.id);
 
   // Update stats
-  const stats = Storage.get('stats', { ...ZAMData.currentUser.stats });
-  stats.deals_used = (stats.deals_used || 0) + 1;
-  Storage.set('stats', stats);
-  ZAMData.currentUser.stats.deals_used = stats.deals_used;
-
-  state.deals[idx].isClaimed = true;
-  const btn = cardEl.querySelector('.btn');
-  if (btn) {
-    btn.className = 'btn btn-sm claimed';
-    btn.textContent = '✓ Eingelöst';
-    btn.disabled = true;
+  const user = ZAMApi.auth.currentUser();
+  if (user) {
+    try {
+      const d = JSON.parse(localStorage.getItem(`zamclub_u_${user.id}`) || '{}');
+      d.stats = d.stats || {};
+      d.stats.deals_used = (d.stats.deals_used || 0) + 1;
+      localStorage.setItem(`zamclub_u_${user.id}`, JSON.stringify(d));
+      ZAMData.currentUser.stats = d.stats;
+    } catch {}
   }
 
-  addPoints(deal.points_reward, deal.store_name);
+  state.deals[idx].is_claimed = true;
+  const btn = cardEl.querySelector('[data-idx]') || cardEl.querySelector('.btn');
+  if (btn) { btn.className = 'btn btn-sm claimed'; btn.textContent = '✓ Eingelöst'; btn.disabled = true; }
 
-  // Update profile
+  await addPoints(deal.points_reward || 0, deal.store_name || 'Deal');
   const dealsEl = $('#profile-stat-deals');
-  if (dealsEl) dealsEl.textContent = stats.deals_used;
+  if (dealsEl) dealsEl.textContent = ZAMData.currentUser.stats?.deals_used || 0;
 }
 
 function generateBarcode() {
@@ -843,12 +805,16 @@ function renderMerchantCard(merchant, idx) {
 // =============================================
 // Profile Page
 // =============================================
-function renderProfile() {
-  const { currentUser } = ZAMData;
-
-  // Load persisted stats
-  const stats = Storage.get('stats', currentUser.stats);
-  currentUser.stats = stats;
+async function renderProfile() {
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const pts = await ZAMApi.points.get();
+  let stats = user.stats || ZAMData.currentUser.stats;
+  if (user.id && user.id !== 'guest') {
+    try {
+      const d = JSON.parse(localStorage.getItem(`zamclub_u_${user.id}`) || '{}');
+      if (d.stats) stats = d.stats;
+    } catch {}
+  }
 
   const nameEl = $('#profile-name');
   const usernameEl = $('#profile-username');
@@ -859,34 +825,46 @@ function renderProfile() {
   const eventsEl = $('#profile-stat-events');
   const dealsEl = $('#profile-stat-deals');
 
-  if (nameEl)    nameEl.textContent    = currentUser.display_name;
-  if (usernameEl) usernameEl.textContent = currentUser.username;
-  if (memberEl)  memberEl.textContent  = currentUser.member_since_formatted;
-  if (pointsEl)  pointsEl.textContent  = currentUser.points.toLocaleString('de-DE');
-  if (avatarEl)  avatarEl.textContent  = currentUser.initials;
-  if (visitsEl)  visitsEl.textContent  = stats.visits;
-  if (eventsEl)  eventsEl.textContent  = stats.events_attended;
-  if (dealsEl)   dealsEl.textContent   = stats.deals_used;
+  if (nameEl) nameEl.textContent = user.display_name || 'Nutzer';
+  if (usernameEl) usernameEl.textContent = user.username || '@nutzer';
+  if (memberEl) memberEl.textContent = user.member_since_formatted || 'Neues Mitglied';
+  if (pointsEl) pointsEl.textContent = pts.toLocaleString('de-DE');
+  if (avatarEl) {
+    if (user.avatar_url) {
+      avatarEl.style.backgroundImage = `url(${user.avatar_url})`;
+      avatarEl.style.backgroundSize = 'cover';
+      avatarEl.textContent = '';
+    } else {
+      avatarEl.style.backgroundImage = '';
+      avatarEl.textContent = user.initials || '?';
+    }
+  }
+  if (visitsEl) visitsEl.textContent = stats?.visits || 0;
+  if (eventsEl) eventsEl.textContent = stats?.events_attended || 0;
+  if (dealsEl) dealsEl.textContent = stats?.deals_used || 0;
 
+  updatePointsDisplay();
   renderBadges();
-  renderSavedSummary();
+  await renderSavedSummary();
 }
 
-function renderSavedSummary() {
-  const savedEvents = Storage.get('saved_events', []);
-  const savedDeals  = Storage.get('saved_deals', []);
+async function renderSavedSummary() {
+  const savedEventsArr = await ZAMApi.profile.savedEvents();
+  const savedDealsArr = await ZAMApi.profile.savedDeals();
 
-  const el = $('#profile-saved-summary');
-  if (!el) return;
+  const container = $('#profile-saved-summary');
+  if (!container) return;
 
-  el.innerHTML = `
-    <div class="saved-chip" onclick="navigateTo('events')">
-      🔖 ${savedEvents.length} Events gemerkt
-    </div>
-    <div class="saved-chip" onclick="navigateTo('deals')">
-      🏷️ ${savedDeals.length} Deals gemerkt
-    </div>
-  `;
+  if (savedDealsArr.length === 0 && savedEventsArr.length === 0) {
+    container.innerHTML = '<div style="font-size:0.8rem;color:var(--color-text-muted)">Noch nichts gemerkt.</div>';
+    return;
+  }
+
+  container.innerHTML = [
+    savedEventsArr.length ? `<div class="saved-chip" onclick="navigateTo('events')">🔖 ${savedEventsArr.length} Event${savedEventsArr.length !== 1 ? 's' : ''} gemerkt</div>` : '',
+    savedDealsArr.length ? `<div class="saved-chip" onclick="navigateTo('deals')">🏷️ ${savedDealsArr.length} Deal${savedDealsArr.length !== 1 ? 's' : ''} gemerkt</div>` : '',
+    savedDealsArr.length ? `<div class="saved-chip" onclick="openSavedDeals()" style="background:var(--primary,#8b5cf6);color:white;border-color:var(--primary,#8b5cf6)">Gespeicherte Deals →</div>` : '',
+  ].join('');
 }
 
 function renderBadges() {
@@ -953,7 +931,7 @@ function initEventFilters() {
 function initButtonAnimations() {
   setTimeout(() => {
     const spinBtn = $('#btn-daily-spin');
-    if (spinBtn && !Storage.isToday(Storage.get('last_spin_date', null))) {
+    if (spinBtn && localStorage.getItem(_spinKey()) !== _todayStr()) {
       spinBtn.classList.add('btn-pulse');
       spinBtn.addEventListener('animationend', () => spinBtn.classList.remove('btn-pulse'));
     }
@@ -1007,7 +985,9 @@ function initAuth() {
   const demoBtn = $('#btn-demo-login');
   if (demoBtn) {
     demoBtn.addEventListener('click', async () => {
-      await ZAMApi.auth.signIn('demo@zamclub.de', 'demo1234');
+      demoBtn.textContent = '⏳ Demo wird geladen…';
+      demoBtn.disabled = true;
+      await ZAMApi.auth.demoLogin();
       showApp();
     });
   }
@@ -1086,6 +1066,22 @@ function showApp() {
   const appShell  = $('#app-shell');
   if (authShell) authShell.style.display = 'none';
   if (appShell)  appShell.style.display  = 'block';
+
+  // Sync points from per-user store into session
+  const user = ZAMApi.auth.currentUser();
+  if (user) {
+    try {
+      const d = JSON.parse(localStorage.getItem(`zamclub_u_${user.id}`) || '{}');
+      if (d.points !== undefined) {
+        user.points = d.points;
+        const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+        g.session_user = user;
+        localStorage.setItem('zamclub_global', JSON.stringify(g));
+        ZAMData.currentUser = { ...ZAMData.currentUser, ...user };
+      }
+    } catch {}
+  }
+
   renderAll();
   state.currentPage = '';
   navigateTo('home');
@@ -1307,19 +1303,127 @@ async function openMerchantDetail(merchantId) {
 }
 
 // =============================================
-// Init (updated)
+// Saved Deals Modal
+// =============================================
+async function openSavedDeals() {
+  const overlay = $('#modal-saved-deals');
+  if (!overlay) return;
+  const listEl = $('#saved-deals-list');
+  if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--color-text-muted)">Lädt…</div>';
+  overlay.classList.add('open');
+  const deals = await ZAMApi.profile.savedDeals();
+  if (!listEl) return;
+  if (deals.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--color-text-muted)">Noch keine Deals gespeichert.</div>';
+    return;
+  }
+  listEl.innerHTML = deals.map(d => `
+    <div class="merchant-mini-card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:1.5rem">${d.store_icon || d.icon || '🏪'}</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:0.88rem">${d.title}</div>
+          <div style="font-size:0.75rem;color:var(--color-text-muted)">${d.store_name || ''} · ${d.expiry_formatted || ''}</div>
+          <div style="font-size:0.78rem;color:${d.category_color || '#8b5cf6'};margin-top:2px">${d.discount}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// =============================================
+// Points History Modal
+// =============================================
+async function openPointsHistory() {
+  const overlay = $('#modal-points-history');
+  if (!overlay) return;
+  const listEl = $('#points-history-list');
+  if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--color-text-muted)">Lädt…</div>';
+  overlay.classList.add('open');
+  const log = await ZAMApi.points.log(30);
+  if (!listEl) return;
+  if (log.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--color-text-muted)">Noch keine Punkte-Historie. Drehe das Glücksrad oder checke ein!</div>';
+    return;
+  }
+  listEl.innerHTML = log.map(entry => {
+    const d = new Date(entry.created_at);
+    const dateStr = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+    return `<div class="points-history-item">
+      <div class="points-history-desc">${entry.description || entry.action}</div>
+      <div class="points-history-meta">${dateStr}</div>
+      <div class="points-history-pts">+${entry.points}</div>
+    </div>`;
+  }).join('');
+}
+
+// =============================================
+// Profile Edit Modal
+// =============================================
+function openProfileEdit() {
+  const overlay = $('#modal-profile-edit');
+  if (!overlay) return;
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const nameInput = $('#edit-display-name');
+  const usernameInput = $('#edit-username');
+  const errEl = $('#profile-edit-error');
+  if (nameInput) nameInput.value = user.display_name || '';
+  if (usernameInput) usernameInput.value = (user.username || '').replace(/^@/, '');
+  if (errEl) errEl.style.display = 'none';
+  const preview = $('#edit-avatar-preview');
+  if (preview) {
+    if (user.avatar_url) { preview.style.backgroundImage = `url(${user.avatar_url})`; preview.style.backgroundSize = 'cover'; preview.textContent = ''; }
+    else { preview.style.backgroundImage = ''; preview.textContent = user.initials || '?'; }
+  }
+  overlay.classList.add('open');
+}
+
+function initProfileEdit() {
+  const saveBtn = $('#btn-profile-edit-save');
+  const avatarInput = $('#edit-avatar-input');
+  const avatarBtn = $('#btn-change-avatar');
+  if (avatarBtn) avatarBtn.addEventListener('click', () => avatarInput?.click());
+  if (avatarInput) {
+    avatarInput.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const url = await ZAMApi.auth.uploadAvatar(file);
+        const avatarEl = $('#profile-avatar');
+        if (avatarEl) { avatarEl.style.backgroundImage = `url(${url})`; avatarEl.style.backgroundSize = 'cover'; avatarEl.textContent = ''; }
+        const preview = $('#edit-avatar-preview');
+        if (preview) { preview.style.backgroundImage = `url(${url})`; preview.style.backgroundSize = 'cover'; preview.textContent = ''; }
+        showToast('Profilbild aktualisiert!', 'success');
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+  }
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      const name = $('#edit-display-name')?.value?.trim();
+      const username = $('#edit-username')?.value?.trim();
+      const errEl = $('#profile-edit-error');
+      if (!name) { if (errEl) { errEl.textContent = 'Name darf nicht leer sein.'; errEl.style.display = 'block'; } return; }
+      saveBtn.textContent = 'Speichern…';
+      saveBtn.disabled = true;
+      try {
+        await ZAMApi.auth.updateProfile({ display_name: name, username });
+        closeModal('modal-profile-edit');
+        await renderProfile();
+        renderHome();
+        showToast('✅ Profil aktualisiert!', 'success');
+      } catch (err) {
+        if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; }
+      }
+      saveBtn.textContent = 'Speichern';
+      saveBtn.disabled = false;
+    });
+  }
+}
+
+// =============================================
+// Init
 // =============================================
 function init() {
-  // Load persisted points
-  const savedPoints = Storage.get('points', null);
-  if (savedPoints !== null) ZAMData.currentUser.points = savedPoints;
-
-  // Merge admin-created items with mock data
-  const adminData = JSON.parse(localStorage.getItem('zamclub_admin') || '{}');
-  if (adminData.events?.length) ZAMData.events = [...ZAMData.events, ...adminData.events];
-  if (adminData.deals?.length)  ZAMData.deals  = [...ZAMData.deals,  ...adminData.deals];
-
-  // Init interactions
   initNavigation();
   initModals();
   initDailySpin();
@@ -1328,8 +1432,7 @@ function init() {
   initButtonAnimations();
   initComments();
   initNewPost();
-
-  // Auth — decides whether to show app or auth screens
+  initProfileEdit();
   initAuth();
 }
 

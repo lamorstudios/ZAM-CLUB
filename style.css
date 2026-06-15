@@ -1382,3 +1382,43 @@ ul, ol { list-style: none; }
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+/* ── Post delete button ── */
+.post-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.45;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: opacity 0.2s, background 0.2s;
+}
+.post-delete-btn:hover { opacity: 1; background: rgba(239,68,68,0.12); }
+
+/* ── Points history list ── */
+.points-history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.points-history-item:last-child { border-bottom: none; }
+.points-history-desc {
+  flex: 1;
+  font-size: 0.83rem;
+  color: var(--text);
+}
+.points-history-meta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.points-history-pts {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #10b981;
+  min-width: 36px;
+  text-align: right;
+}

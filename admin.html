@@ -1072,7 +1072,7 @@ document.getElementById('form-promos').addEventListener('submit', function(e) {
 // ═══════════════════════════════════════════════
 // MODERATION
 // ═══════════════════════════════════════════════
-const APP_KEY = 'zamclub_v1';
+const APP_KEY = 'zamclub_global';
 
 function appStore(key, fb = []) {
   try { return JSON.parse(localStorage.getItem(APP_KEY) || '{}')[key] ?? fb; }
