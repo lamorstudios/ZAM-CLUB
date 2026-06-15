@@ -1,32 +1,57 @@
-const CACHE = 'zam-v1';
-const ASSETS = ['/', '/index.html', '/style.css', '/app.js', '/api.js', '/map.html'];
+const CACHE = 'zam-club-v2';
+const ASSETS = [
+  '/', '/index.html', '/style.css', '/app.js', '/api.js', '/map.html',
+  '/manifest.json', '/assets/icon.svg'
+];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll(ASSETS).catch(() => {}))
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(clients.claim());
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    ).then(() => clients.claim())
+  );
 });
 
 self.addEventListener('fetch', e => {
-  // Network first for HTML, cache first for assets
+  const url = new URL(e.request.url);
+  if (e.request.method !== 'GET') return;
+  // HTML: network first, fallback to cache
   if (e.request.mode === 'navigate') {
-    e.respondWith(fetch(e.request).catch(() => caches.match('/index.html')));
-  } else {
-    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+    e.respondWith(
+      fetch(e.request)
+        .then(r => { const c = r.clone(); caches.open(CACHE).then(cx => cx.put(e.request, c)); return r; })
+        .catch(() => caches.match('/index.html'))
+    );
+    return;
   }
+  // Assets: stale-while-revalidate
+  e.respondWith(
+    caches.open(CACHE).then(cache =>
+      cache.match(e.request).then(cached => {
+        const fresh = fetch(e.request).then(r => {
+          if (r.ok) cache.put(e.request, r.clone());
+          return r;
+        }).catch(() => null);
+        return cached || fresh;
+      })
+    )
+  );
 });
 
-// Push event from server (future)
 self.addEventListener('push', e => {
   const data = e.data ? e.data.json() : {title: 'ZAM Club', body: 'Neue Benachrichtigung'};
   e.waitUntil(
     self.registration.showNotification(data.title || 'ZAM Club', {
       body: data.body || '',
-      icon: '/assets/icon-192.png',
-      badge: '/assets/badge-72.png',
+      icon: '/assets/icon.svg',
+      badge: '/assets/icon.svg',
       tag: data.tag || 'zam-notif',
       data: data,
       vibrate: [200, 100, 200],
@@ -35,7 +60,6 @@ self.addEventListener('push', e => {
   );
 });
 
-// Click on notification
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const url = e.notification.data?.url || '/';

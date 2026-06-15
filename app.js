@@ -188,6 +188,8 @@ function navigateTo(pageId) {
     renderMerchantDashboard();
   } else if (pageId === 'admin-dashboard') {
     renderAdminDashboard();
+  } else if (pageId === 'demo') {
+    renderDemoMode();
   }
 }
 
@@ -2823,9 +2825,206 @@ function _topNotifType(byType) {
 }
 
 // =============================================
+// Phase 13: PWA, Demo Mode, Offline, Helpers
+// =============================================
+
+// PWA Install
+let _deferredInstall = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstall = e;
+  const dismissed = localStorage.getItem('zam_pwa_dismissed');
+  if (!dismissed) {
+    setTimeout(() => { document.getElementById('pwa-install-banner').style.display = 'block'; }, 3000);
+  }
+});
+
+function installPWA() {
+  if (_deferredInstall) {
+    _deferredInstall.prompt();
+    _deferredInstall.userChoice.then(() => { _deferredInstall = null; });
+  }
+  document.getElementById('pwa-install-banner').style.display = 'none';
+}
+
+function dismissInstallBanner() {
+  document.getElementById('pwa-install-banner').style.display = 'none';
+  localStorage.setItem('zam_pwa_dismissed', '1');
+}
+
+// Offline Banner
+function updateOnlineStatus() {
+  const banner = document.getElementById('offline-banner');
+  if (!banner) return;
+  if (!navigator.onLine) {
+    banner.style.display = 'block';
+    document.body.style.paddingTop = '40px';
+  } else {
+    banner.style.display = 'none';
+    document.body.style.paddingTop = '';
+  }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+
+// Role Guard
+function requireRole(role, containerId) {
+  const user = ZAMApi.auth.currentUser();
+  if (!user) return false;
+  const ok = role === 'merchant' ? (user.role === 'merchant' || user.role === 'admin') : user.role === role;
+  if (!ok) {
+    const el = document.getElementById(containerId);
+    if (el) el.innerHTML = `<div class="role-guard"><div class="role-guard-icon">🔒</div><div class="role-guard-title">Kein Zugang</div><div class="role-guard-sub">Dieser Bereich ist nur für ${role === 'merchant' ? 'Händler' : 'Administratoren'} verfügbar.</div></div>`;
+  }
+  return ok;
+}
+
+// Empty State Helper
+function emptyState(icon, title, sub) {
+  return `<div class="empty-state"><div class="empty-state-icon">${icon}</div><div class="empty-state-title">${title}</div><div class="empty-state-sub">${sub}</div></div>`;
+}
+
+// Skeleton Helper
+function showSkeleton(containerId, count = 3) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = Array(count).fill('<div class="skeleton skeleton-card"></div>').join('');
+}
+
+// Demo / Pitch Mode
+let _demoRotateInterval = null;
+
+function renderDemoMode() {
+  const page = document.getElementById('page-demo');
+  if (!page) return;
+
+  // KPI Cards
+  const users = ZAMApi.auth ? (() => { try { return (JSON.parse(localStorage.getItem('zamclub_global') || '{}')).accounts?.length || 0; } catch { return 0; } })() : 0;
+  const events = ZAMApi.events.list().length;
+  const deals = ZAMApi.deals.list().length;
+  const commStats = ZAMApi.analytics.getCommunityStats();
+  const kpiGrid = document.getElementById('demo-kpi-grid');
+  if (kpiGrid) kpiGrid.innerHTML = [
+    { num: Math.max(users, 1), lbl: 'Mitglieder' },
+    { num: events, lbl: 'Events' },
+    { num: deals, lbl: 'Deals' },
+    { num: commStats.posts || 0, lbl: 'Posts' },
+  ].map(k => `<div class="demo-kpi-card"><div class="demo-kpi-num">${k.num}</div><div class="demo-kpi-lbl">${k.lbl}</div></div>`).join('');
+
+  // Activity Feed — rotate entries
+  const activities = [
+    { icon: '👋', text: 'Mia K. hat Felix B. angestupst', time: 'gerade eben' },
+    { icon: '🎉', text: 'Neues Event: Sommermarkt Freiham – 42 Interessierte', time: 'vor 2 Min.' },
+    { icon: '🏷️', text: 'New Balance Store: 20% Rabatt – 18 Aufrufe', time: 'vor 5 Min.' },
+    { icon: '💬', text: 'Anna P. hat in Community geschrieben', time: 'vor 8 Min.' },
+    { icon: '📍', text: '3 neue Nutzer im MK 2(2) eingecheckt', time: 'vor 12 Min.' },
+    { icon: '🏆', text: 'Tom W. hat Gold-Badge freigeschaltet', time: 'vor 18 Min.' },
+  ];
+
+  let actIdx = 0;
+  function renderActivity() {
+    const feed = document.getElementById('demo-activity-feed');
+    if (!feed) return;
+    const slice = activities.slice(actIdx % activities.length, (actIdx % activities.length) + 3);
+    const wrapped = [...slice, ...activities].slice(0, 3);
+    feed.innerHTML = wrapped.map(a => `
+      <div class="demo-activity-item">
+        <div class="demo-activity-icon">${a.icon}</div>
+        <div>
+          <div class="demo-activity-text">${a.text}</div>
+          <div class="demo-activity-time">${a.time}</div>
+        </div>
+      </div>`).join('');
+    actIdx++;
+  }
+  renderActivity();
+  clearInterval(_demoRotateInterval);
+  _demoRotateInterval = setInterval(renderActivity, 4000);
+
+  // Zone Heatmap
+  const heatmap = ZAMApi.analytics.getZoneHeatmap();
+  const zoneNames = { mk2_1: 'MK 2(1) Orange', mk2_2: 'MK 2(2) Lila', mk2_3: 'MK 2(3) Grün', mk2_4: 'MK 2(4) Blau', plaza: 'Gandhi-Platz' };
+  const zoneColors = { mk2_1: '#d97706', mk2_2: '#7c3aed', mk2_3: '#059669', mk2_4: '#2563eb', plaza: '#8b5cf6' };
+  const zoneEl = document.getElementById('demo-zone-heatmap');
+  if (zoneEl) {
+    const entries = Object.entries(heatmap).sort((a, b) => b[1] - a[1]);
+    const maxV = Math.max(...entries.map(e => e[1]), 1);
+    zoneEl.innerHTML = entries.map(([zone, count]) => `
+      <div class="zone-bar-row">
+        <div class="zone-bar-name" style="color:${zoneColors[zone] || '#e2e8f0'}">${zoneNames[zone] || zone}</div>
+        <div class="zone-bar-track"><div class="zone-bar-fill" style="width:${(count / maxV * 100).toFixed(0)}%;background:${zoneColors[zone] || '#8b5cf6'}"></div></div>
+        <div class="zone-bar-count">${count}</div>
+      </div>`).join('');
+  }
+}
+
+// 5-tap Easter egg on logo to open demo mode
+let _logoTaps = 0, _logoTimer = null;
+function onLogoTap() {
+  _logoTaps++;
+  clearTimeout(_logoTimer);
+  _logoTimer = setTimeout(() => { _logoTaps = 0; }, 1500);
+  if (_logoTaps >= 5) {
+    _logoTaps = 0;
+    navigateTo('demo');
+    showToast('🎯 Demo-Modus aktiviert');
+  }
+}
+
+// Seed real ZAM content (called once on first launch)
+function seedZAMContent() {
+  const seeded = localStorage.getItem('zam_seeded_v2');
+  if (seeded) return;
+
+  const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+
+  // Merchants
+  const merchants = g.merchants || [];
+  const zamMerchants = [
+    { id: 'merchant_nb', name: 'New Balance Store', category: 'Mode', zone: 'mk2_1', description: 'Premium Sportswear & Lifestyle', points_multiplier: 2 },
+    { id: 'merchant_edeka', name: 'EDEKA Freiham', category: 'Lebensmittel', zone: 'mk2_1', description: 'Frische Lebensmittel und mehr', points_multiplier: 1 },
+    { id: 'merchant_dm', name: 'dm Drogerie', category: 'Drogerie', zone: 'mk2_2', description: 'Alles für Beauty & Gesundheit', points_multiplier: 1 },
+    { id: 'merchant_cafe', name: 'Café ZAM', category: 'Gastronomie', zone: 'mk2_2', description: 'Kaffee, Kuchen & Mittagsmenüs', points_multiplier: 1 },
+    { id: 'merchant_saturn', name: 'MediaMarkt', category: 'Elektronik', zone: 'mk2_3', description: 'Technik & Unterhaltungselektronik', points_multiplier: 1 },
+  ];
+  zamMerchants.forEach(m => { if (!merchants.find(x => x.id === m.id)) merchants.push({ ...m, status: 'active', created_at: new Date().toISOString() }); });
+  g.merchants = merchants;
+
+  // Events
+  const events = g.events || [];
+  const now = Date.now();
+  const zamEvents = [
+    { id: 'ev_summer', title: 'Sommermarkt Freiham', description: 'Lokale Händler, Musik und Essen auf dem Gandhi-Platz', date: new Date(now + 7 * 864e5).toISOString(), location: 'Mahatma-Gandhi-Platz', zone: 'plaza', merchant_id: null, points: 50, max_participants: 500 },
+    { id: 'ev_yoga', title: 'Yoga im Park', description: 'Kostenloser Yoga-Kurs für alle ZAM Club Mitglieder', date: new Date(now + 3 * 864e5).toISOString(), location: 'Bildungscampus Freiham', zone: 'mk2_3', merchant_id: null, points: 30, max_participants: 50 },
+    { id: 'ev_launch', title: 'New Balance Launch Event', description: 'Neue Kollektion – exklusiv für ZAM Club Mitglieder', date: new Date(now + 14 * 864e5).toISOString(), location: 'New Balance Store', zone: 'mk2_1', merchant_id: 'merchant_nb', points: 75, max_participants: 100 },
+  ];
+  zamEvents.forEach(ev => { if (!events.find(x => x.id === ev.id)) events.push({ ...ev, status: 'active', registrations: [], created_at: new Date().toISOString() }); });
+  g.events = events;
+
+  // Deals
+  const deals = g.deals || [];
+  const zamDeals = [
+    { id: 'deal_nb20', title: '20% auf alle Schuhe', description: 'Exklusiv für ZAM Club Mitglieder', merchant_id: 'merchant_nb', merchant_name: 'New Balance Store', discount: '20%', category: 'Mode', expires_at: new Date(now + 30 * 864e5).toISOString(), points_reward: 25 },
+    { id: 'deal_cafe', title: 'Kaffee + Kuchen für 4,50€', description: 'Täglich ab 14 Uhr', merchant_id: 'merchant_cafe', merchant_name: 'Café ZAM', discount: '–25%', category: 'Gastronomie', expires_at: new Date(now + 60 * 864e5).toISOString(), points_reward: 10 },
+    { id: 'deal_dm', title: 'dm: 3-für-2 auf Eigenmarken', description: 'Gültig auf alle Eigenmarken', merchant_id: 'merchant_dm', merchant_name: 'dm Drogerie', discount: '3für2', category: 'Drogerie', expires_at: new Date(now + 14 * 864e5).toISOString(), points_reward: 15 },
+    { id: 'deal_mm', title: 'Gratis Beratung + 10% Rabatt', description: 'Bei jedem Kauf über 50€', merchant_id: 'merchant_saturn', merchant_name: 'MediaMarkt', discount: '10%', category: 'Elektronik', expires_at: new Date(now + 21 * 864e5).toISOString(), points_reward: 20 },
+  ];
+  zamDeals.forEach(d => { if (!deals.find(x => x.id === d.id)) deals.push({ ...d, status: 'active', created_at: new Date().toISOString() }); });
+  g.deals = zamDeals.filter(d => !deals.find(x => x.id === d.id && x !== d)).concat(deals);
+
+  // Seed analytics demo data
+  ZAMApi.analytics.seedDemo();
+
+  localStorage.setItem('zamclub_global', JSON.stringify(g));
+  localStorage.setItem('zam_seeded_v2', '1');
+}
+
+// =============================================
 // Init
 // =============================================
 function init() {
+  seedZAMContent();
+  updateOnlineStatus();
   initNavigation();
   initModals();
   initDailySpin();

@@ -1558,5 +1558,32 @@ function _levelLabel(level) {
   return { bronze: 'Bronze Member', silver: 'Silber Member', gold: 'Gold Member', platinum: 'Platin Member' }[level] || 'Member';
 }
 
+// ──────────────────────────────────────────────────────────
+// PRIVACY (Phase 13)
+// ──────────────────────────────────────────────────────────
+ZAMApi.privacy = {
+  getSettings() {
+    const uid = _uid();
+    if (!uid) return { showOnMap: true, showStatus: true, allowNudges: true };
+    const u = _uLoad(uid);
+    return u.privacy || { showOnMap: true, showStatus: true, allowNudges: true };
+  },
+  saveSettings(settings) {
+    const uid = _uid();
+    if (!uid) return;
+    const u = _uLoad(uid);
+    u.privacy = { ...this.getSettings(), ...settings };
+    _uSave(uid, u);
+  },
+  canSeeOnMap(userId) {
+    if (!userId) return false;
+    const u = _uLoad(userId);
+    const priv = u.privacy || {};
+    if (priv.showOnMap === false) return false;
+    if (ZAMApi.connections.isBlocked(userId)) return false;
+    return true;
+  },
+};
+
 window.ZAMApi = ZAMApi;
 window._levelLabel = _levelLabel;

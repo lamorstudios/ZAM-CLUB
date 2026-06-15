@@ -15,20 +15,41 @@
 
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="assets/icon.svg"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="ZAM Club"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
 </head>
 <body>
 
 <!-- =====================
      AUTH SHELL (shown when not logged in)
 ========================== -->
+<!-- Offline Banner -->
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#1e0a3c;border-bottom:1px solid rgba(139,92,246,0.4);padding:10px 16px;text-align:center;font-size:0.78rem;font-weight:600;color:#c4b5fd;font-family:'Poppins',sans-serif">
+  📡 Kein Internet – Du bist im Offline-Modus
+</div>
+
+<!-- PWA Install Banner -->
+<div id="pwa-install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:linear-gradient(135deg,#1a0533,#111118);border-top:1px solid rgba(139,92,246,0.3);padding:14px 16px;padding-bottom:max(14px,env(safe-area-inset-bottom,14px));font-family:'Poppins',sans-serif">
+  <div style="display:flex;align-items:center;gap:12px;max-width:480px;margin:0 auto">
+    <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">Z</div>
+    <div style="flex:1">
+      <div style="font-weight:700;font-size:0.85rem;color:#e2e8f0">ZAM Club installieren</div>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.5)">App auf dem Homescreen speichern</div>
+    </div>
+    <button onclick="installPWA()" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer">Installieren</button>
+    <button onclick="dismissInstallBanner()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;padding:4px">×</button>
+  </div>
+</div>
+
 <div id="auth-shell">
 
   <!-- Login -->
   <section id="page-login" class="auth-page active">
     <div class="auth-brand">
-      <div class="auth-logo">ZAM</div>
+      <div class="auth-logo" onclick="onLogoTap()" style="cursor:default;user-select:none">ZAM</div>
       <div class="auth-tagline">Club · Freiham</div>
     </div>
     <div class="auth-card">
@@ -845,6 +866,34 @@
       <button onclick="redeemVoucher()" style="flex:1;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border-radius:10px;padding:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer;border:none">Einlösen</button>
       <button onclick="closeVoucherModal()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.82rem;font-weight:600;font-family:var(--font);cursor:pointer">Abbrechen</button>
     </div>
+  </div>
+</div>
+
+<!-- =====================
+     DEMO / PITCH PAGE
+========================== -->
+<div id="page-demo" class="page" style="background:var(--bg);min-height:100vh;padding-bottom:100px">
+  <div style="background:linear-gradient(135deg,#1a0533,#0d0d1a);padding:28px 20px 24px;text-align:center;border-bottom:1px solid rgba(139,92,246,0.2)">
+    <div style="font-size:2.2rem;font-weight:900;background:linear-gradient(135deg,#8b5cf6,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.02em">ZAM Club</div>
+    <div style="font-size:0.82rem;color:rgba(255,255,255,0.5);margin-top:4px">Live Demo · Freiham München</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px">
+      <span class="demo-pulse-dot"></span>
+      <span style="font-size:0.72rem;color:#8b5cf6;font-weight:600">Live-Daten</span>
+    </div>
+  </div>
+  <div style="padding:20px 16px 0">
+    <div class="demo-kpi-grid" id="demo-kpi-grid"></div>
+    <div style="margin-top:20px">
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.35);margin-bottom:12px">Live-Aktivität</div>
+      <div id="demo-activity-feed"></div>
+    </div>
+    <div style="margin-top:20px">
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.35);margin-bottom:12px">Zonen-Heatmap</div>
+      <div id="demo-zone-heatmap"></div>
+    </div>
+  </div>
+  <div style="padding:20px 16px 0;text-align:center">
+    <button onclick="navigateTo('home')" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:14px;padding:14px 32px;font-size:0.9rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;width:100%;max-width:300px">App öffnen →</button>
   </div>
 </div>
 
