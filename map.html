@@ -1,1802 +1,875 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ZAM Live Map</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#090910" />
+<title>ZAM Live Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#090910;--s:#111118;--s2:#18181f;
+  --pr:#8b5cf6;--pl:#a78bfa;--gr:#10b981;--am:#f59e0b;--rd:#ef4444;
+  --font:'Poppins',system-ui,sans-serif;
+  --gl:rgba(12,12,24,0.9);--glb:rgba(139,92,246,0.22);
+}
+html,body{height:100%;overflow:hidden;background:#030309;font-family:var(--font);color:#e2e8f0}
+button{cursor:pointer;font-family:var(--font);border:none;background:none;color:inherit}
+a{text-decoration:none;color:inherit}
 
-    :root {
-      --bg: #090910;
-      --surface: #111118;
-      --surface-2: #18181f;
-      --primary: #8b5cf6;
-      --primary-light: #a78bfa;
-      --grad: linear-gradient(135deg,#6d28d9,#8b5cf6,#a78bfa);
-    }
+/* MAP */
+#map-wrap{position:fixed;inset:0;overflow:hidden;cursor:grab;touch-action:none;background:#030309}
+#map-wrap:active{cursor:grabbing}
+#map-stage{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
+#map-svg{display:block;width:1000px;height:800px}
+#user-layer,#marker-layer{position:absolute;top:0;left:0;width:1000px;height:800px;pointer-events:none}
+.user-bubble,.map-marker{pointer-events:all}
 
-    body {
-      background: var(--bg);
-      color: #fff;
-      font-family: 'Poppins', system-ui, sans-serif;
-      overflow: hidden;
-      height: 100dvh;
-      height: 100vh;
-      user-select: none;
-      -webkit-user-select: none;
-    }
+/* HEADER */
+#map-header{
+  position:fixed;top:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;z-index:200;pointer-events:all;
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top,10px));
+  background:linear-gradient(to bottom,rgba(3,3,9,0.97) 55%,transparent);
+}
+.hdr-back{width:36px;height:36px;border-radius:10px;flex-shrink:0;background:var(--gl);border:1px solid var(--glb);color:#e2e8f0;font-size:1.1rem;display:flex;align-items:center;justify-content:center}
+.hdr-title{flex:1;min-width:0}
+.hdr-title-text{font-size:0.88rem;font-weight:700;display:block;color:#e2e8f0}
+#hdr-online{font-size:0.65rem;color:var(--gr);font-weight:600}
+.hdr-btn{width:36px;height:36px;border-radius:10px;background:var(--gl);border:1px solid var(--glb);font-size:1rem;display:flex;align-items:center;justify-content:center}
 
-    /* ── MAP WRAP ─────────────────────────────── */
-    #map-wrap {
-      position: fixed;
-      inset: 0;
-      overflow: hidden;
-      cursor: grab;
-      background: #06060e;
-    }
-    #map-wrap:active { cursor: grabbing; }
+/* ZOOM CONTROLS */
+#map-controls{position:fixed;right:12px;top:50%;transform:translateY(-50%);z-index:150;display:flex;flex-direction:column;gap:8px;pointer-events:all}
+.zoom-btn{width:40px;height:40px;border-radius:12px;background:var(--gl);border:1px solid var(--glb);color:#e2e8f0;font-size:1.1rem;font-weight:700;backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center}
 
-    #map-stage {
-      position: absolute;
-      top: 0; left: 0;
-      transform-origin: 0 0;
-      will-change: transform;
-    }
+/* LEGEND */
+#map-legend{position:fixed;left:10px;bottom:180px;z-index:150;display:flex;flex-direction:column;gap:4px;pointer-events:none}
+.leg{display:flex;align-items:center;gap:5px;background:rgba(3,3,9,0.82);border-radius:8px;padding:3px 8px}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.leg-lbl{font-size:0.56rem;font-weight:600;color:rgba(255,255,255,0.48)}
 
-    #map-stage svg {
-      display: block;
-      width: 1000px;
-      height: 750px;
-    }
+/* USER BUBBLES */
+.user-bubble{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);cursor:pointer;z-index:10;transition:transform .15s}
+.user-bubble:active{transform:translate(-50%,-100%) scale(0.88)}
+.av-ring{position:relative;width:46px;height:46px;border-radius:50%;padding:3px;background:conic-gradient(from 0deg,#6d28d9,#a78bfa,#8b5cf6,#6d28d9);animation:ringRot 3s linear infinite}
+.user-bubble.is-own .av-ring{background:conic-gradient(from 0deg,#065f46,#34d399,#10b981,#065f46)}
+.av-img{position:absolute;inset:3px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;color:#fff}
+.av-dot{position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:var(--gr);border:2px solid #030309;z-index:1}
+.status-chip{margin-top:5px;background:rgba(6,6,16,0.93);backdrop-filter:blur(10px);border:1px solid rgba(139,92,246,0.4);border-radius:11px;padding:3px 9px;font-size:0.59rem;font-weight:600;color:#c4b5fd;white-space:nowrap;max-width:128px;overflow:hidden;text-overflow:ellipsis}
+.name-tag{font-size:0.56rem;color:rgba(255,255,255,0.55);font-weight:600;margin-top:2px}
+@keyframes ringRot{to{transform:rotate(360deg)}}
 
-    #user-layer,
-    #marker-layer {
-      position: absolute;
-      top: 0; left: 0;
-      width: 1000px; height: 750px;
-      pointer-events: none;
-    }
+/* MARKERS */
+.map-marker{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%);cursor:pointer;z-index:8}
+.mk-icon{position:relative;width:36px;height:36px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.mk-pulse{position:absolute;inset:-7px;border-radius:50%;border:2px solid;animation:mkP 2.2s ease-out infinite;opacity:0}
+@keyframes mkP{0%{transform:scale(.8);opacity:.7}100%{transform:scale(1.8);opacity:0}}
+.mk-label{font-size:0.56rem;font-weight:700;background:rgba(3,3,9,0.9);border-radius:6px;padding:2px 6px;margin-top:3px;white-space:nowrap;backdrop-filter:blur(8px)}
 
-    /* ── MAP HEADER ───────────────────────────── */
-    #map-header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      background: rgba(9,9,16,0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(139,92,246,0.15);
-    }
-    .map-back-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px; height: 36px;
-      border-radius: 10px;
-      background: rgba(139,92,246,0.15);
-      color: var(--primary-light);
-      text-decoration: none;
-      font-size: 1.1rem;
-      font-weight: 700;
-      transition: background 0.2s;
-      flex-shrink: 0;
-    }
-    .map-back-btn:hover { background: rgba(139,92,246,0.3); }
+/* ZONE TOOLTIP (hover/tap zone label) */
+.zone-tooltip{position:absolute;transform:translate(-50%,-50%);pointer-events:none;z-index:5}
+.zone-tooltip-inner{background:rgba(6,6,18,0.88);border:1px solid rgba(139,92,246,0.25);border-radius:10px;padding:4px 10px;font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.04em;white-space:nowrap;backdrop-filter:blur(8px)}
 
-    .map-title {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    .map-title-text {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #fff;
-      line-height: 1.2;
-    }
-    .online-badge {
-      font-size: 0.7rem;
-      color: #10b981;
-      font-weight: 600;
-    }
-    .map-icon-btn {
-      width: 36px; height: 36px;
-      border-radius: 10px;
-      background: rgba(139,92,246,0.15);
-      border: 1px solid rgba(139,92,246,0.25);
-      color: #fff;
-      font-size: 1rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s;
-      flex-shrink: 0;
-    }
-    .map-icon-btn:hover { background: rgba(139,92,246,0.3); }
+/* STATUS BAR */
+#map-status-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:190;pointer-events:all;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom,12px));background:linear-gradient(to top,rgba(3,3,9,0.98) 60%,transparent)}
+#st-collapsed{display:flex;align-items:center;gap:10px;background:var(--gl);border:1px solid var(--glb);border-radius:16px;padding:10px 14px;backdrop-filter:blur(20px);cursor:pointer}
+.st-my-av{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;border:2px solid var(--pr)}
+#st-preview{flex:1;font-size:0.78rem;color:#c4b5fd;font-weight:500}
+.st-chev{color:var(--pl);font-size:0.82rem}
+#st-expanded{display:none;background:var(--gl);border:1px solid var(--glb);border-radius:18px;padding:14px;backdrop-filter:blur(20px)}
+.st-row{display:flex;gap:8px;margin-bottom:10px}
+.st-row select{flex:1;background:rgba(18,18,36,0.9);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:10px;padding:7px 10px;font-size:0.72rem;font-family:var(--font);font-weight:600}
+.st-input-row{display:flex;gap:8px;margin-bottom:10px}
+.st-input-row input{flex:1;background:rgba(18,18,36,0.9);border:1px solid rgba(139,92,246,0.3);color:#e2e8f0;border-radius:10px;padding:8px 12px;font-size:0.8rem;font-family:var(--font);outline:none}
+.st-input-row input:focus{border-color:var(--pr)}
+.btn-st-save{background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border-radius:10px;padding:8px 16px;font-size:0.8rem;font-weight:700}
+.preset-chips{display:flex;flex-wrap:wrap;gap:6px}
+.pchip{background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.28);border-radius:20px;padding:4px 11px;font-size:0.68rem;color:#c4b5fd;font-weight:600;transition:background .15s}
+.pchip:active{background:rgba(139,92,246,0.28)}
 
-    /* ── USER BUBBLES ─────────────────────────── */
-    .user-bubble {
-      position: absolute;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      cursor: pointer;
-      z-index: 10;
-      transform: translate(-50%, -100%);
-      pointer-events: all;
-      transition: transform 0.2s;
-    }
-    .user-bubble:hover { transform: translate(-50%, -100%) scale(1.08); }
-    .user-bubble.is-own { z-index: 12; }
+/* POPUP */
+#profile-popup{position:fixed;inset:0;z-index:300;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0);transition:background .3s;pointer-events:all}
+#profile-popup.open{background:rgba(0,0,0,0.7)}
+.pop-sheet{width:100%;max-width:480px;background:#0d0d20;border-radius:24px 24px 0 0;border-top:1px solid rgba(139,92,246,0.38);padding:12px 20px 24px;padding-bottom:max(24px,env(safe-area-inset-bottom,24px));transform:translateY(100%);transition:transform .35s cubic-bezier(0.16,1,0.3,1);position:relative}
+#profile-popup.open .pop-sheet{transform:translateY(0)}
+.pop-handle{width:40px;height:4px;border-radius:99px;background:rgba(255,255,255,0.14);margin:0 auto 16px}
+.pop-hdr{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.pop-av{width:54px;height:54px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.95rem;font-weight:700;color:#fff;border:3px solid var(--pr)}
+.pop-info{flex:1;min-width:0}
+.pop-name{font-size:0.98rem;font-weight:700}
+.pop-un{font-size:0.68rem;color:rgba(255,255,255,0.38);margin-top:1px}
+.pop-st{font-size:0.76rem;color:#c4b5fd;margin-top:4px}
+.pop-zone-tag{background:rgba(139,92,246,0.14);border:1px solid rgba(139,92,246,0.32);border-radius:10px;padding:4px 10px;font-size:0.68rem;color:#a78bfa;font-weight:700;flex-shrink:0}
+.pop-badges{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+.pop-badge{background:rgba(22,22,42,0.9);border:1px solid rgba(255,255,255,0.09);border-radius:9px;padding:4px 9px;font-size:0.82rem}
+.pop-pts{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:7px 14px;font-size:0.78rem;color:#fcd34d;font-weight:600;margin-bottom:14px;text-align:center}
+.pop-actions{display:flex;gap:10px;margin-bottom:10px}
+.btn-nudge-pop{flex:2;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border-radius:14px;padding:12px;font-size:0.86rem;font-weight:700}
+.btn-nudge-pop:disabled{opacity:0.45;cursor:not-allowed}
+.btn-view-pop{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.13);border-radius:14px;padding:12px;font-size:0.8rem;font-weight:600;color:#e2e8f0}
+.pop-sec{display:flex;gap:10px}
+.pop-sec button{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:11px;padding:8px;font-size:0.72rem;color:rgba(255,255,255,0.4)}
+.pop-close{position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.42);font-size:0.82rem;display:flex;align-items:center;justify-content:center}
 
-    .avatar-ring-wrap {
-      width: 48px; height: 48px;
-      border-radius: 50%;
-      padding: 3px;
-      background: conic-gradient(from 0deg, #7c3aed, #a78bfa, #c4b5fd, #7c3aed);
-      animation: ringRotate 3s linear infinite;
-      position: relative;
-      flex-shrink: 0;
-    }
-    .is-own .avatar-ring-wrap {
-      background: conic-gradient(from 0deg, #10b981, #34d399, #6ee7b7, #10b981);
-      width: 54px; height: 54px;
-    }
+/* NUDGE INBOX */
+#nudge-inbox{position:fixed;right:10px;bottom:185px;z-index:250;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.nudge-card{pointer-events:all;background:rgba(10,10,22,0.95);border:1px solid rgba(139,92,246,0.48);border-radius:15px;padding:11px;backdrop-filter:blur(20px);animation:slideR .3s cubic-bezier(0.16,1,0.3,1);max-width:220px}
+@keyframes slideR{from{transform:translateX(120%);opacity:0}to{transform:none;opacity:1}}
+.nudge-from{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.nudge-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:700;color:#fff}
+.nudge-txt{font-size:0.7rem;font-weight:600;color:#e2e8f0}
+.nudge-btns{display:flex;gap:5px}
+.btn-na{flex:1;background:rgba(16,185,129,0.13);border:1px solid rgba(16,185,129,0.38);color:#34d399;border-radius:9px;padding:5px;font-size:0.72rem;font-weight:700}
+.btn-nr{width:32px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.28);color:rgba(239,68,68,0.65);border-radius:9px;font-size:0.8rem}
 
-    @keyframes ringRotate { to { transform: rotate(360deg); } }
+/* CONSENT */
+#consent-overlay{position:fixed;inset:0;background:#030309;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
+.co-icon{font-size:3.5rem;margin-bottom:18px}
+.co-title{font-size:1.35rem;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#8b5cf6,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.co-sub{font-size:0.83rem;color:rgba(255,255,255,0.48);margin-bottom:22px;line-height:1.65}
+.co-pts{background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:16px;padding:14px 18px;margin-bottom:22px;text-align:left;width:100%;max-width:320px}
+.co-pts li{list-style:none;font-size:0.8rem;color:rgba(255,255,255,0.68);padding:4px 0;display:flex;align-items:center;gap:8px}
+.btn-consent{width:100%;max-width:320px;background:linear-gradient(135deg,#6d28d9,#8b5cf6,#a78bfa);color:#fff;border-radius:16px;padding:14px;font-size:0.95rem;font-weight:700;margin-bottom:10px}
+.btn-back-co{font-size:0.8rem;color:rgba(255,255,255,0.32)}
 
-    .avatar-img {
-      position: absolute;
-      inset: 3px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: #fff;
-      border: 2px solid var(--bg);
-    }
-
-    .online-dot {
-      position: absolute;
-      bottom: 1px; right: 1px;
-      width: 11px; height: 11px;
-      border-radius: 50%;
-      background: #10b981;
-      border: 2px solid #090910;
-    }
-
-    .status-chip {
-      background: rgba(17,17,30,0.92);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(139,92,246,0.35);
-      border-radius: 12px;
-      padding: 3px 9px;
-      font-size: 0.62rem;
-      color: #c4b5fd;
-      white-space: nowrap;
-      margin-top: 5px;
-      max-width: 130px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      pointer-events: none;
-    }
-    .is-own .status-chip {
-      border-color: rgba(16,185,129,0.5);
-      color: #6ee7b7;
-    }
-
-    .name-tag {
-      font-size: 0.6rem;
-      color: rgba(255,255,255,0.7);
-      font-weight: 600;
-      margin-top: 2px;
-      pointer-events: none;
-    }
-    .is-own .name-tag { color: #6ee7b7; font-size: 0.65rem; }
-
-    /* ── MARKERS ──────────────────────────────── */
-    .map-marker {
-      position: absolute;
-      transform: translate(-50%, -50%);
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      z-index: 8;
-      pointer-events: all;
-    }
-    .map-marker:hover .marker-icon-wrap { transform: scale(1.15); }
-
-    .marker-icon-wrap {
-      width: 38px; height: 38px;
-      border-radius: 50%;
-      border: 2px solid;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1rem;
-      position: relative;
-      transition: transform 0.2s;
-    }
-
-    .marker-pulse {
-      position: absolute;
-      inset: -7px;
-      border-radius: 50%;
-      border: 2px solid;
-      animation: markerPulse 2.2s ease-in-out infinite;
-      opacity: 0.5;
-    }
-    @keyframes markerPulse {
-      0%, 100% { transform: scale(1); opacity: 0.5; }
-      50% { transform: scale(1.3); opacity: 0; }
-    }
-
-    .marker-label {
-      font-size: 0.58rem;
-      font-weight: 600;
-      background: rgba(9,9,16,0.85);
-      border-radius: 6px;
-      padding: 2px 6px;
-      margin-top: 5px;
-      white-space: nowrap;
-      backdrop-filter: blur(4px);
-    }
-
-    /* ── MAP CONTROLS ─────────────────────────── */
-    #map-controls {
-      position: fixed;
-      right: 16px;
-      bottom: 200px;
-      z-index: 90;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    #map-controls button {
-      width: 42px; height: 42px;
-      border-radius: 12px;
-      background: rgba(17,17,30,0.9);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(139,92,246,0.3);
-      color: #fff;
-      font-size: 1.2rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s, transform 0.1s;
-      font-weight: 600;
-    }
-    #map-controls button:hover { background: rgba(139,92,246,0.3); transform: scale(1.05); }
-    #map-controls button:active { transform: scale(0.95); }
-
-    /* ── STATUS BAR ───────────────────────────── */
-    #map-status-bar {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      z-index: 90;
-      background: rgba(9,9,16,0.92);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(139,92,246,0.2);
-      padding: 0 16px;
-    }
-
-    #status-collapsed {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 0;
-      cursor: pointer;
-    }
-    .my-avatar-mini {
-      width: 34px; height: 34px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #fff;
-      border: 2px solid rgba(139,92,246,0.5);
-      flex-shrink: 0;
-    }
-    #status-preview {
-      flex: 1;
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.6);
-    }
-    .chevron {
-      color: rgba(255,255,255,0.4);
-      font-size: 1.2rem;
-      transform: rotate(90deg);
-      display: inline-block;
-    }
-
-    #status-expanded {
-      padding: 14px 0 20px;
-    }
-    .status-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .status-row select {
-      flex: 1;
-      background: var(--surface-2);
-      border: 1px solid rgba(139,92,246,0.25);
-      border-radius: 10px;
-      color: #fff;
-      font-family: 'Poppins', system-ui, sans-serif;
-      font-size: 0.75rem;
-      padding: 8px 10px;
-      outline: none;
-      cursor: pointer;
-    }
-    .status-input-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .status-input-row input {
-      flex: 1;
-      background: var(--surface-2);
-      border: 1px solid rgba(139,92,246,0.25);
-      border-radius: 10px;
-      color: #fff;
-      font-family: 'Poppins', system-ui, sans-serif;
-      font-size: 0.8rem;
-      padding: 10px 12px;
-      outline: none;
-    }
-    .status-input-row input::placeholder { color: rgba(255,255,255,0.3); }
-    .status-input-row input:focus { border-color: var(--primary); }
-    .status-input-row button {
-      width: 42px; height: 42px;
-      border-radius: 10px;
-      background: var(--primary);
-      border: none;
-      color: #fff;
-      font-size: 1.1rem;
-      cursor: pointer;
-      transition: opacity 0.2s;
-      flex-shrink: 0;
-    }
-    .status-input-row button:hover { opacity: 0.85; }
-
-    .preset-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .preset-chips button {
-      background: rgba(139,92,246,0.12);
-      border: 1px solid rgba(139,92,246,0.25);
-      border-radius: 20px;
-      color: #c4b5fd;
-      font-family: 'Poppins', system-ui, sans-serif;
-      font-size: 0.68rem;
-      padding: 5px 10px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .preset-chips button:hover { background: rgba(139,92,246,0.25); }
-
-    /* ── PROFILE POPUP ────────────────────────── */
-    .bottom-sheet-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      background: rgba(0,0,0,0.6);
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
-    .bottom-sheet {
-      background: var(--surface);
-      border-radius: 24px 24px 0 0;
-      border: 1px solid rgba(139,92,246,0.2);
-      border-bottom: none;
-      padding: 0 20px 32px;
-      width: 100%;
-      max-width: 480px;
-      position: relative;
-      transform: translateY(100%);
-      transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
-    }
-    .bottom-sheet-overlay.open .bottom-sheet { transform: translateY(0); }
-
-    .popup-handle {
-      width: 40px; height: 4px;
-      border-radius: 2px;
-      background: rgba(255,255,255,0.15);
-      margin: 14px auto 20px;
-    }
-    .popup-header {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 16px;
-    }
-    .popup-avatar {
-      width: 56px; height: 56px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #fff;
-      flex-shrink: 0;
-      border: 3px solid rgba(139,92,246,0.5);
-    }
-    .popup-info { flex: 1; }
-    .popup-name {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #fff;
-    }
-    .popup-username {
-      font-size: 0.75rem;
-      color: rgba(255,255,255,0.4);
-    }
-    .popup-status {
-      font-size: 0.78rem;
-      color: var(--primary-light);
-      margin-top: 2px;
-    }
-    .popup-zone-badge {
-      background: rgba(139,92,246,0.15);
-      border: 1px solid rgba(139,92,246,0.35);
-      border-radius: 8px;
-      padding: 4px 10px;
-      font-size: 0.7rem;
-      color: var(--primary-light);
-      font-weight: 600;
-    }
-    .popup-badges {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .popup-badge {
-      font-size: 1.3rem;
-    }
-    .popup-points {
-      font-size: 0.82rem;
-      color: rgba(255,255,255,0.5);
-      margin-bottom: 16px;
-    }
-    .popup-actions {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .btn-nudge {
-      flex: 1;
-      padding: 12px;
-      border-radius: 12px;
-      background: var(--grad);
-      border: none;
-      color: #fff;
-      font-family: 'Poppins', system-ui, sans-serif;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .btn-nudge:hover { opacity: 0.9; }
-    .btn-nudge:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-profile {
-      padding: 12px 16px;
-      border-radius: 12px;
-      background: rgba(139,92,246,0.15);
-      border: 1px solid rgba(139,92,246,0.3);
-      color: var(--primary-light);
-      font-family: 'Poppins', system-ui, sans-serif;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .btn-profile:hover { background: rgba(139,92,246,0.25); }
-    .popup-secondary {
-      display: flex;
-      gap: 10px;
-    }
-    .popup-secondary button {
-      background: none;
-      border: none;
-      color: rgba(255,255,255,0.35);
-      font-family: 'Poppins', system-ui, sans-serif;
-      font-size: 0.72rem;
-      cursor: pointer;
-      padding: 4px;
-    }
-    .popup-secondary button:hover { color: rgba(255,255,255,0.6); }
-    .popup-close {
-      position: absolute;
-      top: 16px; right: 16px;
-      width: 30px; height: 30px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: #fff;
-      font-size: 0.8rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .popup-close:hover { background: rgba(255,255,255,0.2); }
-
-    /* ── NUDGE INBOX ──────────────────────────── */
-    .nudge-card {
-      background: rgba(17,17,30,0.95);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(139,92,246,0.3);
-      border-radius: 14px;
-      padding: 10px 12px;
-      min-width: 220px;
-      animation: nudgeSlideIn 0.35s cubic-bezier(0.16,1,0.3,1);
-    }
-    @keyframes nudgeSlideIn {
-      from { opacity: 0; transform: translateX(40px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-    .nudge-from {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .nudge-avatar {
-      width: 30px; height: 30px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.65rem;
-      font-weight: 700;
-      color: #fff;
-      flex-shrink: 0;
-    }
-    .nudge-text {
-      font-size: 0.75rem;
-      color: #fff;
-      font-weight: 600;
-    }
-    .nudge-time {
-      font-size: 0.65rem;
-      color: rgba(255,255,255,0.4);
-    }
-    .nudge-actions {
-      display: flex;
-      gap: 6px;
-    }
-    .btn-nudge-accept {
-      flex: 1;
-      padding: 6px;
-      border-radius: 8px;
-      background: var(--primary);
-      border: none;
-      color: #fff;
-      font-size: 0.72rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .btn-nudge-reject {
-      width: 32px;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: rgba(255,255,255,0.6);
-      font-size: 0.72rem;
-      cursor: pointer;
-    }
-
-    /* ── CONSENT OVERLAY ──────────────────────── */
-    #consent-overlay {
-      position: fixed;
-      inset: 0;
-      background: #090910;
-      z-index: 500;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 24px;
-      text-align: center;
-    }
-    #consent-overlay h2 {
-      font-size: 1.5rem;
-      font-weight: 800;
-      margin-bottom: 12px;
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    #consent-overlay p {
-      font-size: 0.85rem;
-      color: rgba(255,255,255,0.6);
-      margin-bottom: 20px;
-      max-width: 320px;
-    }
-    #consent-overlay ul {
-      list-style: none;
-      margin-bottom: 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    #consent-overlay li {
-      font-size: 0.82rem;
-      color: rgba(255,255,255,0.75);
-    }
-    #consent-overlay .consent-btn {
-      padding: 14px 32px;
-      border-radius: 14px;
-      background: var(--grad);
-      border: none;
-      color: #fff;
-      font-family: 'Poppins', system-ui, sans-serif;
-      font-size: 0.95rem;
-      font-weight: 700;
-      cursor: pointer;
-      margin-bottom: 16px;
-      transition: opacity 0.2s;
-    }
-    #consent-overlay .consent-btn:hover { opacity: 0.9; }
-    #consent-overlay a {
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.4);
-    }
-
-    /* ── TOAST ────────────────────────────────── */
-    .map-toast {
-      position: fixed;
-      bottom: 180px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: rgba(17,17,30,0.95);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(139,92,246,0.35);
-      border-radius: 20px;
-      padding: 10px 20px;
-      font-size: 0.82rem;
-      color: #fff;
-      font-weight: 600;
-      z-index: 400;
-      opacity: 0;
-      transition: opacity 0.3s, transform 0.3s;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-    .map-toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* ── SCROLLBAR ────────────────────────────── */
-    ::-webkit-scrollbar { width: 0; }
-  </style>
+/* TOAST */
+.map-toast{position:fixed;top:75px;left:50%;transform:translateX(-50%) translateY(-14px);background:rgba(10,10,24,0.97);border:1px solid rgba(139,92,246,0.4);border-radius:14px;padding:9px 18px;font-size:0.8rem;font-weight:600;z-index:9999;opacity:0;pointer-events:none;white-space:nowrap;transition:opacity .22s,transform .22s;backdrop-filter:blur(20px)}
+.map-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
 </head>
 <body>
 
-<!-- CONSENT OVERLAY -->
-<div id="consent-overlay" style="display:none">
-  <div style="font-size:3rem;margin-bottom:16px">🗺️</div>
-  <h2>ZAM Live Map</h2>
-  <p>Dein Standort wird NICHT getrackt. Du wählst freiwillig eine Zone aus.</p>
-  <ul>
-    <li>✅ Keine GPS-Daten</li>
-    <li>✅ Zonenbasiert (30–100m Genauigkeit)</li>
+<!-- CONSENT -->
+<div id="consent-overlay">
+  <div class="co-icon">🗺️</div>
+  <h1 class="co-title">ZAM Live Map</h1>
+  <p class="co-sub">Sieh wer gerade im ZAM Freiham ist.<br>Datenschutzfreundlich, zonenbasiert, 100% freiwillig.</p>
+  <ul class="co-pts">
+    <li>✅ Kein GPS — du wählst nur eine Zone</li>
+    <li>✅ 30–100m Genauigkeit, keine exakte Position</li>
     <li>✅ Jederzeit unsichtbar schaltbar</li>
-    <li>✅ Daten nur im Browser gespeichert</li>
+    <li>✅ Nur auf deinem Gerät gespeichert</li>
+    <li>✅ Kein Tracking im Hintergrund</li>
   </ul>
-  <button class="consent-btn" onclick="acceptConsent()">Karte öffnen →</button>
-  <a href="index.html">← Zurück zur App</a>
+  <button class="btn-consent" onclick="acceptConsent()">Karte öffnen →</button>
+  <a class="btn-back-co" href="index.html">← Zurück zur App</a>
 </div>
 
-<!-- MAP HEADER -->
-<div id="map-header">
-  <a href="index.html" class="map-back-btn">←</a>
-  <div class="map-title">
-    <span class="map-title-text">ZAM Live Map</span>
-    <span class="online-badge" id="online-count-display">● 15 online</span>
+<!-- HEADER -->
+<div id="map-header" style="display:none">
+  <a class="hdr-back" href="index.html">←</a>
+  <div class="hdr-title">
+    <span class="hdr-title-text">ZAM Live Map</span>
+    <span id="hdr-online">● Lädt…</span>
   </div>
-  <button id="btn-privacy" class="map-icon-btn" onclick="togglePrivacy()" title="Sichtbarkeit">👁️</button>
+  <button class="hdr-btn" id="btn-priv" onclick="togglePrivacy()">👁️</button>
 </div>
 
-<!-- MAP WRAP -->
-<div id="map-wrap">
+<!-- MAP -->
+<div id="map-wrap" style="display:none">
   <div id="map-stage">
 
-    <!-- SVG MAP -->
-    <svg viewBox="0 0 1000 750" xmlns="http://www.w3.org/2000/svg" width="1000" height="750">
+    <!-- ═══════════════════════════════════════════════
+         SVG MAP — ZAM Freiham Projektübersicht
+         Basiert auf dem offiziellen Lageplan
+    ════════════════════════════════════════════════ -->
+    <svg id="map-svg" viewBox="0 0 1000 800" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <!-- Glasdach Pattern -->
-        <pattern id="glassDach" width="30" height="30" patternUnits="userSpaceOnUse">
-          <line x1="0" y1="0" x2="30" y2="0" stroke="rgba(139,92,246,0.09)" stroke-width="1"/>
-          <line x1="0" y1="0" x2="0" y2="30" stroke="rgba(139,92,246,0.09)" stroke-width="1"/>
+        <!-- Road texture -->
+        <pattern id="road-dots" width="12" height="12" patternUnits="userSpaceOnUse">
+          <circle cx="6" cy="6" r="0.8" fill="rgba(255,255,255,0.04)"/>
         </pattern>
-        <!-- Floor tile pattern -->
-        <pattern id="floorTile" width="20" height="20" patternUnits="userSpaceOnUse">
-          <rect width="20" height="20" fill="none"/>
-          <line x1="0" y1="0" x2="20" y2="0" stroke="rgba(255,255,255,0.02)" stroke-width="0.5"/>
-          <line x1="0" y1="0" x2="0" y2="20" stroke="rgba(255,255,255,0.02)" stroke-width="0.5"/>
+        <!-- Building floor texture -->
+        <pattern id="floor-grid" width="35" height="35" patternUnits="userSpaceOnUse">
+          <path d="M35 0L0 0 0 35" fill="none" stroke="rgba(255,255,255,0.025)" stroke-width="1"/>
         </pattern>
-        <!-- Heatmap gradients -->
-        <radialGradient id="heatFood" cx="50%" cy="50%">
-          <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.3"/>
-          <stop offset="60%" stop-color="#ef4444" stop-opacity="0.12"/>
+        <!-- Heatmaps -->
+        <radialGradient id="hm-red" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#ef4444" stop-opacity="0.35"/>
           <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
         </radialGradient>
-        <radialGradient id="heatAtrium" cx="50%" cy="50%">
-          <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.28"/>
-          <stop offset="60%" stop-color="#7c3aed" stop-opacity="0.1"/>
-          <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+        <radialGradient id="hm-pur" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#8b5cf6" stop-opacity="0.38"/>
+          <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
         </radialGradient>
-        <radialGradient id="heatShopNW" cx="50%" cy="50%">
-          <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.22"/>
-          <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+        <radialGradient id="hm-amb" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#f59e0b" stop-opacity="0.32"/>
+          <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
         </radialGradient>
-        <radialGradient id="heatShopNO" cx="50%" cy="50%">
-          <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.18"/>
-          <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+        <radialGradient id="hm-grn" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#10b981" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+        </radialGradient>
+        <!-- Plaza gradient -->
+        <radialGradient id="plaza-g" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#8b5cf6" stop-opacity="0.12"/>
+          <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
         </radialGradient>
         <!-- Glow filter -->
-        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id="glowStrong" x="-100%" y="-100%" width="300%" height="300%">
-          <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
-          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,0.5)"/>
-        </filter>
+        <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="glow-sm"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <!-- Building inner glow -->
+        <radialGradient id="bld-inner" cx="50%" cy="0%" r="80%">
+          <stop offset="0%"   stop-color="rgba(139,92,246,0.06)"/>
+          <stop offset="100%" stop-color="rgba(139,92,246,0)"/>
+        </radialGradient>
       </defs>
 
-      <!-- 1. VOID / Außen -->
-      <rect width="1000" height="750" fill="#06060e"/>
+      <!-- ─── DARK BACKGROUND / KONTEXT ───────────────────────────────── -->
+      <rect width="1000" height="800" fill="#030309"/>
 
-      <!-- Star field decoration -->
-      <circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.3)"/>
-      <circle cx="950" cy="80" r="1" fill="rgba(255,255,255,0.25)"/>
-      <circle cx="30" cy="700" r="1.5" fill="rgba(255,255,255,0.2)"/>
-      <circle cx="970" cy="680" r="1" fill="rgba(255,255,255,0.3)"/>
-      <circle cx="100" cy="380" r="0.8" fill="rgba(255,255,255,0.4)"/>
-      <circle cx="900" cy="370" r="0.8" fill="rgba(255,255,255,0.4)"/>
+      <!-- ─── ROAD NETWORK (Straßen als Grundfläche) ──────────────────── -->
+      <!-- Straßen-Grundfläche heller als Hintergrund -->
+      <rect width="1000" height="800" fill="#07071a"/>
+      <rect width="1000" height="800" fill="url(#road-dots)"/>
 
-      <!-- 2. Außenbereich -->
-      <rect x="80" y="60" width="840" height="630" rx="40" fill="#0c0c18" stroke="rgba(139,92,246,0.1)" stroke-width="1.5"/>
-      <!-- Außenbereich texture -->
-      <rect x="80" y="60" width="840" height="630" rx="40" fill="url(#floorTile)"/>
+      <!-- Hauptstraßen: leicht heller hervorgehoben -->
+      <!-- Helmut-Schmidt-Allee (oben, E-W) -->
+      <rect x="0" y="68" width="1000" height="38" fill="#0a0a20" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+      <line x1="0" y1="87" x2="1000" y2="87" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="20,15"/>
+      <text x="500" y="84" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.1em">HELMUT-SCHMIDT-ALLEE</text>
 
-      <!-- Außenbereich Wegpfade -->
-      <path d="M500 60 L500 100" stroke="rgba(139,92,246,0.12)" stroke-width="8" stroke-linecap="round"/>
-      <path d="M500 650 L500 690" stroke="rgba(139,92,246,0.12)" stroke-width="8" stroke-linecap="round"/>
-      <path d="M80 375 L140 375" stroke="rgba(139,92,246,0.12)" stroke-width="8" stroke-linecap="round"/>
-      <path d="M860 375 L920 375" stroke="rgba(139,92,246,0.12)" stroke-width="8" stroke-linecap="round"/>
+      <!-- Margarete-Vollmar-Straße (horizontal Mitte-Links) -->
+      <rect x="0" y="450" width="410" height="32" fill="#0a0a20" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+      <line x1="0" y1="466" x2="410" y2="466" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="18,14"/>
+      <text x="200" y="462" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.25)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.08em">MARGARETE-VOLLMAR-STRASSE</text>
 
-      <!-- Außen-Büsche / Vegetation -->
-      <!-- NW Bereich -->
-      <circle cx="110" cy="130" r="22" fill="#0d1f0d" opacity="0.8"/>
-      <circle cx="110" cy="130" r="14" fill="#122012"/>
-      <circle cx="110" cy="130" r="6" fill="#1a3a1a" opacity="0.7"/>
-      <circle cx="145" cy="110" r="16" fill="#0d1f0d" opacity="0.8"/>
-      <circle cx="145" cy="110" r="9" fill="#152415"/>
+      <!-- Bodenseestraße (unten) -->
+      <rect x="0" y="712" width="1000" height="35" fill="#0a0a20" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+      <line x1="0" y1="729" x2="1000" y2="729" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="20,15"/>
+      <text x="640" y="727" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.28)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.08em">BODENSEESTRASSE</text>
 
-      <!-- NE Bereich -->
-      <circle cx="890" cy="130" r="22" fill="#0d1f0d" opacity="0.8"/>
-      <circle cx="890" cy="130" r="14" fill="#122012"/>
-      <circle cx="855" cy="110" r="16" fill="#0d1f0d" opacity="0.8"/>
-      <circle cx="855" cy="110" r="9" fill="#152415"/>
+      <!-- Amalje-Nacken-Straße (DIAGONAL, links von MK2(2)) -->
+      <!-- Road between MK2(1) right edge and MK2(2) left edge -->
+      <!-- MK2(1) right: (372,106) → (328,450) -->
+      <!-- MK2(2) left:  (412,106) → (370,530) -->
+      <polygon points="372,106 412,106 370,530 328,450" fill="#0a0a20"/>
+      <line x1="372" y1="106" x2="328" y2="450" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="16,12"/>
+      <line x1="412" y1="106" x2="370" y2="530" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="16,12"/>
+      <!-- Street label rotated -->
+      <text x="392" y="310" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.07em" transform="rotate(-4,392,310)">AMALJE-NACKEN-STR.</text>
 
-      <!-- SW Bereich -->
-      <circle cx="110" cy="620" r="22" fill="#0d1f0d" opacity="0.8"/>
-      <circle cx="110" cy="620" r="14" fill="#122012"/>
-      <circle cx="145" cy="640" r="16" fill="#0d1f0d" opacity="0.8"/>
+      <!-- Emilie-Maurer-Straße (vertikal rechts von MK2(2)) -->
+      <rect x="618" y="106" width="32" height="432" fill="#0a0a20"/>
+      <line x1="634" y1="106" x2="634" y2="538" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="16,12"/>
+      <text x="634" y="300" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.22)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.07em" transform="rotate(90,634,300)">EMILIE-MAURER-STRASSE</text>
 
-      <!-- SE Bereich -->
-      <circle cx="890" cy="620" r="22" fill="#0d1f0d" opacity="0.8"/>
-      <circle cx="890" cy="620" r="14" fill="#122012"/>
-      <circle cx="855" cy="640" r="16" fill="#0d1f0d" opacity="0.8"/>
+      <!-- Wiesentfelser Straße (vertikal rechts) -->
+      <rect x="888" y="538" width="30" height="174" fill="#0a0a20"/>
+      <text x="903" y="625" text-anchor="middle" font-size="6.5" fill="rgba(255,255,255,0.2)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.06em" transform="rotate(90,903,625)">WIESENTFELSER STR.</text>
 
-      <!-- Außen-Bänke -->
-      <rect x="160" y="355" width="30" height="8" rx="3" fill="#1a1a2e" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-      <rect x="810" y="355" width="30" height="8" rx="3" fill="#1a1a2e" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
-      <rect x="460" y="668" width="30" height="8" rx="3" fill="#1a1a2e" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      <!-- Bildungscampus-Straße (ganz links, vertikal) -->
+      <rect x="0" y="0" width="42" height="800" fill="#06060e"/>
+      <text x="21" y="280" text-anchor="middle" font-size="6.5" fill="rgba(255,255,255,0.18)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.06em" transform="rotate(-90,21,280)">BILDUNGSCAMPUS</text>
 
-      <!-- 3. Hauptgebäude -->
-      <rect x="140" y="100" width="720" height="550" rx="24" fill="#111128" filter="url(#shadow)"/>
-      <rect x="140" y="100" width="720" height="550" rx="24" stroke="rgba(139,92,246,0.2)" stroke-width="1.5" fill="none"/>
+      <!-- ─── MK 2(1) — OBEN LINKS (Trapez) ──────────────────────────── -->
+      <!-- Trapez: breiter oben, Amalje-Nacken-Str schräg rechts -->
+      <!-- Polygon: TL(46,106) TR(372,106) BR(328,450) BL(46,450) -->
+      <polygon points="46,106 372,106 328,450 46,450" fill="#0f102a" stroke="rgba(139,92,246,0.18)" stroke-width="1.5"/>
+      <polygon points="46,106 372,106 328,450 46,450" fill="url(#floor-grid)" opacity="0.4"/>
+      <polygon points="46,106 372,106 328,450 46,450" fill="url(#bld-inner)" opacity="0.8"/>
 
-      <!-- 4. Hauptkorridore -->
-      <!-- E-W Korridor -->
-      <rect x="140" y="320" width="720" height="120" fill="#16162e"/>
-      <rect x="140" y="320" width="720" height="120" fill="url(#floorTile)"/>
-      <!-- Korridor-Mittelstreifen E-W -->
-      <line x1="140" y1="380" x2="860" y2="380" stroke="rgba(139,92,246,0.08)" stroke-width="2" stroke-dasharray="20,12"/>
+      <!-- MK2(1) innere Unterteilung: Nahversorgung (oben, ~62%) / Gastro (unten) -->
+      <!-- Divider at y=312: x_left=46, x_right = 372-(372-328)*(312-106)/(450-106) = 372-44*206/344 = 372-26.3 = 345.7 -->
+      <polygon points="46,312 346,312 328,450 46,450" fill="rgba(16,185,129,0.06)" stroke="rgba(16,185,129,0.12)" stroke-width="1"/>
+      <line x1="46" y1="312" x2="346" y2="312" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-dasharray="8,5"/>
 
-      <!-- N-S Korridor -->
-      <rect x="430" y="100" width="140" height="550" fill="#16162e"/>
-      <rect x="430" y="100" width="140" height="550" fill="url(#floorTile)"/>
-      <!-- Korridor-Mittelstreifen N-S -->
-      <line x1="500" y1="100" x2="500" y2="650" stroke="rgba(139,92,246,0.08)" stroke-width="2" stroke-dasharray="20,12"/>
+      <!-- MK2(1) Beschriftung -->
+      <text x="46" y="100" font-size="11" fill="rgba(167,139,250,0.7)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.04em">MK 2(1)</text>
+      <text x="200" y="220" text-anchor="middle" font-size="9.5" fill="rgba(255,255,255,0.2)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.06em">NAHVERSORGUNG</text>
+      <text x="195" y="398" text-anchor="middle" font-size="9.5" fill="rgba(16,185,129,0.35)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.06em">GASTRO</text>
 
-      <!-- 5. ZONEN-BLÖCKE -->
-
-      <!-- Shops NW -->
-      <rect x="145" y="105" width="280" height="210" fill="#0e1428" stroke="rgba(30,42,64,0.8)" stroke-width="1" rx="4"/>
-      <!-- Trennwände Shops NW -->
-      <line x1="235" y1="105" x2="235" y2="315" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <line x1="325" y1="105" x2="325" y2="315" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <line x1="145" y1="175" x2="425" y2="175" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
-      <line x1="145" y1="245" x2="425" y2="245" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
-
-      <!-- Shop NW Details - Ladentheken -->
-      <rect x="155" y="115" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="245" y="115" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="335" y="115" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="155" y="185" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="245" y="185" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="335" y="185" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="155" y="265" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="245" y="265" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="335" y="265" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-
-      <!-- Shops NO -->
-      <rect x="575" y="105" width="280" height="210" fill="#0e1428" stroke="rgba(30,42,64,0.8)" stroke-width="1" rx="4"/>
-      <!-- Trennwände Shops NO -->
-      <line x1="665" y1="105" x2="665" y2="315" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <line x1="755" y1="105" x2="755" y2="315" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <line x1="575" y1="175" x2="855" y2="175" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
-      <line x1="575" y1="245" x2="855" y2="245" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
-
-      <!-- Shop NO Details -->
-      <rect x="585" y="115" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="675" y="115" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="765" y="115" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="585" y="185" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="675" y="185" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="765" y="185" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="585" y="265" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="675" y="265" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-      <rect x="765" y="265" width="70" height="40" rx="3" fill="#0a0f1e" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-
-      <!-- Atrium/Events-Zentrum -->
-      <rect x="315" y="185" width="370" height="250" fill="#14102a" rx="8"/>
-      <rect x="315" y="185" width="370" height="250" stroke="rgba(139,92,246,0.2)" stroke-width="1.5" fill="none" rx="8"/>
-
-      <!-- Atrium Glasdach-Overlay -->
-      <rect x="315" y="185" width="370" height="250" fill="url(#glassDach)" rx="8"/>
-
-      <!-- Atrium Boden-Detail: konzentrische Bögen -->
-      <ellipse cx="500" cy="310" rx="120" ry="90" fill="none" stroke="rgba(139,92,246,0.06)" stroke-width="1"/>
-      <ellipse cx="500" cy="310" rx="80" ry="60" fill="none" stroke="rgba(139,92,246,0.08)" stroke-width="1"/>
-      <ellipse cx="500" cy="310" rx="40" ry="30" fill="rgba(139,92,246,0.04)" stroke="rgba(139,92,246,0.12)" stroke-width="1"/>
-
-      <!-- Food Court (untere Zone) -->
-      <rect x="145" y="445" width="710" height="200" fill="#1a1208" rx="4"/>
-      <rect x="145" y="445" width="710" height="200" stroke="rgba(245,158,11,0.12)" stroke-width="1" fill="none" rx="4"/>
-
-      <!-- Food Court Bodenstruktur -->
-      <line x1="290" y1="445" x2="290" y2="645" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
-      <line x1="435" y1="445" x2="435" y2="645" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
-      <line x1="565" y1="445" x2="565" y2="645" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
-      <line x1="710" y1="445" x2="710" y2="645" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
-
-      <!-- Food Stände -->
-      <rect x="155" y="460" width="120" height="70" rx="4" fill="#120d04" stroke="rgba(245,158,11,0.12)" stroke-width="1"/>
-      <rect x="300" y="460" width="120" height="70" rx="4" fill="#120d04" stroke="rgba(245,158,11,0.12)" stroke-width="1"/>
-      <rect x="445" y="460" width="110" height="70" rx="4" fill="#120d04" stroke="rgba(245,158,11,0.12)" stroke-width="1"/>
-      <rect x="575" y="460" width="110" height="70" rx="4" fill="#120d04" stroke="rgba(245,158,11,0.12)" stroke-width="1"/>
-      <rect x="700" y="460" width="145" height="70" rx="4" fill="#120d04" stroke="rgba(245,158,11,0.12)" stroke-width="1"/>
-
-      <!-- Food Court Sitzbereich -->
-      <!-- Tische und Stühle -->
-      <circle cx="230" cy="560" r="18" fill="#130e03" stroke="rgba(245,158,11,0.1)" stroke-width="1"/>
-      <circle cx="360" cy="560" r="18" fill="#130e03" stroke="rgba(245,158,11,0.1)" stroke-width="1"/>
-      <circle cx="490" cy="560" r="18" fill="#130e03" stroke="rgba(245,158,11,0.1)" stroke-width="1"/>
-      <circle cx="620" cy="560" r="18" fill="#130e03" stroke="rgba(245,158,11,0.1)" stroke-width="1"/>
-      <circle cx="750" cy="560" r="18" fill="#130e03" stroke="rgba(245,158,11,0.1)" stroke-width="1"/>
-
-      <circle cx="230" cy="610" r="18" fill="#130e03" stroke="rgba(245,158,11,0.1)" stroke-width="1"/>
-      <circle cx="360" cy="610" r="18" fill="#130e03" stroke="rgba(245,158,11,0.1)" stroke-width="1"/>
-      <circle cx="490" cy="610" r="18" fill="#130e03" stroke="rgba(245,158,11,0.1)" stroke-width="1"/>
-      <circle cx="620" cy="610" r="18" fill="#130e03" stroke="rgba(245,158,11,0.1)" stroke-width="1"/>
-      <circle cx="750" cy="610" r="18" fill="#130e03" stroke="rgba(245,158,11,0.1)" stroke-width="1"/>
-
-      <!-- 6. EINGÄNGE -->
-      <!-- Eingang Nord -->
-      <rect x="435" y="60" width="130" height="44" rx="8" fill="#1c1c38"/>
-      <rect x="435" y="60" width="130" height="44" rx="8" stroke="rgba(139,92,246,0.4)" stroke-width="1.5" fill="none"/>
-      <!-- Nord Tür-Linie -->
-      <line x1="460" y1="62" x2="460" y2="102" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-      <line x1="500" y1="62" x2="500" y2="102" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-      <line x1="540" y1="62" x2="540" y2="102" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-
-      <!-- Eingang Süd -->
-      <rect x="435" y="646" width="130" height="54" rx="8" fill="#1c1c38"/>
-      <rect x="435" y="646" width="130" height="54" rx="8" stroke="rgba(139,92,246,0.4)" stroke-width="1.5" fill="none"/>
-      <line x1="460" y1="648" x2="460" y2="698" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-      <line x1="500" y1="648" x2="500" y2="698" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-      <line x1="540" y1="648" x2="540" y2="698" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-
-      <!-- Eingang West -->
-      <rect x="80" y="325" width="64" height="110" rx="8" fill="#1c1c38"/>
-      <rect x="80" y="325" width="64" height="110" rx="8" stroke="rgba(139,92,246,0.4)" stroke-width="1.5" fill="none"/>
-      <line x1="82" y1="355" x2="142" y2="355" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-      <line x1="82" y1="380" x2="142" y2="380" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-      <line x1="82" y1="405" x2="142" y2="405" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-
-      <!-- Eingang Ost -->
-      <rect x="856" y="325" width="64" height="110" rx="8" fill="#1c1c38"/>
-      <rect x="856" y="325" width="64" height="110" rx="8" stroke="rgba(139,92,246,0.4)" stroke-width="1.5" fill="none"/>
-      <line x1="858" y1="355" x2="918" y2="355" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-      <line x1="858" y1="380" x2="918" y2="380" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-      <line x1="858" y1="405" x2="918" y2="405" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-
-      <!-- 8. HEATMAP OVERLAYS (animated) -->
-      <ellipse cx="500" cy="540" rx="200" ry="110" fill="url(#heatFood)">
-        <animate attributeName="opacity" values="0.6;1;0.6" dur="3.5s" repeatCount="indefinite"/>
+      <!-- MK2(1) Heatmap (aktiv) -->
+      <ellipse cx="200" cy="220" rx="140" ry="100" fill="url(#hm-grn)">
+        <animate attributeName="opacity" values="0.4;0.8;0.4" dur="4.5s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="200" cy="390" rx="110" ry="55" fill="url(#hm-amb)">
+        <animate attributeName="opacity" values="0.3;0.65;0.3" dur="3.8s" repeatCount="indefinite"/>
       </ellipse>
 
-      <ellipse cx="500" cy="310" rx="160" ry="120" fill="url(#heatAtrium)">
-        <animate attributeName="opacity" values="0.7;1;0.7" dur="4s" repeatCount="indefinite"/>
+      <!-- Shop-Details MK2(1) -->
+      <rect x="62"  y="130" width="88" height="50" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="106" y="152" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">🥗 Bio-Markt</text>
+      <rect x="162" y="130" width="88" height="50" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="206" y="152" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">🏥 Apotheke</text>
+      <rect x="260" y="130" width="80" height="50" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="300" y="152" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">🏦 Bank</text>
+      <rect x="62"  y="198" width="88" height="50" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="106" y="220" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">📚 Bücher</text>
+      <rect x="162" y="198" width="88" height="50" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="206" y="220" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">👓 Optiker</text>
+      <rect x="260" y="198" width="80" height="50" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="300" y="220" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">💇 Beauty</text>
+      <!-- Gastro Shops -->
+      <rect x="62"  y="326" width="130" height="48" rx="4" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.18)" stroke-width="1"/>
+      <text x="127" y="348" text-anchor="middle" font-size="8" fill="rgba(16,185,129,0.5)" font-family="Poppins,system-ui" font-weight="600">☕ Café Freiham</text>
+      <rect x="205" y="326" width="110" height="48" rx="4" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.18)" stroke-width="1"/>
+      <text x="260" y="348" text-anchor="middle" font-size="8" fill="rgba(16,185,129,0.5)" font-family="Poppins,system-ui" font-weight="600">🥙 Levante</text>
+
+      <!-- ─── MK 2(2) — MITTE (Trapez, höher) ────────────────────────── -->
+      <!-- Polygon: TL(412,106) TR(618,106) BR(618,530) BL(370,530) -->
+      <polygon points="412,106 618,106 618,530 370,530" fill="#0f102a" stroke="rgba(139,92,246,0.18)" stroke-width="1.5"/>
+      <polygon points="412,106 618,106 618,530 370,530" fill="url(#floor-grid)" opacity="0.38"/>
+      <polygon points="412,106 618,106 618,530 370,530" fill="url(#bld-inner)" opacity="0.8"/>
+
+      <!-- MK2(2) Unterteilung: Zentren oben (~58%) / Gastro unten -->
+      <!-- Divider at y=345: x_left = 370+(412-370)*(530-345)/(530-106) = 370+42*185/424 = 370+18.3 = 388 -->
+      <polygon points="388,345 618,345 618,530 370,530" fill="rgba(245,158,11,0.06)" stroke="rgba(245,158,11,0.12)" stroke-width="1"/>
+      <line x1="388" y1="345" x2="618" y2="345" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-dasharray="8,5"/>
+
+      <!-- MK2(2) Labels -->
+      <text x="380" y="100" font-size="11" fill="rgba(167,139,250,0.7)" font-family="Poppins,system-ui" font-weight="700">MK 2(2)</text>
+      <text x="500" y="210" text-anchor="middle" font-size="9.5" fill="rgba(255,255,255,0.2)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.05em">ZENTRENRELEVANTE</text>
+      <text x="500" y="224" text-anchor="middle" font-size="9.5" fill="rgba(255,255,255,0.2)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.05em">SORTIMENTE</text>
+      <text x="495" y="448" text-anchor="middle" font-size="9.5" fill="rgba(245,158,11,0.35)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.06em">GASTRO</text>
+
+      <!-- MK2(2) Heatmap (am aktivsten) -->
+      <ellipse cx="500" cy="220" rx="120" ry="100" fill="url(#hm-pur)">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="3.5s" repeatCount="indefinite"/>
+      </ellipse>
+      <ellipse cx="490" cy="440" rx="110" ry="70" fill="url(#hm-amb)">
+        <animate attributeName="opacity" values="0.4;0.85;0.4" dur="4s" repeatCount="indefinite"/>
       </ellipse>
 
-      <ellipse cx="285" cy="210" rx="130" ry="100" fill="url(#heatShopNW)">
-        <animate attributeName="opacity" values="0.5;0.9;0.5" dur="5s" repeatCount="indefinite"/>
-      </ellipse>
+      <!-- MK2(2) Shop Details -->
+      <rect x="425" y="135" width="90" height="46" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="470" y="156" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">👗 Fashion</text>
+      <rect x="525" y="135" width="84" height="46" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="567" y="156" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">👟 Sport</text>
+      <rect x="425" y="192" width="90" height="46" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="470" y="213" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">💎 Juwelier</text>
+      <rect x="525" y="192" width="84" height="46" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="567" y="213" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">🏠 Home</text>
+      <rect x="425" y="252" width="90" height="46" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="470" y="273" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">📱 Tech</text>
+      <rect x="525" y="252" width="84" height="46" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="567" y="273" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">👶 Kids</text>
+      <!-- Gastro MK2(2) -->
+      <rect x="388" y="360" width="115" height="46" rx="4" fill="rgba(245,158,11,0.07)" stroke="rgba(245,158,11,0.2)" stroke-width="1"/>
+      <text x="445" y="381" text-anchor="middle" font-size="8" fill="rgba(245,158,11,0.5)" font-family="Poppins,system-ui" font-weight="600">🍕 Pizzeria</text>
+      <rect x="514" y="360" width="96" height="46" rx="4" fill="rgba(245,158,11,0.07)" stroke="rgba(245,158,11,0.2)" stroke-width="1"/>
+      <text x="562" y="381" text-anchor="middle" font-size="8" fill="rgba(245,158,11,0.5)" font-family="Poppins,system-ui" font-weight="600">🍜 Asia</text>
+      <rect x="388" y="416" width="115" height="46" rx="4" fill="rgba(245,158,11,0.07)" stroke="rgba(245,158,11,0.2)" stroke-width="1"/>
+      <text x="445" y="437" text-anchor="middle" font-size="8" fill="rgba(245,158,11,0.5)" font-family="Poppins,system-ui" font-weight="600">☕ Bio-Café</text>
+      <rect x="514" y="416" width="96" height="46" rx="4" fill="rgba(245,158,11,0.07)" stroke="rgba(245,158,11,0.2)" stroke-width="1"/>
+      <text x="562" y="437" text-anchor="middle" font-size="8" fill="rgba(245,158,11,0.5)" font-family="Poppins,system-ui" font-weight="600">🥗 Salat</text>
 
-      <ellipse cx="715" cy="210" rx="130" ry="100" fill="url(#heatShopNO)">
-        <animate attributeName="opacity" values="0.4;0.8;0.4" dur="6s" repeatCount="indefinite"/>
-      </ellipse>
+      <!-- ─── MAHATMA-GANDHI-PLATZ ─────────────────────────────────────── -->
+      <!-- Open plaza between buildings -->
+      <!-- Area: right of MK2(3), left of MK2(4), below MK2(2) -->
+      <!-- Rough polygon: (370,530) (650,530) (650,712) (425,712) (370,712) + right of MK2(3) -->
+      <!-- But considering MK2(3) ends at x≈390 at y=712: -->
+      <!-- Plaza polygon: (370,540) (650,540) (650,712) (390,712) -->
+      <polygon points="370,540 650,540 650,712 390,712" fill="#0c0c20" stroke="rgba(139,92,246,0.12)" stroke-width="1"/>
+      <polygon points="370,540 650,540 650,712 390,712" fill="url(#plaza-g)"/>
 
-      <!-- 9. DEKORATIVE ELEMENTE -->
-
-      <!-- Brunnen im Atrium-Zentrum -->
-      <circle cx="500" cy="310" r="28" fill="#0e0a20" stroke="rgba(139,92,246,0.3)" stroke-width="2"/>
-      <circle cx="500" cy="310" r="20" fill="#0c0820" stroke="rgba(139,92,246,0.2)" stroke-width="1.5"/>
-      <circle cx="500" cy="310" r="12" fill="rgba(139,92,246,0.1)" stroke="rgba(139,92,246,0.35)" stroke-width="1"/>
-      <circle cx="500" cy="310" r="5" fill="rgba(139,92,246,0.3)">
-        <animate attributeName="r" values="5;7;5" dur="2s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.8;0.4;0.8" dur="2s" repeatCount="indefinite"/>
-      </circle>
-      <!-- Brunnen Wasser-Ringe -->
-      <circle cx="500" cy="310" r="15" fill="none" stroke="rgba(139,92,246,0.25)" stroke-width="1">
-        <animate attributeName="r" values="15;25;15" dur="3s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.4;0;0.4" dur="3s" repeatCount="indefinite"/>
-      </circle>
-
-      <!-- Atrium Bäume/Pflanzen -->
-      <circle cx="365" cy="220" r="16" fill="#0c1a0c" opacity="0.9"/>
-      <circle cx="365" cy="220" r="10" fill="#122012"/>
-      <circle cx="365" cy="220" r="4" fill="#1a3a1a" opacity="0.8"/>
-
-      <circle cx="635" cy="220" r="16" fill="#0c1a0c" opacity="0.9"/>
-      <circle cx="635" cy="220" r="10" fill="#122012"/>
-      <circle cx="635" cy="220" r="4" fill="#1a3a1a" opacity="0.8"/>
-
-      <circle cx="365" cy="400" r="16" fill="#0c1a0c" opacity="0.9"/>
-      <circle cx="365" cy="400" r="10" fill="#122012"/>
-      <circle cx="365" cy="400" r="4" fill="#1a3a1a" opacity="0.8"/>
-
-      <circle cx="635" cy="400" r="16" fill="#0c1a0c" opacity="0.9"/>
-      <circle cx="635" cy="400" r="10" fill="#122012"/>
-      <circle cx="635" cy="400" r="4" fill="#1a3a1a" opacity="0.8"/>
-
-      <!-- Korridore Bänke -->
-      <rect x="200" y="355" width="28" height="7" rx="2" fill="#1c1c30" stroke="rgba(255,255,255,0.07)" stroke-width="0.5"/>
-      <rect x="770" y="355" width="28" height="7" rx="2" fill="#1c1c30" stroke="rgba(255,255,255,0.07)" stroke-width="0.5"/>
-      <rect x="200" y="393" width="28" height="7" rx="2" fill="#1c1c30" stroke="rgba(255,255,255,0.07)" stroke-width="0.5"/>
-      <rect x="770" y="393" width="28" height="7" rx="2" fill="#1c1c30" stroke="rgba(255,255,255,0.07)" stroke-width="0.5"/>
-
-      <!-- Rolltreppen -->
-      <!-- NW zu Atrium -->
-      <rect x="425" y="250" width="10" height="55" rx="2" fill="#1e1e3a" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-      <polyline points="430,252 426,262 434,262" fill="none" stroke="rgba(139,92,246,0.5)" stroke-width="1.2" stroke-linejoin="round"/>
-      <polyline points="430,298 426,288 434,288" fill="none" stroke="rgba(139,92,246,0.5)" stroke-width="1.2" stroke-linejoin="round"/>
-
-      <!-- NO zu Atrium -->
-      <rect x="565" y="250" width="10" height="55" rx="2" fill="#1e1e3a" stroke="rgba(139,92,246,0.25)" stroke-width="1"/>
-      <polyline points="570,252 566,262 574,262" fill="none" stroke="rgba(139,92,246,0.5)" stroke-width="1.2" stroke-linejoin="round"/>
-      <polyline points="570,298 566,288 574,288" fill="none" stroke="rgba(139,92,246,0.5)" stroke-width="1.2" stroke-linejoin="round"/>
-
-      <!-- Rolltreppen Korridor zu Food -->
-      <rect x="425" y="420" width="10" height="40" rx="2" fill="#1e1e3a" stroke="rgba(245,158,11,0.25)" stroke-width="1"/>
-      <polyline points="430,422 426,430 434,430" fill="none" stroke="rgba(245,158,11,0.5)" stroke-width="1.2"/>
-      <rect x="565" y="420" width="10" height="40" rx="2" fill="#1e1e3a" stroke="rgba(245,158,11,0.25)" stroke-width="1"/>
-      <polyline points="570,422 566,430 574,430" fill="none" stroke="rgba(245,158,11,0.5)" stroke-width="1.2"/>
-
-      <!-- Lichtpunkte entlang Korridore -->
-      <!-- E-W Korridor -->
-      <circle cx="180" cy="380" r="2.5" fill="rgba(255,255,255,0.5)" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="270" cy="380" r="2.5" fill="rgba(255,255,255,0.5)" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="2.4s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="360" cy="380" r="2.5" fill="rgba(255,255,255,0.5)" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="1.8s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="640" cy="380" r="2.5" fill="rgba(255,255,255,0.5)" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="2.2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="730" cy="380" r="2.5" fill="rgba(255,255,255,0.5)" filter="url(#glow)">
+      <!-- Plaza Heatmap (hotspot!) -->
+      <ellipse cx="510" cy="626" rx="140" ry="86" fill="url(#hm-pur)">
         <animate attributeName="opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="820" cy="380" r="2.5" fill="rgba(255,255,255,0.5)" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite"/>
-      </circle>
+      </ellipse>
 
-      <!-- N-S Korridor -->
-      <circle cx="500" cy="155" r="2.5" fill="rgba(255,255,255,0.5)" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="2.1s" repeatCount="indefinite"/>
+      <!-- Plaza Dekorationen -->
+      <!-- Brunnen / Zentralelement -->
+      <circle cx="510" cy="610" r="38" fill="rgba(139,92,246,0.07)" stroke="rgba(139,92,246,0.18)" stroke-width="1.5"/>
+      <circle cx="510" cy="610" r="24" fill="rgba(139,92,246,0.07)" stroke="rgba(167,139,250,0.22)" stroke-width="1">
+        <animate attributeName="r" values="22;26;22" dur="3.2s" repeatCount="indefinite"/>
       </circle>
-      <circle cx="500" cy="230" r="2.5" fill="rgba(255,255,255,0.5)" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="1.9s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="500" cy="470" r="2.5" fill="rgba(255,255,255,0.5)" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="2.7s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="500" cy="570" r="2.5" fill="rgba(255,255,255,0.5)" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="2.3s" repeatCount="indefinite"/>
+      <circle cx="510" cy="610" r="10" fill="rgba(139,92,246,0.18)" stroke="rgba(167,139,250,0.45)" stroke-width="1.5"/>
+      <circle cx="510" cy="610" r="4"  fill="#a78bfa" filter="url(#glow)"/>
+      <!-- Brunnen Glow -->
+      <circle cx="510" cy="610" r="38" fill="url(#hm-pur)" opacity="0.6">
+        <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.8s" repeatCount="indefinite"/>
       </circle>
 
-      <!-- Eingangs-Glow -->
-      <circle cx="500" cy="80" r="8" fill="rgba(139,92,246,0.3)" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.4;0.8;0.4" dur="2s" repeatCount="indefinite"/>
+      <!-- Bänke am Platz -->
+      <rect x="458" y="558" width="44" height="10" rx="5" fill="#1a1a38" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <rect x="458" y="650" width="44" height="10" rx="5" fill="#1a1a38" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <rect x="556" y="590" width="10" height="44" rx="5" fill="#1a1a38" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+      <rect x="458" y="590" width="10" height="44" rx="5" fill="#1a1a38" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+
+      <!-- Bäume am Platz -->
+      <circle cx="390" cy="565" r="9" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="390" cy="565" r="5" fill="#163818" opacity="0.8"/>
+      <circle cx="645" cy="565" r="9" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="645" cy="565" r="5" fill="#163818" opacity="0.8"/>
+      <circle cx="390" cy="698" r="9" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="390" cy="698" r="5" fill="#163818" opacity="0.8"/>
+      <circle cx="645" cy="698" r="9" fill="#0c2810" stroke="#1a4820" stroke-width="1.5"/><circle cx="645" cy="698" r="5" fill="#163818" opacity="0.8"/>
+
+      <!-- Plaza Label -->
+      <text x="510" y="694" text-anchor="middle" font-size="8.5" fill="rgba(167,139,250,0.35)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.06em">MAHATMA-GANDHI-PLATZ</text>
+
+      <!-- ─── MK 2(3) — UNTEN LINKS (großes Trapez) ──────────────────── -->
+      <!-- Polygon: TL(46,482) TR(340,482) BR(390,712) BL(46,712) -->
+      <polygon points="46,482 340,482 390,712 46,712" fill="#0f102a" stroke="rgba(139,92,246,0.18)" stroke-width="1.5"/>
+      <polygon points="46,482 340,482 390,712 46,712" fill="url(#floor-grid)" opacity="0.38"/>
+      <polygon points="46,482 340,482 390,712 46,712" fill="url(#bld-inner)" opacity="0.8"/>
+
+      <!-- MK2(3) Labels -->
+      <text x="46" y="474" font-size="11" fill="rgba(167,139,250,0.7)" font-family="Poppins,system-ui" font-weight="700">MK 2(3)</text>
+      <text x="215" y="580" text-anchor="middle" font-size="9.5" fill="rgba(255,255,255,0.18)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.05em">ZENTRENRELEVANTE</text>
+      <text x="215" y="594" text-anchor="middle" font-size="9.5" fill="rgba(255,255,255,0.18)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.05em">SORTIMENTE</text>
+
+      <!-- MK2(3) Heatmap -->
+      <ellipse cx="218" cy="590" rx="135" ry="95" fill="url(#hm-pur)">
+        <animate attributeName="opacity" values="0.3;0.65;0.3" dur="5s" repeatCount="indefinite"/>
+      </ellipse>
+
+      <!-- MK2(3) Shops -->
+      <rect x="62"  y="508" width="115" height="50" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="119" y="531" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">🏠 Möbel</text>
+      <rect x="190" y="508" width="115" height="50" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="247" y="531" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">👗 Boutique</text>
+      <rect x="62"  y="574" width="115" height="50" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="119" y="597" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">🎨 Kunst</text>
+      <rect x="190" y="574" width="115" height="50" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="247" y="597" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">👟 Sneaker</text>
+      <rect x="74"  y="642" width="125" height="50" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="136" y="665" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">💄 Kosmetik</text>
+      <rect x="214" y="642" width="125" height="50" rx="4" fill="rgba(139,92,246,0.08)" stroke="rgba(139,92,246,0.15)" stroke-width="1"/>
+      <text x="276" y="665" text-anchor="middle" font-size="8" fill="rgba(167,139,250,0.5)" font-family="Poppins,system-ui" font-weight="600">📚 Bücher</text>
+
+      <!-- ─── MK 2(4) — UNTEN RECHTS (Rechteck) ───────────────────────── -->
+      <!-- Polygon: (660,538) (888,538) (888,712) (660,712) -->
+      <rect x="660" y="538" width="228" height="174" rx="4" fill="#0f102a" stroke="rgba(139,92,246,0.18)" stroke-width="1.5"/>
+      <rect x="660" y="538" width="228" height="174" rx="4" fill="url(#floor-grid)" opacity="0.38"/>
+      <rect x="660" y="538" width="228" height="174" rx="4" fill="url(#bld-inner)" opacity="0.8"/>
+
+      <!-- MK2(4) Labels -->
+      <text x="660" y="530" font-size="11" fill="rgba(167,139,250,0.7)" font-family="Poppins,system-ui" font-weight="700">MK 2(4)</text>
+      <text x="774" y="610" text-anchor="middle" font-size="9.5" fill="rgba(255,255,255,0.18)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.06em">NAHVERSORGUNG</text>
+
+      <!-- MK2(4) Heatmap -->
+      <ellipse cx="774" cy="625" rx="110" ry="80" fill="url(#hm-grn)">
+        <animate attributeName="opacity" values="0.3;0.6;0.3" dur="4.8s" repeatCount="indefinite"/>
+      </ellipse>
+
+      <!-- MK2(4) Shops -->
+      <rect x="674" y="558" width="96" height="50" rx="4" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.17)" stroke-width="1"/>
+      <text x="722" y="581" text-anchor="middle" font-size="8" fill="rgba(16,185,129,0.5)" font-family="Poppins,system-ui" font-weight="600">🛒 Supermarkt</text>
+      <rect x="780" y="558" width="96" height="50" rx="4" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.17)" stroke-width="1"/>
+      <text x="828" y="581" text-anchor="middle" font-size="8" fill="rgba(16,185,129,0.5)" font-family="Poppins,system-ui" font-weight="600">🥦 Bio</text>
+      <rect x="674" y="620" width="96" height="50" rx="4" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.17)" stroke-width="1"/>
+      <text x="722" y="643" text-anchor="middle" font-size="8" fill="rgba(16,185,129,0.5)" font-family="Poppins,system-ui" font-weight="600">🧴 Drogerie</text>
+      <rect x="780" y="620" width="96" height="50" rx="4" fill="rgba(16,185,129,0.07)" stroke="rgba(16,185,129,0.17)" stroke-width="1"/>
+      <text x="828" y="643" text-anchor="middle" font-size="8" fill="rgba(16,185,129,0.5)" font-family="Poppins,system-ui" font-weight="600">🍞 Bäcker</text>
+
+      <!-- ─── TRANSPORT-SYMBOLE ────────────────────────────────────────── -->
+      <!-- (H) Haltestelle — zwischen MK2(1) und MK2(2), bei Margarete-Vollmar-Str -->
+      <circle cx="355" cy="466" r="18" fill="#1a1a38" stroke="rgba(52,211,153,0.5)" stroke-width="2" filter="url(#glow-sm)"/>
+      <text x="355" y="472" text-anchor="middle" font-size="14" font-weight="700" fill="rgba(52,211,153,0.8)" font-family="Poppins,system-ui">H</text>
+      <circle cx="355" cy="466" r="18" fill="none" stroke="rgba(52,211,153,0.3)" stroke-width="8">
+        <animate attributeName="stroke-opacity" values="0.3;0;0.3" dur="2.5s" repeatCount="indefinite"/>
+        <animate attributeName="r" values="18;28;18" dur="2.5s" repeatCount="indefinite"/>
       </circle>
-      <circle cx="500" cy="668" r="8" fill="rgba(139,92,246,0.3)" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.4;0.8;0.4" dur="2.5s" repeatCount="indefinite"/>
+
+      <!-- (S) S-Bahn — bei Mahatma-Gandhi-Platz Süd -->
+      <circle cx="420" cy="740" r="18" fill="#1a1a38" stroke="rgba(59,130,246,0.55)" stroke-width="2" filter="url(#glow-sm)"/>
+      <text x="420" y="746" text-anchor="middle" font-size="14" font-weight="700" fill="rgba(59,130,246,0.8)" font-family="Poppins,system-ui">S</text>
+      <circle cx="420" cy="740" r="18" fill="none" stroke="rgba(59,130,246,0.3)" stroke-width="8">
+        <animate attributeName="stroke-opacity" values="0.3;0;0.3" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="r" values="18;28;18" dur="3s" repeatCount="indefinite"/>
       </circle>
-      <circle cx="110" cy="380" r="8" fill="rgba(139,92,246,0.3)" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.4;0.8;0.4" dur="3s" repeatCount="indefinite"/>
+      <text x="450" y="742" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600">S-BAHN</text>
+
+      <!-- ─── DEALS BANNER (Example pinned deals) ──────────────────────── -->
+      <!-- Deal Pin MK2(1) Gastro -->
+      <rect x="115" y="395" width="58" height="20" rx="6" fill="#7c3aed" opacity="0.9"/>
+      <text x="144" y="408" text-anchor="middle" font-size="7.5" font-weight="700" fill="#fff" font-family="Poppins,system-ui">🏷 -20%</text>
+
+      <!-- Deal Pin MK2(2) Fashion -->
+      <rect x="428" y="152" width="60" height="20" rx="6" fill="#059669" opacity="0.9"/>
+      <text x="458" y="165" text-anchor="middle" font-size="7.5" font-weight="700" fill="#fff" font-family="Poppins,system-ui">🏷 2-für-1</text>
+
+      <!-- Deal Pin MK2(4) -->
+      <rect x="723" y="640" width="70" height="20" rx="6" fill="#b45309" opacity="0.9"/>
+      <text x="758" y="653" text-anchor="middle" font-size="7.5" font-weight="700" fill="#fff" font-family="Poppins,system-ui">🏷 10% off</text>
+
+      <!-- ─── COMMUNITY HOTSPOT INDICATOR ─────────────────────────────── -->
+      <!-- MK2(2) Gastro / Bio-Café — Hotspot -->
+      <circle cx="445" cy="440" r="6" fill="#a78bfa" filter="url(#glow)">
+        <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite"/>
       </circle>
-      <circle cx="890" cy="380" r="8" fill="rgba(139,92,246,0.3)" filter="url(#glow)">
-        <animate attributeName="opacity" values="0.4;0.8;0.4" dur="2.8s" repeatCount="indefinite"/>
+      <circle cx="445" cy="440" r="3" fill="#fff"/>
+
+      <!-- Plaza Hotspot -->
+      <circle cx="510" cy="575" r="6" fill="#f59e0b" filter="url(#glow)">
+        <animate attributeName="opacity" values="0.6;1;0.6" dur="1.8s" repeatCount="indefinite"/>
       </circle>
+      <circle cx="510" cy="575" r="3" fill="#fff"/>
 
-      <!-- 10. BESCHRIFTUNGEN -->
-
-      <!-- Eingang Nord -->
-      <text x="500" y="78" font-size="8" fill="rgba(255,255,255,0.7)" font-family="Poppins,system-ui" font-weight="700" text-anchor="middle" letter-spacing="2">EINGANG NORD</text>
-
-      <!-- Eingang Süd -->
-      <text x="500" y="680" font-size="8" fill="rgba(255,255,255,0.7)" font-family="Poppins,system-ui" font-weight="700" text-anchor="middle" letter-spacing="2">EINGANG SÜD</text>
-
-      <!-- Eingang West -->
-      <text x="112" y="384" font-size="7" fill="rgba(255,255,255,0.6)" font-family="Poppins,system-ui" font-weight="700" text-anchor="middle" letter-spacing="1" transform="rotate(-90, 112, 384)">WEST</text>
-
-      <!-- Eingang Ost -->
-      <text x="888" y="384" font-size="7" fill="rgba(255,255,255,0.6)" font-family="Poppins,system-ui" font-weight="700" text-anchor="middle" letter-spacing="1" transform="rotate(90, 888, 384)">OST</text>
-
-      <!-- ATRIUM Label -->
-      <text x="500" y="195" font-size="9" fill="rgba(255,255,255,0.25)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle" letter-spacing="3">ATRIUM</text>
-
-      <!-- EVENTBÜHNE Label -->
-      <text x="500" y="355" font-size="11" fill="rgba(196,181,253,0.4)" font-family="Poppins,system-ui" font-weight="700" text-anchor="middle" letter-spacing="2">EVENTBÜHNE</text>
-
-      <!-- FOOD COURT Label -->
-      <text x="500" y="466" font-size="11" fill="rgba(245,158,11,0.45)" font-family="Poppins,system-ui" font-weight="700" text-anchor="middle" letter-spacing="2">FOOD COURT</text>
-
-      <!-- SHOPS NW Label -->
-      <text x="285" y="122" font-size="9" fill="rgba(255,255,255,0.25)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle" letter-spacing="2">SHOPS NW</text>
-
-      <!-- SHOPS NO Label -->
-      <text x="715" y="122" font-size="9" fill="rgba(255,255,255,0.25)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle" letter-spacing="2">SHOPS NO</text>
-
-      <!-- Händler-Namen NW -->
-      <text x="190" y="138" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Fashion Zone</text>
-      <text x="280" y="138" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">SportStyle</text>
-      <text x="370" y="138" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">TechHub</text>
-      <text x="190" y="208" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Beauty Bar</text>
-      <text x="280" y="208" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Zara Home</text>
-      <text x="370" y="208" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Toys R'Us</text>
-      <text x="190" y="278" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Optiker</text>
-      <text x="280" y="278" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Drogerie</text>
-      <text x="370" y="278" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Bücher</text>
-
-      <!-- Händler-Namen NO -->
-      <text x="620" y="138" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Bio-Café</text>
-      <text x="710" y="138" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Sneaker Lab</text>
-      <text x="800" y="138" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">GameZone</text>
-      <text x="620" y="208" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Jewellery</text>
-      <text x="710" y="208" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">H&amp;M</text>
-      <text x="800" y="208" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Apple Store</text>
-      <text x="620" y="278" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Parfümerie</text>
-      <text x="710" y="278" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Levi's</text>
-      <text x="800" y="278" font-size="6.5" fill="rgba(255,255,255,0.3)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Intersport</text>
-
-      <!-- Food Court Händler -->
-      <text x="215" y="498" font-size="6.5" fill="rgba(245,158,11,0.5)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Levante</text>
-      <text x="215" y="507" font-size="6" fill="rgba(245,158,11,0.35)" font-family="Poppins,system-ui" font-weight="500" text-anchor="middle">Kitchen</text>
-      <text x="360" y="498" font-size="6.5" fill="rgba(245,158,11,0.5)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Bio-Café</text>
-      <text x="500" y="498" font-size="6.5" fill="rgba(245,158,11,0.5)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Pizza Arena</text>
-      <text x="630" y="498" font-size="6.5" fill="rgba(245,158,11,0.5)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Sushi Bar</text>
-      <text x="772" y="498" font-size="6.5" fill="rgba(245,158,11,0.5)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle">Burger&amp;Co</text>
-
-      <!-- AUSSENBEREICH -->
-      <text x="160" y="200" font-size="8" fill="rgba(255,255,255,0.15)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle" letter-spacing="1">AUßEN</text>
-      <text x="840" y="200" font-size="8" fill="rgba(255,255,255,0.15)" font-family="Poppins,system-ui" font-weight="600" text-anchor="middle" letter-spacing="1">AUßEN</text>
-
-      <!-- 11. EINGANGS-PFEIL-SYMBOLE -->
-      <!-- Nord Pfeil -->
-      <polygon points="500,65 493,58 507,58" fill="rgba(139,92,246,0.6)" filter="url(#glow)"/>
-      <!-- Süd Pfeil -->
-      <polygon points="500,685 493,692 507,692" fill="rgba(139,92,246,0.6)" filter="url(#glow)"/>
-      <!-- West Pfeil -->
-      <polygon points="95,380 88,373 88,387" fill="rgba(139,92,246,0.6)" filter="url(#glow)"/>
-      <!-- Ost Pfeil -->
-      <polygon points="905,380 912,373 912,387" fill="rgba(139,92,246,0.6)" filter="url(#glow)"/>
-
-      <!-- Korridor-Trennlinie oben am N-S Korridor -->
-      <line x1="430" y1="320" x2="430" y2="445" stroke="rgba(139,92,246,0.08)" stroke-width="1"/>
-      <line x1="570" y1="320" x2="570" y2="445" stroke="rgba(139,92,246,0.08)" stroke-width="1"/>
-
-      <!-- Gebäude-Außenkante Zierlinie -->
-      <rect x="140" y="100" width="720" height="550" rx="24" stroke="rgba(139,92,246,0.06)" stroke-width="3" fill="none"/>
+      <!-- ─── KORRIDOR-LICHTER ───────────────────────────────────────────── -->
+      <g opacity="0.3" filter="url(#glow-sm)">
+        <circle cx="390" cy="200" r="2.5" fill="#a78bfa"/>
+        <circle cx="390" cy="280" r="2.5" fill="#a78bfa"/>
+        <circle cx="618" cy="200" r="2.5" fill="#a78bfa"/>
+        <circle cx="618" cy="300" r="2.5" fill="#a78bfa"/>
+        <circle cx="618" cy="400" r="2.5" fill="#a78bfa"/>
+        <circle cx="200" cy="106" r="2.5" fill="#a78bfa"/>
+        <circle cx="500" cy="106" r="2.5" fill="#a78bfa"/>
+      </g>
     </svg>
 
-    <!-- USER LAYER -->
     <div id="user-layer"></div>
-
-    <!-- MARKER LAYER -->
     <div id="marker-layer"></div>
   </div>
 </div>
 
-<!-- MAP CONTROLS -->
-<div id="map-controls">
-  <button onclick="zoomIn()" title="Zoom In">＋</button>
-  <button onclick="zoomOut()" title="Zoom Out">－</button>
-  <button onclick="centerOnMe()" title="Eigene Position">⊙</button>
+<!-- CONTROLS -->
+<div id="map-controls" style="display:none">
+  <button class="zoom-btn" onclick="zoomIn()">＋</button>
+  <button class="zoom-btn" onclick="zoomOut()">－</button>
+  <button class="zoom-btn" style="font-size:0.82rem" onclick="centerOnMe()">⊙</button>
 </div>
 
-<!-- BOTTOM STATUS BAR -->
-<div id="map-status-bar">
-  <div id="status-collapsed" onclick="expandStatus()">
-    <div class="my-avatar-mini" id="my-avatar-mini" style="background:#8b5cf6">ME</div>
-    <span id="status-preview">Tippe um Status zu setzen…</span>
-    <span class="chevron">›</span>
+<!-- LEGEND -->
+<div id="map-legend" style="display:none">
+  <div class="leg"><div class="leg-dot" style="background:#ef4444"></div><span class="leg-lbl">Sehr belebt</span></div>
+  <div class="leg"><div class="leg-dot" style="background:#8b5cf6"></div><span class="leg-lbl">Aktives Event</span></div>
+  <div class="leg"><div class="leg-dot" style="background:#f59e0b"></div><span class="leg-lbl">Gastro / Food</span></div>
+  <div class="leg"><div class="leg-dot" style="background:#10b981"></div><span class="leg-lbl">Einkaufen</span></div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="map-status-bar" style="display:none">
+  <div id="st-collapsed" onclick="expandStatus()">
+    <div class="st-my-av" id="my-mini">?</div>
+    <span id="st-preview">Tippe um deinen Status zu setzen…</span>
+    <span class="st-chev">›</span>
   </div>
-  <div id="status-expanded" style="display:none">
-    <div class="status-row">
-      <select id="zone-select">
-        <option value="eingang">🚪 Eingang</option>
-        <option value="food">🍕 Food Area</option>
-        <option value="shops">🛍️ Shops</option>
-        <option value="events">🎭 Events</option>
-        <option value="aussen">☀️ Außenbereich</option>
+  <div id="st-expanded">
+    <div class="st-row">
+      <select id="zone-sel">
+        <option value="mk2_1">🏪 MK 2(1) — Nahversorgung/Gastro</option>
+        <option value="mk2_2">🛍️ MK 2(2) — Shopping/Gastro</option>
+        <option value="mk2_3">🏬 MK 2(3) — Sortimente</option>
+        <option value="mk2_4">🛒 MK 2(4) — Nahversorgung</option>
+        <option value="plaza">☀️ Mahatma-Gandhi-Platz</option>
       </select>
-      <select id="visibility-select">
+      <select id="vis-sel">
         <option value="all">👁️ Alle</option>
         <option value="connections">👥 Freunde</option>
         <option value="hidden">🚫 Unsichtbar</option>
       </select>
     </div>
-    <div class="status-input-row">
-      <input type="text" id="status-text" placeholder="Status schreiben…" maxlength="60"/>
-      <button onclick="saveMyStatus()">✓</button>
+    <div class="st-input-row">
+      <input type="text" id="st-text" placeholder="Was machst du gerade?" maxlength="60" autocomplete="off"/>
+      <button class="btn-st-save" onclick="saveMyStatus()">✓</button>
     </div>
     <div class="preset-chips">
-      <button onclick="setPreset('🍕 Beim Essen')">🍕 Beim Essen</button>
-      <button onclick="setPreset('🎭 Beim Event')">🎭 Beim Event</button>
-      <button onclick="setPreset('🔍 Suche Leute')">🔍 Suche Leute</button>
-      <button onclick="setPreset('☕ Kaffeepause')">☕ Kaffeepause</button>
-      <button onclick="setPreset('🛍️ Shopping')">🛍️ Shopping</button>
-      <button onclick="setPreset('👋 Neu hier!')">👋 Neu hier!</button>
+      <button class="pchip" onclick="setPreset('🍕 Beim Essen')">🍕 Beim Essen</button>
+      <button class="pchip" onclick="setPreset('🎭 Beim Event')">🎭 Beim Event</button>
+      <button class="pchip" onclick="setPreset('🔍 Suche Leute')">🔍 Suche Leute</button>
+      <button class="pchip" onclick="setPreset('☕ Kaffeepause')">☕ Kaffeepause</button>
+      <button class="pchip" onclick="setPreset('🛍️ Shopping')">🛍️ Shopping</button>
+      <button class="pchip" onclick="setPreset('👋 Neu hier!')">👋 Neu hier!</button>
     </div>
   </div>
 </div>
 
-<!-- PROFILE POPUP -->
-<div id="profile-popup" class="bottom-sheet-overlay" style="display:none" onclick="closePopupOnOverlay(event)">
-  <div class="bottom-sheet">
-    <div class="popup-handle"></div>
-    <div class="popup-header">
-      <div class="popup-avatar" id="popup-avatar-el">MK</div>
-      <div class="popup-info">
-        <div class="popup-name" id="popup-name">Mia K.</div>
-        <div class="popup-username" id="popup-username">@mia_k</div>
-        <div class="popup-status" id="popup-status">🎭 Beim Event</div>
+<!-- PROFIL POPUP -->
+<div id="profile-popup" onclick="handleOvClick(event)">
+  <div class="pop-sheet">
+    <div class="pop-handle"></div>
+    <button class="pop-close" onclick="closePopup()">✕</button>
+    <div class="pop-hdr">
+      <div class="pop-av" id="pop-av">MK</div>
+      <div class="pop-info">
+        <div class="pop-name"    id="pop-name">Mia K.</div>
+        <div class="pop-un"      id="pop-un">@mia_k</div>
+        <div class="pop-st"      id="pop-st">🛍️ Shopping</div>
       </div>
-      <div class="popup-zone-badge" id="popup-zone">Events</div>
+      <div class="pop-zone-tag" id="pop-zone">MK 2(2)</div>
     </div>
-    <div class="popup-badges" id="popup-badges"></div>
-    <div class="popup-points" id="popup-points">⭐ 1.250 Punkte</div>
-    <div class="popup-actions">
-      <button class="btn-nudge" id="btn-nudge" onclick="doNudge()">👋 Anstupsen</button>
-      <button class="btn-profile" onclick="window.location.href='index.html#profile'">👤 Profil</button>
+    <div class="pop-badges" id="pop-badges"></div>
+    <div class="pop-pts"    id="pop-pts">⭐ 1.250 Punkte</div>
+    <div class="pop-actions">
+      <button class="btn-nudge-pop" id="btn-nudge">👋 Anstupsen</button>
+      <button class="btn-view-pop"  onclick="closePopup()">👤 Profil</button>
     </div>
-    <div class="popup-secondary">
-      <button onclick="blockFromPopup()">🚫 Blockieren</button>
-      <button onclick="reportFromPopup()">⚑ Melden</button>
+    <div class="pop-sec">
+      <button onclick="blockPop()">🚫 Blockieren</button>
+      <button onclick="reportPop()">⚑ Melden</button>
     </div>
-    <button class="popup-close" onclick="closePopup()">✕</button>
   </div>
 </div>
 
 <!-- NUDGE INBOX -->
-<div id="nudge-inbox" style="position:fixed;right:12px;bottom:200px;z-index:150;display:flex;flex-direction:column;gap:8px;pointer-events:none"></div>
+<div id="nudge-inbox"></div>
 
 <script src="data.js"></script>
 <script src="api.js"></script>
 <script>
-// ── Zone Data ────────────────────────────────────────
+'use strict';
+
+// ── Zone-Koordinaten basierend auf echtem ZAM-Lageplan ─────────────
 const ZONE_CENTERS = {
-  eingang: { x: 500, y: 115  },
-  food:    { x: 500, y: 530  },
-  shops:   { x: 290, y: 215  },
-  events:  { x: 500, y: 310  },
-  aussen:  { x: 180, y: 430  },
+  mk2_1: {x:200,y:270},
+  mk2_2: {x:500,y:280},
+  mk2_3: {x:218,y:600},
+  mk2_4: {x:774,y:625},
+  plaza: {x:510,y:610},
 };
+
 const ZONE_VARIANTS = {
-  eingang: [{ x:480,y:110 },{ x:520,y:125 },{ x:500,y:90 }],
-  food:    [{ x:300,y:510 },{ x:500,y:540 },{ x:680,y:520 },{ x:450,y:570 }],
-  shops:   [{ x:240,y:180 },{ x:290,y:215 },{ x:650,y:180 },{ x:700,y:215 },{ x:240,y:260 }],
-  events:  [{ x:460,y:290 },{ x:520,y:320 },{ x:490,y:350 }],
-  aussen:  [{ x:160,y:400 },{ x:820,y:420 },{ x:500,y:680 },{ x:180,y:550 }],
+  // MK2(1): Nahversorgung (oben) + Gastro (unten)
+  mk2_1: [{x:120,y:180},{x:200,y:200},{x:280,y:170},{x:120,y:380},{x:200,y:400},{x:270,y:390},{x:160,y:270},{x:240,y:290}],
+  // MK2(2): Sortimente (oben) + Gastro (unten)
+  mk2_2: [{x:450,y:170},{x:530,y:190},{x:575,y:165},{x:455,y:250},{x:560,y:235},{x:440,y:420},{x:510,y:450},{x:580,y:430},{x:480,y:310}],
+  // MK2(3): Sortimente (großes Gebäude)
+  mk2_3: [{x:120,y:530},{x:200,y:545},{x:285,y:530},{x:110,y:600},{x:215,y:615},{x:310,y:595},{x:135,y:665},{x:240,y:670}],
+  // MK2(4): Nahversorgung (Rechteck)
+  mk2_4: [{x:700,y:575},{x:770,y:570},{x:840,y:580},{x:700,y:650},{x:775,y:645},{x:840,y:640}],
+  // Mahatma-Gandhi-Platz
+  plaza: [{x:450,y:575},{x:510,y:565},{x:570,y:580},{x:450,y:640},{x:515,y:650},{x:575,y:635}],
 };
 
-const DEMO_MAP_USERS = [
-  { id:'usr_042', name:'Mia K.',   initials:'MK', color:'#7c3aed', zone:'events',  status:'🎭 Beim Event',    variant:0 },
-  { id:'usr_017', name:'Felix B.', initials:'FB', color:'#10b981', zone:'food',    status:'🍕 Beim Essen',    variant:0 },
-  { id:'usr_088', name:'Sarah L.', initials:'SL', color:'#ec4899', zone:'shops',   status:'🛍️ Shopping',      variant:0 },
-  { id:'usr_031', name:'Tom W.',   initials:'TW', color:'#f59e0b', zone:'shops',   status:'☕ Kaffeepause',   variant:3 },
-  { id:'usr_055', name:'Anna P.',  initials:'AP', color:'#3b82f6', zone:'eingang', status:'👋 Neu hier!',     variant:0 },
-  { id:'usr_066', name:'Leo M.',   initials:'LM', color:'#8b5cf6', zone:'food',    status:'🔍 Suche Leute',   variant:2 },
-  { id:'usr_077', name:'Emma R.',  initials:'ER', color:'#06b6d4', zone:'aussen',  status:'☀️ Pause draußen', variant:0 },
+const ZONE_NAMES = {mk2_1:'MK 2(1)',mk2_2:'MK 2(2)',mk2_3:'MK 2(3)',mk2_4:'MK 2(4)',plaza:'Gandhi-Platz'};
+
+// ── Demo Nutzer auf der Karte ───────────────────────────────────────
+const DEMO_USERS = [
+  {id:'usr_042',name:'Mia K.',  initials:'MK',color:'#7c3aed',zone:'mk2_2',status:'🛍️ Shopping',      vi:0},
+  {id:'usr_017',name:'Felix B.',initials:'FB',color:'#10b981',zone:'mk2_2',status:'🍕 Beim Essen',    vi:5},
+  {id:'usr_088',name:'Sarah L.',initials:'SL',color:'#ec4899',zone:'mk2_1',status:'☕ Kaffeepause',   vi:0},
+  {id:'usr_031',name:'Tom W.',  initials:'TW',color:'#f59e0b',zone:'mk2_3',status:'🛍️ Shopping',     vi:0},
+  {id:'usr_055',name:'Anna P.', initials:'AP',color:'#3b82f6',zone:'plaza', status:'🔍 Suche Leute',  vi:0},
+  {id:'usr_066',name:'Leo M.',  initials:'LM',color:'#8b5cf6',zone:'mk2_4',status:'🛒 Einkaufen',    vi:0},
+  {id:'usr_077',name:'Emma R.', initials:'ER',color:'#06b6d4',zone:'plaza', status:'🎭 Beim Event',   vi:3},
+  {id:'usr_099',name:'Max S.',  initials:'MS',color:'#f472b6',zone:'mk2_1',status:'🥙 Beim Essen',   vi:4},
 ];
 
+// ── Event/Deal Marker ───────────────────────────────────────────────
 const MAP_MARKERS = [
-  { id:'ev1', x:500, y:310, icon:'🎭', label:'Sommermarkt',   type:'event',   color:'#f59e0b' },
-  { id:'ev2', x:400, y:530, icon:'🍕', label:'Food Festival', type:'event',   color:'#ef4444' },
-  { id:'d1',  x:280, y:180, icon:'🏷️', label:'-20% Deals',   type:'deal',    color:'#10b981' },
-  { id:'d2',  x:700, y:210, icon:'⭐', label:'Neu: Bio-Café', type:'hotspot', color:'#8b5cf6' },
+  {x:510,y:575,icon:'🎭',label:'Sommermarkt',  color:'#f59e0b'},
+  {x:200,y:440,icon:'🍕',label:'Food-Night',   color:'#ef4444'},
+  {x:280,y:178,icon:'🏷️',label:'Sale -30%',   color:'#10b981'},
+  {x:560,y:450,icon:'☕',label:'Bio-Café Neu', color:'#8b5cf6'},
+  {x:774,y:600,icon:'🛒',label:'Angebote!',   color:'#f59e0b'},
 ];
 
-// ── Map State ────────────────────────────────────────
-let mapScale = 0.55;
-let mapTx = 0, mapTy = 0;
-const MIN_SCALE = 0.35, MAX_SCALE = 2.5;
+// ── Helpers ────────────────────────────────────────────────────────
+function uLoad(k,d=null){const u=ZAMApi.auth.currentUser();if(!u)return d;try{return JSON.parse(localStorage.getItem('zamclub_u_'+u.id)||'{}')[k]??d}catch{return d}}
+function uSet(k,v){const u=ZAMApi.auth.currentUser();if(!u)return;try{const d=JSON.parse(localStorage.getItem('zamclub_u_'+u.id)||'{}');d[k]=v;localStorage.setItem('zamclub_u_'+u.id,JSON.stringify(d))}catch{}}
 
-// ── localStorage helpers ─────────────────────────────
-function gLoad(k, fb = null) {
-  try { return JSON.parse(localStorage.getItem('zamclub_global') || '{}')[k] ?? fb; } catch { return fb; }
+// ── Pan / Zoom ─────────────────────────────────────────────────────
+const SVG_W=1000,SVG_H=800,MIN_S=0.38,MAX_S=2.8;
+let mS=0.55,mX=0,mY=0;
+
+function initT(){
+  const w=document.getElementById('map-wrap');
+  mS=Math.min(w.clientWidth/SVG_W,w.clientHeight/SVG_H)*0.9;
+  mX=(w.clientWidth -SVG_W*mS)/2;
+  mY=(w.clientHeight-SVG_H*mS)/2;
+  applyT(false);
 }
-function gSet(k, v) {
-  try { const d = JSON.parse(localStorage.getItem('zamclub_global') || '{}'); d[k] = v; localStorage.setItem('zamclub_global', JSON.stringify(d)); } catch {}
+function applyT(anim){
+  const s=document.getElementById('map-stage');
+  s.style.transition=anim?'transform 0.35s cubic-bezier(0.16,1,0.3,1)':'';
+  s.style.transform=`translate(${mX}px,${mY}px) scale(${mS})`;
 }
-function uLoad(k, fb = null) {
-  try {
-    const user = ZAMApi?.auth?.currentUser?.();
-    if (!user) return fb;
-    return JSON.parse(localStorage.getItem(`zamclub_u_${user.id}`) || '{}')[k] ?? fb;
-  } catch { return fb; }
+function clampT(){
+  const w=document.getElementById('map-wrap'),mg=80;
+  mX=Math.max(w.clientWidth -SVG_W*mS-mg,Math.min(mg,mX));
+  mY=Math.max(w.clientHeight-SVG_H*mS-mg,Math.min(mg,mY));
 }
-function uSet(k, v) {
-  try {
-    const user = ZAMApi?.auth?.currentUser?.();
-    if (!user) return;
-    const d = JSON.parse(localStorage.getItem(`zamclub_u_${user.id}`) || '{}');
-    d[k] = v; localStorage.setItem(`zamclub_u_${user.id}`, JSON.stringify(d));
-  } catch {}
+function zoomIn(){mS=Math.min(MAX_S,mS*1.3);clampT();applyT(true)}
+function zoomOut(){mS=Math.max(MIN_S,mS/1.3);clampT();applyT(true)}
+function centerOnMe(){
+  const z=uLoad('map_zone','mk2_2'),c=ZONE_CENTERS[z]||ZONE_CENTERS.plaza;
+  const w=document.getElementById('map-wrap');
+  mX=w.clientWidth/2-c.x*mS;mY=w.clientHeight/2-c.y*mS;clampT();applyT(true);
 }
 
-// ── Consent ─────────────────────────────────────────
-function checkConsent() {
-  if (!localStorage.getItem('zamclub_map_consent')) {
-    document.getElementById('consent-overlay').style.display = 'flex';
-  } else { showMap(); }
+// ── Touch/Mouse ────────────────────────────────────────────────────
+(function(){
+  const wrap=document.getElementById('map-wrap');
+  let drag=false,lx=0,ly=0,pinch=false,ld=0,pcx=0,pcy=0;
+  const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+  const mid=(t,el)=>{const r=el.getBoundingClientRect();return{x:(t[0].clientX+t[1].clientX)/2-r.left,y:(t[0].clientY+t[1].clientY)/2-r.top}};
+  wrap.addEventListener('mousedown',e=>{drag=true;lx=e.clientX;ly=e.clientY;wrap.style.cursor='grabbing'});
+  document.addEventListener('mousemove',e=>{if(!drag)return;mX+=e.clientX-lx;mY+=e.clientY-ly;lx=e.clientX;ly=e.clientY;clampT();applyT(false)});
+  document.addEventListener('mouseup',()=>{drag=false;wrap.style.cursor='grab'});
+  wrap.addEventListener('touchstart',e=>{
+    if(e.touches.length===1){drag=true;lx=e.touches[0].clientX;ly=e.touches[0].clientY}
+    else if(e.touches.length===2){drag=false;pinch=true;ld=dist(e.touches);const m=mid(e.touches,wrap);pcx=m.x;pcy=m.y}
+  },{passive:true});
+  wrap.addEventListener('touchmove',e=>{
+    if(drag&&e.touches.length===1){
+      mX+=e.touches[0].clientX-lx;mY+=e.touches[0].clientY-ly;
+      lx=e.touches[0].clientX;ly=e.touches[0].clientY;clampT();applyT(false);
+    }else if(pinch&&e.touches.length===2){
+      const nd=dist(e.touches),r=nd/ld,ns=Math.max(MIN_S,Math.min(MAX_S,mS*r));
+      mX=pcx-(pcx-mX)*(ns/mS);mY=pcy-(pcy-mY)*(ns/mS);mS=ns;ld=nd;clampT();applyT(false);
+    }
+    e.preventDefault();
+  },{passive:false});
+  wrap.addEventListener('touchend',e=>{if(e.touches.length<2)pinch=false;if(e.touches.length===0)drag=false});
+  let lt=0;
+  wrap.addEventListener('touchend',e=>{
+    const now=Date.now();
+    if(now-lt<280&&e.changedTouches.length===1){
+      const r=wrap.getBoundingClientRect(),cx=e.changedTouches[0].clientX-r.left,cy=e.changedTouches[0].clientY-r.top;
+      const ns=mS<1.0?1.4:0.65;mX=cx-(cx-mX)*(ns/mS);mY=cy-(cy-mY)*(ns/mS);mS=ns;clampT();applyT(true);
+    }
+    lt=now;
+  });
+})();
+
+// ── Consent ─────────────────────────────────────────────────────────
+function checkConsent(){
+  if(!localStorage.getItem('zamclub_map_consent'))document.getElementById('consent-overlay').style.display='flex';
+  else showMap();
 }
-function acceptConsent() {
-  localStorage.setItem('zamclub_map_consent', '1');
-  document.getElementById('consent-overlay').style.display = 'none';
+function acceptConsent(){
+  localStorage.setItem('zamclub_map_consent','1');
+  document.getElementById('consent-overlay').style.display='none';
   showMap();
 }
 
-// ── Map Init ─────────────────────────────────────────
-function initMapTransform() {
-  const wrap = document.getElementById('map-wrap');
-  const SVG_W = 1000, SVG_H = 750;
-  const ww = wrap.clientWidth, wh = wrap.clientHeight;
-  mapScale = Math.min(ww / SVG_W, wh / SVG_H) * 0.92;
-  mapTx = (ww - SVG_W * mapScale) / 2;
-  mapTy = (wh - SVG_H * mapScale) / 2;
-  applyTransform();
-}
-
-function applyTransform() {
-  document.getElementById('map-stage').style.transform =
-    `translate(${mapTx}px,${mapTy}px) scale(${mapScale})`;
-}
-
-function showMap() {
-  let user = null;
-  try { user = ZAMApi?.auth?.currentUser?.(); } catch {}
-  if (!user) { window.location.href = 'index.html'; return; }
-  initMapTransform();
-  renderUserBubbles();
+// ── Show Map ─────────────────────────────────────────────────────────
+function showMap(){
+  const user=ZAMApi.auth.currentUser();
+  if(!user){window.location.href='index.html';return}
+  const show=['map-header','map-wrap','map-controls','map-legend','map-status-bar'];
+  show.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=''});
+  document.getElementById('map-header').style.display='flex';
+  document.getElementById('map-controls').style.display='flex';
+  document.getElementById('map-legend').style.display='flex';
+  document.getElementById('map-status-bar').style.display='block';
+  initT();
+  renderBubbles();
   renderMarkers();
   loadMyStatus();
+  updatePrivBtn();
   startPolling();
-  updateMyAvatar(user);
 }
 
-function updateMyAvatar(user) {
-  const mini = document.getElementById('my-avatar-mini');
-  if (mini) {
-    mini.textContent = user.initials || (user.display_name || user.name || 'ME').slice(0,2).toUpperCase();
-    mini.style.background = user.avatar_color || '#8b5cf6';
+// ── User Bubbles ─────────────────────────────────────────────────────
+function getPos(zone,vi){
+  const vs=ZONE_VARIANTS[zone]||ZONE_VARIANTS.plaza;
+  const v=vs[vi%vs.length];
+  return{x:v.x+(Math.random()-.5)*8,y:v.y+(Math.random()-.5)*7};
+}
+function renderBubbles(){
+  const layer=document.getElementById('user-layer');
+  layer.innerHTML='';
+  const me=ZAMApi.auth.currentUser();
+  const vis=uLoad('map_visibility','all');
+  if(vis!=='hidden'){
+    const zone=uLoad('map_zone','mk2_2'),status=uLoad('map_status','');
+    const pos=getPos(zone,7);
+    layer.appendChild(makeBubble({id:me.id,name:'Ich',initials:(me.initials||'?').slice(0,2),color:me.avatar_color||'#8b5cf6',status:status||'📍 Ich bin hier',isOwn:true},pos));
   }
+  DEMO_USERS.forEach(u=>layer.appendChild(makeBubble({...u,isOwn:false},getPos(u.zone,u.vi))));
+}
+function makeBubble(u,pos){
+  const d=document.createElement('div');
+  d.className='user-bubble'+(u.isOwn?' is-own':'');
+  d.style.left=pos.x+'px';d.style.top=pos.y+'px';
+  d.innerHTML=`<div class="av-ring"><div class="av-img" style="background:${u.color}">${u.initials}</div><span class="av-dot"></span></div>${u.status?`<div class="status-chip">${u.status}</div>`:''}<div class="name-tag">${u.name}</div>`;
+  if(!u.isOwn)d.onclick=e=>{e.stopPropagation();openPopup(u.id)};
+  return d;
 }
 
-// ── User Bubbles ─────────────────────────────────────
-function renderUserBubbles() {
-  const layer = document.getElementById('user-layer');
-  layer.innerHTML = '';
-  let user = null;
-  try { user = ZAMApi?.auth?.currentUser?.(); } catch {}
-  if (!user) return;
-
-  const visibility = uLoad('map_visibility', 'all');
-  const myZone = uLoad('map_zone', 'eingang');
-  const myStatus = uLoad('map_status', '');
-  const myPos = getZonePos(myZone, 99);
-  if (visibility !== 'hidden') {
-    const myName = user.display_name || user.name || 'Ich';
-    const myInitials = user.initials || myName.slice(0,2).toUpperCase();
-    const myBubble = createBubble({
-      id: user.id, name: myName, initials: myInitials,
-      color: user.avatar_color || '#8b5cf6',
-      status: myStatus || '📍 Ich bin hier',
-      isOwn: true, isVisible: true
-    }, myPos);
-    layer.appendChild(myBubble);
-  }
-
-  DEMO_MAP_USERS.forEach(u => {
-    const pos = getZonePos(u.zone, u.variant);
-    layer.appendChild(createBubble({ ...u, isOwn: false, isVisible: true }, pos));
+// ── Markers ──────────────────────────────────────────────────────────
+function renderMarkers(){
+  const layer=document.getElementById('marker-layer');
+  layer.innerHTML='';
+  MAP_MARKERS.forEach(m=>{
+    const d=document.createElement('div');
+    d.className='map-marker';d.style.left=m.x+'px';d.style.top=m.y+'px';
+    d.innerHTML=`<div class="mk-icon" style="border-color:${m.color};background:${m.color}1a"><span>${m.icon}</span><div class="mk-pulse" style="border-color:${m.color}"></div></div><div class="mk-label" style="color:${m.color}">${m.label}</div>`;
+    d.onclick=e=>{e.stopPropagation();showToast(`${m.icon} ${m.label}`)};
+    layer.appendChild(d);
   });
 }
 
-function getZonePos(zone, variant) {
-  const variants = ZONE_VARIANTS[zone] || ZONE_VARIANTS.eingang;
-  const v = variants[variant % variants.length];
-  return { x: v.x + (Math.random() - 0.5) * 12, y: v.y + (Math.random() - 0.5) * 12 };
+// ── Popup ────────────────────────────────────────────────────────────
+let _pu=null;
+function openPopup(uid){
+  _pu=DEMO_USERS.find(u=>u.id===uid);if(!_pu)return;const u=_pu;
+  document.getElementById('pop-av').textContent=u.initials;
+  document.getElementById('pop-av').style.cssText=`background:${u.color};border-color:${u.color};width:54px;height:54px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.95rem;font-weight:700;color:#fff;border:3px solid ${u.color}`;
+  document.getElementById('pop-name').textContent=u.name;
+  document.getElementById('pop-un').textContent='@'+u.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'_zam';
+  document.getElementById('pop-st').textContent=u.status;
+  document.getElementById('pop-zone').textContent=ZONE_NAMES[u.zone]||u.zone;
+  document.getElementById('pop-pts').textContent='⭐ '+(800+Math.floor(Math.random()*2400))+' Punkte';
+  const bp=['🌟','🎯','💬','🎟️','🏷️'];const nb=1+Math.floor(Math.random()*3);
+  document.getElementById('pop-badges').innerHTML=bp.slice(0,nb).map(b=>`<span class="pop-badge">${b}</span>`).join('');
+  const btn=document.getElementById('btn-nudge');
+  btn.disabled=false;btn.style.opacity='';
+  const connected=ZAMApi.nudges?.isConnected(uid),pending=ZAMApi.nudges?.hasPendingNudgeTo(uid);
+  if(connected){btn.textContent='💬 Chatten';btn.onclick=()=>openPrivChat(uid)}
+  else if(pending){btn.textContent='⏳ Angefragt…';btn.disabled=true;btn.style.opacity='0.45'}
+  else{btn.textContent='👋 Anstupsen';btn.onclick=()=>doNudge()}
+  const popup=document.getElementById('profile-popup');
+  popup.style.display='flex';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>popup.classList.add('open')));
 }
+function closePopup(){const p=document.getElementById('profile-popup');p.classList.remove('open');setTimeout(()=>{p.style.display='none';_pu=null},330)}
+function handleOvClick(e){if(e.target===document.getElementById('profile-popup'))closePopup()}
 
-function createBubble(user, pos) {
-  const div = document.createElement('div');
-  div.className = 'user-bubble' + (user.isOwn ? ' is-own' : '');
-  div.style.left = pos.x + 'px';
-  div.style.top  = pos.y + 'px';
-  div.dataset.userId = user.id;
-  div.innerHTML = `
-    <div class="avatar-ring-wrap">
-      <div class="avatar-img" style="background:${user.color}">${user.initials}</div>
-      <span class="online-dot"></span>
-    </div>
-    ${user.status ? `<div class="status-chip">${user.status}</div>` : ''}
-    <div class="name-tag">${user.isOwn ? 'Ich' : user.name}</div>
-  `;
-  if (!user.isOwn) div.onclick = () => openUserPopup(user.id);
-  div.style.pointerEvents = 'all';
-  return div;
+// ── Nudge ────────────────────────────────────────────────────────────
+function doNudge(){
+  if(!_pu)return;const saved=_pu;
+  const nid=ZAMApi.nudges?.send(saved.id,saved.name)||('demo_'+Date.now());
+  showToast('👋 Angestupst! Warte auf Antwort…');closePopup();
+  setTimeout(()=>{ZAMApi.nudges?.accept(nid);showToast('✅ '+saved.name+' hat angenommen!');renderBubbles()},4000+Math.random()*3000);
 }
-
-// ── Markers ──────────────────────────────────────────
-function renderMarkers() {
-  const layer = document.getElementById('marker-layer');
-  layer.innerHTML = '';
-  MAP_MARKERS.forEach(m => {
-    const div = document.createElement('div');
-    div.className = 'map-marker';
-    div.style.left = m.x + 'px';
-    div.style.top  = m.y + 'px';
-    div.style.pointerEvents = 'all';
-    div.innerHTML = `
-      <div class="marker-icon-wrap" style="border-color:${m.color};background:${m.color}22">
-        <span>${m.icon}</span>
-        <div class="marker-pulse" style="border-color:${m.color}"></div>
-      </div>
-      <div class="marker-label" style="color:${m.color}">${m.label}</div>
-    `;
-    div.onclick = () => showToast(`${m.icon} ${m.label}`);
-    layer.appendChild(div);
+function checkNudges(){
+  const pending=ZAMApi.nudges?.myNudges()||[];
+  const inbox=document.getElementById('nudge-inbox');inbox.innerHTML='';
+  pending.forEach(n=>{
+    const fu=DEMO_USERS.find(u=>u.id===n.from_id)||{name:n.from_name||'?',initials:'??',color:'#8b5cf6'};
+    const c=document.createElement('div');c.className='nudge-card';
+    c.innerHTML=`<div class="nudge-from"><span class="nudge-av" style="background:${fu.color}">${fu.initials}</span><div><div class="nudge-txt">${fu.name} stupst dich an!</div></div></div><div class="nudge-btns"><button class="btn-na" onclick="acceptNudge('${n.id}')">✓ Annehmen</button><button class="btn-nr" onclick="rejectNudge('${n.id}')">✕</button></div>`;
+    inbox.appendChild(c);
   });
 }
+function acceptNudge(id){ZAMApi.nudges?.accept(id);checkNudges();showToast('✅ Verbunden!')}
+function rejectNudge(id){ZAMApi.nudges?.reject(id);checkNudges()}
 
-// ── Popup ────────────────────────────────────────────
-let _popupUser = null;
-function openUserPopup(userId) {
-  _popupUser = DEMO_MAP_USERS.find(u => u.id === userId);
-  if (!_popupUser) return;
+// ── Status ────────────────────────────────────────────────────────────
+function saveMyStatus(){
+  const zone=document.getElementById('zone-sel').value,status=document.getElementById('st-text').value.trim(),vis=document.getElementById('vis-sel').value;
+  uSet('map_zone',zone);uSet('map_status',status);uSet('map_visibility',vis);
+  renderBubbles();updatePreview();collapseStatus();updatePrivBtn();showToast('✅ Status gespeichert!');
+}
+function setPreset(t){document.getElementById('st-text').value=t}
+function loadMyStatus(){
+  const z=document.getElementById('zone-sel'),s=document.getElementById('st-text'),v=document.getElementById('vis-sel');
+  if(z)z.value=uLoad('map_zone','mk2_2');if(s)s.value=uLoad('map_status','');if(v)v.value=uLoad('map_visibility','all');
+  const me=ZAMApi.auth.currentUser();
+  if(me){const av=document.getElementById('my-mini');if(av){av.textContent=(me.initials||'?').slice(0,2);av.style.background=me.avatar_color||'#8b5cf6'}}
+  updatePreview();
+}
+function updatePreview(){
+  const st=uLoad('map_status',''),z=uLoad('map_zone','mk2_2');
+  document.getElementById('st-preview').textContent=st||`📍 ${ZONE_NAMES[z]||'ZAM'}`;
+}
+function expandStatus(){document.getElementById('st-collapsed').style.display='none';document.getElementById('st-expanded').style.display='block'}
+function collapseStatus(){document.getElementById('st-collapsed').style.display='flex';document.getElementById('st-expanded').style.display='none'}
 
-  document.getElementById('popup-avatar-el').textContent = _popupUser.initials;
-  document.getElementById('popup-avatar-el').style.background = _popupUser.color;
-  document.getElementById('popup-name').textContent = _popupUser.name;
-  document.getElementById('popup-username').textContent = '@' + _popupUser.name.toLowerCase().replace(/[^a-z]/g,'') + '_z';
-  document.getElementById('popup-status').textContent = _popupUser.status;
-  const zoneMap = { eingang:'Eingang', food:'Food Area', shops:'Shops', events:'Events', aussen:'Außen' };
-  document.getElementById('popup-zone').textContent = zoneMap[_popupUser.zone] || '';
-  document.getElementById('popup-points').textContent = '⭐ ' + (800 + Math.floor(Math.random()*2000)) + ' Punkte';
+// ── Privacy ───────────────────────────────────────────────────────────
+function togglePrivacy(){const cur=uLoad('map_visibility','all'),next=cur==='hidden'?'all':'hidden';uSet('map_visibility',next);renderBubbles();updatePrivBtn();showToast(next==='hidden'?'🚫 Unsichtbar':'👁️ Sichtbar')}
+function updatePrivBtn(){const v=uLoad('map_visibility','all');const b=document.getElementById('btn-priv');if(b)b.textContent=v==='hidden'?'🚫':'👁️'}
+function blockPop(){if(!_pu)return;ZAMApi.chat?.blockUser(_pu.id);closePopup();showToast('🚫 Blockiert')}
+function reportPop(){if(!_pu)return;ZAMApi.chat?.report('user',_pu.id,'inappropriate',_pu.id);closePopup();showToast('⚑ Gemeldet')}
+function openPrivChat(uid){const rid=ZAMApi.nudges?.privateChatRoomId(uid)||`room_priv_${uid}`,other=DEMO_USERS.find(u=>u.id===uid)||{name:'Nutzer'};sessionStorage.setItem('open_chat_room',JSON.stringify({id:rid,name:'💬 '+other.name,isPrivate:true}));window.location.href='index.html#community'}
 
-  const allBadges = ['🌟','🎯','💬','🔥','👑'];
-  const cnt = 1 + Math.floor(Math.random()*3);
-  document.getElementById('popup-badges').innerHTML = allBadges.slice(0,cnt).map(b => `<span class="popup-badge">${b}</span>`).join('');
-
-  let isConnected = false, hasPending = false;
-  try { isConnected = ZAMApi.nudges?.isConnected?.(_popupUser.id); } catch {}
-  try { hasPending = ZAMApi.nudges?.hasPendingNudgeTo?.(_popupUser.id); } catch {}
-
-  const nudgeBtn = document.getElementById('btn-nudge');
-  if (isConnected) {
-    nudgeBtn.textContent = '💬 Chatten';
-    nudgeBtn.disabled = false;
-    nudgeBtn.onclick = () => openPrivateChat(_popupUser.id);
-  } else if (hasPending) {
-    nudgeBtn.textContent = '⏳ Angefragt…';
-    nudgeBtn.disabled = true;
-  } else {
-    nudgeBtn.textContent = '👋 Anstupsen';
-    nudgeBtn.disabled = false;
-    nudgeBtn.onclick = () => doNudge();
-  }
-
-  document.getElementById('profile-popup').style.display = 'flex';
-  setTimeout(() => document.getElementById('profile-popup').classList.add('open'), 10);
+// ── Polling ───────────────────────────────────────────────────────────
+function startPolling(){
+  checkNudges();setInterval(checkNudges,5000);
+  const c=ZAMApi.chat?.onlineCount()||8;
+  const el=document.getElementById('hdr-online');if(el)el.textContent=`● ${c+DEMO_USERS.length} im ZAM`;
 }
 
-function closePopup() {
-  document.getElementById('profile-popup').classList.remove('open');
-  setTimeout(() => { document.getElementById('profile-popup').style.display = 'none'; _popupUser = null; }, 300);
-}
-function closePopupOnOverlay(e) {
-  if (e.target === document.getElementById('profile-popup')) closePopup();
-}
+// ── Toast ─────────────────────────────────────────────────────────────
+function showToast(msg){const t=document.createElement('div');t.className='map-toast';t.textContent=msg;document.body.appendChild(t);requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),250)},2800)}
 
-// ── Nudge ────────────────────────────────────────────
-function doNudge() {
-  if (!_popupUser) return;
-  let nudgeId = 'demo_' + Date.now();
-  try { nudgeId = ZAMApi.nudges?.send?.(_popupUser.id, _popupUser.name) || nudgeId; } catch {}
-  showToast('👋 Angestupst!');
-  closePopup();
-  const u = _popupUser;
-  setTimeout(() => {
-    try { ZAMApi.nudges?.accept?.(nudgeId); } catch {}
-    showNudgeAcceptedToast(u);
-    renderUserBubbles();
-  }, 4000 + Math.random() * 3000);
-}
-
-function showNudgeInbox(nudges) {
-  const inbox = document.getElementById('nudge-inbox');
-  inbox.innerHTML = '';
-  nudges.forEach(n => {
-    const card = document.createElement('div');
-    card.className = 'nudge-card';
-    const fromUser = DEMO_MAP_USERS.find(u => u.id === n.from_id) || {
-      name: n.from_name || 'Nutzer',
-      initials: (n.from_name || 'NU').slice(0,2).toUpperCase(),
-      color: '#8b5cf6'
-    };
-    card.innerHTML = `
-      <div class="nudge-from">
-        <span class="nudge-avatar" style="background:${fromUser.color}">${fromUser.initials}</span>
-        <div>
-          <div class="nudge-text">${fromUser.name} stupst dich an!</div>
-          <div class="nudge-time">gerade eben</div>
-        </div>
-      </div>
-      <div class="nudge-actions">
-        <button class="btn-nudge-accept" onclick="acceptNudge('${n.id}')">✓ Annehmen</button>
-        <button class="btn-nudge-reject" onclick="rejectNudge('${n.id}')">✕</button>
-      </div>`;
-    inbox.appendChild(card);
-  });
-}
-
-function acceptNudge(id) {
-  try { ZAMApi.nudges?.accept?.(id); } catch {}
-  checkNudges();
-  showToast('✅ Verbunden! Du kannst jetzt chatten.');
-}
-function rejectNudge(id) {
-  try { ZAMApi.nudges?.reject?.(id); } catch {}
-  checkNudges();
-}
-function checkNudges() {
-  let pending = [];
-  try { pending = ZAMApi.nudges?.myNudges?.() || []; } catch {}
-  showNudgeInbox(pending);
-}
-
-// ── Status ───────────────────────────────────────────
-function saveMyStatus() {
-  const zone = document.getElementById('zone-select').value;
-  const status = document.getElementById('status-text').value.trim();
-  const visibility = document.getElementById('visibility-select').value;
-  uSet('map_zone', zone);
-  uSet('map_status', status);
-  uSet('map_visibility', visibility);
-  renderUserBubbles();
-  updateStatusPreview();
-  collapseStatus();
-  showToast('✅ Status gespeichert!');
-}
-function setPreset(text) {
-  document.getElementById('status-text').value = text;
-  document.getElementById('status-text').focus();
-}
-function loadMyStatus() {
-  const zone = uLoad('map_zone', 'eingang');
-  const status = uLoad('map_status', '');
-  const visibility = uLoad('map_visibility', 'all');
-  const zoneEl = document.getElementById('zone-select');
-  const statusEl = document.getElementById('status-text');
-  const visEl = document.getElementById('visibility-select');
-  if (zoneEl) zoneEl.value = zone;
-  if (statusEl) statusEl.value = status;
-  if (visEl) visEl.value = visibility;
-  updateStatusPreview();
-}
-function updateStatusPreview() {
-  const status = uLoad('map_status', '');
-  const zone = uLoad('map_zone', 'eingang');
-  const zoneLabels = { eingang:'Eingang', food:'Food Area', shops:'Shops', events:'Events', aussen:'Außen' };
-  document.getElementById('status-preview').textContent = status || `📍 ${zoneLabels[zone] || 'Eingang'}`;
-}
-
-// ── Privacy ────────────────────────────────────────────
-function togglePrivacy() {
-  const current = uLoad('map_visibility', 'all');
-  const next = current === 'hidden' ? 'all' : 'hidden';
-  uSet('map_visibility', next);
-  document.getElementById('btn-privacy').textContent = next === 'hidden' ? '🚫' : '👁️';
-  renderUserBubbles();
-  showToast(next === 'hidden' ? '🚫 Du bist jetzt unsichtbar' : '👁️ Du bist jetzt sichtbar');
-}
-
-// ── Private Chat ─────────────────────────────────────
-function openPrivateChat(userId) {
-  let roomId = `room_priv_${userId}`;
-  try { roomId = ZAMApi.nudges?.privateChatRoomId?.(userId) || roomId; } catch {}
-  const other = DEMO_MAP_USERS.find(u => u.id === userId) || { name: 'Nutzer' };
-  sessionStorage.setItem('open_chat_room', JSON.stringify({ id: roomId, name: '💬 ' + other.name, isPrivate: true }));
-  window.location.href = 'index.html#community';
-}
-
-// ── Polling ───────────────────────────────────────────
-function startPolling() {
-  checkNudges();
-  setInterval(checkNudges, 5000);
-  let count = 8;
-  try { count = ZAMApi.chat?.onlineCount?.() || 8; } catch {}
-  const el = document.getElementById('online-count-display');
-  if (el) el.textContent = `● ${count + DEMO_MAP_USERS.length} online`;
-}
-
-// ── Toast ─────────────────────────────────────────────
-function showToast(msg) {
-  const t = document.createElement('div');
-  t.className = 'map-toast';
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.classList.add('show'), 10);
-  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2800);
-}
-function showNudgeAcceptedToast(user) {
-  showToast(`✅ ${user.name} hat deinen Anstoß angenommen!`);
-}
-
-// ── Block/Report ──────────────────────────────────────
-function blockFromPopup() {
-  if (!_popupUser) return;
-  try { ZAMApi.chat?.blockUser?.(_popupUser.id); } catch {}
-  closePopup();
-  showToast('🚫 Nutzer blockiert');
-}
-function reportFromPopup() {
-  if (!_popupUser) return;
-  try { ZAMApi.chat?.report?.('user', _popupUser.id, 'inappropriate', _popupUser.id); } catch {}
-  closePopup();
-  showToast('⚑ Gemeldet. Danke!');
-}
-
-// ── Status bar ────────────────────────────────────────
-function expandStatus() {
-  document.getElementById('status-collapsed').style.display = 'none';
-  document.getElementById('status-expanded').style.display = 'block';
-}
-function collapseStatus() {
-  document.getElementById('status-collapsed').style.display = 'flex';
-  document.getElementById('status-expanded').style.display = 'none';
-}
-
-// ── Zoom controls ─────────────────────────────────────
-function zoomIn() {
-  mapScale = Math.min(MAX_SCALE, mapScale * 1.25);
-  const stage = document.getElementById('map-stage');
-  stage.style.transition = 'transform 0.2s cubic-bezier(0.16,1,0.3,1)';
-  applyTransform();
-  setTimeout(() => { stage.style.transition = ''; }, 200);
-}
-function zoomOut() {
-  mapScale = Math.max(MIN_SCALE, mapScale / 1.25);
-  const stage = document.getElementById('map-stage');
-  stage.style.transition = 'transform 0.2s cubic-bezier(0.16,1,0.3,1)';
-  applyTransform();
-  setTimeout(() => { stage.style.transition = ''; }, 200);
-}
-function centerOnMe() {
-  let user = null;
-  try { user = ZAMApi?.auth?.currentUser?.(); } catch {}
-  if (!user) return;
-  const zone = uLoad('map_zone', 'eingang');
-  const pos = ZONE_CENTERS[zone] || ZONE_CENTERS.eingang;
-  const wrap = document.getElementById('map-wrap');
-  mapTx = wrap.clientWidth  / 2 - pos.x * mapScale;
-  mapTy = wrap.clientHeight / 2 - pos.y * mapScale;
-  const stage = document.getElementById('map-stage');
-  stage.style.transition = 'transform 0.4s cubic-bezier(0.16,1,0.3,1)';
-  applyTransform();
-  setTimeout(() => { stage.style.transition = ''; }, 400);
-}
-
-// ── Clamp ─────────────────────────────────────────────
-function clampTransform() {
-  const wrap = document.getElementById('map-wrap');
-  const SVG_W = 1000, SVG_H = 750;
-  const margin = 120;
-  const minX = wrap.clientWidth - SVG_W * mapScale - margin;
-  const minY = wrap.clientHeight - SVG_H * mapScale - margin;
-  mapTx = Math.max(minX, Math.min(margin, mapTx));
-  mapTy = Math.max(minY, Math.min(margin, mapTy));
-}
-
-// ── Pan + Pinch ───────────────────────────────────────
-(function() {
-  const wrap = document.getElementById('map-wrap');
-  let dragging = false, lastX = 0, lastY = 0;
-  let pinching = false, lastDist = 0, pinchCx = 0, pinchCy = 0;
-
-  // Mouse
-  wrap.addEventListener('mousedown', e => {
-    if (e.target.closest('.user-bubble, .map-marker, button, a, select, input')) return;
-    dragging = true; lastX = e.clientX; lastY = e.clientY;
-    wrap.style.cursor = 'grabbing';
-    e.preventDefault();
-  });
-  document.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    mapTx += e.clientX - lastX; mapTy += e.clientY - lastY;
-    lastX = e.clientX; lastY = e.clientY;
-    clampTransform(); applyTransform();
-  });
-  document.addEventListener('mouseup', () => { dragging = false; wrap.style.cursor = 'grab'; });
-
-  // Wheel zoom
-  wrap.addEventListener('wheel', e => {
-    e.preventDefault();
-    const rect = wrap.getBoundingClientRect();
-    const cx = e.clientX - rect.left;
-    const cy = e.clientY - rect.top;
-    const delta = e.deltaY < 0 ? 1.12 : 0.89;
-    const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, mapScale * delta));
-    mapTx = cx - (cx - mapTx) * (newScale / mapScale);
-    mapTy = cy - (cy - mapTy) * (newScale / mapScale);
-    mapScale = newScale;
-    clampTransform(); applyTransform();
-  }, { passive: false });
-
-  // Touch
-  wrap.addEventListener('touchstart', e => {
-    if (e.touches.length === 1) {
-      if (e.target.closest('.user-bubble, .map-marker, button, a, select, input')) return;
-      dragging = true; pinching = false;
-      lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
-    } else if (e.touches.length === 2) {
-      dragging = false; pinching = true;
-      lastDist = getTouchDist(e.touches);
-      const mid = getTouchMid(e.touches, wrap);
-      pinchCx = mid.x; pinchCy = mid.y;
-    }
-  }, { passive: true });
-
-  wrap.addEventListener('touchmove', e => {
-    if (dragging && e.touches.length === 1) {
-      const dx = e.touches[0].clientX - lastX;
-      const dy = e.touches[0].clientY - lastY;
-      lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
-      mapTx += dx; mapTy += dy;
-      clampTransform(); applyTransform();
-    } else if (pinching && e.touches.length === 2) {
-      const dist = getTouchDist(e.touches);
-      const ratio = dist / lastDist;
-      const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, mapScale * ratio));
-      mapTx = pinchCx - (pinchCx - mapTx) * (newScale / mapScale);
-      mapTy = pinchCy - (pinchCy - mapTy) * (newScale / mapScale);
-      mapScale = newScale;
-      lastDist = dist;
-      clampTransform(); applyTransform();
-    }
-    e.preventDefault();
-  }, { passive: false });
-
-  wrap.addEventListener('touchend', e => {
-    if (e.touches.length < 2) pinching = false;
-    if (e.touches.length === 0) dragging = false;
-  });
-
-  // Double-tap zoom
-  let lastTap = 0;
-  wrap.addEventListener('touchend', e => {
-    if (e.target.closest('.user-bubble, .map-marker, button, a')) return;
-    const now = Date.now();
-    if (now - lastTap < 300) {
-      const t = e.changedTouches[0];
-      const rect = wrap.getBoundingClientRect();
-      const cx = t.clientX - rect.left;
-      const cy = t.clientY - rect.top;
-      const newScale = mapScale < 1.0 ? 1.2 : 0.65;
-      mapTx = cx - (cx - mapTx) * (newScale / mapScale);
-      mapTy = cy - (cy - mapTy) * (newScale / mapScale);
-      mapScale = newScale;
-      clampTransform();
-      const stage = document.getElementById('map-stage');
-      stage.style.transition = 'transform 0.35s cubic-bezier(0.16,1,0.3,1)';
-      applyTransform();
-      setTimeout(() => { stage.style.transition = ''; }, 350);
-    }
-    lastTap = now;
-  });
-
-  function getTouchDist(touches) {
-    const dx = touches[0].clientX - touches[1].clientX;
-    const dy = touches[0].clientY - touches[1].clientY;
-    return Math.sqrt(dx*dx + dy*dy);
-  }
-  function getTouchMid(touches, el) {
-    const rect = el.getBoundingClientRect();
-    return {
-      x: (touches[0].clientX + touches[1].clientX) / 2 - rect.left,
-      y: (touches[0].clientY + touches[1].clientY) / 2 - rect.top,
-    };
-  }
-})();
-
-// ── Init ─────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  checkConsent();
-});
+document.addEventListener('DOMContentLoaded',checkConsent);
 </script>
 </body>
 </html>
