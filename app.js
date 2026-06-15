@@ -215,6 +215,7 @@ function renderHomeEvents() {
   ZAMData.events.forEach(evt => {
     const saved = isSaved('event', evt.id);
     const card = el('div', 'event-card-mini card-dark');
+    card.style.setProperty('--accent-color', evt.category_color);
     card.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div class="category-tag" style="background:${evt.category_color}22;color:${evt.category_color}">${evt.category}</div>
@@ -507,7 +508,7 @@ function renderPostCard(post, idx) {
         <div class="post-author-name">${post.author.name}</div>
         <div class="post-author-level">${post.author.level}</div>
       </div>
-      <div class="post-time">${post.timeAgo}</div>
+      <div class="post-time">${post.time_ago}</div>
     </div>
     <div class="post-content">${post.content}</div>
     <div class="post-tags">${tagsHtml}</div>
@@ -587,7 +588,8 @@ function renderEvents(filter = 'all') {
 
 function renderEventCard(evt, idx) {
   const div = el('div', 'event-card-full card-dark');
-  const spotsLow = evt.spotsLeft <= 10;
+  div.style.setProperty('--accent-color', evt.category_color);
+  const spotsLow = evt.spots_left <= 10;
 
   div.innerHTML = `
     <div class="event-card-top">
@@ -609,8 +611,8 @@ function renderEventCard(evt, idx) {
     <div class="event-card-footer">
       <div class="spots-info">
         ${spotsLow
-          ? `<strong>Nur noch ${evt.spotsLeft} Plätze!</strong>`
-          : `${evt.spotsLeft} Plätze frei`}
+          ? `<strong>Nur noch ${evt.spots_left} Plätze!</strong>`
+          : `${evt.spots_left} Plätze frei`}
       </div>
       <button class="${evt.is_joined ? 'btn btn-sm joined' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
         ${evt.is_joined ? '✓ Angemeldet' : 'Teilnehmen'}
@@ -633,7 +635,7 @@ function joinEvent(idx, cardEl) {
   if (evt.is_joined) return;
 
   evt.is_joined = true;
-  evt.spotsLeft = Math.max(0, evt.spotsLeft - 1);
+  evt.spots_left = Math.max(0, evt.spots_left - 1);
 
   // Persist
   const joined = Storage.get('joined_events', []);
