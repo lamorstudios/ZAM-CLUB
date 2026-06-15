@@ -38,6 +38,10 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
 .tb-online{font-size:0.58rem;color:#34d399;font-weight:600;display:flex;align-items:center;gap:3px;margin-top:1px}
 .tb-online::before{content:'';width:6px;height:6px;border-radius:50%;background:#34d399;display:inline-block}
 .tb-btn{pointer-events:all;width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:0.9rem;color:rgba(255,255,255,0.7)}
+/* Online pill must override pointer-events:none from #topbar */
+#online-pill-btn{pointer-events:all !important}
+@keyframes onlinePulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,0.5)}50%{box-shadow:0 0 0 4px rgba(52,211,153,0)}}
+#au-fab{animation:none} /* position handled by zoom-ctrl */
 #nudge-bell{position:relative}
 #nudge-badge{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:#ef4444;border:2px solid #0d0d18;display:none}
 /* MAP STAGE */
@@ -348,6 +352,11 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
       <button class="z-btn" onclick="mapZoom(1.25)">+</button>
       <button class="z-btn" onclick="mapZoom(0.8)">−</button>
       <button id="locate-btn" onclick="locateMe()">◎</button>
+      <!-- Aktive Nutzer FAB — always clickable, outside topbar -->
+      <button id="au-fab" onclick="openMapActiveUsers()" title="Aktive Nutzer" style="width:auto;min-width:36px;height:36px;border-radius:18px;background:rgba(13,13,24,0.92);border:1.5px solid rgba(52,211,153,0.55);color:#34d399;font-size:0.68rem;font-weight:800;font-family:Poppins,system-ui;display:flex;align-items:center;gap:4px;padding:0 10px;backdrop-filter:blur(16px);cursor:pointer;white-space:nowrap;box-shadow:0 0 12px rgba(52,211,153,0.2)">
+        <span style="width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block;flex-shrink:0;animation:onlinePulse 1.8s ease-in-out infinite"></span>
+        <span id="au-fab-count">21 online</span>
+      </button>
     </div>
 
     <div id="status-bar">
@@ -760,14 +769,21 @@ let _dealReqTarget = null;
 function openMapActiveUsers() {
   const ov = document.getElementById('au-overlay');
   const sh = document.getElementById('au-sheet');
-  if (!ov || !sh) return;
-  ov.style.display = 'block';
-  requestAnimationFrame(() => { sh.style.transform = 'translateY(0)'; });
+  if (!ov || !sh) { alert('Panel nicht gefunden'); return; }
+  ov.style.display = 'flex';
+  ov.style.alignItems = 'flex-end';
+  ov.style.justifyContent = 'center';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { sh.style.transform = 'translateY(0)'; });
+  });
   auSwitchTab('users');
-  // Animate pill
   const count = MAP_DEMO_USERS_EXTENDED.length;
-  document.getElementById('au-count-txt').textContent = count + ' Nutzer gerade aktiv';
-  document.getElementById('online-pill-count').textContent = count + ' online';
+  const ctxt = document.getElementById('au-count-txt');
+  const pill = document.getElementById('online-pill-count');
+  if (ctxt) ctxt.textContent = count + ' Nutzer gerade aktiv';
+  if (pill) pill.textContent = count + ' online';
+  const fab = document.getElementById('au-fab-count');
+  if (fab) fab.textContent = count + ' online';
 }
 
 function closeMapActiveUsers() {
@@ -1143,8 +1159,10 @@ window.addEventListener('DOMContentLoaded',()=>{
     const n = MAP_DEMO_USERS_EXTENDED.length + Math.floor(Math.random()*8);
     const el = document.getElementById('tb-online');
     const pill = document.getElementById('online-pill-count');
+    const fab = document.getElementById('au-fab-count');
     if (el) el.textContent = n + ' Freunde online';
     if (pill) pill.textContent = n + ' online';
+    if (fab) fab.textContent = n + ' online';
   }
   updateOnlineCount();
   setInterval(updateOnlineCount, 12000);
