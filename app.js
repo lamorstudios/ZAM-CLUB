@@ -172,6 +172,19 @@ function navigateTo(pageId) {
   $$('.nav-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.page === pageId);
   });
+
+  // Special pages without data-page nav tab
+  const notifNavBtn = $('#nav-notifications');
+  if (notifNavBtn) {
+    notifNavBtn.classList.toggle('active', pageId === 'notifications' || pageId === 'notif-settings');
+  }
+
+  // Render page-specific content on navigate
+  if (pageId === 'notifications') {
+    renderNotifications();
+  } else if (pageId === 'notif-settings') {
+    renderNotifSettings();
+  }
 }
 
 function initNavigation() {
@@ -1515,6 +1528,16 @@ function showApp() {
   setTimeout(() => checkBadgesAfterAction(), 900);
   startNotifPolling();
   checkMapRedirect();
+
+  // Phase 11: Push Notifications & Notification Center
+  scheduleEventReminders();
+  seedDemoNotifications();
+  updateNotifBadge();
+  setTimeout(() => {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default' && !localStorage.getItem('push_banner_dismissed')) {
+      // Banner is shown when user navigates to notifications page
+    }
+  }, 2000);
 }
 
 function authNavigate(page) {
@@ -2316,6 +2339,8 @@ function _pollNotifications() {
   if (nudgePending.length > _lastNudgeCount && nudgePending.length > 0) {
     const newest = nudgePending[0];
     showToast(`👋 ${newest.from_name} hat dich angestupst!`, 'nudge');
+    // Phase 11: send push notification
+    ZAMApi.push.send(`👋 Neuer Anstupser!`, `${newest.from_name} hat dich angestupst`, {type:'nudge', url:'#community'});
   }
   _lastNudgeCount = nudgePending.length;
 
@@ -2330,12 +2355,17 @@ function _pollNotifications() {
       const chatId = chatIds[0];
       const msgs   = ZAMApi.privateChat.getMessages(chatId);
       const lastMsg = msgs.filter(m => m.sender_id !== me.id).pop();
-      if (lastMsg) showToast(`💬 Neue Nachricht von ${lastMsg.sender_name}`, 'message');
+      if (lastMsg) {
+        showToast(`💬 Neue Nachricht von ${lastMsg.sender_name}`, 'message');
+        // Phase 11: send push notification
+        ZAMApi.push.send('💬 Neue Nachricht', `${lastMsg.sender_name}: ${lastMsg.content.slice(0, 60)}`, {type:'message', url:'#community'});
+      }
     }
   }
   _lastPcUnread = pcUnread;
 
   updateCommunityBadge();
+  updateNotifBadge(); // Phase 11
 }
 
 function updateCommunityBadge() {
@@ -2392,6 +2422,210 @@ function checkMapRedirect() {
 }
 
 // =============================================
+// Phase 11 — Notification Center
+// =============================================
+let notifFilter = 'all';
+
+function setNotifFilter(f, btn) {
+  notifFilter = f;
+  document.querySelectorAll('.nf-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderNotifications();
+}
+
+function renderNotifications() {
+  const me = ZAMApi.auth.currentUser();
+
+  // Push-Permission Banner
+  const banner = document.getElementById('push-permission-banner');
+  if (banner) {
+    const perm = 'Notification' in window ? Notification.permission : 'unsupported';
+    const dismissed = localStorage.getItem('push_banner_dismissed');
+    banner.style.display = (perm === 'default' && !dismissed) ? 'block' : 'none';
+  }
+
+  if (!me) return;
+  const all = ZAMApi.notifications.getAll();
+  const filtered = notifFilter === 'all' ? all : all.filter(n => n.type === notifFilter);
+  const list = document.getElementById('notif-list');
+  if (!list) return;
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="notif-empty"><span class="notif-empty-icon">🔔</span>Keine Benachrichtigungen${notifFilter !== 'all' ? ' in dieser Kategorie' : ''}</div>`;
+    updateNotifBadge();
+    return;
+  }
+
+  const icons = {message:'💬', nudge:'👋', event:'🎉', deal:'🏷️', community:'👥', badge:'🏆', info:'ℹ️'};
+  list.innerHTML = filtered.map(n => `
+    <div class="notif-item ${n.read ? '' : 'unread'}" onclick="onNotifClick('${n.id}','${(n.url||'').replace(/'/g,"\\'")}','${n.type||''}')">
+      <div class="notif-icon type-${n.type||'info'}">${icons[n.type] || '🔔'}</div>
+      <div class="notif-body">
+        <div class="notif-title">${escHtml(n.title||'')}</div>
+        <div class="notif-text">${escHtml(n.body||'')}</div>
+        <div class="notif-time">${timeAgo(n.createdAt)}</div>
+      </div>
+      ${n.read ? '' : '<div class="notif-unread-dot"></div>'}
+      <button class="notif-del-btn" onclick="event.stopPropagation();ZAMApi.notifications.deleteById('${n.id}');renderNotifications()">✕</button>
+    </div>`).join('');
+  updateNotifBadge();
+}
+
+function onNotifClick(id, url, type) {
+  ZAMApi.notifications.markReadById(id);
+  ZAMApi.notifications.recordOpened();
+  renderNotifications();
+  updateNotifBadge();
+  if (url && url !== '/' && url !== 'undefined') {
+    const hash = url.includes('#') ? url.split('#')[1] : url.replace(/^\//, '');
+    if (hash) navigateTo(hash);
+  }
+}
+
+function updateNotifBadge() {
+  const count = ZAMApi.notifications.unreadCount();
+  const badge = document.getElementById('notif-nav-badge');
+  if (!badge) return;
+  badge.style.display = count > 0 ? 'flex' : 'none';
+  badge.textContent = count > 9 ? '9+' : count;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'Gerade eben';
+  if (s < 3600) return `Vor ${Math.floor(s/60)} Min.`;
+  if (s < 86400) return `Vor ${Math.floor(s/3600)} Std.`;
+  return `Vor ${Math.floor(s/86400)} Tag${Math.floor(s/86400) > 1 ? 'en' : ''}`;
+}
+
+// ── Push Permission Handling ──────────────────────────────────
+async function requestPushPermission() {
+  const result = await ZAMApi.push.requestPermission();
+  dismissPushBanner();
+  if (result === 'granted') {
+    await ZAMApi.push.register();
+    showToast('✅ Push-Benachrichtigungen aktiviert!', 'info');
+    renderNotifSettings();
+  } else {
+    showToast('Push wurde nicht erlaubt', 'info');
+  }
+}
+
+function dismissPushBanner() {
+  localStorage.setItem('push_banner_dismissed', '1');
+  const b = document.getElementById('push-permission-banner');
+  if (b) b.style.display = 'none';
+}
+
+async function togglePushPermission() {
+  const perm = 'Notification' in window ? Notification.permission : 'unsupported';
+  if (perm === 'granted') {
+    showToast('Push in Browser-Einstellungen deaktivieren', 'info');
+  } else {
+    await requestPushPermission();
+  }
+  renderNotifSettings();
+}
+
+function renderNotifSettings() {
+  const perm = 'Notification' in window ? Notification.permission : 'unsupported';
+  const statusMap = {granted:'✅ Aktiv', denied:'❌ Deaktiviert', default:'⚠️ Nicht aktiviert', unsupported:'Nicht unterstützt'};
+  const el = document.getElementById('push-status-val');
+  if (el) el.textContent = statusMap[perm] || perm;
+  const btn = document.getElementById('btn-push-toggle');
+  if (btn) btn.textContent = perm === 'granted' ? 'In Browser-Einstellungen deaktivieren' : 'Jetzt aktivieren';
+
+  const settings = ZAMApi.notifications.getSettings();
+  const categories = [
+    {key:'messages', label:'💬 Nachrichten'},
+    {key:'nudges',   label:'👋 Anstupsien'},
+    {key:'events',   label:'🎉 Events'},
+    {key:'deals',    label:'🏷️ Deals'},
+    {key:'community',label:'👥 Community'},
+    {key:'badges',   label:'🏆 Abzeichen'},
+  ];
+  const list = document.getElementById('notif-settings-list');
+  if (!list) return;
+  list.innerHTML = categories.map(c => `
+    <div class="settings-row">
+      <span>${c.label}</span>
+      <label class="settings-toggle">
+        <input type="checkbox" ${settings[c.key] !== false ? 'checked' : ''} onchange="saveNotifSetting('${c.key}',this.checked)">
+        <span class="settings-toggle-slider"></span>
+      </label>
+    </div>`).join('');
+}
+
+function saveNotifSetting(key, val) {
+  const s = ZAMApi.notifications.getSettings();
+  s[key] = val;
+  ZAMApi.notifications.saveSettings(s);
+}
+
+// ── Event Reminder Scheduling ─────────────────────────────────
+function scheduleEventReminders() {
+  const events = (typeof ZAMApi !== 'undefined' && ZAMApi.events) ? ZAMApi.events.list() : [];
+  const now = Date.now();
+  events.forEach(ev => {
+    if (!ev.date) return;
+    const evTime = new Date(ev.date).getTime();
+    const in24h  = evTime - now - 86400000;
+    const in1h   = evTime - now - 3600000;
+    if (in24h > 0 && in24h < 86400000) {
+      setTimeout(() => {
+        ZAMApi.push.send(`🎉 ${ev.title}`, 'Startet morgen! Sei dabei.', {type:'event', url:'#events'});
+      }, in24h);
+    }
+    if (in1h > 0 && in1h < 3600000) {
+      setTimeout(() => {
+        ZAMApi.push.send(`🎉 ${ev.title}`, 'Startet in 1 Stunde!', {type:'event', url:'#events'});
+      }, in1h);
+    }
+  });
+}
+
+function seedDemoNotifications() {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) return;
+  const existing = ZAMApi.notifications.getAll();
+  if (existing.length > 0) return;
+  const demos = [
+    {type:'nudge',     title:'👋 Neuer Anstupser!',              body:'Mia K. hat dich angestupst'},
+    {type:'event',     title:'🎉 Food Festival startet morgen',   body:'Vergiss nicht: Food Festival im MK 2(1) morgen ab 12 Uhr'},
+    {type:'deal',      title:'🏷️ Neuer Deal: -20% Mode',         body:'Heute nur: 20% Rabatt bei Fashion Store im MK 2(2)'},
+    {type:'community', title:'👍 Jemand hat deinen Beitrag geliked', body:'Dein Post erhielt 5 neue Likes'},
+    {type:'badge',     title:'🏆 Neues Abzeichen: Früher Vogel!', body:'Du warst unter den ersten 100 ZAM-Mitgliedern'},
+  ];
+  demos.forEach(d => ZAMApi.notifications.add(d));
+}
+
+// ── Admin Push Stats ──────────────────────────────────────────
+function renderAdminPushStats() {
+  const stats = ZAMApi.notifications.getAdminStats();
+  const rate    = stats.sent > 0 ? Math.round(stats.opened / stats.sent * 100) : 0;
+  const ignored = stats.sent - stats.opened;
+  const el = document.getElementById('admin-push-stats');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="push-stat-grid">
+      <div class="push-stat-card"><div class="push-stat-num">${stats.sent}</div><div class="push-stat-lbl">Versendet</div></div>
+      <div class="push-stat-card"><div class="push-stat-num">${stats.opened}</div><div class="push-stat-lbl">Geöffnet</div></div>
+      <div class="push-stat-card"><div class="push-stat-num">${rate}%</div><div class="push-stat-lbl">Öffnungsrate</div></div>
+    </div>
+    <div style="padding:0 16px;font-size:0.72rem;color:rgba(255,255,255,0.4)">Ignoriert: ${ignored} | Top-Typ: ${_topNotifType(stats.byType)}</div>`;
+}
+
+function _topNotifType(byType) {
+  if (!byType || !Object.keys(byType).length) return '–';
+  return Object.entries(byType).sort((a,b) => b[1]-a[1])[0][0];
+}
+
+// =============================================
 // Init
 // =============================================
 function init() {
@@ -2409,6 +2643,18 @@ function init() {
   initPrivateChat();
   initUserReport();
   initAuth();
+}
+
+// Register Service Worker (Phase 11)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW:', e));
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data?.type === 'notif-click') {
+      ZAMApi.notifications.recordOpened();
+      const url = e.data.data?.url || '/';
+      if (url.includes('#')) navigateTo(url.split('#')[1]);
+    }
+  });
 }
 
 document.readyState === 'loading'

@@ -228,3 +228,45 @@ CREATE POLICY "blocks_own" ON public.blocks
 -- Index for fast lookup
 CREATE INDEX idx_blocks_blocker ON public.blocks(blocker_id);
 CREATE INDEX idx_pm_chat_created ON public.private_messages(chat_id, created_at);
+
+-- ── push_subscriptions ───────────────────────────────────────────
+CREATE TABLE public.push_subscriptions (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  endpoint   TEXT NOT NULL,
+  p256dh     TEXT NOT NULL,
+  auth_key   TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, endpoint)
+);
+ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "push_own" ON public.push_subscriptions FOR ALL USING (user_id = auth.uid());
+
+-- ── notification_log ──────────────────────────────────────────────
+CREATE TABLE public.notification_log (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  type       TEXT NOT NULL,
+  title      TEXT NOT NULL,
+  body       TEXT,
+  sent_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  opened_at  TIMESTAMPTZ,
+  status     TEXT NOT NULL DEFAULT 'sent' -- 'sent' | 'opened' | 'failed'
+);
+ALTER TABLE public.notification_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "notif_log_own" ON public.notification_log FOR SELECT USING (user_id = auth.uid());
+
+-- ── notification_settings ─────────────────────────────────────────
+CREATE TABLE public.notification_settings (
+  user_id   UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  all_notif BOOLEAN NOT NULL DEFAULT true,
+  messages  BOOLEAN NOT NULL DEFAULT true,
+  nudges    BOOLEAN NOT NULL DEFAULT true,
+  events    BOOLEAN NOT NULL DEFAULT true,
+  deals     BOOLEAN NOT NULL DEFAULT true,
+  community BOOLEAN NOT NULL DEFAULT true,
+  badges    BOOLEAN NOT NULL DEFAULT true,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE public.notification_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "notif_settings_own" ON public.notification_settings FOR ALL USING (user_id = auth.uid());

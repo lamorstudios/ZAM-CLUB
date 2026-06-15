@@ -34,6 +34,7 @@ const BADGE_DEFS = [
 const _commentStore = {};
 
 function _uuid() { return 'demo_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function _notifUid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 function _now()  { return new Date().toISOString(); }
 function _todayKey() { return new Date().toISOString().slice(0, 10); }
 
@@ -1195,9 +1196,10 @@ const ZAMApi = {
   },
 
   // ──────────────────────────────────────────────────────────
-  // NOTIFICATIONS
+  // NOTIFICATIONS (Phase 11 — Notification Center)
   // ──────────────────────────────────────────────────────────
   notifications: {
+    // Legacy admin notifications (keep working)
     async list()         { return _s('notifications', []); },
     async markRead(id)   {
       const n = _s('notifications', []);
@@ -1209,6 +1211,128 @@ const ZAMApi = {
       const n = _s('notifications', []);
       n.unshift({ id: _uuid(), title, body, type, action_url: actionUrl, is_read: false, created_at: _now() });
       _set('notifications', n.slice(0, 50));
+    },
+
+    // ── Settings ─────────────────────────────────────────────
+    getSettings() {
+      const uid = _uid();
+      if (!uid) return {all:true,messages:true,nudges:true,events:true,deals:true,community:true,badges:true};
+      return _uLoad(uid, 'notif_settings', {all:true,messages:true,nudges:true,events:true,deals:true,community:true,badges:true});
+    },
+    saveSettings(s) {
+      const uid = _uid();
+      if (uid) _uSet(uid, 'notif_settings', s);
+    },
+
+    // ── History ───────────────────────────────────────────────
+    getAll() {
+      const uid = _uid();
+      return uid ? _uLoad(uid, 'notif_history', []) : [];
+    },
+    add(notif) {
+      const uid = _uid();
+      if (!uid) return;
+      const h = _uLoad(uid, 'notif_history', []);
+      h.unshift({...notif, id: notif.id || _notifUid(), read: false, createdAt: Date.now()});
+      if (h.length > 100) h.splice(100);
+      _uSet(uid, 'notif_history', h);
+      _uSet(uid, 'notif_unread_count', (parseInt(_uLoad(uid, 'notif_unread_count', 0))||0) + 1);
+    },
+    markReadById(id) {
+      const uid = _uid();
+      if (!uid) return;
+      const h = _uLoad(uid, 'notif_history', []);
+      const n = h.find(x => x.id === id);
+      if (n && !n.read) {
+        n.read = true;
+        _uSet(uid, 'notif_history', h);
+        const c = Math.max(0, (parseInt(_uLoad(uid, 'notif_unread_count', 0))||0) - 1);
+        _uSet(uid, 'notif_unread_count', c);
+      }
+    },
+    markAllRead() {
+      const uid = _uid();
+      if (!uid) return;
+      const h = _uLoad(uid, 'notif_history', []).map(n => ({...n, read: true}));
+      _uSet(uid, 'notif_history', h);
+      _uSet(uid, 'notif_unread_count', 0);
+    },
+    unreadCount() {
+      const uid = _uid();
+      return uid ? (parseInt(_uLoad(uid, 'notif_unread_count', 0))||0) : 0;
+    },
+    deleteById(id) {
+      const uid = _uid();
+      if (!uid) return;
+      const h = _uLoad(uid, 'notif_history', []).filter(x => x.id !== id);
+      _uSet(uid, 'notif_history', h);
+    },
+    clear() {
+      const uid = _uid();
+      if (!uid) return;
+      _uSet(uid, 'notif_history', []);
+      _uSet(uid, 'notif_unread_count', 0);
+    },
+
+    // ── Admin stats (global) ──────────────────────────────────
+    recordSent(type) {
+      const s = _gLoad('push_stats', {sent:0, opened:0, ignored:0, byType:{}});
+      s.sent++; s.byType[type] = (s.byType[type]||0)+1;
+      _gSet('push_stats', s);
+    },
+    recordOpened() {
+      const s = _gLoad('push_stats', {sent:0, opened:0, ignored:0, byType:{}});
+      s.opened++; _gSet('push_stats', s);
+    },
+    getAdminStats() { return _gLoad('push_stats', {sent:0, opened:0, ignored:0, byType:{}}); },
+  },
+
+  // ──────────────────────────────────────────────────────────
+  // PUSH (Phase 11)
+  // ──────────────────────────────────────────────────────────
+  push: {
+    async requestPermission() {
+      if (!('Notification' in window)) return 'unsupported';
+      if (Notification.permission === 'granted') return 'granted';
+      if (Notification.permission === 'denied') return 'denied';
+      const result = await Notification.requestPermission();
+      return result;
+    },
+    getPermission() {
+      if (!('Notification' in window)) return 'unsupported';
+      return Notification.permission;
+    },
+    async register() {
+      if (!('serviceWorker' in navigator)) return null;
+      try {
+        const reg = await navigator.serviceWorker.register('/sw.js');
+        await navigator.serviceWorker.ready;
+        return reg;
+      } catch(e) { console.warn('SW register failed', e); return null; }
+    },
+    async send(title, body, options = {}) {
+      const settings = ZAMApi.notifications.getSettings();
+      const typeMap = {message:'messages', nudge:'nudges', event:'events', deal:'deals', badge:'badges', community:'community'};
+      const settingKey = typeMap[options.type] || 'all';
+      if (!settings.all || settings[settingKey] === false) return;
+      ZAMApi.notifications.recordSent(options.type || 'info');
+      ZAMApi.notifications.add({
+        type: options.type || 'info',
+        title, body,
+        url: options.url || '/',
+      });
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      const reg = await navigator.serviceWorker.ready.catch(() => null);
+      if (reg) {
+        reg.showNotification(title, {
+          body, icon: '/assets/zam-map.jpg',
+          tag: options.tag || 'zam',
+          data: {url: options.url || '/', type: options.type},
+          vibrate: [200, 100, 200],
+        });
+      } else {
+        new Notification(title, {body, icon: '/assets/zam-map.jpg'});
+      }
     },
   },
 };

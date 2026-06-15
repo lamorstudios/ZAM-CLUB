@@ -14,6 +14,9 @@
   <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" /></noscript>
 
   <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 </head>
 <body>
 
@@ -385,6 +388,69 @@
   </section>
 
   <!-- =====================
+       NOTIFICATIONS PAGE
+  ========================== -->
+  <div id="page-notifications" class="page">
+    <div class="page-header">
+      <h1 class="page-title">Benachrichtigungen</h1>
+      <div style="display:flex;gap:8px">
+        <button class="icon-btn" onclick="ZAMApi.notifications.markAllRead();renderNotifications()" title="Alle gelesen">✓</button>
+        <button class="icon-btn" onclick="ZAMApi.notifications.clear();renderNotifications()" title="Alle löschen">🗑️</button>
+      </div>
+    </div>
+
+    <!-- Filter Chips -->
+    <div class="notif-filter-bar" id="notif-filter-bar">
+      <button class="nf-chip active" data-filter="all" onclick="setNotifFilter('all',this)">Alle</button>
+      <button class="nf-chip" data-filter="message" onclick="setNotifFilter('message',this)">💬 Nachrichten</button>
+      <button class="nf-chip" data-filter="nudge" onclick="setNotifFilter('nudge',this)">👋 Anstupsien</button>
+      <button class="nf-chip" data-filter="event" onclick="setNotifFilter('event',this)">🎉 Events</button>
+      <button class="nf-chip" data-filter="deal" onclick="setNotifFilter('deal',this)">🏷️ Deals</button>
+      <button class="nf-chip" data-filter="community" onclick="setNotifFilter('community',this)">👥 Community</button>
+    </div>
+
+    <!-- Push Permission Banner -->
+    <div id="push-permission-banner" class="push-banner" style="display:none">
+      <div class="push-banner-icon">🔔</div>
+      <div class="push-banner-text">
+        <strong>Push-Benachrichtigungen aktivieren</strong>
+        <p>Damit du nichts verpasst – Anstupsien, Nachrichten, Events.</p>
+      </div>
+      <button class="btn-push-allow" onclick="requestPushPermission()">Aktivieren</button>
+      <button class="btn-push-deny" onclick="dismissPushBanner()">Nicht jetzt</button>
+    </div>
+
+    <!-- Notification List -->
+    <div id="notif-list" class="notif-list"></div>
+
+    <!-- Notification Settings Link -->
+    <button class="notif-settings-btn" onclick="navigateTo('notif-settings')">⚙️ Benachrichtigungs-Einstellungen</button>
+  </div>
+
+  <!-- =====================
+       NOTIFICATION SETTINGS PAGE
+  ========================== -->
+  <div id="page-notif-settings" class="page">
+    <div class="page-header">
+      <button class="back-btn" onclick="navigateTo('notifications')">←</button>
+      <h1 class="page-title">Einstellungen</h1>
+    </div>
+    <div class="settings-section">
+      <h3 class="settings-section-title">Push-Benachrichtigungen</h3>
+      <div id="push-status-row" class="settings-row">
+        <span>Status</span><span id="push-status-val" style="color:#8b5cf6">Prüfen...</span>
+      </div>
+      <button id="btn-push-toggle" class="btn-settings-action" onclick="togglePushPermission()">Aktivieren</button>
+    </div>
+    <div class="settings-section" style="margin-top:16px">
+      <h3 class="settings-section-title">Kategorien</h3>
+      <div class="settings-toggle-list" id="notif-settings-list">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================
        CHAT ROOM VIEW (app-level overlay, slides over all pages)
   ========================== -->
   <div class="chat-room-view" id="chat-room-view" role="dialog" aria-label="Chat-Raum">
@@ -428,6 +494,11 @@
       <span class="nav-icon">📍</span>
       <span>Map</span>
     </a>
+    <button class="nav-tab" onclick="navigateTo('notifications')" id="nav-notifications" aria-label="Benachrichtigungen">
+      <span class="nav-icon">🔔</span>
+      <span>Alerts</span>
+      <span id="notif-nav-badge" class="nav-badge" style="display:none"></span>
+    </button>
     <button class="nav-tab" data-page="profile" aria-label="Profil">
       <span class="nav-icon">👤</span>
       <span>Profil</span>
