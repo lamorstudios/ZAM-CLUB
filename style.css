@@ -90,7 +90,7 @@ ul, ol { list-style: none; }
 .page {
   display: none;
   flex-direction: column;
-  min-height: auto;
+  min-height: 100dvh;
   padding-bottom: calc(var(--nav-h) + 24px);
   overflow-x: hidden;
   /* overflow-y intentionally unset — body scrolls, not the page element */
