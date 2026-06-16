@@ -224,36 +224,8 @@
       <div class="ai-home-banner-arrow">→</div>
     </div>
 
-    <!-- Händler Tools Card (only visible for merchant/admin role) -->
-    <div id="home-merchant-tools" style="display:none;margin:0 16px 4px">
-      <div style="background:linear-gradient(135deg,rgba(109,40,217,0.25),rgba(139,92,246,0.15));border:1px solid rgba(139,92,246,0.35);border-radius:16px;padding:16px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-          <span style="font-size:1.3rem">🏪</span>
-          <div>
-            <div style="font-size:0.9rem;font-weight:800;color:#c4b5fd">Händler Tools</div>
-            <div style="font-size:0.68rem;color:rgba(139,92,246,0.7)" id="home-merchant-shopname">Mein Shop</div>
-          </div>
-          <div style="margin-left:auto;background:rgba(16,185,129,0.15);border:1px solid rgba(52,211,153,0.3);border-radius:6px;padding:2px 8px;font-size:0.62rem;font-weight:700;color:#34d399">● AKTIV</div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <button onclick="openQRScanner()" style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:10px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer;grid-column:1/-1">
-            <span style="font-size:1.1rem">📷</span> QR-Code scannen
-          </button>
-          <button onclick="openMerchantEventModal()" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer">
-            <span>📅</span> Event einreichen
-          </button>
-          <button onclick="openMerchantDealModal()" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#fbbf24;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer">
-            <span>🏷️</span> Deal einreichen
-          </button>
-          <button onclick="openMerchantStatsOverlay()" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer">
-            <span>📊</span> Statistiken
-          </button>
-          <button onclick="navigateTo('merchant-dashboard')" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer">
-            <span>⚙️</span> Mein Dashboard
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Händler Tools Card — rendered dynamically by renderHome() -->
+    <div id="home-merchant-tools" style="display:none;margin:0 16px 8px"></div>
 
     <!-- Referral CTA -->
     <div id="home-referral-cta" style="margin:12px 16px 4px;cursor:pointer" onclick="openShareDialog()">
@@ -687,23 +659,27 @@
       <span class="nav-icon">🏠</span>
       <span>Home</span>
     </button>
-    <button class="nav-tab" data-page="community" aria-label="Community">
-      <span class="nav-icon">👥</span>
-      <span>Community</span>
-      <span class="nav-community-badge" id="nav-community-badge" style="display:none"></span>
+    <button class="nav-tab" data-page="deals" aria-label="Deals">
+      <span class="nav-icon">🏷️</span>
+      <span>Deals</span>
     </button>
     <button class="nav-tab" data-page="events" aria-label="Events">
       <span class="nav-icon">📅</span>
       <span>Events</span>
     </button>
-    <button class="nav-tab" data-page="deals" aria-label="Deals">
-      <span class="nav-icon">🏷️</span>
-      <span>Deals</span>
+    <button class="nav-tab" data-page="community" aria-label="Community">
+      <span class="nav-icon">👥</span>
+      <span>Community</span>
+      <span class="nav-community-badge" id="nav-community-badge" style="display:none"></span>
     </button>
     <a class="nav-tab nav-tab-map" href="map.html" aria-label="Live Map">
       <span class="nav-icon">📍</span>
       <span>Map</span>
     </a>
+    <button class="nav-tab" data-page="photo-challenges" aria-label="Foto-Challenges">
+      <span class="nav-icon">📸</span>
+      <span style="font-size:0.6rem">Challenges</span>
+    </button>
     <button class="nav-tab" data-page="notifications" id="nav-notifications" aria-label="Benachrichtigungen">
       <span class="nav-icon">🔔</span>
       <span>Alerts</span>
@@ -712,10 +688,6 @@
     <button class="nav-tab" data-page="profile" aria-label="Profil">
       <span class="nav-icon">👤</span>
       <span>Profil</span>
-    </button>
-    <button class="nav-tab" data-page="photo-challenges" aria-label="Foto-Challenges">
-      <span class="nav-icon">📸</span>
-      <span style="font-size:0.6rem">Challenges</span>
     </button>
   </nav>
 

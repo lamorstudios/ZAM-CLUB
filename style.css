@@ -184,19 +184,19 @@ body.subpage-active #app-shell {
   flex: 1;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 4px;
+  gap: 3px;
   background: transparent;
   color: var(--dim);
-  font-size: 0.58rem;
+  font-size: 0.52rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   position: relative;
   padding: 8px 4px;
   transition: color var(--tf);
 }
 .nav-tab .nav-icon {
-  font-size: 1.3rem;
+  font-size: 1.15rem;
   line-height: 1;
   transition: transform var(--tn) var(--spring), filter var(--tn);
 }

@@ -280,16 +280,39 @@ function renderHome() {
   if (refCountEl) refCountEl.textContent = refCount;
   if (refPtsEl)   refPtsEl.textContent   = refCount * 250;
 
-  // Show Händler Tools card for merchant/admin
+  // Händler Tools card — injected dynamically so event listeners are 100% reliable
   const toolsCard = document.getElementById('home-merchant-tools');
   if (toolsCard) {
     const isMerchant = user.role === 'merchant' || user.role === 'admin';
-    toolsCard.style.display = isMerchant ? 'block' : 'none';
-    const shopName = document.getElementById('home-merchant-shopname');
-    if (shopName && user.role === 'merchant') {
-      shopName.textContent = user.display_name || user.name || 'Mein Shop';
-    } else if (shopName && user.role === 'admin') {
-      shopName.textContent = 'Admin-Vorschau aktiv';
+    if (!isMerchant) {
+      toolsCard.style.display = 'none';
+    } else {
+      const shopLabel = user.role === 'admin' ? 'Admin-Vorschau aktiv' : (user.display_name || user.name || 'Demo Händler');
+      toolsCard.style.display = 'block';
+      toolsCard.innerHTML = `
+        <div style="background:linear-gradient(135deg,rgba(109,40,217,0.25),rgba(139,92,246,0.15));border:1px solid rgba(139,92,246,0.35);border-radius:16px;padding:16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+            <span style="font-size:1.3rem">🏪</span>
+            <div>
+              <div style="font-size:0.9rem;font-weight:800;color:#c4b5fd">Händler Tools</div>
+              <div style="font-size:0.68rem;color:rgba(139,92,246,0.7)">${escHtml(shopLabel)}</div>
+            </div>
+            <div style="margin-left:auto;background:rgba(16,185,129,0.15);border:1px solid rgba(52,211,153,0.3);border-radius:6px;padding:2px 8px;font-size:0.62rem;font-weight:700;color:#34d399">● AKTIV</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button id="ht-qr"     style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:10px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer;grid-column:1/-1"><span style="font-size:1.1rem">📷</span> QR-Code scannen</button>
+            <button id="ht-event"  style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>📅</span> Event einreichen</button>
+            <button id="ht-deal"   style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#fbbf24;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>🏷️</span> Deal einreichen</button>
+            <button id="ht-stats"  style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>📊</span> Statistiken</button>
+            <button id="ht-dash"   style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>⚙️</span> Mein Dashboard</button>
+          </div>
+        </div>`;
+      // Attach listeners programmatically — no onclick string dependency
+      document.getElementById('ht-qr')   ?.addEventListener('click', openQRScanner);
+      document.getElementById('ht-event')?.addEventListener('click', openMerchantEventModal);
+      document.getElementById('ht-deal') ?.addEventListener('click', openMerchantDealModal);
+      document.getElementById('ht-stats')?.addEventListener('click', openMerchantStatsOverlay);
+      document.getElementById('ht-dash') ?.addEventListener('click', () => navigateTo('merchant-dashboard'));
     }
   }
 }
