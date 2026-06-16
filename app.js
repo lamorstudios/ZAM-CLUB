@@ -6022,24 +6022,32 @@ function openMerchantEventModal() {
   if (!m) return;
   ['me-title','me-desc','me-date','me-time','me-location','me-note'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const prev = document.getElementById('me-image-preview'); if (prev) prev.style.display = 'none';
-  m.classList.add('open');
+  m.style.display = '';          // clear inline display:none so CSS display:flex takes effect
+  requestAnimationFrame(() => m.classList.add('open')); // add after display resolves for transition
   document.body.style.overflow = 'hidden';
 }
 function closeMerchantEventModal() {
   const m = document.getElementById('modal-merchant-event');
-  if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
+  if (!m) return;
+  m.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => { if (!m.classList.contains('open')) m.style.display = 'none'; }, 300);
 }
 function openMerchantDealModal() {
   const m = document.getElementById('modal-merchant-deal');
   if (!m) return;
   ['md-title','md-desc','md-discount','md-expiry','md-limit','md-note'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const prev = document.getElementById('md-image-preview'); if (prev) prev.style.display = 'none';
-  m.classList.add('open');
+  m.style.display = '';          // clear inline display:none so CSS display:flex takes effect
+  requestAnimationFrame(() => m.classList.add('open'));
   document.body.style.overflow = 'hidden';
 }
 function closeMerchantDealModal() {
   const m = document.getElementById('modal-merchant-deal');
-  if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
+  if (!m) return;
+  m.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => { if (!m.classList.contains('open')) m.style.display = 'none'; }, 300);
 }
 function previewMerchantImage(inputId, previewId) {
   const file = document.getElementById(inputId)?.files?.[0];
