@@ -5364,27 +5364,43 @@ function _saveModQueue(l) { localStorage.setItem('zam_moderation_queue', JSON.st
 
 function _seedChallenges() {
   const existing = _getChallenges();
-  if (existing.length >= 2 && existing[0]?.id === 'zam_ch_001' && existing[0]?.rules) return;
+  if (existing.length >= 4 && existing[0]?.id === 'zam_ch_001' && existing[0]?.rules) return;
   // Clear old submissions when re-seeding challenges
   localStorage.removeItem('zam_photo_submissions');
   localStorage.removeItem('zam_photo_gallery');
   localStorage.removeItem('zam_photo_challenges');
   localStorage.setItem('zam_photo_challenges', JSON.stringify([
-    { id:'zam_ch_001', merchant_id:'mer_001', merchant_name:'Café Freiham', merchant_icon:'☕',
-      banner_color:'#b45309', demo_count:3,
-      title:'Café Freiham Morning Challenge',
-      description:'Zeig deinen perfekten Kaffeemoment im Café Freiham! Fotografiere dein Heißgetränk an 3 verschiedenen Tagen – und dein zweites Getränk ist für 1 € dabei.',
-      reward_description:'2. Heißgetränk für 1 € + 200 Punkte',
-      rules:['1 Foto pro Tag zählt','Heißgetränk muss im Bild sichtbar sein','Nur im Café Freiham (EG, Eingang West)','Kein Upload aus der Galerie'],
+    { id:'zam_ch_001', merchant_id:'mer_008', merchant_name:'Dunkin Donuts', merchant_icon:'🍩',
+      banner_color:'#ea580c', demo_count:5,
+      title:'Dunkin Donuts Challenge',
+      description:'Zeig deine süßesten Momente bei Dunkin Donuts! 3 Besuche fotografieren – und beim 3. Besuch gibt es einen Gratis-Donut für dich.',
+      reward_description:'Gratis Donut + 200 Punkte',
+      rules:['1 Foto pro Tag zählt','Donut oder Kaffee muss im Bild sichtbar sein','Nur bei Dunkin Donuts im ZAM','Kein Upload aus der Galerie'],
       required_photos_count:3, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
-    { id:'zam_ch_002', merchant_id:'mer_004', merchant_name:'Westside Gym', merchant_icon:'💪',
+    { id:'zam_ch_002', merchant_id:'mer_002', merchant_name:'KFC', merchant_icon:'🍗',
+      banner_color:'#b91c1c', demo_count:2,
+      title:'KFC Fan Challenge',
+      description:'Bist du ein echter KFC-Fan? Fotografiere deinen Chicken-Moment an 3 verschiedenen Tagen und zeig, dass du der größte KFC-Fan im ZAM bist!',
+      reward_description:'Gratis Hot Wings + 150 Punkte',
+      rules:['1 Foto pro Tag zählt','Essen muss im Bild erkennbar sein','Nur bei KFC im ZAM Food Court','Kein Upload aus der Galerie'],
+      required_photos_count:3, max_per_day:1,
+      location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
+    { id:'zam_ch_003', merchant_id:'mer_023', merchant_name:'Fit Star', merchant_icon:'💪',
       banner_color:'#065f46', demo_count:1,
-      title:'Westside Gym Fitness Challenge',
-      description:'Dokumentiere deine Trainings-Fortschritte im Westside Gym! 4 Fotos an 4 verschiedenen Tagen – zeig dein Workout, die Rooftop-Sauna oder deinen Motivationsmoment.',
-      reward_description:'1 Monat Mitgliedschaft gratis + 300 Punkte',
-      rules:['1 Foto pro Tag zählt','Foto muss im Westside Gym aufgenommen werden','Training oder Wellness-Bereich muss erkennbar sein','Kein Upload aus der Galerie'],
-      required_photos_count:4, max_per_day:1,
+      title:'Fit Star Challenge',
+      description:'Dokumentiere deine Trainings-Fortschritte bei Fit Star! 5 Check-ins sammeln – zeig dein Workout, die Sauna oder deinen Motivationsmoment.',
+      reward_description:'1 Monat gratis + 300 Punkte',
+      rules:['1 Foto pro Tag zählt','Foto muss im Fit Star aufgenommen werden','Training oder Wellness-Bereich erkennbar','Kein Upload aus der Galerie'],
+      required_photos_count:5, max_per_day:1,
+      location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
+    { id:'zam_ch_004', merchant_id:'mer_019', merchant_name:"L'Osteria", merchant_icon:'🍕',
+      banner_color:'#b91c1c', demo_count:3,
+      title:"L'Osteria Pizza Challenge",
+      description:"Fotografiere deinen Pizzamoment bei L'Osteria! 2 Pizza-Fotos einreichen und den ZAM-Genießer-Bonus sichern – inklusive Rabatt auf deinen nächsten Besuch.",
+      reward_description:"15 % Rabatt + 180 Punkte",
+      rules:['1 Foto pro Tag zählt','Pizza muss deutlich sichtbar sein',"Nur bei L'Osteria im ZAM OG 1",'Kein Upload aus der Galerie'],
+      required_photos_count:2, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
   ]));
   _seedDemoPhotoSubmissions();
@@ -5408,11 +5424,12 @@ function _makeDemoPhotoDataUrl(emoji, color, label) {
 function _seedDemoPhotoSubmissions() {
   if (_getPhotoSubs().length) return;
   const demos = [
-    { id:'sub_d1', challenge_id:'zam_ch_001', challenge_name:'Café Freiham Morning Challenge', user_id:'demo_user1', username:'mia_k', image_data: _makeDemoPhotoDataUrl('☕','#b45309','Morning Coffee'), lat:48.1523, lng:11.4386, submission_day:'2026-06-12', created_at:'2026-06-12T08:30:00Z', status:'auto_approved' },
-    { id:'sub_d2', challenge_id:'zam_ch_001', challenge_name:'Café Freiham Morning Challenge', user_id:'demo_user2', username:'felix_b', image_data: _makeDemoPhotoDataUrl('☕','#78350f','Café Moment'), lat:48.1524, lng:11.4387, submission_day:'2026-06-13', created_at:'2026-06-13T09:15:00Z', status:'auto_approved' },
-    { id:'sub_d3', challenge_id:'zam_ch_002', challenge_name:'Westside Gym Fitness Challenge', user_id:'demo_user3', username:'sarah_l', image_data: _makeDemoPhotoDataUrl('💪','#065f46','Workout'), lat:48.1522, lng:11.4385, submission_day:'2026-06-13', created_at:'2026-06-13T07:00:00Z', status:'auto_approved' },
-    { id:'sub_d4', challenge_id:'zam_ch_001', challenge_name:'Café Freiham Morning Challenge', user_id:'demo_user4', username:'tom_w', image_data: _makeDemoPhotoDataUrl('☕','#92400e','Latte Art'), lat:48.1523, lng:11.4386, submission_day:'2026-06-14', created_at:'2026-06-14T08:45:00Z', status:'auto_approved' },
-    { id:'sub_d5', challenge_id:'zam_ch_002', challenge_name:'Westside Gym Fitness Challenge', user_id:'demo_user5', username:'anna_p', image_data: _makeDemoPhotoDataUrl('🧘','#064e3b','Yoga Rooftop'), lat:48.1523, lng:11.4386, submission_day:'2026-06-14', created_at:'2026-06-14T17:30:00Z', status:'auto_approved' },
+    { id:'sub_d1', challenge_id:'zam_ch_001', challenge_name:'Dunkin Donuts Challenge', user_id:'demo_user1', username:'mia_k', image_data: _makeDemoPhotoDataUrl('🍩','#ea580c','Donut Moment'), lat:48.1523, lng:11.4386, submission_day:'2026-06-12', created_at:'2026-06-12T10:30:00Z', status:'auto_approved' },
+    { id:'sub_d2', challenge_id:'zam_ch_001', challenge_name:'Dunkin Donuts Challenge', user_id:'demo_user2', username:'felix_b', image_data: _makeDemoPhotoDataUrl('🍩','#c2410c','Sweet Break'), lat:48.1524, lng:11.4387, submission_day:'2026-06-13', created_at:'2026-06-13T09:15:00Z', status:'auto_approved' },
+    { id:'sub_d3', challenge_id:'zam_ch_003', challenge_name:'Fit Star Challenge', user_id:'demo_user3', username:'sarah_l', image_data: _makeDemoPhotoDataUrl('💪','#065f46','Workout'), lat:48.1522, lng:11.4385, submission_day:'2026-06-13', created_at:'2026-06-13T07:00:00Z', status:'auto_approved' },
+    { id:'sub_d4', challenge_id:'zam_ch_002', challenge_name:'KFC Fan Challenge', user_id:'demo_user4', username:'tom_w', image_data: _makeDemoPhotoDataUrl('🍗','#b91c1c','Chicken Time'), lat:48.1523, lng:11.4386, submission_day:'2026-06-14', created_at:'2026-06-14T12:45:00Z', status:'auto_approved' },
+    { id:'sub_d5', challenge_id:'zam_ch_004', challenge_name:"L'Osteria Pizza Challenge", user_id:'demo_user5', username:'anna_p', image_data: _makeDemoPhotoDataUrl('🍕','#b91c1c','Pizza Perfetta'), lat:48.1523, lng:11.4386, submission_day:'2026-06-14', created_at:'2026-06-14T13:30:00Z', status:'auto_approved' },
+    { id:'sub_d6', challenge_id:'zam_ch_003', challenge_name:'Fit Star Challenge', user_id:'demo_user6', username:'julia_m', image_data: _makeDemoPhotoDataUrl('🧘','#064e3b','Yoga Flow'), lat:48.1523, lng:11.4386, submission_day:'2026-06-15', created_at:'2026-06-15T08:00:00Z', status:'auto_approved' },
   ];
   _savePhotoSubs(demos);
   const gallery = demos.map(s => ({ id:'gal_'+s.id, submission_id:s.id, image_data:s.image_data, username:s.username, challenge_name:s.challenge_name, likes:Math.floor(Math.random()*30), liked_by:[], created_at:s.created_at }));
