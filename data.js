@@ -454,6 +454,104 @@ const communityPosts = [
 ];
 
 // ============================================================
+// TABLE: spin_merchant_rewards
+// Supabase: public.spin_merchant_rewards
+// Händler können Gewinne für den Lucky Spin einreichen.
+// ============================================================
+const spinMerchantRewards = [
+  {
+    id:                  'spr_001',
+    merchant_id:         'mer_gelato',
+    merchant_name:       'Gelato di Monaco',
+    merchant_icon:       '🍦',
+    banner_color:        '#0891b2',
+    title:               'Gratis Eiskugel in der Waffel',
+    description:         'Eine Kugel Eis deiner Wahl gratis – direkt an der Gelato-Station im ZAM-Erdgeschoss.',
+    reward_type:         'gratis_product',
+    total_quantity:      10,
+    remaining_quantity:  7,
+    active_from:         '2026-06-16',
+    active_until:        '2026-06-26',
+    redeem_within_days:  14,
+    terms:               'Gilt für 1 Kugel. Nicht mit anderen Aktionen kombinierbar.',
+    status:              'approved',
+    probability:         0.04,
+  },
+  {
+    id:                  'spr_002',
+    merchant_id:         'mer_pitsburger',
+    merchant_name:       'Pitsburger',
+    merchant_icon:       '🍔',
+    banner_color:        '#b91c1c',
+    title:               '2 Menüs zum Preis von 1',
+    description:         'Zwei Burger-Menüs (Burger + Beilage + Getränk) zum Preis von einem. Ideal für ein Lunch mit Freunden.',
+    reward_type:         '2für1',
+    total_quantity:      2,
+    remaining_quantity:  2,
+    active_from:         '2026-06-16',
+    active_until:        '2026-06-23',
+    redeem_within_days:  7,
+    terms:               'Gilt für 2 Standardmenüs (max. Wert 18 €). Einmalig einlösbar.',
+    status:              'approved',
+    probability:         0.025,
+  },
+  {
+    id:                  'spr_003',
+    merchant_id:         'mer_001',
+    merchant_name:       'Café Freiham',
+    merchant_icon:       '☕',
+    banner_color:        '#b45309',
+    title:               'Gratis Heißgetränk',
+    description:         'Ein Heißgetränk deiner Wahl gratis. Gilt auf alle Kaffee- und Tee-Spezialitäten, auch Oat-Milk-Varianten.',
+    reward_type:         'gratis_product',
+    total_quantity:      5,
+    remaining_quantity:  4,
+    active_from:         '2026-06-16',
+    active_until:        '2026-06-30',
+    redeem_within_days:  14,
+    terms:               'Gilt für 1 Heißgetränk (max. Wert 5,50 €). Mo–Sa bis 11 Uhr.',
+    status:              'approved',
+    probability:         0.035,
+  },
+  {
+    id:                  'spr_004',
+    merchant_id:         'mer_asia',
+    merchant_name:       'Asia Street Food',
+    merchant_icon:       '🥢',
+    banner_color:        '#065f46',
+    title:               'Gratis Frühlingsrollen',
+    description:         '2 hausgemachte Frühlingsrollen gratis zum Hauptgericht. Einzulösen bei Asia Street Food im Food Court OG 2.',
+    reward_type:         'gratis_product',
+    total_quantity:      3,
+    remaining_quantity:  2,
+    active_from:         '2026-06-16',
+    active_until:        '2026-06-22',
+    redeem_within_days:  7,
+    terms:               '2 Frühlingsrollen gratis. Nur bei Kauf eines Hauptgerichts. Pro Person einmalig.',
+    status:              'approved',
+    probability:         0.03,
+  },
+  {
+    id:                  'spr_005',
+    merchant_id:         'mer_002',
+    merchant_name:       'Odeya Fashion',
+    merchant_icon:       '👗',
+    banner_color:        '#be185d',
+    title:               '30% Rabatt-Coupon',
+    description:         'Exklusiver Spin-Gewinn: 30% auf deinen nächsten Einkauf bei Odeya Fashion – mehr als mit der Standard-Mitgliedschaft.',
+    reward_type:         'discount',
+    total_quantity:      3,
+    remaining_quantity:  3,
+    active_from:         '2026-06-16',
+    active_until:        '2026-06-30',
+    redeem_within_days:  10,
+    terms:               'Gilt auf reguläre Artikel. Nicht auf Sale-Ware. Einmalig einlösbar.',
+    status:              'pending',
+    probability:         0.02,
+  },
+];
+
+// ============================================================
 // TABLE: spin_rewards  (config table)
 // Supabase: public.spin_rewards
 // ============================================================
@@ -485,13 +583,14 @@ const challenges = [
 //   ZAMData.events = (await supabase.from('events').select('*')).data;
 // ============================================================
 window.ZAMData = {
-  currentUser,       // → supabase.auth.getUser()  +  profiles.select()
-  profiles,          // → supabase.from('profiles').select()
-  badges,            // → supabase.from('badges').select() + user_badges join
-  merchants,         // → supabase.from('merchants').select()
-  events,            // → supabase.from('events').select()
-  deals,             // → supabase.from('deals').select()
-  communityPosts,    // → supabase.from('community_posts').select('*, profiles(*)')
-  spinRewards,       // → supabase.from('spin_rewards').select()
-  challenges,        // → supabase.from('challenges').select()
+  currentUser,            // → supabase.auth.getUser()  +  profiles.select()
+  profiles,               // → supabase.from('profiles').select()
+  badges,                 // → supabase.from('badges').select() + user_badges join
+  merchants,              // → supabase.from('merchants').select()
+  events,                 // → supabase.from('events').select()
+  deals,                  // → supabase.from('deals').select()
+  communityPosts,         // → supabase.from('community_posts').select('*, profiles(*)')
+  spinRewards,            // → supabase.from('spin_rewards').select()
+  spinMerchantRewards,    // → supabase.from('spin_merchant_rewards').select()
+  challenges,             // → supabase.from('challenges').select()
 };

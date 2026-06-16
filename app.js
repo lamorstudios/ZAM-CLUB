@@ -265,6 +265,8 @@ function renderHome() {
   if (nameEl) nameEl.textContent = firstName + '! 👋';
 
   updatePointsDisplay();
+  _initSpinMerchantPrizes();
+  _renderHomeSpinPreview();
   renderHomeRecs();
   renderHomeEvents();
   renderHomeDeals();
@@ -303,16 +305,20 @@ function renderHome() {
             <button id="ht-qr"     style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border:none;border-radius:10px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer;grid-column:1/-1"><span style="font-size:1.1rem">📷</span> QR-Code scannen</button>
             <button id="ht-event"  style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>📅</span> Event einreichen</button>
             <button id="ht-deal"   style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(247,171,0,0.15);border:1px solid rgba(247,171,0,0.3);color:#F7AB00;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>🏷️</span> Deal einreichen</button>
+            <button id="ht-spin"   style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.3);color:#c4b5fd;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>🎰</span> Spin-Gewinn</button>
             <button id="ht-stats"  style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>📊</span> Statistiken</button>
-            <button id="ht-dash"   style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>⚙️</span> Mein Dashboard</button>
+            <button id="ht-dash"   style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>⚙️</span> Dashboard</button>
+            ${user.role === 'admin' ? `<button id="ht-admin-spin" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#f87171;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer;grid-column:1/-1"><span>🛡️</span> Spin-Gewinne verwalten</button>` : ''}
           </div>
         </div>`;
       // Attach listeners programmatically — no onclick string dependency
-      document.getElementById('ht-qr')   ?.addEventListener('click', openQRScanner);
-      document.getElementById('ht-event')?.addEventListener('click', openMerchantEventModal);
-      document.getElementById('ht-deal') ?.addEventListener('click', openMerchantDealModal);
-      document.getElementById('ht-stats')?.addEventListener('click', openMerchantStatsOverlay);
-      document.getElementById('ht-dash') ?.addEventListener('click', () => navigateTo('merchant-dashboard'));
+      document.getElementById('ht-qr')        ?.addEventListener('click', openQRScanner);
+      document.getElementById('ht-event')     ?.addEventListener('click', openMerchantEventModal);
+      document.getElementById('ht-deal')      ?.addEventListener('click', openMerchantDealModal);
+      document.getElementById('ht-spin')      ?.addEventListener('click', openSpinPrizeModal);
+      document.getElementById('ht-stats')     ?.addEventListener('click', openMerchantStatsOverlay);
+      document.getElementById('ht-dash')      ?.addEventListener('click', () => navigateTo('merchant-dashboard'));
+      document.getElementById('ht-admin-spin')?.addEventListener('click', openAdminSpinManagement);
     }
   }
 }
@@ -541,6 +547,7 @@ function _buildSpinCards(disabled = false) {
 }
 
 function openSpinModal() {
+  _initSpinMerchantPrizes();
   const overlay = $('#modal-spin');
   if (!overlay) return;
   const alreadySpun = localStorage.getItem(_spinKey()) === _todayStr();
@@ -548,6 +555,7 @@ function openSpinModal() {
   const spinBtn = $('#btn-spin-go');
   if (result) result.style.display = 'none';
   _buildSpinCards(alreadySpun);
+  _renderSpinMerchantPreview();
   if (spinBtn) {
     spinBtn.disabled = alreadySpun;
     spinBtn.textContent = alreadySpun ? '✓ Heute bereits gedreht' : '🎰 Jetzt drehen!';
@@ -564,18 +572,21 @@ async function doSpin() {
   const spinBtn = $('#btn-spin-go');
   if (spinBtn) { spinBtn.disabled = true; spinBtn.textContent = '⏳ Dreht…'; }
 
-  // Pick reward by probability
+  // Build merged pool (points + active merchant prizes)
+  const pool = _buildSpinPool();
   let cumulative = 0;
   const rand = Math.random();
-  let reward = ZAMData.spinRewards[0];
+  let reward = pool[0];
   let rewardIdx = 0;
-  for (let i = 0; i < ZAMData.spinRewards.length; i++) {
-    cumulative += ZAMData.spinRewards[i].probability;
-    if (rand <= cumulative) { reward = ZAMData.spinRewards[i]; rewardIdx = i; break; }
+  for (let i = 0; i < pool.length; i++) {
+    cumulative += pool[i].probability;
+    if (rand <= cumulative) { reward = pool[i]; rewardIdx = i; break; }
   }
-
-  // Animate — shake all cards, then flip the winner
+  // Clamp to card count for animation (merchant prizes overflow point cards → animate last card)
   const cards = $$('.spin-card');
+  const animIdx = Math.min(rewardIdx, cards.length - 1);
+
+  // Animate — shake all cards, then flip the winner card
   cards.forEach((c, i) => {
     setTimeout(() => {
       c.classList.add('shaking');
@@ -584,19 +595,55 @@ async function doSpin() {
   });
 
   setTimeout(async () => {
-    if (cards[rewardIdx]) cards[rewardIdx].classList.add('flipped');
+    if (cards[animIdx]) cards[animIdx].classList.add('flipped');
 
-    const resultEl  = $('#spin-result');
-    const resultPts = $('#spin-result-points');
-    const resultLbl = $('#spin-result-label');
-    const resultIcon = $('#spin-result-icon');
-    if (resultEl)   resultEl.style.display = 'block';
-    if (resultPts)  resultPts.textContent  = '+' + reward.points;
-    if (resultLbl)  resultLbl.textContent  = reward.label + ' gewonnen!';
-    if (resultIcon) resultIcon.textContent = reward.points >= 250 ? '🎉' : reward.points >= 100 ? '🥳' : '✨';
+    const resultEl = $('#spin-result');
+    if (!resultEl) return;
+    resultEl.style.display = 'block';
 
-    await addPoints(reward.points, 'Daily Spin');
-    localStorage.setItem(_spinKey(), _todayStr());
+    if (reward._type === 'merchant_prize') {
+      // ── Händler-Gewinn ──
+      const wonReward = _handleMerchantPrizeWin(reward);
+      const expDate = new Date(wonReward.expires_at).toLocaleDateString('de-DE');
+      resultEl.innerHTML = `
+        <div style="text-align:center;padding:4px 0 8px">
+          <div style="font-size:2.8rem;margin-bottom:6px">🎉</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#F7AB00;margin-bottom:2px">Jackpot-Gewinn!</div>
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-bottom:14px">Händler-Preis gewonnen</div>
+          <div style="background:rgba(247,171,0,0.1);border:1px solid rgba(247,171,0,0.3);border-radius:14px;padding:14px;margin-bottom:14px;text-align:left">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <span style="font-size:2rem">${reward.merchant_icon}</span>
+              <div>
+                <div style="font-size:0.92rem;font-weight:800;color:#e2e8f0">${escHtml(reward.title)}</div>
+                <div style="font-size:0.7rem;color:rgba(255,255,255,0.5)">${escHtml(reward.merchant_name)}</div>
+              </div>
+            </div>
+            <div style="font-size:0.72rem;color:rgba(255,255,255,0.55);line-height:1.5;margin-bottom:8px">${escHtml(reward.description)}</div>
+            <div style="font-size:0.65rem;color:#F7AB00;font-weight:700">⏰ Einlösefrist: bis ${expDate}</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button onclick="showQRVoucher('${wonReward.id}')" style="flex:1;padding:11px;background:linear-gradient(135deg,#8a5f00,#F7AB00);border:none;color:#fff;border-radius:12px;font-size:0.8rem;font-weight:800;font-family:var(--font);cursor:pointer">📱 QR-Code</button>
+            <button onclick="navigateTo('rewards');document.getElementById('modal-spin')?.classList.remove('open')" style="flex:1;padding:11px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);border-radius:12px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">🎁 Zu Belohnungen</button>
+          </div>
+        </div>`;
+      localStorage.setItem(_spinKey(), _todayStr());
+      if (spinBtn) spinBtn.style.display = 'none';
+      _renderHomeSpinPreview(); // refresh home preview (reduced count)
+    } else {
+      // ── Punkte-Gewinn ──
+      const resultPts  = $('#spin-result-points');
+      const resultLbl  = $('#spin-result-label');
+      const resultIcon = $('#spin-result-icon');
+      if (resultPts)  resultPts.textContent  = '+' + reward.points;
+      if (resultLbl)  resultLbl.textContent  = reward.label + ' gewonnen!';
+      if (resultIcon) resultIcon.textContent = reward.points >= 250 ? '🎉' : reward.points >= 100 ? '🥳' : '✨';
+      await addPoints(reward.points, 'Daily Spin');
+      localStorage.setItem(_spinKey(), _todayStr());
+      if (spinBtn) spinBtn.textContent = '✓ Punkte gutgeschrieben';
+    }
+
+    const nextSpin = $('#spin-next-info');
+    if (nextSpin) nextSpin.textContent = '⏰ Nächste Drehung ab Mitternacht';
 
     // Track spin stat
     const user = ZAMApi.auth.currentUser();
@@ -609,13 +656,127 @@ async function doSpin() {
       } catch {}
     }
 
-    if (spinBtn) spinBtn.textContent = '✓ Punkte gutgeschrieben';
-    const nextSpin = $('#spin-next-info');
-    if (nextSpin) nextSpin.textContent = '⏰ Nächste Drehung ab Mitternacht';
-
     await checkBadgesAfterAction();
     renderChallenges();
   }, 650);
+}
+
+// =============================================
+// Spin Merchant Prizes
+// =============================================
+function _getSpinMerchantPrizes() {
+  try {
+    const stored = localStorage.getItem('zam_spin_merchant_prizes');
+    return stored ? JSON.parse(stored) : (ZAMData.spinMerchantRewards || []);
+  } catch { return ZAMData.spinMerchantRewards || []; }
+}
+function _saveSpinMerchantPrizes(list) {
+  localStorage.setItem('zam_spin_merchant_prizes', JSON.stringify(list));
+}
+function _initSpinMerchantPrizes() {
+  // Seed from ZAMData if not yet in localStorage
+  if (!localStorage.getItem('zam_spin_merchant_prizes')) {
+    _saveSpinMerchantPrizes(ZAMData.spinMerchantRewards || []);
+  }
+}
+
+function _getActiveMerchantPrizes() {
+  const today = new Date().toISOString().slice(0, 10);
+  return _getSpinMerchantPrizes().filter(p =>
+    p.status === 'approved' &&
+    p.remaining_quantity > 0 &&
+    p.active_from <= today &&
+    p.active_until >= today
+  );
+}
+
+function _buildSpinPool() {
+  const active = _getActiveMerchantPrizes();
+  const ptPool = (ZAMData.spinRewards || []).map(r => ({ ...r, _type: 'points' }));
+  if (!active.length) return ptPool;
+  const MERCHANT_TOTAL = Math.min(0.18, active.length * 0.04);
+  const ptsScale = 1 - MERCHANT_TOTAL;
+  const merItems = active.map(p => ({
+    ...p,
+    _type: 'merchant_prize',
+    label: p.title,
+    points: 0,
+    probability: MERCHANT_TOTAL / active.length,
+  }));
+  return [
+    ...ptPool.map(r => ({ ...r, probability: r.probability * ptsScale })),
+    ...merItems,
+  ];
+}
+
+function _handleMerchantPrizeWin(prize) {
+  // Reduce remaining quantity
+  const all = _getSpinMerchantPrizes();
+  const idx = all.findIndex(p => p.id === prize.id);
+  if (idx !== -1) {
+    all[idx].remaining_quantity = Math.max(0, all[idx].remaining_quantity - 1);
+    _saveSpinMerchantPrizes(all);
+  }
+  // Save to user rewards
+  const exp = new Date();
+  exp.setDate(exp.getDate() + (prize.redeem_within_days || 14));
+  const reward = {
+    id: 'rew_spin_' + Date.now(),
+    type: 'spin_prize',
+    merchant_name: prize.merchant_name,
+    merchant_icon: prize.merchant_icon,
+    title: prize.title,
+    description: prize.description,
+    terms: prize.terms,
+    spin_reward_id: prize.id,
+    voucher_id: _generateVoucherId(),
+    status: 'available',
+    earned_at: new Date().toISOString(),
+    expires_at: exp.toISOString(),
+    redeemed_at: null,
+  };
+  const rewards = _getRewards();
+  rewards.unshift(reward);
+  _saveRewards(rewards);
+  return reward;
+}
+
+// Update spin modal preview of merchant prizes
+function _renderSpinMerchantPreview() {
+  const active = _getActiveMerchantPrizes();
+  const el = document.getElementById('spin-merchant-preview');
+  if (!el) return;
+  if (!active.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="margin:12px 0 4px;padding:12px 14px;background:rgba(247,171,0,0.07);border:1px solid rgba(247,171,0,0.2);border-radius:12px">
+      <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:#F7AB00;margin-bottom:8px">🎁 Heute auch zu gewinnen</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${active.map(p => `
+          <div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:4px 9px">
+            <span style="font-size:1rem">${p.merchant_icon}</span>
+            <div>
+              <div style="font-size:0.62rem;font-weight:700;color:#e2e8f0;line-height:1.2">${escHtml(p.title)}</div>
+              <div style="font-size:0.55rem;color:rgba(255,255,255,0.4)">${escHtml(p.merchant_name)} · noch ${p.remaining_quantity}×</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+// Update home spin preview strip
+function _renderHomeSpinPreview() {
+  const active = _getActiveMerchantPrizes();
+  const el = document.getElementById('home-spin-preview');
+  if (!el) return;
+  if (!active.length) { el.style.display = 'none'; return; }
+  const names = active.map(p => p.merchant_icon + ' ' + p.title.split(' ').slice(0, 3).join(' ')).join(' · ');
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="margin:0 16px 8px;padding:10px 14px;background:rgba(247,171,0,0.07);border:1px solid rgba(247,171,0,0.18);border-radius:12px;cursor:pointer" onclick="openSpinModal()">
+      <div style="font-size:0.62rem;font-weight:700;color:#F7AB00;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px">🎰 Heute im Spin</div>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.65);line-height:1.4">${escHtml(names)} · und Punkte</div>
+    </div>`;
 }
 
 // =============================================
@@ -5639,10 +5800,10 @@ const POINTS_CATALOG = [
 function _seedRewards() {
   if (_getRewards().length) return;
   const demos = [
-    { id:'rew_d1', type:'challenge', merchant_name:'Asia Street Food', merchant_icon:'🥢', title:'Gratis Frühlingsrollen', description:'Einzulösen bei Asia Street Food im ZAM.', voucher_id:'ZAM-AS7742', status:'available', challenge_id:'ch_004', expires_at: new Date(Date.now()+30*86400000).toISOString(), earned_at: new Date().toISOString() },
-    { id:'rew_d2', type:'points',    merchant_name:'Café Freiham',     merchant_icon:'☕', title:'Gratis Kaffee',         description:'Ein Heißgetränk deiner Wahl gratis.',   voucher_id:'ZAM-CF4419', status:'available', points_cost:500, expires_at: new Date(Date.now()+14*86400000).toISOString(), earned_at: new Date().toISOString() },
-    { id:'rew_d3', type:'event',     merchant_name:'ZAM Freiham',      merchant_icon:'🎫', title:'Summer Event Ticket',  description:'Einlass zum ZAM Summer Community Event.', voucher_id:'ZAM-EV1123', status:'redeemed',  expires_at: new Date(Date.now()-2*86400000).toISOString(), earned_at: new Date(Date.now()-5*86400000).toISOString(), redeemed_at: new Date(Date.now()-2*86400000).toISOString() },
-    { id:'rew_d4', type:'challenge', merchant_name:'Pitsburger',       merchant_icon:'🍔', title:'Gratis Pommes',        description:'Beilage deiner Wahl bei Pitsburger gratis.', voucher_id:'ZAM-PB9931', status:'available', challenge_id:'ch_001', expires_at: new Date(Date.now()+21*86400000).toISOString(), earned_at: new Date().toISOString() },
+    { id:'rew_d1', type:'spin_prize', merchant_name:'Gelato di Monaco', merchant_icon:'🍦', title:'Gratis Eiskugel in der Waffel', description:'Eine Kugel Eis deiner Wahl gratis an der Gelato-Station im ZAM-EG. Gewonnen beim Daily Spin!', terms:'1 Kugel. Nicht kombinierbar.', voucher_id:'ZAM-GL3391', spin_reward_id:'spr_001', status:'available', expires_at: new Date(Date.now()+12*86400000).toISOString(), earned_at: new Date().toISOString() },
+    { id:'rew_d2', type:'challenge',  merchant_name:'Asia Street Food', merchant_icon:'🥢', title:'Gratis Frühlingsrollen',          description:'Einzulösen bei Asia Street Food im Food Court OG 2.', voucher_id:'ZAM-AS7742', status:'available', challenge_id:'zam_ch_001', expires_at: new Date(Date.now()+20*86400000).toISOString(), earned_at: new Date().toISOString() },
+    { id:'rew_d3', type:'points',     merchant_name:'Café Freiham',     merchant_icon:'☕', title:'Gratis Heißgetränk',              description:'Ein Heißgetränk deiner Wahl gratis.', voucher_id:'ZAM-CF4419', status:'available', points_cost:500, expires_at: new Date(Date.now()+14*86400000).toISOString(), earned_at: new Date().toISOString() },
+    { id:'rew_d4', type:'event',      merchant_name:'ZAM Freiham',      merchant_icon:'🎫', title:'Summer Event Ticket',             description:'Einlass zum ZAM Sommernacht-Konzert, 28. Juni.', voucher_id:'ZAM-EV1123', status:'redeemed', expires_at: new Date(Date.now()-2*86400000).toISOString(), earned_at: new Date(Date.now()-5*86400000).toISOString(), redeemed_at: new Date(Date.now()-2*86400000).toISOString() },
   ];
   _saveRewards(demos);
 }
@@ -5666,7 +5827,7 @@ function renderRewards() {
   const badge = document.getElementById('rewards-count-badge');
   if (badge) { badge.textContent = available.length; badge.style.display = available.length ? 'block' : 'none'; }
 
-  const typeLabel = { challenge:'🏆 Challenge', points:'⭐ Punkte', event:'🎫 Event' };
+  const typeLabel = { challenge:'🏆 Challenge', points:'⭐ Punkte', event:'🎫 Event', spin_prize:'🎰 Spin-Gewinn' };
   const statusStyle = {
     available: 'background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.25)',
     redeemed:  'background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.35);border:1px solid rgba(255,255,255,0.08)',
@@ -6140,6 +6301,133 @@ function submitNewDeal() {
   saveMerchantSubmissions(list);
   setTimeout(() => { _merchantModalClose('_dyn_deal_modal'); showToast('✅ Deal erfolgreich eingereicht!'); }, 500);
 }
+// ── Spin-Gewinn einreichen (Händler) ─────────────────────────
+function openSpinPrizeModal() {
+  const today = new Date().toISOString().slice(0, 10);
+  const inTen = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
+  _buildMerchantModal('_dyn_spin_modal', '🎰 Spin-Gewinn einreichen',
+    _inp('_sp_title',   'Titel des Gewinns *', 'z.B. Gratis Eiskugel in der Waffel') +
+    _ta ('_sp_desc',    'Beschreibung *', 'Was genau gewinnt der Nutzer? Wo einlösen?') +
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">` +
+    _inp('_sp_qty',     'Anzahl verfügbar *', '10', 'number') +
+    _inp('_sp_days',    'Einlösefrist (Tage) *', '14', 'number') +
+    `</div>` +
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">` +
+    _inp('_sp_from',    'Aktiv von *', today, 'date') +
+    _inp('_sp_until',   'Aktiv bis *', inTen, 'date') +
+    `</div>` +
+    `<div style="margin-bottom:10px">
+       <label style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.55);display:block;margin-bottom:5px">Gewinnart *</label>
+       <select id="_sp_type" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,0.12);color:#e2e8f0;border-radius:10px;padding:10px 12px;font-size:0.84rem;font-family:var(--font);outline:none;-webkit-appearance:none">
+         <option value="gratis_product">Gratis-Produkt</option>
+         <option value="2für1">2-für-1</option>
+         <option value="discount">Rabatt-Coupon</option>
+         <option value="upgrade">Upgrade</option>
+       </select>
+     </div>` +
+    _ta ('_sp_terms',   'Bedingungen', 'z.B. Nur Mo–Fr, max. 1× pro Besuch') +
+    _submitBtn('submitSpinPrize()', '🎰 Spin-Gewinn einreichen')
+  );
+}
+
+function submitSpinPrize() {
+  const title = document.getElementById('_sp_title')?.value?.trim();
+  const desc  = document.getElementById('_sp_desc')?.value?.trim();
+  const qty   = parseInt(document.getElementById('_sp_qty')?.value) || 0;
+  const days  = parseInt(document.getElementById('_sp_days')?.value) || 14;
+  const from  = document.getElementById('_sp_from')?.value;
+  const until = document.getElementById('_sp_until')?.value;
+  const type  = document.getElementById('_sp_type')?.value || 'gratis_product';
+  const terms = document.getElementById('_sp_terms')?.value?.trim() || '';
+  if (!title || !desc || !qty || !from || !until) {
+    showToast('⚠️ Bitte alle Pflichtfelder ausfüllen'); return;
+  }
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const newPrize = {
+    id:                  'spr_' + Date.now(),
+    merchant_id:         user?.id || 'merchant_demo',
+    merchant_name:       user?.display_name || 'Demo Händler',
+    merchant_icon:       '🏪',
+    banner_color:        '#FA4615',
+    title,
+    description:         desc,
+    reward_type:         type,
+    total_quantity:      qty,
+    remaining_quantity:  qty,
+    active_from:         from,
+    active_until:        until,
+    redeem_within_days:  days,
+    terms,
+    status:              'pending',
+    probability:         0.03,
+  };
+  const all = _getSpinMerchantPrizes();
+  all.unshift(newPrize);
+  _saveSpinMerchantPrizes(all);
+  const btn = document.querySelector('#_dyn_spin_modal button:last-of-type');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird eingereicht…'; }
+  setTimeout(() => {
+    _merchantModalClose('_dyn_spin_modal');
+    showToast('✅ Spin-Gewinn eingereicht – wartet auf Admin-Freigabe');
+  }, 500);
+}
+
+// ── Admin: Spin-Gewinne verwalten ─────────────────────────────
+function openAdminSpinManagement() {
+  const all = _getSpinMerchantPrizes();
+  const today = new Date().toISOString().slice(0, 10);
+  const statusColor = { approved:'#34d399', pending:'#F7AB00', rejected:'#f87171', expired:'rgba(255,255,255,0.3)', exhausted:'rgba(255,255,255,0.3)' };
+  const statusLabel = { approved:'● Live', pending:'⏳ Wartet', rejected:'✗ Abgelehnt', expired:'⌛ Abgelaufen', exhausted:'∅ Ausgeschöpft' };
+
+  const prizeRows = all.map((p, idx) => {
+    const isExpired = p.active_until < today;
+    const isExhausted = p.remaining_quantity <= 0;
+    const displayStatus = isExhausted ? 'exhausted' : isExpired ? 'expired' : p.status;
+    return `
+    <div style="background:#212121;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px">
+        <span style="font-size:1.5rem;flex-shrink:0">${p.merchant_icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.84rem;font-weight:800;color:#e2e8f0">${escHtml(p.title)}</div>
+          <div style="font-size:0.65rem;color:rgba(255,255,255,0.4)">${escHtml(p.merchant_name)} · ${p.active_from} bis ${p.active_until}</div>
+          <div style="font-size:0.65rem;color:rgba(255,255,255,0.45);margin-top:2px">${p.remaining_quantity}/${p.total_quantity} verfügbar · ${p.redeem_within_days} Tage Einlösefrist</div>
+        </div>
+        <span style="font-size:0.62rem;font-weight:700;padding:3px 8px;border-radius:10px;background:rgba(255,255,255,0.06);color:${statusColor[displayStatus]||'#e2e8f0'};white-space:nowrap">${statusLabel[displayStatus]||displayStatus}</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${p.status !== 'approved' && !isExpired && !isExhausted ? `<button onclick="_adminSpinAction(${idx},'approve')" style="padding:6px 12px;background:rgba(16,185,129,0.15);border:1px solid rgba(52,211,153,0.3);color:#34d399;border-radius:8px;font-size:0.68rem;font-weight:700;font-family:var(--font);cursor:pointer">✓ Freigeben</button>` : ''}
+        ${p.status === 'approved' ? `<button onclick="_adminSpinAction(${idx},'deactivate')" style="padding:6px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:8px;font-size:0.68rem;font-weight:700;font-family:var(--font);cursor:pointer">✗ Deaktivieren</button>` : ''}
+        ${p.status === 'pending' ? `<button onclick="_adminSpinAction(${idx},'reject')" style="padding:6px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:8px;font-size:0.68rem;font-weight:700;font-family:var(--font);cursor:pointer">✗ Ablehnen</button>` : ''}
+        ${p.status !== 'approved' && !isExpired ? `<button onclick="_adminSpinAction(${idx},'prioritize')" style="padding:6px 12px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.25);color:#c4b5fd;border-radius:8px;font-size:0.68rem;font-weight:700;font-family:var(--font);cursor:pointer">↑ Priorisieren</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  _buildMerchantModal('_dyn_admin_spin', '🛡️ Spin-Gewinne verwalten',
+    `<div style="font-size:0.72rem;color:rgba(255,255,255,0.45);margin-bottom:14px">${all.length} Einreichungen gesamt · ${all.filter(p=>p.status==='pending').length} warten auf Freigabe</div>` +
+    (all.length ? prizeRows : '<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);font-size:0.82rem">Keine Einreichungen vorhanden.</div>') +
+    `<button onclick="_merchantModalClose('_dyn_admin_spin')" style="width:100%;padding:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.84rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:8px">Schließen</button>`
+  );
+}
+
+function _adminSpinAction(idx, action) {
+  const all = _getSpinMerchantPrizes();
+  if (!all[idx]) return;
+  if (action === 'approve')     { all[idx].status = 'approved'; }
+  else if (action === 'reject') { all[idx].status = 'rejected'; }
+  else if (action === 'deactivate') { all[idx].status = 'rejected'; }
+  else if (action === 'prioritize') {
+    // Move to front of approved list
+    const [item] = all.splice(idx, 1);
+    item.status = 'approved';
+    all.unshift(item);
+  }
+  _saveSpinMerchantPrizes(all);
+  _merchantModalClose('_dyn_admin_spin');
+  setTimeout(openAdminSpinManagement, 200);
+  showToast(action === 'approve' ? '✅ Spin-Gewinn freigeschaltet!' : action === 'prioritize' ? '↑ Priorisiert & freigeschaltet' : '✓ Status aktualisiert');
+}
+
 function previewMerchantImage(inputId, previewId) {
   const file = document.getElementById(inputId)?.files?.[0];
   const preview = document.getElementById(previewId);
