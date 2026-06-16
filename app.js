@@ -174,7 +174,7 @@ function navigateTo(pageId) {
   // Sub-pages live OUTSIDE #app-shell in the DOM. When active, app-shell's
   // min-height:100dvh would create 100dvh of black space before the sub-page.
   // Collapse app-shell to height:0 when on a sub-page.
-  const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings']);
+  const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings','merchant-preview']);
   document.body.classList.toggle('subpage-active', !MAIN_PAGES.has(pageId));
 
   // Triple scroll reset — ensure top of page on all mobile browsers
@@ -202,6 +202,8 @@ function navigateTo(pageId) {
     renderNotifications();
   } else if (pageId === 'notif-settings') {
     renderNotifSettings();
+  } else if (pageId === 'merchant-preview') {
+    renderMerchantPreviewSubmissions();
   } else if (pageId === 'merchant-dashboard') {
     renderMerchantDashboard();
   } else if (pageId === 'admin-dashboard') {
@@ -4743,6 +4745,26 @@ if ('serviceWorker' in navigator) {
       if (url.includes('#')) navigateTo(url.split('#')[1]);
     }
   });
+}
+
+function renderMerchantPreviewSubmissions() {
+  const el = document.getElementById('mp-submissions');
+  if (!el) return;
+  const all = getMerchantSubmissions ? getMerchantSubmissions() : [];
+  const demoSubs = all.filter(s => s.merchantId === 'demo_cafe_freiham');
+  if (!demoSubs.length) return; // keep static demo data
+  const statusLabel = { pending:'⏳ Wartet', approved:'✅ Freigegeben', live:'🟢 Live', rejected:'❌ Abgelehnt', draft:'📝 Entwurf' };
+  const statusClass = { pending:'status-pending', approved:'status-approved', live:'status-live', rejected:'status-rejected', draft:'status-draft' };
+  el.innerHTML = demoSubs.map(s => `
+    <div class="submission-card">
+      <div class="submission-card-header">
+        <span class="submission-type-badge submission-type-${s.type}">${s.type==='event'?'📅 Event':'🏷️ Deal'}</span>
+        <span class="submission-status ${statusClass[s.status]||'status-draft'}">${statusLabel[s.status]||s.status}</span>
+      </div>
+      <div class="submission-card-title">${escHtml(s.title)}</div>
+      <div class="submission-card-meta">${new Date(s.submittedAt).toLocaleDateString('de-DE')}${s.type==='event'&&s.date?' · '+s.date:''}${s.type==='deal'&&s.expiry?' · bis '+s.expiry:''}</div>
+      ${s.adminNote?`<div class="submission-card-note">💬 ${escHtml(s.adminNote)}</div>`:''}
+    </div>`).join('');
 }
 
 document.readyState === 'loading'

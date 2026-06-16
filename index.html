@@ -556,6 +556,10 @@
       <span class="nav-icon">👤</span>
       <span>Profil</span>
     </button>
+    <button class="nav-tab" data-page="merchant-preview" aria-label="Händler Preview" style="color:#a78bfa">
+      <span class="nav-icon">🏪</span>
+      <span style="font-size:0.6rem">Händler</span>
+    </button>
   </nav>
 
   <!-- =====================
@@ -1299,6 +1303,98 @@
       <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitMerchantDeal()">📤 Einreichen</button>
     </div>
   </div>
+</div>
+
+<!-- =============================================
+     MERCHANT PREVIEW PAGE (standalone, no auth)
+     ============================================= -->
+<div id="page-merchant-preview" class="page">
+  <!-- Banner -->
+  <div style="background:linear-gradient(135deg,#92400e,#d97706);padding:10px 16px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:0.62rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;background:rgba(0,0,0,0.25);color:#fff;padding:3px 8px;border-radius:6px">Admin-Vorschau</span>
+    <span style="font-size:0.82rem;font-weight:700;color:#fff;flex:1">☕ Café Freiham</span>
+    <button onclick="navigateTo('profile')" style="font-size:0.74rem;font-weight:700;color:#fff;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:inherit">← Admin</button>
+  </div>
+
+  <!-- Header -->
+  <div class="page-header" style="border-bottom:1px solid rgba(255,255,255,0.07)">
+    <h1 class="page-title">Händler-Dashboard</h1>
+    <div style="background:rgba(16,185,129,0.15);border:1px solid rgba(52,211,153,0.3);border-radius:8px;padding:3px 10px;font-size:0.68rem;font-weight:700;color:#34d399">● LIVE</div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px 16px 0">
+    <button onclick="openQRScanner()" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-family:var(--font);font-size:0.7rem;font-weight:600;color:var(--text)">
+      <span style="font-size:1.4rem">📷</span><span>QR scannen</span>
+    </button>
+    <button onclick="openMerchantEventModal()" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-family:var(--font);font-size:0.7rem;font-weight:600;color:var(--text)">
+      <span style="font-size:1.4rem">📅</span><span>Event</span>
+    </button>
+    <button onclick="openMerchantDealModal()" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-family:var(--font);font-size:0.7rem;font-weight:600;color:var(--text)">
+      <span style="font-size:1.4rem">🏷️</span><span>Deal</span>
+    </button>
+  </div>
+
+  <!-- KPIs -->
+  <div style="padding:16px">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+      <div class="kpi-card"><div class="kpi-icon">👁️</div><div class="kpi-value">247</div><div class="kpi-label">Profilaufrufe</div><div class="kpi-trend up">↑ +12%</div></div>
+      <div class="kpi-card"><div class="kpi-icon">🏷️</div><div class="kpi-value">84</div><div class="kpi-label">Deal-Aufrufe</div><div class="kpi-trend up">↑ +8%</div></div>
+      <div class="kpi-card"><div class="kpi-icon">✅</div><div class="kpi-value">31</div><div class="kpi-label">Eingelöst</div><div class="kpi-trend up">↑ +3%</div></div>
+      <div class="kpi-card"><div class="kpi-icon">🙋</div><div class="kpi-value">19</div><div class="kpi-label">Event-Teilnehmer</div><div class="kpi-trend up">↑ +15%</div></div>
+    </div>
+  </div>
+
+  <!-- Deals -->
+  <div class="dash-section">
+    <h3 class="dash-section-title">🏷️ Aktive Deals</h3>
+    <div class="dash-table-wrap">
+      <div class="dash-row"><div class="dash-row-icon">☕</div><div class="dash-row-main"><div class="dash-row-name">Kaffee + Kuchen 20% Rabatt</div><div class="dash-row-sub">42 Aufrufe · 12 Gespeichert · 5 Eingelöst</div></div><div class="dash-row-val">42</div></div>
+      <div class="dash-row"><div class="dash-row-icon">🥐</div><div class="dash-row-main"><div class="dash-row-name">Frühstück für 2 – 15% off</div><div class="dash-row-sub">28 Aufrufe · 9 Gespeichert · 3 Eingelöst</div></div><div class="dash-row-val">28</div></div>
+    </div>
+  </div>
+
+  <!-- Events -->
+  <div class="dash-section">
+    <h3 class="dash-section-title">🎉 Aktive Events</h3>
+    <div class="dash-table-wrap">
+      <div class="dash-row"><div class="dash-row-icon">🎵</div><div class="dash-row-main"><div class="dash-row-name">Live Jazz am Freitag</div><div class="dash-row-sub">67 Aufrufe · 19 Teilnehmer · 8 Check-ins</div></div><div class="dash-row-val">19</div></div>
+    </div>
+  </div>
+
+  <!-- Vouchers -->
+  <div class="dash-section">
+    <h3 class="dash-section-title">🎟️ Letzte Einlösungen</h3>
+    <div class="dash-table-wrap" id="mp-vouchers">
+      <div class="dash-row"><div class="dash-row-icon">🎟️</div><div class="dash-row-main"><div class="dash-row-name" style="font-family:monospace">ZAM-CF-001</div><div class="dash-row-sub">✅ Eingelöst – vor 2h</div></div><div class="dash-row-val" style="color:#34d399;font-size:0.65rem">OK</div></div>
+      <div class="dash-row"><div class="dash-row-icon">🎟️</div><div class="dash-row-main"><div class="dash-row-name" style="font-family:monospace">ZAM-CF-002</div><div class="dash-row-sub">⏳ Aktiv</div></div><div class="dash-row-val" style="color:#f59e0b;font-size:0.65rem">AKTIV</div></div>
+    </div>
+  </div>
+
+  <!-- Submissions -->
+  <div class="dash-section">
+    <h3 class="dash-section-title">📋 Meine Aktionen</h3>
+    <div id="mp-submissions" class="merchant-submissions-list">
+      <div class="submission-card">
+        <div class="submission-card-header">
+          <span class="submission-type-badge submission-type-event">📅 Event</span>
+          <span class="submission-status status-approved">✅ Freigegeben</span>
+        </div>
+        <div class="submission-card-title">Live Jazz am Freitag</div>
+        <div class="submission-card-meta">14.06.2026 · Eingereicht: 10.06.2026</div>
+      </div>
+      <div class="submission-card">
+        <div class="submission-card-header">
+          <span class="submission-type-badge submission-type-deal">🏷️ Deal</span>
+          <span class="submission-status status-pending">⏳ Wartet</span>
+        </div>
+        <div class="submission-card-title">Happy Hour 16-18 Uhr</div>
+        <div class="submission-card-meta">Gültig bis 31.07.2026 · Eingereicht: 15.06.2026</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:100px"></div><!-- spacer for bottom nav -->
 </div>
 
 <!-- Scripts (load data first, then app logic) -->
