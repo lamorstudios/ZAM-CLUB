@@ -1532,22 +1532,24 @@ function initAuth() {
   }
 
   // Google Login
-  const googleBtn = $('#btn-google-login');
-  if (googleBtn) {
-    googleBtn.addEventListener('click', async () => {
-      googleBtn.textContent = '⏳ Google Login…';
-      googleBtn.disabled = true;
-      try {
-        await ZAMApi.auth.signInWithGoogle();
-        showApp();
-      } catch(e) {
-        const errEl = $('#login-error');
-        if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
-        googleBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> Mit Google anmelden';
-        googleBtn.disabled = false;
-      }
-    });
+  const _googleSvg = '<svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>';
+  async function _handleGoogleAuth(btn, label) {
+    btn.innerHTML = '⏳ Google wird verbunden…';
+    btn.disabled = true;
+    try {
+      await ZAMApi.auth.signInWithGoogle();
+      showApp();
+    } catch(e) {
+      const errEl = $('#login-error') || $('#register-error');
+      if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+      btn.innerHTML = _googleSvg + ' ' + label;
+      btn.disabled = false;
+    }
   }
+  const googleLoginBtn = $('#btn-google-login');
+  if (googleLoginBtn) googleLoginBtn.addEventListener('click', () => _handleGoogleAuth(googleLoginBtn, 'Mit Google anmelden'));
+  const googleRegBtn = $('#btn-google-register');
+  if (googleRegBtn) googleRegBtn.addEventListener('click', () => _handleGoogleAuth(googleRegBtn, 'Mit Google registrieren'));
 
   // Demo Login
   const demoBtn = $('#btn-demo-login');
@@ -4891,21 +4893,62 @@ function _getModQueue()   { try { return JSON.parse(localStorage.getItem('zam_mo
 function _saveModQueue(l) { localStorage.setItem('zam_moderation_queue', JSON.stringify(l)); }
 
 function _seedChallenges() {
-  if (_getChallenges().length) return;
+  const existing = _getChallenges();
+  if (existing.length >= 4) return;
+  // clear old 3-item seed to upgrade to 4-item seed
+  localStorage.removeItem('zam_photo_challenges');
   localStorage.setItem('zam_photo_challenges', JSON.stringify([
-    { id:'ch_001', merchant_id:'demo_cafe_freiham', merchant_name:'Café Freiham', merchant_icon:'☕',
-      title:'5 Kaffee-Momente', description:'Fotografiere deinen Lieblingsmoment im Café Freiham an 5 verschiedenen Tagen.',
-      reward_description:'Gratis Kaffee + 200 Punkte', required_photos_count:5, max_per_day:1,
+    { id:'ch_001', merchant_id:'demo_pitsburger', merchant_name:'Pitsburger', merchant_icon:'🍔',
+      banner_color:'#7c3aed',
+      title:'Pitsburger Fan Challenge', description:'Zeig deinen Lieblingsburger bei Pitsburger! Fotografiere an 3 verschiedenen Tagen deinen Burger-Moment und sicher dir deinen Gratis-Burger.',
+      reward_description:'1 Gratis Burger nach 3 Fotos', required_photos_count:3, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
-    { id:'ch_002', merchant_id:'demo_pitsburger', merchant_name:'Pitsburger', merchant_icon:'🍔',
-      title:'Burger Fan Challenge', description:'Zeig deinen Lieblingsburger bei Pitsburger an 3 verschiedenen Tagen.',
-      reward_description:'1 Gratis Burger', required_photos_count:3, max_per_day:1,
+    { id:'ch_002', merchant_id:'demo_gelato', merchant_name:'Gelato World', merchant_icon:'🍦',
+      banner_color:'#0891b2',
+      title:'Gelato Summer Challenge', description:'Teile deine schönsten Gelato-Momente im ZAM! 5 Fotos an verschiedenen Tagen und du bekommst eine Kugel gratis.',
+      reward_description:'1 Gratis-Kugel + 150 Punkte', required_photos_count:5, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
-    { id:'ch_003', merchant_id:'demo_zam', merchant_name:'ZAM Freiham', merchant_icon:'🏪',
-      title:'ZAM Entdecker', description:'Entdecke 5 verschiedene Bereiche des ZAM und fotografiere deine Highlights.',
+    { id:'ch_003', merchant_id:'demo_asia', merchant_name:'Asia Street Food', merchant_icon:'🥢',
+      banner_color:'#059669',
+      title:'Asia Street Food Challenge', description:'Entdecke die Vielfalt der asiatischen Küche im ZAM! Fotografiere 3 verschiedene Gerichte und gewinne einen Gutschein.',
+      reward_description:'5€ Gutschein + 100 Punkte', required_photos_count:3, max_per_day:1,
+      location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
+    { id:'ch_004', merchant_id:'demo_zam', merchant_name:'ZAM Freiham', merchant_icon:'🏪',
+      banner_color:'#d97706',
+      title:'ZAM Entdecker', description:'Entdecke 5 verschiedene Bereiche des ZAM Freiham und fotografiere deine Lieblingsmomente. Das beste Foto gewinnt!',
       reward_description:'Exklusives Badge + 500 Punkte', required_photos_count:5, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
   ]));
+  _seedDemoPhotoSubmissions();
+}
+
+function _makeDemoPhotoDataUrl(emoji, color, label) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 400; canvas.height = 300;
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,400,300);
+  grad.addColorStop(0, color); grad.addColorStop(1, color+'88');
+  ctx.fillStyle = grad; ctx.fillRect(0,0,400,300);
+  ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fillRect(0,0,400,150);
+  ctx.font = 'bold 80px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(emoji, 200, 130);
+  ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.fillText(label, 200, 230);
+  ctx.font = '14px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fillText('ZAM Freiham · Demo', 200, 262);
+  return canvas.toDataURL('image/jpeg', 0.8);
+}
+
+function _seedDemoPhotoSubmissions() {
+  if (_getPhotoSubs().length) return;
+  const demos = [
+    { id:'sub_d1', challenge_id:'ch_001', challenge_name:'Pitsburger Fan Challenge', user_id:'demo_user1', username:'julia_m', image_data: _makeDemoPhotoDataUrl('🍔','#7c3aed','Pitsburger Fan'), lat:48.1523, lng:11.4386, submission_day:'2026-06-10', created_at:'2026-06-10T12:00:00Z', status:'auto_approved' },
+    { id:'sub_d2', challenge_id:'ch_002', challenge_name:'Gelato Summer Challenge', user_id:'demo_user2', username:'max_k', image_data: _makeDemoPhotoDataUrl('🍦','#0891b2','Gelato Moment'), lat:48.1524, lng:11.4387, submission_day:'2026-06-11', created_at:'2026-06-11T14:30:00Z', status:'auto_approved' },
+    { id:'sub_d3', challenge_id:'ch_003', challenge_name:'Asia Street Food Challenge', user_id:'demo_user3', username:'sarah_l', image_data: _makeDemoPhotoDataUrl('🥢','#059669','Asian Food'), lat:48.1522, lng:11.4385, submission_day:'2026-06-12', created_at:'2026-06-12T13:00:00Z', status:'auto_approved' },
+    { id:'sub_d4', challenge_id:'ch_001', challenge_name:'Pitsburger Fan Challenge', user_id:'demo_user4', username:'tom_w', image_data: _makeDemoPhotoDataUrl('🍔','#dc2626','Burger Moment'), lat:48.1523, lng:11.4386, submission_day:'2026-06-13', created_at:'2026-06-13T18:00:00Z', status:'auto_approved' },
+    { id:'sub_d5', challenge_id:'ch_004', challenge_name:'ZAM Entdecker', user_id:'demo_user5', username:'anna_p', image_data: _makeDemoPhotoDataUrl('🏪','#d97706','ZAM Highlight'), lat:48.1523, lng:11.4386, submission_day:'2026-06-14', created_at:'2026-06-14T11:00:00Z', status:'auto_approved' },
+  ];
+  _savePhotoSubs(demos);
+  const gallery = demos.map(s => ({ id:'gal_'+s.id, submission_id:s.id, image_data:s.image_data, username:s.username, challenge_name:s.challenge_name, likes:Math.floor(Math.random()*30), liked_by:[], created_at:s.created_at }));
+  _saveGallery(gallery);
 }
 
 function renderPhotoChallenges() {
@@ -4914,7 +4957,7 @@ function renderPhotoChallenges() {
   const user = ZAMApi.auth.currentUser();
   const uid = user?.id || 'guest';
   const allSubs = _getPhotoSubs();
-  const container = document.getElementById('challenges-list');
+  const container = document.getElementById('photo-challenges-list');
   if (!container) return;
 
   if (!challenges.length) { container.innerHTML = '<p style="text-align:center;color:var(--dim);padding:40px 0">Keine aktiven Challenges</p>'; return; }
@@ -4934,36 +4977,41 @@ function renderPhotoChallenges() {
         : `<div class="challenge-photo-slot" style="color:rgba(255,255,255,0.2)">${i<count?'✓':'📷'}</div>`;
     }).join('');
 
-    return `<div class="challenge-card">
-      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px">
-        <div class="challenge-merchant-icon">${ch.merchant_icon}</div>
-        <div style="flex:1">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <span class="challenge-title">${escHtml(ch.title)}</span>
-            <span style="font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:5px;${done?'background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.25)':'background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.2)'}">${done?'✓ Fertig':'Aktiv'}</span>
-          </div>
-          <div class="challenge-merchant-name">${escHtml(ch.merchant_name)}</div>
-          <div class="challenge-reward">🎁 ${escHtml(ch.reward_description)}</div>
+    const bannerColor = ch.banner_color || '#6d28d9';
+    return `<div class="challenge-card" style="overflow:hidden">
+      <div style="height:80px;background:linear-gradient(135deg,${bannerColor},${bannerColor}99);display:flex;align-items:center;gap:14px;padding:14px 16px;margin:-16px -16px 14px">
+        <div style="font-size:2.8rem;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.4))">${ch.merchant_icon}</div>
+        <div>
+          <div style="font-size:1rem;font-weight:800;color:#fff;line-height:1.2">${escHtml(ch.title)}</div>
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.7);margin-top:2px">${escHtml(ch.merchant_name)}</div>
+          <span style="display:inline-block;margin-top:4px;font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:5px;${done?'background:rgba(245,158,11,0.25);color:#fbbf24':'background:rgba(255,255,255,0.2);color:#fff'}">${done?'✓ Abgeschlossen':'🔥 Aktiv'}</span>
         </div>
       </div>
-      <p style="font-size:0.74rem;color:var(--dim);line-height:1.5;margin-bottom:10px">${escHtml(ch.description)}</p>
+      <p style="font-size:0.78rem;color:var(--dim);line-height:1.55;margin-bottom:12px">${escHtml(ch.description)}</p>
+      <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:1.2rem">🎁</span>
+        <div>
+          <div style="font-size:0.68rem;color:var(--dim);text-transform:uppercase;letter-spacing:0.05em;font-weight:700">Belohnung</div>
+          <div style="font-size:0.82rem;font-weight:700;color:#34d399">${escHtml(ch.reward_description)}</div>
+        </div>
+      </div>
       <div style="margin-bottom:10px">
-        <div class="challenge-progress-label"><span>${count} / ${total} Fotos</span><span>${Math.round(pct)}%</span></div>
-        <div class="challenge-progress-track"><div class="challenge-progress-fill" style="width:${pct}%"></div></div>
+        <div class="challenge-progress-label"><span style="font-weight:700">${count} / ${total} Fotos</span><span style="color:${bannerColor}">${Math.round(pct)}%</span></div>
+        <div class="challenge-progress-track"><div class="challenge-progress-fill" style="width:${pct}%;background:${bannerColor}"></div></div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${slots}</div>
-      <div style="font-size:0.67rem;color:var(--dim);display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+      <div style="font-size:0.67rem;color:var(--dim);display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
         <span>📅 Max. 1 Foto/Tag</span><span>📍 Standortprüfung aktiv</span>
-        ${doneToday?'<span style="color:#f59e0b">⚠️ Heute schon eingereicht</span>':''}
+        ${doneToday?'<span style="color:#f59e0b">⚠️ Heute bereits eingereicht</span>':''}
       </div>
       ${done
-        ? `<div style="background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:10px;padding:12px;text-align:center">
-             <div style="font-size:1.1rem;margin-bottom:4px">🎉 Challenge abgeschlossen!</div>
-             <div style="font-size:0.78rem;color:#34d399">${escHtml(ch.reward_description)}</div>
+        ? `<div style="background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:10px;padding:14px;text-align:center">
+             <div style="font-size:1.2rem;margin-bottom:4px">🎉 Challenge abgeschlossen!</div>
+             <div style="font-size:0.8rem;color:#34d399;font-weight:600">${escHtml(ch.reward_description)}</div>
            </div>`
         : doneToday
-          ? `<button disabled style="width:100%;padding:11px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.25);border-radius:10px;font-size:0.82rem;font-family:var(--font)">Heute bereits eingereicht – morgen wieder</button>`
-          : `<button onclick="openCameraForChallenge('${ch.id}')" style="width:100%;padding:11px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">📷 Foto aufnehmen</button>`
+          ? `<button disabled style="width:100%;padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.25);border-radius:10px;font-size:0.82rem;font-family:var(--font)">Heute bereits eingereicht – morgen wieder</button>`
+          : `<button onclick="openCameraForChallenge('${ch.id}')" style="width:100%;padding:13px;background:linear-gradient(135deg,${bannerColor},${bannerColor}cc);border:none;color:#fff;border-radius:12px;font-size:0.9rem;font-weight:700;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 14px ${bannerColor}44">📸 Foto aufnehmen</button>`
       }
     </div>`;
   }).join('');
@@ -4995,10 +5043,52 @@ function closeCameraModal() {
 
 function _startCamera() {
   const video = document.getElementById('camera-video');
-  if (!video || !navigator.mediaDevices?.getUserMedia) { showToast('Kamera nicht verfügbar'); closeCameraModal(); return; }
+  if (!video || !navigator.mediaDevices?.getUserMedia) { _showCameraDemo(); return; }
   navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment', width:{ideal:1280}, height:{ideal:720} }, audio:false })
     .then(stream => { _cameraStream = stream; video.srcObject = stream; })
-    .catch(() => { showToast('Kamera-Zugriff verweigert'); closeCameraModal(); });
+    .catch(() => _showCameraDemo());
+}
+
+function _showCameraDemo() {
+  const video = document.getElementById('camera-video');
+  const hint  = document.getElementById('camera-hint');
+  if (video) {
+    video.style.display = 'none';
+    const placeholder = video.parentElement.querySelector('.camera-demo-placeholder');
+    if (!placeholder) {
+      const div = document.createElement('div');
+      div.className = 'camera-demo-placeholder';
+      div.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:linear-gradient(135deg,#1a1a2e,#0f0f1a)';
+      div.innerHTML = `<div style="font-size:3.5rem">📷</div>
+        <div style="font-size:0.9rem;font-weight:700;color:#fff">Kamera wird geöffnet</div>
+        <div style="font-size:0.75rem;color:rgba(255,255,255,0.5);text-align:center;padding:0 20px">Demo-Modus: Kamera-Zugriff nicht verfügbar.<br>Klicke „📷 Demo-Foto" um fortzufahren.</div>`;
+      video.parentElement.appendChild(div);
+    }
+  }
+  if (hint) hint.style.display = 'none';
+  const captureBtn = document.querySelector('#modal-camera [onclick="capturePhoto()"]');
+  if (captureBtn) { captureBtn.title = 'Demo-Foto'; captureBtn.onclick = () => _captureDemoPhoto(); }
+}
+
+function _captureDemoPhoto() {
+  const colors = ['#6d28d9','#0891b2','#059669','#d97706','#dc2626'];
+  const c = colors[Math.floor(Math.random()*colors.length)];
+  const canvas = document.createElement('canvas');
+  canvas.width = 640; canvas.height = 480;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = c; ctx.fillRect(0,0,640,480);
+  ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fillRect(0,0,640,240);
+  ctx.font = 'bold 80px sans-serif'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('📸', 320, 200);
+  ctx.font = 'bold 28px sans-serif'; ctx.fillText('ZAM Demo-Foto', 320, 290);
+  ctx.font = '18px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillText(new Date().toLocaleTimeString('de-DE'), 320, 330);
+  _capturedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  const img = document.getElementById('camera-preview-img');
+  const preview = document.getElementById('camera-photo-preview');
+  const hint = document.getElementById('camera-hint');
+  if (img) img.src = _capturedDataUrl;
+  if (preview) preview.style.display = 'block';
+  if (hint) hint.style.display = 'none';
 }
 
 function _stopCamera() {
@@ -5103,6 +5193,7 @@ function submitChallengePhoto() {
 }
 
 function renderCommunityGallery() {
+  _seedChallenges(); // ensure demo data exists
   const container = document.getElementById('gallery-grid-container');
   if (!container) return;
   const gallery = _getGallery();
@@ -5114,15 +5205,21 @@ function renderCommunityGallery() {
   const uid = user?.id || 'guest';
   container.innerHTML = gallery.map(item => {
     const liked = (item.liked_by||[]).includes(uid);
+    const imgSrc = item.image_data || item.image_url;
+    const uname = item.username || item.user_name || 'Gast';
+    const challengeName = item.challenge_name || item.challenge_title || '';
+    const dateStr = item.created_at || item.approved_at;
     return `<div class="gallery-item">
-      <div class="gallery-item-img">${item.image_url ? `<img src="${item.image_url}" alt="">` : '📷'}</div>
+      <div class="gallery-item-img" style="background:#111">${imgSrc ? `<img src="${imgSrc}" alt="" style="width:100%;height:100%;object-fit:cover">` : '<span style="font-size:2rem">📷</span>'}</div>
       <div class="gallery-item-body">
-        <div class="gallery-item-user">@${escHtml(item.user_name||'Gast')}</div>
-        <div class="gallery-item-meta">${escHtml(item.merchant_name||'')}${item.challenge_title?' · '+escHtml(item.challenge_title):''}</div>
-        <div class="gallery-item-meta">${new Date(item.approved_at).toLocaleDateString('de-DE')}</div>
-        <button class="gallery-like-btn ${liked?'liked':''}" onclick="toggleGalleryLike('${item.id}',this)">
-          ${liked?'❤️':'🤍'} <span>${item.likes_count||0}</span>
-        </button>
+        <div class="gallery-item-user" style="font-weight:700;font-size:0.78rem">@${escHtml(uname)}</div>
+        <div class="gallery-item-meta" style="font-size:0.68rem;color:var(--dim)">${escHtml(challengeName)}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+          <span style="font-size:0.65rem;color:var(--dim)">${dateStr ? new Date(dateStr).toLocaleDateString('de-DE') : ''}</span>
+          <button class="gallery-like-btn ${liked?'liked':''}" onclick="toggleGalleryLike('${item.id}',this)" style="display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-size:0.78rem;color:${liked?'#f43f5e':'var(--dim)'}">
+            ${liked?'❤️':'🤍'} <span>${item.likes||item.likes_count||0}</span>
+          </button>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -5135,8 +5232,9 @@ function toggleGalleryLike(itemId, btn) {
   if (!item) return;
   item.liked_by = item.liked_by || [];
   const idx = item.liked_by.indexOf(uid);
-  if (idx === -1) { item.liked_by.push(uid); item.likes_count = (item.likes_count||0)+1; }
-  else { item.liked_by.splice(idx,1); item.likes_count = Math.max(0,(item.likes_count||0)-1); }
+  const likeField = 'likes' in item ? 'likes' : 'likes_count';
+  if (idx === -1) { item.liked_by.push(uid); item[likeField] = (item[likeField]||0)+1; }
+  else { item.liked_by.splice(idx,1); item[likeField] = Math.max(0,(item[likeField]||0)-1); }
   _saveGallery(gallery);
   btn.className = 'gallery-like-btn ' + (idx===-1?'liked':'');
   btn.innerHTML = `${idx===-1?'❤️':'🤍'} <span>${item.likes_count}</span>`;
