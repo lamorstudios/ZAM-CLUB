@@ -895,12 +895,12 @@ function renderDealCard(deal, idx) {
     </div>
     <div class="deal-title">${deal.title}</div>
     <p class="deal-description">${deal.description}</p>
-    <div class="deal-card-footer">
-      <div class="deal-expiry">🗓 ${deal.expiry_formatted}</div>
+    <div class="deal-footer">
+      <div class="deal-validity">📅 ${deal.expiry_formatted}</div>
       <div class="deal-actions">
         <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn deal-action-social">👥 Gemeinsam</button>
         <button onclick="openVoucherQR('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}','${deal.merchant_id||''}');event.stopPropagation()" class="deal-action-btn deal-action-redeem">🎟 Einlösen</button>
-        <button class="${deal.is_claimed ? 'btn btn-sm claimed deal-action-save' : 'btn btn-primary btn-sm deal-action-save'}" data-idx="${idx}">
+        <button class="${deal.is_claimed ? 'btn btn-sm claimed save-voucher-button' : 'btn btn-primary btn-sm save-voucher-button'}" data-idx="${idx}">
           ${deal.is_claimed ? '✓ Eingelöst' : 'Gutschein sichern'}
         </button>
       </div>

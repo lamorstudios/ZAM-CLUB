@@ -621,37 +621,54 @@ a.nav-tab-map { text-decoration: none; }
   font-size: 0.77rem; color: rgba(238,238,245,0.58);
   line-height: 1.65; margin-bottom: 14px;
 }
-.deal-card-footer {
-  display: flex; flex-direction: column;
-  gap: 10px; padding-top: 14px; border-top: 1px solid var(--border);
-  width: 100%; box-sizing: border-box;
+/* ── Deal card footer (replaces old deal-card-footer) ── */
+.deal-footer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  box-sizing: border-box;
 }
-.deal-expiry {
-  font-size: 0.66rem; color: var(--dim);
-  background: var(--surface-2); padding: 4px 10px;
-  border-radius: var(--r-full); border: 1px solid var(--border);
-  width: fit-content; max-width: 100%;
+.deal-validity {
+  width: 100%;
+  padding: 9px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.72rem;
+  color: var(--dim);
+  box-sizing: border-box;
 }
 .deal-actions {
+  width: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  width: 100%;
+  box-sizing: border-box;
 }
-.deal-action-save {
-  grid-column: 1 / -1;
+.deal-actions button,
+.deal-actions .btn {
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  white-space: normal;
+  word-break: break-word;
+}
+.save-voucher-button {
+  grid-column: 1 / -1;
+  width: 100% !important;
 }
 .deal-action-btn {
   background: none;
   border-radius: 8px;
-  padding: 7px 8px;
+  padding: 8px 6px;
   font-size: 0.68rem;
   font-weight: 600;
   font-family: var(--font);
   cursor: pointer;
-  width: 100%;
-  box-sizing: border-box;
 }
 .deal-action-social {
   background: rgba(5,150,105,0.12);
