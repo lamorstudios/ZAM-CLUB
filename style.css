@@ -59,7 +59,7 @@ body {
   color: var(--text);
   min-height: 100dvh;
   overflow-x: hidden;
-  overscroll-behavior-y: none;
+  /* NO overflow-y restriction — body must scroll freely */
   -webkit-font-smoothing: antialiased;
 }
 button { border: none; outline: none; cursor: pointer; font-family: inherit; }
@@ -74,8 +74,7 @@ ul, ol { list-style: none; }
   min-height: 100dvh;
   position: relative;
   background: var(--bg);
-  overflow: hidden;
-  overscroll-behavior: none;
+  overflow-x: hidden; /* only clip horizontal, body handles vertical scroll */
 }
 
 @media (min-width: 500px) {
@@ -93,8 +92,8 @@ ul, ol { list-style: none; }
   flex-direction: column;
   min-height: 100dvh;
   padding-bottom: calc(var(--nav-h) + 24px);
-  overflow-y: auto;
   overflow-x: hidden;
+  /* overflow-y intentionally unset — body scrolls, not the page element */
   opacity: 0;
   transform: translateY(10px);
   transition: opacity var(--tn) var(--ease), transform var(--tn) var(--ease);

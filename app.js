@@ -158,6 +158,12 @@ function updatePointsDisplay(animate = false) {
 function navigateTo(pageId) {
   if (state.currentPage === pageId) return;
 
+  // Always release body scroll lock when navigating (chat may have locked it)
+  _unlockBodyScroll();
+  // Close any open chat overlays
+  $('#chat-room-view')?.classList.remove('open');
+  $('#private-chat-view')?.classList.remove('open');
+
   const currentEl = $(`#page-${state.currentPage}`);
   if (currentEl) currentEl.classList.remove('active');
 
@@ -2207,9 +2213,12 @@ function sendPrivateMessage() {
 //   3. Translate chat upward to stay in view (avoids top/transform conflict)
 
 let _bodyScrollY = 0;
+let _bodyLocked = false;
 
 function _lockBodyScroll() {
+  if (_bodyLocked) return;
   _bodyScrollY = window.scrollY;
+  _bodyLocked = true;
   document.body.style.position = 'fixed';
   document.body.style.top = `-${_bodyScrollY}px`;
   document.body.style.left = '0';
@@ -2218,6 +2227,8 @@ function _lockBodyScroll() {
 }
 
 function _unlockBodyScroll() {
+  if (!_bodyLocked) return;
+  _bodyLocked = false;
   document.body.style.position = '';
   document.body.style.top = '';
   document.body.style.left = '';
