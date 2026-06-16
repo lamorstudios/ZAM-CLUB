@@ -4711,18 +4711,26 @@ function init() {
   initPrivateChat();
   initUserReport();
   initChatKeyboardFix();
-  initAuth();
-  // Handle admin merchant preview deep-link
+
+  // Handle admin merchant preview BEFORE initAuth (so login screen doesn't block it)
   if (window.location.hash === '#merchant-dashboard-preview') {
     history.replaceState(null, '', window.location.pathname);
     const stored = sessionStorage.getItem('zam_admin_preview_merchant');
     if (stored) {
       sessionStorage.removeItem('zam_admin_preview_merchant');
-      const merchant = JSON.parse(stored);
-      _adminPreviewMerchant = merchant;
-      setTimeout(() => adminPreviewMerchant(merchant), 100);
+      _adminPreviewMerchant = JSON.parse(stored);
+      // Force-show the app shell (bypass login screen)
+      const authShell = document.getElementById('auth-shell');
+      const appShell  = document.getElementById('app-shell');
+      if (authShell) authShell.style.display = 'none';
+      if (appShell)  appShell.style.display  = 'block';
+      // Show preview banner and navigate to merchant dashboard
+      setTimeout(() => adminPreviewMerchant(_adminPreviewMerchant), 80);
+      return; // skip initAuth entirely for preview mode
     }
   }
+
+  initAuth();
 }
 
 // Register Service Worker (Phase 11)

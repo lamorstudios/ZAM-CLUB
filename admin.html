@@ -489,6 +489,15 @@
 <div class="admin-page">
 <div class="admin-container">
 
+  <!-- Händler-Dashboard Vorschau Button (always visible) -->
+  <div style="padding:16px 0 4px">
+    <button onclick="openDemoMerchantPreview()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:16px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:14px;font-size:0.95rem;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 20px rgba(139,92,246,0.4)">
+      <span style="font-size:1.3rem">🏪</span>
+      Händler-Dashboard öffnen
+      <span style="font-size:0.75rem;background:rgba(255,255,255,0.2);padding:3px 8px;border-radius:6px;font-weight:600">Café Freiham Demo</span>
+    </button>
+  </div>
+
   <!-- Tab Navigation (only this element scrolls horizontally) -->
   <div class="admin-tabs-wrapper">
     <nav class="admin-tabs" role="tablist">
@@ -1918,6 +1927,12 @@ function adminOpenMerchantPreview(invJson) {
   var inv = typeof invJson === 'string' ? JSON.parse(invJson) : invJson;
   sessionStorage.setItem('zam_admin_preview_merchant', JSON.stringify(inv));
   window.location.href = 'index.html#merchant-dashboard-preview';
+}
+
+// Quick demo preview for Café Freiham
+function openDemoMerchantPreview() {
+  var demo = { id:'demo_cafe_freiham', shopname:'Café Freiham', email:'cafe@freiham.de', contact:'Maria Huber', category:'Gastronomie', zone:'mk2_1', status:'approved', isDemo:true };
+  adminOpenMerchantPreview(demo);
 }
 </script>
 </body>
