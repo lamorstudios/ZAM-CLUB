@@ -6019,17 +6019,27 @@ document.readyState === 'loading'
 
 function openMerchantEventModal() {
   const m = document.getElementById('modal-merchant-event');
-  if (m) { m.style.display = 'flex'; document.getElementById('me-title').value = ''; document.getElementById('me-desc').value = ''; document.getElementById('me-date').value = ''; document.getElementById('me-time').value = ''; document.getElementById('me-location').value = ''; document.getElementById('me-note').value = ''; document.getElementById('me-image-preview').style.display = 'none'; }
+  if (!m) return;
+  ['me-title','me-desc','me-date','me-time','me-location','me-note'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const prev = document.getElementById('me-image-preview'); if (prev) prev.style.display = 'none';
+  m.classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 function closeMerchantEventModal() {
-  const m = document.getElementById('modal-merchant-event'); if (m) m.style.display = 'none';
+  const m = document.getElementById('modal-merchant-event');
+  if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
 }
 function openMerchantDealModal() {
   const m = document.getElementById('modal-merchant-deal');
-  if (m) { m.style.display = 'flex'; document.getElementById('md-title').value = ''; document.getElementById('md-desc').value = ''; document.getElementById('md-discount').value = ''; document.getElementById('md-expiry').value = ''; document.getElementById('md-limit').value = ''; document.getElementById('md-note').value = ''; document.getElementById('md-image-preview').style.display = 'none'; }
+  if (!m) return;
+  ['md-title','md-desc','md-discount','md-expiry','md-limit','md-note'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const prev = document.getElementById('md-image-preview'); if (prev) prev.style.display = 'none';
+  m.classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 function closeMerchantDealModal() {
-  const m = document.getElementById('modal-merchant-deal'); if (m) m.style.display = 'none';
+  const m = document.getElementById('modal-merchant-deal');
+  if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
 }
 function previewMerchantImage(inputId, previewId) {
   const file = document.getElementById(inputId)?.files?.[0];
@@ -6049,7 +6059,9 @@ function submitMerchantEvent() {
   const title = document.getElementById('me-title')?.value?.trim();
   const desc = document.getElementById('me-desc')?.value?.trim();
   const date = document.getElementById('me-date')?.value;
-  if (!title || !desc || !date) { alert('Bitte Titel, Beschreibung und Datum ausfüllen.'); return; }
+  if (!title || !desc || !date) { showToast('⚠️ Bitte Titel, Beschreibung und Datum ausfüllen.'); return; }
+  const btn = document.querySelector('#modal-merchant-event .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird eingereicht…'; }
   const state = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
   const merchantId = state.currentMerchant?.id || state.merchantProfile?.id || 'unknown';
   const merchantName = state.currentMerchant?.name || state.merchantProfile?.name || 'Unbekannt';
@@ -6073,15 +6085,19 @@ function submitMerchantEvent() {
   const list = getMerchantSubmissions();
   list.unshift(submission);
   saveMerchantSubmissions(list);
-  closeMerchantEventModal();
-  showToast('✅ Event eingereicht! Das Team prüft deinen Vorschlag.');
-  renderMerchantDashboard();
+  setTimeout(() => {
+    closeMerchantEventModal();
+    showToast('✅ Event erfolgreich eingereicht!');
+    if (typeof renderMerchantDashboard === 'function') renderMerchantDashboard();
+  }, 600);
 }
 function submitMerchantDeal() {
   const title = document.getElementById('md-title')?.value?.trim();
   const desc = document.getElementById('md-desc')?.value?.trim();
   const expiry = document.getElementById('md-expiry')?.value;
-  if (!title || !desc || !expiry) { alert('Bitte Titel, Beschreibung und Ablaufdatum ausfüllen.'); return; }
+  if (!title || !desc || !expiry) { showToast('⚠️ Bitte Titel, Beschreibung und Ablaufdatum ausfüllen.'); return; }
+  const btn = document.querySelector('#modal-merchant-deal .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird eingereicht…'; }
   const state = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
   const merchantId = state.currentMerchant?.id || state.merchantProfile?.id || 'unknown';
   const merchantName = state.currentMerchant?.name || state.merchantProfile?.name || 'Unbekannt';
@@ -6105,9 +6121,11 @@ function submitMerchantDeal() {
   const list = getMerchantSubmissions();
   list.unshift(submission);
   saveMerchantSubmissions(list);
-  closeMerchantDealModal();
-  showToast('✅ Deal eingereicht! Das Team prüft deinen Vorschlag.');
-  renderMerchantDashboard();
+  setTimeout(() => {
+    closeMerchantDealModal();
+    showToast('✅ Deal erfolgreich eingereicht!');
+    if (typeof renderMerchantDashboard === 'function') renderMerchantDashboard();
+  }, 600);
 }
 // =============================================
 // Admin Merchant Preview Mode
