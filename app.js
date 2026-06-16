@@ -174,7 +174,7 @@ function navigateTo(pageId) {
   // Sub-pages live OUTSIDE #app-shell in the DOM. When active, app-shell's
   // min-height:100dvh would create 100dvh of black space before the sub-page.
   // Collapse app-shell to height:0 when on a sub-page.
-  const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings','merchant-preview']);
+  const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings','merchant-preview','photo-challenges','community-gallery']);
   document.body.classList.toggle('subpage-active', !MAIN_PAGES.has(pageId));
 
   // Triple scroll reset — ensure top of page on all mobile browsers
@@ -229,6 +229,10 @@ function navigateTo(pageId) {
     // static page, nothing to render dynamically
   } else if (pageId === 'admin-ai-insights') {
     renderAdminAIInsights('admin-ai-insights');
+  } else if (pageId === 'photo-challenges') {
+    renderPhotoChallenges();
+  } else if (pageId === 'community-gallery') {
+    renderCommunityGallery();
   }
 }
 
@@ -1523,6 +1527,24 @@ function initAuth() {
         errEl.style.display  = 'block';
         loginBtn.textContent = 'Anmelden';
         loginBtn.disabled    = false;
+      }
+    });
+  }
+
+  // Google Login
+  const googleBtn = $('#btn-google-login');
+  if (googleBtn) {
+    googleBtn.addEventListener('click', async () => {
+      googleBtn.textContent = '⏳ Google Login…';
+      googleBtn.disabled = true;
+      try {
+        await ZAMApi.auth.signInWithGoogle();
+        showApp();
+      } catch(e) {
+        const errEl = $('#login-error');
+        if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+        googleBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> Mit Google anmelden';
+        googleBtn.disabled = false;
       }
     });
   }
@@ -4847,6 +4869,277 @@ function renderMerchantPreviewSubmissions() {
       <div class="submission-card-meta">${new Date(s.submittedAt).toLocaleDateString('de-DE')}${s.type==='event'&&s.date?' · '+s.date:''}${s.type==='deal'&&s.expiry?' · bis '+s.expiry:''}</div>
       ${s.adminNote?`<div class="submission-card-note">💬 ${escHtml(s.adminNote)}</div>`:''}
     </div>`).join('');
+}
+
+// =============================================
+// Photo Challenges System
+// =============================================
+const ZAM_LAT = 48.1523, ZAM_LNG = 11.4386, ZAM_RADIUS_M = 500;
+
+function _geoDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+function _getChallenges() { try { return JSON.parse(localStorage.getItem('zam_photo_challenges')||'[]'); } catch { return []; } }
+function _getPhotoSubs()  { try { return JSON.parse(localStorage.getItem('zam_photo_submissions')||'[]'); } catch { return []; } }
+function _savePhotoSubs(l){ localStorage.setItem('zam_photo_submissions', JSON.stringify(l)); }
+function _getGallery()    { try { return JSON.parse(localStorage.getItem('zam_community_gallery')||'[]'); } catch { return []; } }
+function _saveGallery(l)  { localStorage.setItem('zam_community_gallery', JSON.stringify(l)); }
+function _getModQueue()   { try { return JSON.parse(localStorage.getItem('zam_moderation_queue')||'[]'); } catch { return []; } }
+function _saveModQueue(l) { localStorage.setItem('zam_moderation_queue', JSON.stringify(l)); }
+
+function _seedChallenges() {
+  if (_getChallenges().length) return;
+  localStorage.setItem('zam_photo_challenges', JSON.stringify([
+    { id:'ch_001', merchant_id:'demo_cafe_freiham', merchant_name:'Café Freiham', merchant_icon:'☕',
+      title:'5 Kaffee-Momente', description:'Fotografiere deinen Lieblingsmoment im Café Freiham an 5 verschiedenen Tagen.',
+      reward_description:'Gratis Kaffee + 200 Punkte', required_photos_count:5, max_per_day:1,
+      location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
+    { id:'ch_002', merchant_id:'demo_pitsburger', merchant_name:'Pitsburger', merchant_icon:'🍔',
+      title:'Burger Fan Challenge', description:'Zeig deinen Lieblingsburger bei Pitsburger an 3 verschiedenen Tagen.',
+      reward_description:'1 Gratis Burger', required_photos_count:3, max_per_day:1,
+      location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
+    { id:'ch_003', merchant_id:'demo_zam', merchant_name:'ZAM Freiham', merchant_icon:'🏪',
+      title:'ZAM Entdecker', description:'Entdecke 5 verschiedene Bereiche des ZAM und fotografiere deine Highlights.',
+      reward_description:'Exklusives Badge + 500 Punkte', required_photos_count:5, max_per_day:1,
+      location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
+  ]));
+}
+
+function renderPhotoChallenges() {
+  _seedChallenges();
+  const challenges = _getChallenges().filter(c => c.status === 'active');
+  const user = ZAMApi.auth.currentUser();
+  const uid = user?.id || 'guest';
+  const allSubs = _getPhotoSubs();
+  const container = document.getElementById('challenges-list');
+  if (!container) return;
+
+  if (!challenges.length) { container.innerHTML = '<p style="text-align:center;color:var(--dim);padding:40px 0">Keine aktiven Challenges</p>'; return; }
+
+  container.innerHTML = challenges.map(ch => {
+    const mySubs = allSubs.filter(s => s.challenge_id===ch.id && s.user_id===uid && s.status==='approved');
+    const count = mySubs.length, total = ch.required_photos_count;
+    const pct = Math.min(100, (count/total)*100);
+    const done = count >= total;
+    const today = new Date().toISOString().slice(0,10);
+    const doneToday = allSubs.some(s => s.challenge_id===ch.id && s.user_id===uid && s.submission_day===today && s.status!=='rejected');
+
+    const slots = Array.from({length:total}, (_,i) => {
+      const sub = mySubs[i];
+      return sub
+        ? `<div class="challenge-photo-slot filled"><img src="${sub.image_url}" alt="Foto ${i+1}"></div>`
+        : `<div class="challenge-photo-slot" style="color:rgba(255,255,255,0.2)">${i<count?'✓':'📷'}</div>`;
+    }).join('');
+
+    return `<div class="challenge-card">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px">
+        <div class="challenge-merchant-icon">${ch.merchant_icon}</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span class="challenge-title">${escHtml(ch.title)}</span>
+            <span style="font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:5px;${done?'background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.25)':'background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.2)'}">${done?'✓ Fertig':'Aktiv'}</span>
+          </div>
+          <div class="challenge-merchant-name">${escHtml(ch.merchant_name)}</div>
+          <div class="challenge-reward">🎁 ${escHtml(ch.reward_description)}</div>
+        </div>
+      </div>
+      <p style="font-size:0.74rem;color:var(--dim);line-height:1.5;margin-bottom:10px">${escHtml(ch.description)}</p>
+      <div style="margin-bottom:10px">
+        <div class="challenge-progress-label"><span>${count} / ${total} Fotos</span><span>${Math.round(pct)}%</span></div>
+        <div class="challenge-progress-track"><div class="challenge-progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${slots}</div>
+      <div style="font-size:0.67rem;color:var(--dim);display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+        <span>📅 Max. 1 Foto/Tag</span><span>📍 Standortprüfung aktiv</span>
+        ${doneToday?'<span style="color:#f59e0b">⚠️ Heute schon eingereicht</span>':''}
+      </div>
+      ${done
+        ? `<div style="background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:10px;padding:12px;text-align:center">
+             <div style="font-size:1.1rem;margin-bottom:4px">🎉 Challenge abgeschlossen!</div>
+             <div style="font-size:0.78rem;color:#34d399">${escHtml(ch.reward_description)}</div>
+           </div>`
+        : doneToday
+          ? `<button disabled style="width:100%;padding:11px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.25);border-radius:10px;font-size:0.82rem;font-family:var(--font)">Heute bereits eingereicht – morgen wieder</button>`
+          : `<button onclick="openCameraForChallenge('${ch.id}')" style="width:100%;padding:11px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:none;color:#fff;border-radius:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">📷 Foto aufnehmen</button>`
+      }
+    </div>`;
+  }).join('');
+}
+
+// ── Camera ──
+let _activeChallengeId = null, _cameraStream = null, _capturedDataUrl = null, _userLocation = null;
+
+function openCameraForChallenge(challengeId) {
+  _activeChallengeId = challengeId;
+  _capturedDataUrl = null;
+  _userLocation = null;
+  const ch = _getChallenges().find(c => c.id === challengeId);
+  const modal = document.getElementById('modal-camera');
+  if (!modal) return;
+  document.getElementById('camera-challenge-title').textContent = ch ? ch.title : 'Foto aufnehmen';
+  document.getElementById('camera-photo-preview').style.display = 'none';
+  document.getElementById('camera-hint').style.display = 'block';
+  modal.style.display = 'flex';
+  _startCamera();
+  _checkLocation();
+}
+
+function closeCameraModal() {
+  _stopCamera();
+  const m = document.getElementById('modal-camera');
+  if (m) m.style.display = 'none';
+}
+
+function _startCamera() {
+  const video = document.getElementById('camera-video');
+  if (!video || !navigator.mediaDevices?.getUserMedia) { showToast('Kamera nicht verfügbar'); closeCameraModal(); return; }
+  navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment', width:{ideal:1280}, height:{ideal:720} }, audio:false })
+    .then(stream => { _cameraStream = stream; video.srcObject = stream; })
+    .catch(() => { showToast('Kamera-Zugriff verweigert'); closeCameraModal(); });
+}
+
+function _stopCamera() {
+  if (_cameraStream) { _cameraStream.getTracks().forEach(t => t.stop()); _cameraStream = null; }
+}
+
+function _checkLocation() {
+  const el = document.getElementById('camera-location-status');
+  if (!el) return;
+  el.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;font-size:0.74rem;font-weight:600;width:100%;max-width:400px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);color:#fbbf24';
+  el.innerHTML = '<span>📍</span><span>Standort wird geprüft…</span>';
+  if (!navigator.geolocation) { _locationFallback(el); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    _userLocation = { lat:pos.coords.latitude, lng:pos.coords.longitude };
+    const dist = Math.round(_geoDistance(_userLocation.lat, _userLocation.lng, ZAM_LAT, ZAM_LNG));
+    if (dist <= ZAM_RADIUS_M) {
+      el.style.background = 'rgba(16,185,129,0.1)'; el.style.border = '1px solid rgba(52,211,153,0.25)'; el.style.color = '#34d399';
+      el.innerHTML = `<span>✅</span><span>Im ZAM-Bereich (${dist}m)</span>`;
+    } else {
+      _userLocation = null;
+      el.style.background = 'rgba(239,68,68,0.08)'; el.style.border = '1px solid rgba(239,68,68,0.2)'; el.style.color = '#f87171';
+      el.innerHTML = `<span>❌</span><span>Außerhalb des ZAM (${dist}m – max. ${ZAM_RADIUS_M}m)</span>`;
+    }
+  }, () => _locationFallback(el), { timeout:8000, maximumAge:60000 });
+}
+
+function _locationFallback(el) {
+  _userLocation = { lat:ZAM_LAT, lng:ZAM_LNG, isDemo:true };
+  el.style.background = 'rgba(16,185,129,0.1)'; el.style.border = '1px solid rgba(52,211,153,0.25)'; el.style.color = '#34d399';
+  el.innerHTML = '<span>✅</span><span>Demo-Modus: Standort simuliert</span>';
+}
+
+function capturePhoto() {
+  const video = document.getElementById('camera-video');
+  const canvas = document.getElementById('camera-canvas');
+  if (!video || !canvas) return;
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  _capturedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+  document.getElementById('camera-preview-img').src = _capturedDataUrl;
+  document.getElementById('camera-photo-preview').style.display = 'block';
+  document.getElementById('camera-hint').style.display = 'none';
+}
+
+function retakePhoto() {
+  _capturedDataUrl = null;
+  document.getElementById('camera-photo-preview').style.display = 'none';
+  document.getElementById('camera-hint').style.display = 'block';
+}
+
+function submitChallengePhoto() {
+  if (!_capturedDataUrl) { showToast('Bitte zuerst ein Foto aufnehmen'); return; }
+  if (!_userLocation) { showToast('❌ Nicht im ZAM-Bereich. Bitte näher kommen.'); return; }
+  const user = ZAMApi.auth.currentUser();
+  const uid = user?.id || 'guest';
+  const today = new Date().toISOString().slice(0,10);
+  const subs = _getPhotoSubs();
+  if (subs.some(s => s.challenge_id===_activeChallengeId && s.user_id===uid && s.submission_day===today && s.status!=='rejected')) {
+    showToast('Heute bereits ein Foto eingereicht!'); return;
+  }
+  const btn = document.getElementById('btn-submit-photo');
+  if (btn) { btn.textContent = 'Wird eingereicht…'; btn.disabled = true; }
+
+  setTimeout(() => {
+    const subId = 'sub_' + Date.now();
+    const sub = { id:subId, challenge_id:_activeChallengeId, user_id:uid,
+      user_name:user?.display_name||user?.name||'Gast',
+      image_url:_capturedDataUrl, location_lat:_userLocation.lat, location_lng:_userLocation.lng,
+      submitted_at:new Date().toISOString(), submission_day:today, status:'approved' };
+    subs.push(sub); _savePhotoSubs(subs);
+
+    // Moderation queue entry
+    const q = _getModQueue();
+    q.unshift({ id:'mod_'+Date.now(), content_type:'photo_challenge', content_id:subId,
+      status:'auto_approved', moderation_result:{ safe:true, flags:[] }, admin_notes:'', created_at:new Date().toISOString() });
+    _saveModQueue(q);
+
+    // Add to gallery
+    const ch = _getChallenges().find(c => c.id===_activeChallengeId);
+    const gallery = _getGallery();
+    gallery.unshift({ id:'gal_'+Date.now(), submission_id:subId, image_url:_capturedDataUrl,
+      user_id:uid, user_name:user?.display_name||'Gast',
+      merchant_name:ch?.merchant_name||'', challenge_title:ch?.title||'',
+      approved_at:new Date().toISOString(), likes_count:0, liked_by:[] });
+    _saveGallery(gallery);
+
+    // Check completion
+    const approvedCount = subs.filter(s => s.challenge_id===_activeChallengeId && s.user_id===uid && s.status==='approved').length;
+    const completed = ch && approvedCount >= ch.required_photos_count;
+
+    closeCameraModal();
+    if (completed) {
+      showToast('🎉 Challenge abgeschlossen! ' + (ch?.reward_description||''));
+      try { ZAMApi.points.add(200); } catch {}
+    } else {
+      showToast(`✅ Foto ${approvedCount}/${ch?.required_photos_count||5} eingereicht!`);
+    }
+    renderPhotoChallenges();
+    if (btn) { btn.textContent = '✅ Einreichen'; btn.disabled = false; }
+  }, 350);
+}
+
+function renderCommunityGallery() {
+  const container = document.getElementById('gallery-grid-container');
+  if (!container) return;
+  const gallery = _getGallery();
+  if (!gallery.length) {
+    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 16px;color:var(--dim)"><div style="font-size:2.5rem;margin-bottom:10px">📷</div><div style="font-size:0.84rem">Noch keine Fotos.<br>Nimm an einer Challenge teil!</div></div>';
+    return;
+  }
+  const user = ZAMApi.auth.currentUser();
+  const uid = user?.id || 'guest';
+  container.innerHTML = gallery.map(item => {
+    const liked = (item.liked_by||[]).includes(uid);
+    return `<div class="gallery-item">
+      <div class="gallery-item-img">${item.image_url ? `<img src="${item.image_url}" alt="">` : '📷'}</div>
+      <div class="gallery-item-body">
+        <div class="gallery-item-user">@${escHtml(item.user_name||'Gast')}</div>
+        <div class="gallery-item-meta">${escHtml(item.merchant_name||'')}${item.challenge_title?' · '+escHtml(item.challenge_title):''}</div>
+        <div class="gallery-item-meta">${new Date(item.approved_at).toLocaleDateString('de-DE')}</div>
+        <button class="gallery-like-btn ${liked?'liked':''}" onclick="toggleGalleryLike('${item.id}',this)">
+          ${liked?'❤️':'🤍'} <span>${item.likes_count||0}</span>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleGalleryLike(itemId, btn) {
+  const gallery = _getGallery();
+  const item = gallery.find(g => g.id===itemId);
+  const uid = ZAMApi.auth.currentUser()?.id || 'guest';
+  if (!item) return;
+  item.liked_by = item.liked_by || [];
+  const idx = item.liked_by.indexOf(uid);
+  if (idx === -1) { item.liked_by.push(uid); item.likes_count = (item.likes_count||0)+1; }
+  else { item.liked_by.splice(idx,1); item.likes_count = Math.max(0,(item.likes_count||0)-1); }
+  _saveGallery(gallery);
+  btn.className = 'gallery-like-btn ' + (idx===-1?'liked':'');
+  btn.innerHTML = `${idx===-1?'❤️':'🤍'} <span>${item.likes_count}</span>`;
 }
 
 document.readyState === 'loading'

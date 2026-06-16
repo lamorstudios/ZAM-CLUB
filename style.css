@@ -2443,3 +2443,26 @@ a.nav-tab-map { text-decoration: none; }
 .preview-merchant-name { font-size:0.82rem; font-weight:700; color:#fff; flex:1; }
 .preview-back-btn { font-size:0.74rem; font-weight:700; color:#fff; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.3); border-radius:8px; padding:6px 12px; cursor:pointer; font-family:var(--font); white-space:nowrap; flex-shrink:0; }
 .preview-back-btn:hover { background:rgba(0,0,0,0.5); }
+
+/* ── Photo Challenges ── */
+.challenge-card { background:var(--surface-2); border:1px solid var(--border); border-radius:16px; padding:16px; margin-bottom:12px; }
+.challenge-merchant-icon { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#6d28d9,#8b5cf6); display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
+.challenge-title { font-size:0.88rem; font-weight:700; }
+.challenge-merchant-name { font-size:0.7rem; color:var(--dim); margin-top:2px; }
+.challenge-reward { font-size:0.7rem; color:#fbbf24; margin-top:3px; }
+.challenge-progress-label { display:flex; justify-content:space-between; font-size:0.7rem; color:var(--dim); margin-bottom:5px; }
+.challenge-progress-track { height:6px; background:rgba(255,255,255,0.08); border-radius:999px; overflow:hidden; }
+.challenge-progress-fill { height:100%; background:linear-gradient(90deg,#6d28d9,#8b5cf6); border-radius:999px; transition:width .4s; }
+.challenge-photo-slot { width:52px; height:52px; border-radius:10px; background:rgba(255,255,255,0.05); border:1.5px dashed rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; font-size:1rem; overflow:hidden; flex-shrink:0; }
+.challenge-photo-slot.filled { border-style:solid; border-color:rgba(139,92,246,0.4); }
+.challenge-photo-slot img { width:100%; height:100%; object-fit:cover; border-radius:8px; }
+/* Community Gallery */
+.gallery-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:0 16px 100px; }
+.gallery-item { background:var(--surface-2); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+.gallery-item-img { width:100%; aspect-ratio:1; object-fit:cover; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; font-size:2rem; }
+.gallery-item-img img { width:100%; height:100%; object-fit:cover; }
+.gallery-item-body { padding:8px 10px 10px; }
+.gallery-item-user { font-size:0.72rem; font-weight:600; }
+.gallery-item-meta { font-size:0.62rem; color:var(--dim); margin-top:1px; }
+.gallery-like-btn { background:none; border:none; color:var(--dim); font-size:0.72rem; cursor:pointer; font-family:var(--font); padding:0; margin-top:5px; display:flex; align-items:center; gap:3px; }
+.gallery-like-btn.liked { color:#f87171; }

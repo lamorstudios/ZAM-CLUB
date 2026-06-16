@@ -742,6 +742,14 @@
           <p style="color:var(--dim,#888);text-align:center;padding:20px">Lade...</p>
         </div>
       </div>
+
+      <div style="margin-top:24px">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:8px">📸 Foto-Moderations-Warteschlange</h3>
+        <p style="font-size:0.82rem;color:#888;margin-bottom:16px">Fotos aus Community-Challenges. Auto-genehmigte Fotos können hier abgelehnt oder als Featured markiert werden.</p>
+        <div id="admin-photo-moderation">
+          <p style="color:var(--dim,#888);text-align:center;padding:20px">Lade...</p>
+        </div>
+      </div>
     </div>
 
     <!-- All content overview -->
@@ -1813,7 +1821,7 @@ function _getContracts() {
 // Tab wechsel
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    if (btn.dataset.tab === 'moderation')     renderModeration();
+    if (btn.dataset.tab === 'moderation')     { renderModeration(); renderAdminMerchantSubmissions(); renderPhotoModeration(); }
     if (btn.dataset.tab === 'notifications')  { renderNotifications(); markAllNotifsRead(); }
     if (btn.dataset.tab === 'analytics')      renderAdminAnalyticsTab();
     if (btn.dataset.tab === 'betreiber')      { renderBetreiberDashboard(); renderAdminMerchantPreviewSelect(); }
@@ -1827,6 +1835,8 @@ renderEventsList();
 renderDealsList();
 renderPromosList();
 renderModeration();
+renderAdminMerchantSubmissions();
+renderPhotoModeration();
 updateCounts();
 updateNotifCount();
 
@@ -1887,6 +1897,57 @@ function adminFeatureSubmission(id) {
   const list = getMerchantSubmissions();
   const s = list.find(x => x.id === id);
   if (s) { s.status = 'live'; s.featured = true; saveMerchantSubmissions(list); renderAdminMerchantSubmissions(); showToast('⭐ Als Featured markiert!'); }
+}
+
+// Photo moderation
+function renderPhotoModeration() {
+  const container = document.getElementById('admin-photo-moderation');
+  if (!container) return;
+  const queue = JSON.parse(localStorage.getItem('zam_photo_submissions') || '[]');
+  if (!queue.length) {
+    container.innerHTML = '<p style="color:#888;text-align:center;padding:20px">Keine Foto-Einreichungen vorhanden.</p>';
+    return;
+  }
+  const statusLabel = { auto_approved:'🤖 Auto-Genehmigt', approved:'✅ Genehmigt', rejected:'❌ Abgelehnt', featured:'⭐ Featured' };
+  container.innerHTML = queue.map(p => `
+    <div class="admin-submission-card" style="margin-bottom:12px">
+      <div class="admin-submission-card-header">
+        <span class="submission-type-badge" style="background:rgba(99,102,241,0.2);color:#a5b4fc;border-radius:6px;padding:2px 8px;font-size:0.72rem">${p.challenge_name||'Challenge'}</span>
+        <span class="submission-status ${p.status==='rejected'?'status-rejected':p.status==='featured'?'status-live':'status-approved'}">${statusLabel[p.status]||p.status}</span>
+        <span style="margin-left:auto;font-size:0.72rem;color:#888">${p.username||'Nutzer'}</span>
+      </div>
+      <div style="margin:10px 0">
+        <img src="${p.image_data}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px" alt="Foto">
+        <div style="font-size:0.72rem;color:#888;margin-top:6px">📍 ${p.lat?p.lat.toFixed(4):'-'}, ${p.lng?p.lng.toFixed(4):'-'} · ${new Date(p.created_at).toLocaleDateString('de-DE')}</div>
+      </div>
+      <div class="admin-submission-actions">
+        <button class="btn-approve" onclick="adminPhotoApprove('${p.id}')">✅ Behalten</button>
+        <button class="btn-reject" onclick="adminPhotoReject('${p.id}')">❌ Entfernen</button>
+        <button class="btn-feature" onclick="adminPhotoFeature('${p.id}')">⭐ Featured</button>
+      </div>
+    </div>
+  `).join('');
+}
+function adminPhotoApprove(id) {
+  const list = JSON.parse(localStorage.getItem('zam_photo_submissions')||'[]');
+  const p = list.find(x => x.id === id);
+  if (p) { p.status = 'approved'; localStorage.setItem('zam_photo_submissions', JSON.stringify(list)); renderPhotoModeration(); showToast('✅ Foto genehmigt!'); }
+}
+function adminPhotoReject(id) {
+  const list = JSON.parse(localStorage.getItem('zam_photo_submissions')||'[]');
+  const idx = list.findIndex(x => x.id === id);
+  if (idx !== -1) {
+    list.splice(idx, 1);
+    localStorage.setItem('zam_photo_submissions', JSON.stringify(list));
+    const gallery = JSON.parse(localStorage.getItem('zam_community_gallery')||'[]').filter(x => x.submission_id !== id);
+    localStorage.setItem('zam_community_gallery', JSON.stringify(gallery));
+    renderPhotoModeration(); showToast('❌ Foto entfernt.');
+  }
+}
+function adminPhotoFeature(id) {
+  const list = JSON.parse(localStorage.getItem('zam_photo_submissions')||'[]');
+  const p = list.find(x => x.id === id);
+  if (p) { p.status = 'featured'; localStorage.setItem('zam_photo_submissions', JSON.stringify(list)); renderPhotoModeration(); showToast('⭐ Als Featured markiert!'); }
 }
 
 // Admin merchant preview select

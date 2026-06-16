@@ -197,6 +197,33 @@ const ZAMApi = {
     },
 
     /**
+     * Google OAuth Login.
+     * Supabase: await supabase.auth.signInWithOAuth({ provider: 'google' })
+     */
+    async signInWithGoogle() {
+      // Supabase: const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
+      // if (error) throw error; return data;
+
+      // Demo-Fallback: create/login a Google demo user
+      const accounts = _gLoad('accounts', []);
+      const googleEmail = 'google.demo@gmail.com';
+      let account = accounts.find(a => a.email === googleEmail);
+      if (!account) {
+        account = {
+          id: _uuid(), email: googleEmail,
+          display_name: 'Google Nutzer', username: 'google_user',
+          role: 'user', points: 50, provider: 'google',
+          created_at: _now(),
+        };
+        accounts.push(account);
+        _gSet('accounts', accounts);
+      }
+      _gSet('session_user', account.id);
+      ZAMData.currentUser = account;
+      return { user: account };
+    },
+
+    /**
      * Ausloggen.
      * Supabase: await supabase.auth.signOut()
      */
