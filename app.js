@@ -6017,37 +6017,117 @@ document.readyState === 'loading'
   ? document.addEventListener('DOMContentLoaded', init)
   : init();
 
+// ── Merchant form modals — dynamically created, zero CSS-class dependency ──
+
+function _merchantModalClose(id) {
+  const el = document.getElementById(id);
+  if (el) { el.style.opacity = '0'; el.style.transform = 'translateY(100%)'; setTimeout(() => el.remove(), 260); }
+  document.body.style.overflow = '';
+}
+
+function _buildMerchantModal(id, title, bodyHtml) {
+  document.getElementById(id)?.remove(); // avoid duplicates
+  const overlay = document.createElement('div');
+  overlay.id = id;
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.82);display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(8px);transition:opacity .25s';
+  overlay.addEventListener('click', e => { if (e.target === overlay) _merchantModalClose(id); });
+
+  const sheet = document.createElement('div');
+  sheet.style.cssText = `width:100%;max-width:520px;background:#111118;border-radius:24px 24px 0 0;padding:20px 20px max(40px,env(safe-area-inset-bottom,40px));max-height:90vh;overflow-y:auto;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,1,.36,1),opacity .25s`;
+  sheet.innerHTML = `
+    <div style="width:40px;height:4px;background:rgba(255,255,255,0.15);border-radius:99px;margin:0 auto 18px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h3 style="font-size:1.1rem;font-weight:900;color:#fff;margin:0">${title}</h3>
+      <button onclick="_merchantModalClose('${id}')" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.6);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">✕</button>
+    </div>
+    ${bodyHtml}`;
+
+  overlay.appendChild(sheet);
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; sheet.style.transform = 'translateY(0)'; });
+}
+
+function _inp(label, id, type, placeholder, required) {
+  return `<div style="margin-bottom:14px"><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">${label}${required?' *':''}</label><input type="${type}" id="${id}" placeholder="${placeholder||''}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:inherit;font-size:0.85rem;outline:none" ${required?'required':''}></div>`;
+}
+function _ta(label, id, placeholder) {
+  return `<div style="margin-bottom:14px"><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">${label} *</label><textarea id="${id}" placeholder="${placeholder||''}" rows="3" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:inherit;font-size:0.85rem;outline:none;resize:vertical" required></textarea></div>`;
+}
+function _sel(label, id, options) {
+  return `<div style="margin-bottom:14px"><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">${label}</label><select id="${id}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:inherit;font-size:0.85rem;outline:none">${options}</select></div>`;
+}
+function _submitBtn(label, onclick) {
+  return `<button onclick="${onclick}" style="width:100%;padding:14px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:none;color:#fff;border-radius:14px;font-size:0.9rem;font-weight:800;font-family:inherit;cursor:pointer;margin-top:6px">${label}</button>`;
+}
+
 function openMerchantEventModal() {
-  const m = document.getElementById('modal-merchant-event');
-  if (!m) return;
-  ['me-title','me-desc','me-date','me-time','me-location','me-note'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  const prev = document.getElementById('me-image-preview'); if (prev) prev.style.display = 'none';
-  m.style.display = '';          // clear inline display:none so CSS display:flex takes effect
-  requestAnimationFrame(() => m.classList.add('open')); // add after display resolves for transition
-  document.body.style.overflow = 'hidden';
+  _buildMerchantModal('_dyn_event_modal', '📅 Event einreichen',
+    _inp('Eventtitel', '_ev_title', 'text', 'z.B. Sommer-Nacht-Event', true) +
+    _ta('Beschreibung', '_ev_desc', 'Was erwartet die Besucher?') +
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">` +
+    _inp('Datum', '_ev_date', 'date', '', true) +
+    _inp('Uhrzeit', '_ev_time', 'time', '') +
+    `</div>` +
+    _inp('Standort / Ort', '_ev_loc', 'text', 'z.B. EG, Stand 12') +
+    _sel('Kategorie', '_ev_cat',
+      '<option value="food">🍴 Food & Drink</option><option value="shopping">🛍️ Shopping</option><option value="entertainment">🎭 Entertainment</option><option value="kids">🧒 Kinder</option><option value="other">📌 Sonstiges</option>') +
+    `<div style="margin-bottom:14px"><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Bild (optional)</label><input type="file" id="_ev_img" accept="image/*" onchange="_prvMerchImg('_ev_img','_ev_imgprev')" style="color:rgba(255,255,255,0.5);font-family:inherit;font-size:0.78rem"><img id="_ev_imgprev" style="display:none;width:100%;border-radius:10px;margin-top:8px;max-height:160px;object-fit:cover"></div>` +
+    _submitBtn('📤 Event einreichen', 'submitNewEvent()')
+  );
 }
-function closeMerchantEventModal() {
-  const m = document.getElementById('modal-merchant-event');
-  if (!m) return;
-  m.classList.remove('open');
-  document.body.style.overflow = '';
-  setTimeout(() => { if (!m.classList.contains('open')) m.style.display = 'none'; }, 300);
-}
+
 function openMerchantDealModal() {
-  const m = document.getElementById('modal-merchant-deal');
-  if (!m) return;
-  ['md-title','md-desc','md-discount','md-expiry','md-limit','md-note'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  const prev = document.getElementById('md-image-preview'); if (prev) prev.style.display = 'none';
-  m.style.display = '';          // clear inline display:none so CSS display:flex takes effect
-  requestAnimationFrame(() => m.classList.add('open'));
-  document.body.style.overflow = 'hidden';
+  _buildMerchantModal('_dyn_deal_modal', '🏷️ Deal einreichen',
+    _inp('Deal-Titel', '_dl_title', 'text', 'z.B. 20% auf alle Burger', true) +
+    _ta('Beschreibung', '_dl_desc', 'Was beinhaltet der Deal?') +
+    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">` +
+    _inp('Rabatt', '_dl_disc', 'text', 'z.B. 20% oder 5€') +
+    _inp('Gültig bis', '_dl_exp', 'date', '', true) +
+    `</div>` +
+    `<div style="margin-bottom:14px"><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Bild (optional)</label><input type="file" id="_dl_img" accept="image/*" onchange="_prvMerchImg('_dl_img','_dl_imgprev')" style="color:rgba(255,255,255,0.5);font-family:inherit;font-size:0.78rem"><img id="_dl_imgprev" style="display:none;width:100%;border-radius:10px;margin-top:8px;max-height:160px;object-fit:cover"></div>` +
+    _submitBtn('📤 Deal einreichen', 'submitNewDeal()')
+  );
 }
-function closeMerchantDealModal() {
-  const m = document.getElementById('modal-merchant-deal');
-  if (!m) return;
-  m.classList.remove('open');
-  document.body.style.overflow = '';
-  setTimeout(() => { if (!m.classList.contains('open')) m.style.display = 'none'; }, 300);
+
+function closeMerchantEventModal() { _merchantModalClose('_dyn_event_modal'); }
+function closeMerchantDealModal()  { _merchantModalClose('_dyn_deal_modal'); }
+
+function _prvMerchImg(inputId, previewId) {
+  const f = document.getElementById(inputId)?.files?.[0];
+  const p = document.getElementById(previewId);
+  if (!f || !p) return;
+  const r = new FileReader();
+  r.onload = e => { p.src = e.target.result; p.style.display = 'block'; };
+  r.readAsDataURL(f);
+}
+
+function submitNewEvent() {
+  const title = document.getElementById('_ev_title')?.value?.trim();
+  const desc  = document.getElementById('_ev_desc')?.value?.trim();
+  const date  = document.getElementById('_ev_date')?.value;
+  if (!title || !desc || !date) { showToast('⚠️ Titel, Beschreibung und Datum erforderlich'); return; }
+  const btn = document.querySelector('#_dyn_event_modal button:last-child');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird eingereicht…'; }
+  const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const list = getMerchantSubmissions();
+  list.unshift({ id:'evt_'+Date.now(), type:'event', status:'pending', title, description:desc, date, time:document.getElementById('_ev_time')?.value||'', location:document.getElementById('_ev_loc')?.value?.trim()||'', category:document.getElementById('_ev_cat')?.value||'other', merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() });
+  saveMerchantSubmissions(list);
+  setTimeout(() => { _merchantModalClose('_dyn_event_modal'); showToast('✅ Event erfolgreich eingereicht!'); }, 500);
+}
+
+function submitNewDeal() {
+  const title = document.getElementById('_dl_title')?.value?.trim();
+  const desc  = document.getElementById('_dl_desc')?.value?.trim();
+  const exp   = document.getElementById('_dl_exp')?.value;
+  if (!title || !desc || !exp) { showToast('⚠️ Titel, Beschreibung und Ablaufdatum erforderlich'); return; }
+  const btn = document.querySelector('#_dyn_deal_modal button:last-child');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird eingereicht…'; }
+  const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const list = getMerchantSubmissions();
+  list.unshift({ id:'deal_'+Date.now(), type:'deal', status:'pending', title, description:desc, discount:document.getElementById('_dl_disc')?.value?.trim()||'', expiry:exp, merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() });
+  saveMerchantSubmissions(list);
+  setTimeout(() => { _merchantModalClose('_dyn_deal_modal'); showToast('✅ Deal erfolgreich eingereicht!'); }, 500);
 }
 function previewMerchantImage(inputId, previewId) {
   const file = document.getElementById(inputId)?.files?.[0];
