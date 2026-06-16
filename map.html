@@ -51,22 +51,38 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
 #map-svg{display:block;width:520px;height:800px}
 #user-layer,#marker-layer{position:absolute;top:0;left:0;width:520px;height:800px;pointer-events:none;contain:layout style}
 .user-bubble,.map-marker{pointer-events:all}
-/* USER BUBBLES */
-.user-bubble{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);cursor:pointer;z-index:20;transition:transform .12s}
-.user-bubble:active{transform:translate(-50%,-100%) scale(0.88)}
-.av-wrap{position:relative;width:40px;height:40px}
-.av-ring{position:absolute;inset:0;border-radius:50%;border:2.5px solid #8b5cf6}
-.user-bubble.is-own .av-ring{border-color:#34d399}
-.av-img{position:absolute;inset:2.5px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff}
-.av-online{position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:#34d399;border:2px solid #0d0d18}
-.user-chip{margin-top:4px;background:#09091a;border:1px solid rgba(139,92,246,0.35);border-radius:10px;padding:2px 8px;font-size:0.54rem;font-weight:600;color:#c4b5fd;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;transition:opacity .15s}
-.user-name{font-size:0.5rem;color:rgba(255,255,255,0.45);font-weight:600;margin-top:2px}
+/* USER BUBBLES — compact (overridden below) */
 /* panning state: freeze all expensive effects */
 .panning .user-chip,.panning .user-name{opacity:0;pointer-events:none}
 .panning .mk-lbl{opacity:0}
 .panning .mk-pulse{animation-play-state:paused}
 .panning .av-ring{animation:none}
-/* MARKERS */
+/* USER BUBBLES — compact */
+.user-bubble{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);cursor:pointer;z-index:20;transition:transform .12s}
+.user-bubble:active{transform:translate(-50%,-100%) scale(0.88)}
+/* Invisible touch target (44px) around small 28px avatar */
+.av-wrap{position:relative;width:28px;height:28px;padding:8px;margin:-8px;box-sizing:content-box}
+.av-ring{position:absolute;inset:8px;border-radius:50%;border:2px solid rgba(139,92,246,0.6)}
+.user-bubble.is-own .av-ring{border-color:#34d399}
+.av-img{position:absolute;inset:10.5px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:700;color:#fff}
+.av-online{position:absolute;bottom:8px;right:8px;width:7px;height:7px;border-radius:50%;background:#34d399;border:1.5px solid #0d0d18}
+/* Status: tiny badge only; full text on hover/tap */
+.user-status-dot{width:16px;height:16px;border-radius:50%;background:#141423;border:1px solid rgba(139,92,246,0.3);margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:0.52rem;line-height:1}
+.user-chip{display:none} /* hidden by default; shown via JS on tap */
+.user-name{font-size:0.45rem;color:rgba(255,255,255,0.4);font-weight:600;margin-top:1px;white-space:nowrap}
+/* ADMIN EDIT MODE */
+.admin-edit-mode #admin-shop-layer{display:block!important}
+.admin-edit-mode #user-layer{z-index:10!important} /* shops take precedence visually */
+.shop-edit-hit{position:absolute;border:1px solid transparent;border-radius:3px;cursor:crosshair;transition:background 0.15s,border-color 0.15s}
+.shop-edit-hit:hover{background:rgba(250,70,21,0.18)!important;border-color:rgba(250,70,21,0.6)!important}
+/* ADMIN EDIT PANEL */
+#map-editor-panel{position:fixed;bottom:0;left:56px;right:0;z-index:400;max-height:85vh;background:#0f0f1e;border-top:2px solid rgba(250,70,21,0.5);border-radius:18px 18px 0 0;transform:translateY(100%);transition:transform 0.32s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;padding:14px 16px 32px;font-family:Poppins,system-ui;max-width:480px}
+#map-editor-panel.open{transform:translateY(0)}
+@media(min-width:600px){#map-editor-panel{left:56px;right:auto;width:340px;height:100vh;max-height:100vh;border-radius:0;border-top:none;border-right:1px solid rgba(250,70,21,0.3);top:0;bottom:0}}
+.ed-label{font-size:0.64rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:4px;display:block}
+.ed-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#e2e8f0;border-radius:8px;padding:8px 10px;font-size:0.8rem;font-family:Poppins,system-ui;outline:none;margin-bottom:12px;box-sizing:border-box}
+.ed-input:focus{border-color:rgba(250,70,21,0.5)}
+
 .map-marker{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-50%);cursor:pointer;z-index:15}
 .mk-pin{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.9rem;border:2px solid rgba(255,255,255,0.2);box-shadow:0 2px 12px rgba(0,0,0,0.5)}
 .mk-pulse{position:absolute;inset:-8px;border-radius:50%;border:2px solid;animation:mkP 2s ease-out infinite;opacity:0}
@@ -140,7 +156,11 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
         <span id="online-pill-count" style="font-size:0.72rem;font-weight:700;color:#34d399">21 online</span>
       </button>
       <button class="tb-btn" id="nudge-bell" onclick="openNudgeInbox()">🔔<span id="nudge-badge"></span></button>
+      <button id="map-edit-btn" onclick="toggleAdminMapEdit()" style="display:none;pointer-events:all;padding:5px 10px;border-radius:9px;background:rgba(250,70,21,0.15);border:1px solid rgba(250,70,21,0.4);color:#FA4615;font-size:0.66rem;font-weight:800;font-family:Poppins,system-ui;cursor:pointer;white-space:nowrap;letter-spacing:0.02em">✏️ Map bearbeiten</button>
     </div>
+
+    <!-- ADMIN SHOP EDIT LAYER (only visible in edit mode) -->
+    <div id="admin-shop-layer" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:25"></div>
 
     <div id="map-wrap">
       <div id="map-stage">
@@ -393,6 +413,54 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
         <button class="btn-save" onclick="saveStatus()">Speichern</button>
       </div>
     </div>
+
+    <!-- ADMIN MAP EDITOR PANEL -->
+    <div id="map-editor-panel">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div style="flex:1">
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(250,70,21,0.8)">🗺️ Map Editor</div>
+          <div id="ed-shop-name-header" style="font-size:1rem;font-weight:800;color:#fff;margin-top:2px">Shop auswählen</div>
+        </div>
+        <button onclick="closeEditorPanel()" style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:1.2rem;cursor:pointer;font-family:Poppins,system-ui;flex-shrink:0">×</button>
+      </div>
+      <div id="ed-hint" style="text-align:center;padding:24px 0 8px;color:rgba(255,255,255,0.35);font-size:0.78rem;line-height:1.6">
+        ✏️ Klicke einen Shop auf der Karte an,<br>um ihn zu bearbeiten.
+      </div>
+      <div id="ed-form" style="display:none">
+        <label class="ed-label">Shopname</label>
+        <input id="ed-name" class="ed-input" type="text" placeholder="Shopname">
+        <label class="ed-label">Kurzname / Map-Label</label>
+        <input id="ed-short" class="ed-input" type="text" placeholder="🛒 REWE">
+        <label class="ed-label">Kategorie</label>
+        <select id="ed-cat" class="ed-input">
+          <option>Supermarkt</option><option>Mode & Lifestyle</option><option>Gastronomie</option><option>Drogerie & Beauty</option><option>Elektronik</option><option>Sport & Fitness</option><option>Bücher & Medien</option><option>Juwelier</option><option>Spielzeug</option><option>Tiernahrung</option><option>Kunst & Kultur</option><option>Bank & Finanzen</option><option>Gesundheit</option><option>Sonstiges</option>
+        </select>
+        <label class="ed-label">Öffnungszeiten</label>
+        <input id="ed-hours" class="ed-input" type="text" placeholder="Mo–Sa 9–20 Uhr">
+        <label class="ed-label">Aktueller Deal (optional)</label>
+        <input id="ed-deal" class="ed-input" type="text" placeholder="z.B. -20% heute">
+        <label class="ed-label">Beschreibung</label>
+        <textarea id="ed-desc" class="ed-input" rows="2" style="resize:none" placeholder="Kurze Info zum Shop"></textarea>
+        <label class="ed-label">Logo (Emoji oder Text)</label>
+        <input id="ed-logo" class="ed-input" type="text" placeholder="🛒 oder leer lassen">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <label class="ed-label" style="margin:0;flex:1">Sichtbar auf der Map</label>
+          <label style="position:relative;width:42px;height:23px;flex-shrink:0">
+            <input type="checkbox" id="ed-visible" checked style="opacity:0;width:0;height:0;position:absolute">
+            <span id="ed-vis-track" style="position:absolute;inset:0;border-radius:12px;background:#FA4615;cursor:pointer"></span>
+            <span id="ed-vis-thumb" style="position:absolute;top:2.5px;left:21px;width:18px;height:18px;border-radius:50%;background:#fff;pointer-events:none;transition:left 0.2s"></span>
+          </label>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="saveShopEdit()" style="flex:2;background:linear-gradient(135deg,#c43510,#FA4615);border:none;border-radius:10px;padding:12px;color:#fff;font-size:0.84rem;font-weight:800;cursor:pointer;font-family:Poppins,system-ui">💾 Speichern</button>
+          <button onclick="closeEditorPanel()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px;color:rgba(255,255,255,0.45);font-size:0.8rem;font-weight:600;cursor:pointer;font-family:Poppins,system-ui">Abbrechen</button>
+        </div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;color:rgba(255,255,255,0.25);margin-bottom:8px">Map-Position (readonly)</div>
+          <div id="ed-pos-info" style="font-size:0.72rem;color:rgba(255,255,255,0.35);font-family:monospace"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -520,7 +588,7 @@ function updateWrapSize(){wrapW=wrap.clientWidth;wrapH=wrap.clientHeight;}
 updateWrapSize();
 window.addEventListener('resize',updateWrapSize,{passive:true});
 
-function applyT(){stage.style.transform=`translate(${tx|0}px,${ty|0}px) scale(${scale})`}
+function applyT(){stage.style.transform=`translate(${tx|0}px,${ty|0}px) scale(${scale})`;if(typeof _adminEditMode!=='undefined'&&_adminEditMode)_syncAdminLayerTransform();}
 function scheduleT(){if(!rafId)rafId=requestAnimationFrame(()=>{rafId=null;applyT()})}
 
 function clamp(){
@@ -640,22 +708,6 @@ function initMap(){
   scale=Math.min(wrapW/520,wrapH/800)*0.9;
   tx=(wrapW-520*scale)/2;ty=(wrapH-800*scale)/2;
   applyT();renderUsers();renderMarkers();loadMyState();
-}
-
-function renderUsers(){
-  const L=document.getElementById('user-layer');L.innerHTML='';
-  DEMO_USERS.forEach(u=>{
-    const p=ZONE_POS[u.zone][u.posIdx];
-    const el=document.createElement('div');el.className='user-bubble';el.style.left=p.x+'px';el.style.top=p.y+'px';
-    el.innerHTML=`<div class="av-wrap"><div class="av-ring"></div><div class="av-img" style="background:${u.bg}">${u.initials}</div><div class="av-online"></div></div><div class="user-chip">${u.status}</div><div class="user-name">${u.name}</div>`;
-    el.onclick=()=>openUserPopup(u);L.appendChild(el);
-  });
-  const z=localStorage.getItem('zam_map_zone')||'mk2_1';
-  const p=ZONE_POS[z][7]||ZONE_POS[z][0];
-  const st=localStorage.getItem('zam_map_status')||'📍 Eingang';
-  const me=document.createElement('div');me.className='user-bubble is-own';me.id='my-bubble';me.style.left=p.x+'px';me.style.top=p.y+'px';
-  me.innerHTML=`<div class="av-wrap"><div class="av-ring"></div><div class="av-img" style="background:#065f46">JM</div><div class="av-online"></div></div><div class="user-chip">${st}</div><div class="user-name">Ich</div>`;
-  L.appendChild(me);
 }
 
 function renderMarkers(){
@@ -1222,6 +1274,248 @@ function blockMapUser(id,name){
   showPopup();
 }
 
+// ══════════════════════════════════════════
+// USER BUBBLE — compact renderUsers override
+// ══════════════════════════════════════════
+function renderUsers(){
+  const L=document.getElementById('user-layer');L.innerHTML='';
+  DEMO_USERS.forEach(u=>{
+    const p=ZONE_POS[u.zone][u.posIdx];
+    const el=document.createElement('div');
+    el.className='user-bubble';
+    el.style.cssText=`left:${p.x}px;top:${p.y}px`;
+    // Emoji prefix from status for dot
+    const emoji = u.status ? u.status.split(' ')[0] : '👤';
+    el.innerHTML=`<div class="av-wrap"><div class="av-ring"></div><div class="av-img" style="background:${u.bg}">${u.initials}</div><div class="av-online"></div></div><div class="user-status-dot">${emoji}</div><div class="user-name">${u.name}</div>`;
+    el.onclick=()=>openUserPopup(u);L.appendChild(el);
+  });
+  const z=localStorage.getItem('zam_map_zone')||'mk2_1';
+  const posArr=ZONE_POS[z];
+  const p=posArr[Math.min(7,posArr.length-1)];
+  const st=localStorage.getItem('zam_map_status')||'📍 Eingang';
+  const emoji = st.split(' ')[0];
+  const me=document.createElement('div');me.className='user-bubble is-own';me.id='my-bubble';me.style.cssText=`left:${p.x}px;top:${p.y}px`;
+  me.innerHTML=`<div class="av-wrap"><div class="av-ring"></div><div class="av-img" style="background:#065f46">JM</div><div class="av-online"></div></div><div class="user-status-dot">${emoji}</div><div class="user-name">Ich</div>`;
+  L.appendChild(me);
+}
+
+// ══════════════════════════════════════════
+// ADMIN MAP EDITOR
+// ══════════════════════════════════════════
+const SHOP_MAP_KEY = 'zam_shop_map_data';
+
+const DEFAULT_SHOPS = [
+  // MK 2(1)
+  {id:'s_rewe',      name:'REWE City',           short:'🛒 REWE City',           zone:'mk2_1', x:50,  y:70,  w:85, h:48, cat:'Supermarkt',      hours:'Mo–Sa 7–22 Uhr',  deal:'',             desc:'REWE City Freiham – täglich frisch.', logo:'🛒', visible:true},
+  {id:'s_apo',       name:'Freiham Apotheke',     short:'💊 Freiham Apotheke',     zone:'mk2_1', x:148, y:70,  w:80, h:48, cat:'Gesundheit',       hours:'Mo–Fr 8–19 Uhr',  deal:'',             desc:'Apotheke im ZAM Erdgeschoss.', logo:'💊', visible:true},
+  {id:'s_bio',       name:'denns Bio-Markt',       short:'🥦 denns Bio-Markt',      zone:'mk2_1', x:50,  y:132, w:85, h:48, cat:'Supermarkt',      hours:'Mo–Sa 8–20 Uhr',  deal:'-10% Bio',     desc:'Bio & Naturkost für Freiham.', logo:'🥦', visible:true},
+  {id:'s_spk',       name:'Sparkasse',             short:'🏦 Sparkasse',            zone:'mk2_1', x:148, y:132, w:80, h:48, cat:'Bank & Finanzen',  hours:'Mo–Fr 9–17 Uhr',  deal:'',             desc:'Sparkasse Filiale Freiham.', logo:'🏦', visible:true},
+  {id:'s_buch1',     name:'Welt der Bücher',       short:'📚 Welt der Bücher',      zone:'mk2_1', x:50,  y:194, w:85, h:48, cat:'Bücher & Medien', hours:'Mo–Sa 9–20 Uhr',  deal:'',             desc:'Bücher, Geschenke & mehr.', logo:'📚', visible:true},
+  {id:'s_eyes',      name:'eyes+more',             short:'👓 eyes+more',            zone:'mk2_1', x:148, y:194, w:80, h:48, cat:'Gesundheit',       hours:'Mo–Sa 10–19 Uhr', deal:'',             desc:'Optik & Kontaktlinsen.', logo:'👓', visible:true},
+  {id:'s_cafe1',     name:'Café Freiham',          short:'☕ Café Freiham',         zone:'mk2_1', x:50,  y:272, w:95, h:44, cat:'Gastronomie',     hours:'Mo–So 8–20 Uhr',  deal:'2. Getränk 1€',desc:'Dein Lieblings-Café im ZAM.', logo:'☕', visible:true},
+  {id:'s_lev',       name:'Levante Kitchen',       short:'🥙 Levante Kitchen',      zone:'mk2_1', x:158, y:272, w:70, h:44, cat:'Gastronomie',     hours:'Mo–So 11–21 Uhr', deal:'Business Lunch 10,90€', desc:'Mediterrane Küche im ZAM.', logo:'🥙', visible:true},
+  // MK 2(2)
+  {id:'s_odeya',     name:'Odeya Fashion',         short:'👗 Odeya Fashion',        zone:'mk2_2', x:264, y:68,  w:76, h:46, cat:'Mode & Lifestyle', hours:'Mo–Sa 10–20 Uhr', deal:'-20% Mode',    desc:'Damenmode & Accessoires.', logo:'👗', visible:true},
+  {id:'s_isport',    name:'Intersport',            short:'👟 Intersport',           zone:'mk2_2', x:352, y:68,  w:44, h:46, cat:'Sport & Fitness',  hours:'Mo–Sa 10–20 Uhr', deal:'',             desc:'Sportartikel & Schuhe.', logo:'👟', visible:true},
+  {id:'s_juwel',     name:'Juwelier Gold',         short:'💎 Juwelier Gold',        zone:'mk2_2', x:264, y:126, w:76, h:46, cat:'Juwelier',         hours:'Mo–Sa 10–19 Uhr', deal:'',             desc:'Schmuck & Uhren.', logo:'💎', visible:true},
+  {id:'s_depot',     name:'Depot Home',            short:'🏠 Depot Home',           zone:'mk2_2', x:352, y:126, w:44, h:46, cat:'Mode & Lifestyle', hours:'Mo–Sa 10–20 Uhr', deal:'',             desc:'Wohnaccessoires & Deko.', logo:'🏠', visible:true},
+  {id:'s_tech',      name:'TechHub München',       short:'📱 TechHub München',      zone:'mk2_2', x:264, y:184, w:76, h:46, cat:'Elektronik',       hours:'Mo–Sa 10–20 Uhr', deal:'',             desc:'Smartphones, Tablets & Co.', logo:'📱', visible:true},
+  {id:'s_game',      name:'GameStop',              short:'🎮 GameStop',             zone:'mk2_2', x:352, y:184, w:44, h:46, cat:'Elektronik',       hours:'Mo–Sa 10–20 Uhr', deal:'',             desc:'Games & Konsolen.', logo:'🎮', visible:true},
+  {id:'s_bistro',    name:'Café Freiham Bistro',   short:'☕ Freiham Bistro',       zone:'mk2_2', x:258, y:310, w:76, h:44, cat:'Gastronomie',     hours:'Mo–So 8–21 Uhr',  deal:'',             desc:'Bistro & Snacks im OG.', logo:'☕', visible:true},
+  {id:'s_bella',     name:'Bella Italia',          short:'🍕 Bella Italia',         zone:'mk2_2', x:344, y:310, w:52, h:44, cat:'Gastronomie',     hours:'Mo–So 11–22 Uhr', deal:'',             desc:'Pizza & Pasta frisch zubereitet.', logo:'🍕', visible:true},
+  {id:'s_green',     name:'Greenbox Salads',       short:'🥗 Greenbox Salads',      zone:'mk2_2', x:258, y:364, w:76, h:44, cat:'Gastronomie',     hours:'Mo–Fr 10–20 Uhr', deal:'',             desc:'Frische Salate & Bowl-Konzept.', logo:'🥗', visible:true},
+  {id:'s_asia',      name:'Asia Street Food',      short:'🥢 Asia Street Food',     zone:'mk2_2', x:344, y:364, w:52, h:44, cat:'Gastronomie',     hours:'Mo–So 11–21 Uhr', deal:'Gratis Frühlingsrollen', desc:'Asiatische Streetfood-Spezialitäten.', logo:'🥢', visible:true},
+  // MK 2(3)
+  {id:'s_xxxl',      name:'XXXLutz',               short:'🏠 XXXLutz',              zone:'mk2_3', x:50,  y:425, w:90, h:48, cat:'Mode & Lifestyle', hours:'Mo–Sa 10–20 Uhr', deal:'',             desc:'Möbel & Einrichtung.', logo:'🏠', visible:true},
+  {id:'s_ooutlet',   name:'Odeya Outlet',          short:'👗 Odeya Outlet',         zone:'mk2_3', x:152, y:425, w:70, h:48, cat:'Mode & Lifestyle', hours:'Mo–Sa 10–20 Uhr', deal:'-30% alles',   desc:'Outlet für Odeya Fashion.', logo:'👗', visible:true},
+  {id:'s_galerie',   name:'Galerie Freiham',       short:'🎨 Galerie Freiham',      zone:'mk2_3', x:50,  y:485, w:90, h:48, cat:'Kunst & Kultur',  hours:'Di–So 10–18 Uhr', deal:'',             desc:'Lokale Kunst & Ausstellungen.', logo:'🎨', visible:true},
+  {id:'s_snipes',    name:'Snipes',                short:'👟 Snipes',               zone:'mk2_3', x:152, y:485, w:70, h:48, cat:'Mode & Lifestyle', hours:'Mo–Sa 10–20 Uhr', deal:'',             desc:'Sneakers & Streetwear.', logo:'👟', visible:true},
+  {id:'s_douglas',   name:'Douglas',               short:'💄 Douglas',              zone:'mk2_3', x:54,  y:545, w:90, h:48, cat:'Drogerie & Beauty',hours:'Mo–Sa 9–20 Uhr',  deal:'',             desc:'Parfümerie & Beauty-Marken.', logo:'💄', visible:true},
+  {id:'s_fress',     name:'Fressnapf',             short:'🐾 Fressnapf',            zone:'mk2_3', x:156, y:545, w:72, h:48, cat:'Tiernahrung',      hours:'Mo–Sa 9–20 Uhr',  deal:'',             desc:'Tiernahrung & Zubehör.', logo:'🐾', visible:true},
+  {id:'s_kunst',     name:'Kunsthaus ZAM',         short:'🖼️ Kunsthaus ZAM',        zone:'mk2_3', x:58,  y:615, w:94, h:48, cat:'Kunst & Kultur',  hours:'Di–So 10–18 Uhr', deal:'',             desc:'Wechselausstellungen & Shop.', logo:'🖼️', visible:true},
+  {id:'s_buch2',     name:'Welt der Bücher',       short:'📚 Welt der Bücher',      zone:'mk2_3', x:162, y:615, w:72, h:48, cat:'Bücher & Medien', hours:'Mo–Sa 9–20 Uhr',  deal:'',             desc:'Bücher OG.', logo:'📚', visible:true},
+  {id:'s_gym',       name:'Westside Gym',          short:'🏋️ Westside Gym',         zone:'mk2_3', x:64,  y:683, w:92, h:48, cat:'Sport & Fitness',  hours:'Mo–So 6–23 Uhr',  deal:'7 Tage gratis',desc:'Premium Fitnessstudio mit Rooftop-Sauna.', logo:'🏋️', visible:true},
+  {id:'s_smyths',    name:'Smyths Toys',           short:'🧸 Smyths Toys',          zone:'mk2_3', x:166, y:683, w:72, h:48, cat:'Spielzeug',        hours:'Mo–Sa 10–19 Uhr', deal:'',             desc:'Spielzeug & Kinderprodukte.', logo:'🧸', visible:true},
+  // MK 2(4)
+  {id:'s_aldi',      name:'Aldi Süd',              short:'🛒 Aldi Süd',             zone:'mk2_4', x:440, y:465, w:40, h:52, cat:'Supermarkt',      hours:'Mo–Sa 7–21 Uhr',  deal:'',             desc:'Discounter.', logo:'🛒', visible:true},
+  {id:'s_tegut',     name:'tegut…',                short:'🥦 tegut…',               zone:'mk2_4', x:440, y:528, w:40, h:52, cat:'Supermarkt',      hours:'Mo–Sa 7–21 Uhr',  deal:'',             desc:'Tegut Vollsortimenter.', logo:'🥦', visible:true},
+  {id:'s_dm',        name:'dm Drogerie',           short:'🧴 dm Drogerie',          zone:'mk2_4', x:440, y:591, w:40, h:52, cat:'Drogerie & Beauty',hours:'Mo–Sa 8–20 Uhr',  deal:'',             desc:'dm Drogeriemarkt.', logo:'🧴', visible:true},
+  {id:'s_baeck',     name:'Bäckerei Reinhardt',    short:'🍞 Bäckerei Reinhardt',   zone:'mk2_4', x:440, y:654, w:40, h:52, cat:'Gastronomie',     hours:'Mo–Sa 6–18 Uhr',  deal:'',             desc:'Frische Backwaren täglich.', logo:'🍞', visible:true},
+];
+
+function _getShopData() {
+  try { return JSON.parse(localStorage.getItem(SHOP_MAP_KEY) || 'null') || DEFAULT_SHOPS; }
+  catch { return DEFAULT_SHOPS; }
+}
+function _saveShopData(data) { localStorage.setItem(SHOP_MAP_KEY, JSON.stringify(data)); }
+
+let _adminEditMode = false;
+let _editingShopId = null;
+
+function _isAdminRole() {
+  try {
+    const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+    return (g.session_user?.role === 'admin');
+  } catch { return false; }
+}
+
+function toggleAdminMapEdit() {
+  _adminEditMode = !_adminEditMode;
+  const btn = document.getElementById('map-edit-btn');
+  const mapArea = document.getElementById('map-area');
+  if (_adminEditMode) {
+    mapArea.classList.add('admin-edit-mode');
+    btn.textContent = '✅ Bearbeiten beenden';
+    btn.style.background = 'rgba(52,211,153,0.15)';
+    btn.style.borderColor = 'rgba(52,211,153,0.4)';
+    btn.style.color = '#34d399';
+    _renderAdminShopLayer();
+    _showMapToast('✏️ Admin Map Editor aktiv – Shop antippen zum Bearbeiten');
+  } else {
+    mapArea.classList.remove('admin-edit-mode');
+    btn.textContent = '✏️ Map bearbeiten';
+    btn.style.background = 'rgba(250,70,21,0.15)';
+    btn.style.borderColor = 'rgba(250,70,21,0.4)';
+    btn.style.color = '#FA4615';
+    closeEditorPanel();
+    document.getElementById('admin-shop-layer').innerHTML = '';
+  }
+}
+
+function _renderAdminShopLayer() {
+  const layer = document.getElementById('admin-shop-layer');
+  layer.innerHTML = '';
+  layer.style.pointerEvents = 'none'; // layer itself doesn't capture — children do
+  const shops = _getShopData();
+  shops.forEach(s => {
+    const hit = document.createElement('div');
+    hit.className = 'shop-edit-hit';
+    hit.title = s.name;
+    hit.dataset.shopId = s.id;
+    // Position matches SVG rect — will be scaled with transform on map-stage
+    // We use an absolutely positioned div that tracks the svg coordinate space
+    // by listening to the same tx/ty/scale as the map
+    hit.style.cssText = `left:${s.x}px;top:${s.y}px;width:${s.w}px;height:${s.h}px;pointer-events:all;opacity:${s.visible ? 1 : 0.4}`;
+    if (!s.visible) hit.style.background = 'rgba(239,68,68,0.08)';
+    hit.onclick = (e) => { e.stopPropagation(); openShopEditor(s.id); };
+    layer.appendChild(hit);
+  });
+  _syncAdminLayerTransform();
+}
+
+function _syncAdminLayerTransform() {
+  const layer = document.getElementById('admin-shop-layer');
+  if (!layer) return;
+  // Mirror the map-stage transform so shop hit areas align with SVG rects
+  layer.style.transformOrigin = '0 0';
+  layer.style.transform = `translate(${tx|0}px,${ty|0}px) scale(${scale})`;
+}
+
+// Hook into the pan/zoom loop to keep admin layer in sync
+// (applyT already calls scheduleT via RAF — we patch it after definition)
+
+function openShopEditor(shopId) {
+  const shops = _getShopData();
+  const shop = shops.find(s => s.id === shopId);
+  if (!shop) return;
+  _editingShopId = shopId;
+
+  document.getElementById('ed-hint').style.display = 'none';
+  document.getElementById('ed-form').style.display = 'block';
+  document.getElementById('ed-shop-name-header').textContent = shop.name;
+
+  document.getElementById('ed-name').value = shop.name;
+  document.getElementById('ed-short').value = shop.short;
+  document.getElementById('ed-cat').value = shop.cat;
+  document.getElementById('ed-hours').value = shop.hours || '';
+  document.getElementById('ed-deal').value = shop.deal || '';
+  document.getElementById('ed-desc').value = shop.desc || '';
+  document.getElementById('ed-logo').value = shop.logo || '';
+  const vis = shop.visible !== false;
+  document.getElementById('ed-visible').checked = vis;
+  document.getElementById('ed-vis-track').style.background = vis ? '#FA4615' : 'rgba(255,255,255,0.12)';
+  document.getElementById('ed-vis-thumb').style.left = vis ? '21px' : '2.5px';
+  document.getElementById('ed-pos-info').textContent = `x:${shop.x} y:${shop.y} w:${shop.w} h:${shop.h} zone:${shop.zone}`;
+
+  document.getElementById('map-editor-panel').classList.add('open');
+
+  // Wire visible toggle
+  document.getElementById('ed-visible').onchange = function() {
+    const on = this.checked;
+    document.getElementById('ed-vis-track').style.background = on ? '#FA4615' : 'rgba(255,255,255,0.12)';
+    document.getElementById('ed-vis-thumb').style.left = on ? '21px' : '2.5px';
+  };
+}
+
+function saveShopEdit() {
+  if (!_editingShopId) return;
+  const shops = _getShopData();
+  const idx = shops.findIndex(s => s.id === _editingShopId);
+  if (idx === -1) return;
+
+  const s = shops[idx];
+  s.name    = document.getElementById('ed-name').value.trim() || s.name;
+  s.short   = document.getElementById('ed-short').value.trim() || s.short;
+  s.cat     = document.getElementById('ed-cat').value;
+  s.hours   = document.getElementById('ed-hours').value.trim();
+  s.deal    = document.getElementById('ed-deal').value.trim();
+  s.desc    = document.getElementById('ed-desc').value.trim();
+  s.logo    = document.getElementById('ed-logo').value.trim();
+  s.visible = document.getElementById('ed-visible').checked;
+
+  _saveShopData(shops);
+  _applyShopDataToSVG(shops);
+  _renderAdminShopLayer(); // refresh hit areas
+
+  document.getElementById('ed-shop-name-header').textContent = s.name;
+  _showMapToast('✅ ' + s.name + ' gespeichert!');
+}
+
+function _applyShopDataToSVG(shops) {
+  // Update SVG text labels in-place for visible shops
+  const svg = document.getElementById('map-svg');
+  if (!svg) return;
+  const allTexts = svg.querySelectorAll('text');
+  shops.forEach(s => {
+    // Find SVG text closest to shop center
+    const cx = s.x + s.w/2;
+    const cy = s.y + s.h/2;
+    let closest = null, minDist = Infinity;
+    allTexts.forEach(t => {
+      const tx = parseFloat(t.getAttribute('x') || 0);
+      const ty = parseFloat(t.getAttribute('y') || 0);
+      // Check if this is a small shop label (font-size ~7-8)
+      const fs = parseFloat(t.getAttribute('font-size') || 12);
+      if (fs > 9) return; // skip zone labels
+      const d = Math.hypot(tx - cx, ty - cy);
+      if (d < minDist) { minDist = d; closest = t; }
+    });
+    if (closest && minDist < 60) {
+      const label = s.logo ? `${s.logo} ${s.name}` : s.name;
+      closest.textContent = label;
+      closest.setAttribute('opacity', s.visible ? '1' : '0.2');
+    }
+  });
+  // Also update popup if a shop popup is open
+}
+
+function closeEditorPanel() {
+  document.getElementById('map-editor-panel').classList.remove('open');
+  _editingShopId = null;
+}
+
+// Show admin edit button if user is admin
+function _checkAdminMapButton() {
+  const btn = document.getElementById('map-edit-btn');
+  if (!btn) return;
+  if (_isAdminRole()) {
+    btn.style.display = 'flex';
+  } else {
+    btn.style.display = 'none';
+    if (_adminEditMode) toggleAdminMapEdit();
+  }
+}
+
 window.addEventListener('DOMContentLoaded',()=>{
   initMap();
   // Animate online count
@@ -1237,6 +1531,14 @@ window.addEventListener('DOMContentLoaded',()=>{
   updateOnlineCount();
   setInterval(updateOnlineCount, 12000);
   if(localStorage.getItem('zam_map_consent')) document.getElementById('consent').style.display='none';
+
+  // Check admin role periodically (user can switch in main app)
+  _checkAdminMapButton();
+  setInterval(_checkAdminMapButton, 2000);
+
+  // Apply any saved shop edits to SVG on load
+  const savedShops = JSON.parse(localStorage.getItem(SHOP_MAP_KEY) || 'null');
+  if (savedShops) _applyShopDataToSVG(savedShops);
 });
 </script>
 </body>
