@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Händler-Dashboard Demo – ZAM Club</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #090910;
+    --surface: #111118;
+    --surface-2: #18181f;
+    --border: rgba(255,255,255,0.08);
+    --primary: #8b5cf6;
+    --text: #e2e8f0;
+    --dim: rgba(255,255,255,0.45);
+    --font: 'Poppins', system-ui, sans-serif;
+    --radius: 14px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    max-width: 430px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+  }
+
+  /* Banner */
+  .preview-banner {
+    background: linear-gradient(135deg, #92400e, #d97706);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .preview-badge {
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    background: rgba(0,0,0,0.25);
+    color: #fff;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .preview-name { font-size: 0.85rem; font-weight: 700; color: #fff; flex: 1; }
+  .back-btn {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+  }
+
+  /* Page Header */
+  .page-header {
+    padding: 18px 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .page-title { font-size: 1.15rem; font-weight: 800; flex: 1; }
+  .live-badge {
+    background: rgba(16,185,129,0.15);
+    border: 1px solid rgba(52,211,153,0.3);
+    border-radius: 8px;
+    padding: 3px 10px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #34d399;
+  }
+
+  /* Quick Actions */
+  .quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 16px;
+  }
+  .quick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 12px 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.2;
+  }
+  .quick-btn:hover { background: var(--surface); }
+  .quick-btn .icon { font-size: 1.4rem; }
+
+  /* KPI Grid */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 0 16px 16px;
+  }
+  .kpi-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+  }
+  .kpi-icon { font-size: 1.3rem; margin-bottom: 6px; }
+  .kpi-value { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+  .kpi-label { font-size: 0.68rem; color: var(--dim); margin-top: 3px; }
+  .kpi-trend { font-size: 0.65rem; font-weight: 700; margin-top: 4px; color: #34d399; }
+
+  /* Section */
+  .section { padding: 0 16px 20px; }
+  .section-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Row */
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .row:last-child { border-bottom: none; }
+  .row-icon { font-size: 1.2rem; width: 32px; text-align: center; flex-shrink: 0; }
+  .row-main { flex: 1; min-width: 0; }
+  .row-name { font-size: 0.82rem; font-weight: 600; }
+  .row-sub { font-size: 0.68rem; color: var(--dim); margin-top: 2px; }
+  .row-val { font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
+
+  /* Submission Cards */
+  .sub-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .sub-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .type-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .type-event { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .type-deal  { background: rgba(245,158,11,0.15);  color: #fbbf24; }
+  .status-badge {
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-left: auto;
+  }
+  .s-draft    { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+  .s-pending  { background: rgba(245,158,11,0.15);  color: #fbbf24; }
+  .s-live     { background: rgba(16,185,129,0.15);  color: #34d399; }
+  .s-rejected { background: rgba(239,68,68,0.12);   color: #f87171; }
+  .sub-title { font-size: 0.84rem; font-weight: 600; }
+  .sub-meta  { font-size: 0.68rem; color: var(--dim); margin-top: 3px; }
+  .sub-note  { font-size: 0.7rem; color: #f87171; margin-top: 8px; padding: 7px 10px; background: rgba(239,68,68,0.08); border-radius: 8px; border: 1px solid rgba(239,68,68,0.2); }
+
+  /* Stats chart */
+  .week-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 80px;
+    padding: 0 4px;
+    margin-top: 10px;
+  }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar-fill { width: 100%; background: var(--primary); border-radius: 4px 4px 0 0; min-height: 4px; }
+  .bar-lbl { font-size: 0.6rem; color: var(--dim); }
+
+  /* QR Modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 200;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-sheet {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 16px 32px;
+    width: 100%;
+    max-width: 430px;
+  }
+  .modal-title { font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
+  .form-input {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid rgba(139,92,246,0.25);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    font-family: var(--font);
+    outline: none;
+    margin-bottom: 10px;
+  }
+  .form-label { font-size: 0.74rem; color: var(--dim); margin-bottom: 5px; display: block; }
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg,#6d28d9,#8b5cf6);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .btn-cancel {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    color: var(--dim);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: var(--font);
+    cursor: pointer;
+    margin-top: 6px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e1e2e;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    border: 1px solid rgba(255,255,255,0.12);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- Admin-Vorschau Banner -->
+<div class="preview-banner">
+  <span class="preview-badge">Admin-Demo</span>
+  <span class="preview-name">☕ Café Freiham</span>
+  <a href="index.html" class="back-btn">← Zurück zur App</a>
+</div>
+
+<!-- Page Header -->
+<div class="page-header">
+  <div>
+    <div class="page-title">Händler-Dashboard</div>
+    <div style="font-size:0.72rem;color:var(--dim);margin-top:2px">Gastronomie · MK 2(1)</div>
+  </div>
+  <span class="live-badge">● LIVE</span>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+  <button class="quick-btn" onclick="showModal('modal-qr')">
+    <span class="icon">📷</span>QR scannen
+  </button>
+  <button class="quick-btn" onclick="showModal('modal-deal')">
+    <span class="icon">🏷️</span>Neuer Deal
+  </button>
+  <button class="quick-btn" onclick="showModal('modal-event')">
+    <span class="icon">📅</span>Neues Event
+  </button>
+  <button class="quick-btn" onclick="showModal('modal-photo')">
+    <span class="icon">📸</span>Foto hochladen
+  </button>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-icon">👁️</div>
+    <div class="kpi-value">247</div>
+    <div class="kpi-label">Profilaufrufe</div>
+    <div class="kpi-trend">↑ +12% diese Woche</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon">🏷️</div>
+    <div class="kpi-value">84</div>
+    <div class="kpi-label">Deal-Aufrufe</div>
+    <div class="kpi-trend">↑ +8%</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon">💾</div>
+    <div class="kpi-value">53</div>
+    <div class="kpi-label">Gutscheine gespeichert</div>
+    <div class="kpi-trend">↑ +21%</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon">✅</div>
+    <div class="kpi-value">31</div>
+    <div class="kpi-label">Gutscheine eingelöst</div>
+    <div class="kpi-trend">↑ +3%</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon">📷</div>
+    <div class="kpi-value">18</div>
+    <div class="kpi-label">QR-Scans heute</div>
+    <div class="kpi-trend">↑ +5%</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-icon">🙋</div>
+    <div class="kpi-value">19</div>
+    <div class="kpi-label">Event-Teilnahmen</div>
+    <div class="kpi-trend">↑ +15%</div>
+  </div>
+</div>
+
+<!-- Meine Aktionen -->
+<div class="section">
+  <div class="section-title">📋 Meine Aktionen</div>
+
+  <div class="sub-card">
+    <div class="sub-header">
+      <span class="type-badge type-event">📅 Event</span>
+      <span class="status-badge s-live">🟢 Live</span>
+    </div>
+    <div class="sub-title">Live Jazz am Freitag</div>
+    <div class="sub-meta">20.06.2026 · 19:00 Uhr · Café-Terrasse</div>
+  </div>
+
+  <div class="sub-card">
+    <div class="sub-header">
+      <span class="type-badge type-deal">🏷️ Deal</span>
+      <span class="status-badge s-pending">⏳ Wartet auf Freigabe</span>
+    </div>
+    <div class="sub-title">Happy Hour 16–18 Uhr – 20% auf alles</div>
+    <div class="sub-meta">Eingereicht: 15.06.2026 · Gültig bis 31.07.2026</div>
+  </div>
+
+  <div class="sub-card">
+    <div class="sub-header">
+      <span class="type-badge type-deal">🏷️ Deal</span>
+      <span class="status-badge s-draft">📝 Entwurf</span>
+    </div>
+    <div class="sub-title">Kaffee + Kuchen Kombi – 15% Rabatt</div>
+    <div class="sub-meta">Noch nicht eingereicht</div>
+  </div>
+
+  <div class="sub-card">
+    <div class="sub-header">
+      <span class="type-badge type-event">📅 Event</span>
+      <span class="status-badge s-rejected">❌ Abgelehnt</span>
+    </div>
+    <div class="sub-title">Brunch-Buffet Sonntag</div>
+    <div class="sub-meta">Eingereicht: 01.06.2026</div>
+    <div class="sub-note">💬 Zeitkonflikt mit Center-Event. Bitte anderen Termin wählen.</div>
+  </div>
+
+  <button class="btn-primary" onclick="showModal('modal-deal')">+ Neue Aktion einreichen</button>
+</div>
+
+<!-- Einlösungen -->
+<div class="section">
+  <div class="section-title">🎟️ Letzte Einlösungen</div>
+  <div class="row">
+    <div class="row-icon">🎟️</div>
+    <div class="row-main">
+      <div class="row-name" style="font-family:monospace">ZAM-CF-2026-031</div>
+      <div class="row-sub">📷 Code gescannt · Kaffee + Kuchen Deal · vor 23 Min</div>
+    </div>
+    <div class="row-val" style="color:#34d399">✅ OK</div>
+  </div>
+  <div class="row">
+    <div class="row-icon">🎟️</div>
+    <div class="row-main">
+      <div class="row-name" style="font-family:monospace">ZAM-CF-2026-030</div>
+      <div class="row-sub">✅ Gutschein eingelöst · Frühstück Deal · heute 10:12</div>
+    </div>
+    <div class="row-val" style="color:#34d399">✅ OK</div>
+  </div>
+  <div class="row">
+    <div class="row-icon">⭐</div>
+    <div class="row-main">
+      <div class="row-name">Punkte vergeben</div>
+      <div class="row-sub">+50 Punkte an Julia P. · Einlösung ZAM-CF-030</div>
+    </div>
+    <div class="row-val" style="color:#f59e0b">+50</div>
+  </div>
+  <div class="row">
+    <div class="row-icon">🎟️</div>
+    <div class="row-main">
+      <div class="row-name" style="font-family:monospace">ZAM-CF-2026-029</div>
+      <div class="row-sub">✅ Gutschein eingelöst · Happy Hour · gestern 17:44</div>
+    </div>
+    <div class="row-val" style="color:#34d399">✅ OK</div>
+  </div>
+</div>
+
+<!-- Statistiken -->
+<div class="section">
+  <div class="section-title">📊 Statistiken</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+    <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px">
+      <div style="font-size:0.68rem;color:var(--dim);margin-bottom:4px">⭐ Top Deal</div>
+      <div style="font-size:0.82rem;font-weight:700">Kaffee + Kuchen</div>
+      <div style="font-size:0.68rem;color:#34d399;margin-top:3px">31 Einlösungen</div>
+    </div>
+    <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px">
+      <div style="font-size:0.68rem;color:var(--dim);margin-bottom:4px">📷 Heutige Scans</div>
+      <div style="font-size:0.82rem;font-weight:700">18 QR-Scans</div>
+      <div style="font-size:0.68rem;color:#60a5fa;margin-top:3px">Ø 12 pro Tag</div>
+    </div>
+  </div>
+
+  <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:14px">
+    <div style="font-size:0.72rem;font-weight:700;margin-bottom:6px">📅 Wochenübersicht – Scans</div>
+    <div class="week-chart">
+      <div class="bar-col"><div class="bar-fill" style="height:40%"></div><div class="bar-lbl">Mo</div></div>
+      <div class="bar-col"><div class="bar-fill" style="height:60%"></div><div class="bar-lbl">Di</div></div>
+      <div class="bar-col"><div class="bar-fill" style="height:45%"></div><div class="bar-lbl">Mi</div></div>
+      <div class="bar-col"><div class="bar-fill" style="height:80%"></div><div class="bar-lbl">Do</div></div>
+      <div class="bar-col"><div class="bar-fill" style="height:100%"></div><div class="bar-lbl">Fr</div></div>
+      <div class="bar-col"><div class="bar-fill" style="height:70%"></div><div class="bar-lbl">Sa</div></div>
+      <div class="bar-col"><div class="bar-fill" style="height:30%;background:rgba(139,92,246,0.4)"></div><div class="bar-lbl">So</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== MODALS ======================== -->
+
+<!-- QR Scanner Modal -->
+<div class="modal-overlay" id="modal-qr" onclick="if(event.target===this)closeModal('modal-qr')">
+  <div class="modal-sheet">
+    <div class="modal-title">📷 QR-Code scannen</div>
+    <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:40px 20px;text-align:center;margin-bottom:14px">
+      <div style="font-size:3rem;margin-bottom:10px">📷</div>
+      <div style="font-size:0.82rem;color:var(--dim)">Kamera-Zugriff wird in der echten App verwendet.<br>Halte den Gutschein-QR-Code in die Kamera.</div>
+    </div>
+    <div style="font-size:0.76rem;color:var(--dim);margin-bottom:10px">Oder Code manuell eingeben:</div>
+    <input class="form-input" placeholder="z.B. ZAM-CF-2026-042" id="qr-input">
+    <button class="btn-primary" onclick="redeemDemo()">✅ Gutschein einlösen</button>
+    <button class="btn-cancel" onclick="closeModal('modal-qr')">Abbrechen</button>
+  </div>
+</div>
+
+<!-- Deal Modal -->
+<div class="modal-overlay" id="modal-deal" onclick="if(event.target===this)closeModal('modal-deal')">
+  <div class="modal-sheet" style="max-height:90vh;overflow-y:auto">
+    <div class="modal-title">🏷️ Neuen Deal einreichen</div>
+    <label class="form-label">Deal-Titel *</label>
+    <input class="form-input" placeholder="z.B. 20% auf Frühstück">
+    <label class="form-label">Beschreibung *</label>
+    <textarea class="form-input" rows="3" placeholder="Was ist im Deal enthalten?" style="resize:vertical"></textarea>
+    <label class="form-label">Rabatt</label>
+    <input class="form-input" placeholder="z.B. 20%">
+    <label class="form-label">Gültig bis *</label>
+    <input class="form-input" type="date">
+    <button class="btn-primary" onclick="submitDemo('Deal')">📤 Einreichen</button>
+    <button class="btn-cancel" onclick="closeModal('modal-deal')">Abbrechen</button>
+  </div>
+</div>
+
+<!-- Event Modal -->
+<div class="modal-overlay" id="modal-event" onclick="if(event.target===this)closeModal('modal-event')">
+  <div class="modal-sheet" style="max-height:90vh;overflow-y:auto">
+    <div class="modal-title">📅 Neues Event einreichen</div>
+    <label class="form-label">Event-Titel *</label>
+    <input class="form-input" placeholder="z.B. Live Jazz Abend">
+    <label class="form-label">Beschreibung *</label>
+    <textarea class="form-input" rows="3" placeholder="Was erwartet die Gäste?" style="resize:vertical"></textarea>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label class="form-label">Datum *</label><input class="form-input" type="date"></div>
+      <div><label class="form-label">Uhrzeit</label><input class="form-input" type="time"></div>
+    </div>
+    <label class="form-label">Ort / Stand</label>
+    <input class="form-input" placeholder="z.B. Café-Terrasse">
+    <button class="btn-primary" onclick="submitDemo('Event')">📤 Einreichen</button>
+    <button class="btn-cancel" onclick="closeModal('modal-event')">Abbrechen</button>
+  </div>
+</div>
+
+<!-- Photo Modal -->
+<div class="modal-overlay" id="modal-photo" onclick="if(event.target===this)closeModal('modal-photo')">
+  <div class="modal-sheet">
+    <div class="modal-title">📸 Foto hochladen</div>
+    <div style="background:var(--surface-2);border:2px dashed rgba(139,92,246,0.4);border-radius:12px;padding:30px 20px;text-align:center;margin-bottom:14px;cursor:pointer" onclick="document.getElementById('photo-input').click()">
+      <div style="font-size:2.5rem;margin-bottom:8px">🖼️</div>
+      <div style="font-size:0.82rem;color:var(--dim)">Tippe hier um ein Bild auszuwählen</div>
+      <div style="font-size:0.68rem;color:rgba(255,255,255,0.25);margin-top:4px">JPG, PNG bis 5 MB</div>
+    </div>
+    <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+    <img id="photo-preview" style="display:none;width:100%;border-radius:10px;margin-bottom:12px;max-height:200px;object-fit:cover" alt="">
+    <button class="btn-primary" onclick="submitDemo('Foto')">📤 Hochladen</button>
+    <button class="btn-cancel" onclick="closeModal('modal-photo')">Abbrechen</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+function showModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+function submitDemo(type) {
+  const modals = document.querySelectorAll('.modal-overlay');
+  modals.forEach(m => m.classList.remove('open'));
+  toast('✅ ' + type + ' eingereicht! Wartet auf Admin-Freigabe.');
+}
+function redeemDemo() {
+  const code = document.getElementById('qr-input').value.trim() || 'ZAM-CF-DEMO';
+  closeModal('modal-qr');
+  toast('✅ ' + code + ' erfolgreich eingelöst! +50 Punkte vergeben.');
+}
+function previewPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('photo-preview');
+    img.src = e.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+</script>
+</body>
+</html>
