@@ -52,14 +52,21 @@
 
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html { font-size: 16px; scroll-behavior: smooth; overflow-x: hidden; }
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  height: 100%;
+  overflow: hidden; /* html clippt, body scrollt */
+}
 body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--text);
-  min-height: 100dvh;
+  min-height: 100%;
+  height: auto;
   overflow-x: hidden;
-  overscroll-behavior-y: none;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   -webkit-font-smoothing: antialiased;
 }
 button { border: none; outline: none; cursor: pointer; font-family: inherit; }
@@ -74,9 +81,6 @@ ul, ol { list-style: none; }
   min-height: 100dvh;
   position: relative;
   background: var(--bg);
-  /* overflow:hidden removed — iOS Safari treats it as scroll boundary,
-     blocking touch propagation to body. html/body overflow-x:hidden suffices. */
-  overscroll-behavior: none;
 }
 
 @media (min-width: 500px) {
