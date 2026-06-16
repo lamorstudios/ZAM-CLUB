@@ -2405,3 +2405,33 @@ a.nav-tab-map { text-decoration: none; }
 .deal-match-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(5,150,105,0.07);border:1px solid rgba(5,150,105,0.15);border-radius:12px;margin-bottom:8px}
 .deal-match-btn{background:rgba(5,150,105,0.15);border:1px solid rgba(5,150,105,0.3);border-radius:8px;padding:5px 12px;font-size:0.7rem;font-weight:700;color:#34d399;font-family:var(--font);cursor:pointer;flex-shrink:0}
 .deal-match-btn:active{opacity:0.7}
+
+/* Merchant Submissions */
+.merchant-quick-actions { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:0 16px 20px; }
+.merchant-quick-btn { display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 8px; background:var(--surface-2); border:1px solid var(--border); border-radius:12px; cursor:pointer; font-family:var(--font); font-size:0.7rem; font-weight:600; color:var(--text); transition:background 0.15s; }
+.merchant-quick-btn:hover { background:var(--surface); }
+.merchant-quick-btn span:first-child { font-size:1.4rem; }
+.merchant-submissions-list { display:flex; flex-direction:column; gap:10px; }
+.submission-card { background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:14px 16px; }
+.submission-card-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.submission-type-badge { font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; padding:3px 8px; border-radius:6px; }
+.submission-type-event { background:rgba(59,130,246,0.15); color:#60a5fa; }
+.submission-type-deal { background:rgba(245,158,11,0.15); color:#fbbf24; }
+.submission-status { font-size:0.65rem; font-weight:700; padding:3px 8px; border-radius:6px; margin-left:auto; }
+.status-pending { background:rgba(245,158,11,0.15); color:#fbbf24; }
+.status-approved,.status-live { background:rgba(16,185,129,0.15); color:#34d399; }
+.status-rejected { background:rgba(239,68,68,0.12); color:#f87171; }
+.status-draft { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.4); }
+.submission-card-title { font-size:0.85rem; font-weight:600; color:var(--text); }
+.submission-card-meta { font-size:0.72rem; color:var(--dim); margin-top:4px; }
+.submission-card-note { font-size:0.72rem; color:#f87171; margin-top:8px; padding:8px 10px; background:rgba(239,68,68,0.08); border-radius:8px; border:1px solid rgba(239,68,68,0.2); }
+/* Admin submission review */
+.admin-submission-card { background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
+.admin-submission-card-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+.admin-submission-card-body { font-size:0.8rem; color:var(--dim); margin-bottom:12px; line-height:1.5; }
+.admin-submission-card-body strong { color:var(--text); }
+.admin-submission-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.admin-submission-actions button { padding:7px 14px; border-radius:8px; font-size:0.75rem; font-weight:600; font-family:var(--font); cursor:pointer; border:none; }
+.btn-approve { background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.3) !important; }
+.btn-reject { background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.2) !important; }
+.btn-feature { background:rgba(139,92,246,0.15); color:#c4b5fd; border:1px solid rgba(139,92,246,0.3) !important; }

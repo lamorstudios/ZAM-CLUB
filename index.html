@@ -1186,6 +1186,116 @@
   </div>
 </div>
 
+<!-- Merchant Event Submission Modal -->
+<div id="modal-merchant-event" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeMerchantEventModal()">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <h3 class="modal-title">📅 Event einreichen</h3>
+      <button class="modal-close" onclick="closeMerchantEventModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;max-height:70vh;padding-bottom:20px">
+      <div class="form-group">
+        <label class="form-label">Event-Titel *</label>
+        <input type="text" id="me-title" class="form-input" placeholder="z.B. Sommer-Sale 2025" maxlength="80">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beschreibung *</label>
+        <textarea id="me-desc" class="form-input" rows="3" placeholder="Was erwartet die Besucher?" maxlength="500" style="resize:vertical"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Datum *</label>
+          <input type="date" id="me-date" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Uhrzeit</label>
+          <input type="time" id="me-time" class="form-input">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ort / Stand</label>
+        <input type="text" id="me-location" class="form-input" placeholder="z.B. EG, Stand 12" maxlength="80">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kategorie</label>
+        <select id="me-category" class="form-input">
+          <option value="shopping">🛍️ Shopping</option>
+          <option value="food">🍴 Food &amp; Drink</option>
+          <option value="entertainment">🎭 Entertainment</option>
+          <option value="kids">🧒 Kinder</option>
+          <option value="beauty">💄 Beauty</option>
+          <option value="other">📌 Sonstiges</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bild (optional)</label>
+        <input type="file" id="me-image" class="form-input" accept="image/*" onchange="previewMerchantImage('me-image','me-image-preview')">
+        <img id="me-image-preview" style="display:none;width:100%;border-radius:10px;margin-top:8px;max-height:180px;object-fit:cover">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notiz ans Team (optional)</label>
+        <textarea id="me-note" class="form-input" rows="2" placeholder="Besondere Anforderungen?" maxlength="300" style="resize:vertical"></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitMerchantEvent()">📤 Einreichen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Merchant Deal Submission Modal -->
+<div id="modal-merchant-deal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeMerchantDealModal()">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <h3 class="modal-title">🏷️ Deal einreichen</h3>
+      <button class="modal-close" onclick="closeMerchantDealModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;max-height:70vh;padding-bottom:20px">
+      <div class="form-group">
+        <label class="form-label">Deal-Titel *</label>
+        <input type="text" id="md-title" class="form-input" placeholder="z.B. 20% auf alles" maxlength="80">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beschreibung *</label>
+        <textarea id="md-desc" class="form-input" rows="3" placeholder="Was beinhaltet der Deal?" maxlength="500" style="resize:vertical"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Rabatt</label>
+          <input type="text" id="md-discount" class="form-input" placeholder="z.B. 20%" maxlength="20">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gültig bis *</label>
+          <input type="date" id="md-expiry" class="form-input">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kategorie</label>
+        <select id="md-category" class="form-input">
+          <option value="shopping">🛍️ Shopping</option>
+          <option value="food">🍴 Food &amp; Drink</option>
+          <option value="beauty">💄 Beauty</option>
+          <option value="kids">🧒 Kinder</option>
+          <option value="sport">⚽ Sport</option>
+          <option value="other">📌 Sonstiges</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Begrenzung (optional)</label>
+        <input type="number" id="md-limit" class="form-input" placeholder="z.B. 50 (Stückzahl, leer = unbegrenzt)" min="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bild (optional)</label>
+        <input type="file" id="md-image" class="form-input" accept="image/*" onchange="previewMerchantImage('md-image','md-image-preview')">
+        <img id="md-image-preview" style="display:none;width:100%;border-radius:10px;margin-top:8px;max-height:180px;object-fit:cover">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notiz ans Team (optional)</label>
+        <textarea id="md-note" class="form-input" rows="2" placeholder="Besondere Anforderungen?" maxlength="300" style="resize:vertical"></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitMerchantDeal()">📤 Einreichen</button>
+    </div>
+  </div>
+</div>
+
 <!-- Scripts (load data first, then app logic) -->
 <script src="data.js"></script>
 <script src="api.js"></script>

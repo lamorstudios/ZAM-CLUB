@@ -3076,19 +3076,19 @@ function renderMerchantDashboard() {
 
   ZAMApi.analytics.seedDemo();
 
-  // QR Scanner button at top of dashboard
+  // Quick actions grid at top of dashboard
   const kpiGridEl = document.getElementById('merchant-kpi-grid');
   if (kpiGridEl) {
     let scannerBtnWrap = document.getElementById('merchant-qr-scanner-wrap');
     if (!scannerBtnWrap) {
       scannerBtnWrap = document.createElement('div');
       scannerBtnWrap.id = 'merchant-qr-scanner-wrap';
-      scannerBtnWrap.style.cssText = 'margin:0 16px 20px';
       scannerBtnWrap.innerHTML = `
-        <button class="btn btn-primary btn-full" style="gap:8px" onclick="openQRScanner()">
-          📷 QR-Code scannen
-        </button>
-        <div style="font-size:0.72rem;color:var(--muted);text-align:center;margin-top:6px">Gutscheine & Check-ins scannen</div>
+        <div class="merchant-quick-actions">
+          <button class="merchant-quick-btn" onclick="openQRScanner()"><span>📷</span><span>QR scannen</span></button>
+          <button class="merchant-quick-btn" onclick="openMerchantEventModal()"><span>📅</span><span>Event einreichen</span></button>
+          <button class="merchant-quick-btn" onclick="openMerchantDealModal()"><span>🏷️</span><span>Deal einreichen</span></button>
+        </div>
       `;
       kpiGridEl.parentNode.insertBefore(scannerBtnWrap, kpiGridEl);
     }
@@ -3177,6 +3177,24 @@ function renderMerchantDashboard() {
   // Sponsored section
   const sponsoredEl = document.getElementById('merchant-sponsored');
   if (sponsoredEl) sponsoredEl.innerHTML = renderSponsoredSection('deal') + renderSponsoredSection('event');
+
+  // Merchant submissions section
+  const merchantId = me.id;
+  let submissionsWrap = document.getElementById('merchant-submissions-wrap');
+  if (!submissionsWrap) {
+    submissionsWrap = document.createElement('div');
+    submissionsWrap.id = 'merchant-submissions-wrap';
+    const dashContainer = kpiGridEl ? kpiGridEl.closest('.view') || kpiGridEl.parentNode : null;
+    if (dashContainer) dashContainer.appendChild(submissionsWrap);
+  }
+  if (submissionsWrap) {
+    submissionsWrap.innerHTML = `
+      <div style="padding:0 16px 16px">
+        <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:12px">📋 Meine Einreichungen</h3>
+        <div class="merchant-submissions-list">${renderMerchantSubmissionsSection(merchantId)}</div>
+      </div>
+    `;
+  }
 }
 
 function openVoucherRedeemer() {
@@ -4662,3 +4680,159 @@ if ('serviceWorker' in navigator) {
 document.readyState === 'loading'
   ? document.addEventListener('DOMContentLoaded', init)
   : init();
+
+function openMerchantEventModal() {
+  const m = document.getElementById('modal-merchant-event');
+  if (m) { m.style.display = 'flex'; document.getElementById('me-title').value = ''; document.getElementById('me-desc').value = ''; document.getElementById('me-date').value = ''; document.getElementById('me-time').value = ''; document.getElementById('me-location').value = ''; document.getElementById('me-note').value = ''; document.getElementById('me-image-preview').style.display = 'none'; }
+}
+function closeMerchantEventModal() {
+  const m = document.getElementById('modal-merchant-event'); if (m) m.style.display = 'none';
+}
+function openMerchantDealModal() {
+  const m = document.getElementById('modal-merchant-deal');
+  if (m) { m.style.display = 'flex'; document.getElementById('md-title').value = ''; document.getElementById('md-desc').value = ''; document.getElementById('md-discount').value = ''; document.getElementById('md-expiry').value = ''; document.getElementById('md-limit').value = ''; document.getElementById('md-note').value = ''; document.getElementById('md-image-preview').style.display = 'none'; }
+}
+function closeMerchantDealModal() {
+  const m = document.getElementById('modal-merchant-deal'); if (m) m.style.display = 'none';
+}
+function previewMerchantImage(inputId, previewId) {
+  const file = document.getElementById(inputId)?.files?.[0];
+  const preview = document.getElementById(previewId);
+  if (!file || !preview) return;
+  const reader = new FileReader();
+  reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+  reader.readAsDataURL(file);
+}
+function getMerchantSubmissions() {
+  try { return JSON.parse(localStorage.getItem('zam_merchant_submissions') || '[]'); } catch { return []; }
+}
+function saveMerchantSubmissions(list) {
+  localStorage.setItem('zam_merchant_submissions', JSON.stringify(list));
+}
+function submitMerchantEvent() {
+  const title = document.getElementById('me-title')?.value?.trim();
+  const desc = document.getElementById('me-desc')?.value?.trim();
+  const date = document.getElementById('me-date')?.value;
+  if (!title || !desc || !date) { alert('Bitte Titel, Beschreibung und Datum ausfüllen.'); return; }
+  const state = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const merchantId = state.currentMerchant?.id || state.merchantProfile?.id || 'unknown';
+  const merchantName = state.currentMerchant?.name || state.merchantProfile?.name || 'Unbekannt';
+  const imagePreview = document.getElementById('me-image-preview');
+  const submission = {
+    id: 'evt_' + Date.now(),
+    type: 'event',
+    status: 'pending',
+    merchantId, merchantName,
+    title,
+    description: desc,
+    date,
+    time: document.getElementById('me-time')?.value || '',
+    location: document.getElementById('me-location')?.value?.trim() || '',
+    category: document.getElementById('me-category')?.value || 'other',
+    note: document.getElementById('me-note')?.value?.trim() || '',
+    image: imagePreview?.style.display !== 'none' ? imagePreview?.src : null,
+    submittedAt: new Date().toISOString(),
+    adminNote: ''
+  };
+  const list = getMerchantSubmissions();
+  list.unshift(submission);
+  saveMerchantSubmissions(list);
+  closeMerchantEventModal();
+  showToast('✅ Event eingereicht! Das Team prüft deinen Vorschlag.');
+  renderMerchantDashboard();
+}
+function submitMerchantDeal() {
+  const title = document.getElementById('md-title')?.value?.trim();
+  const desc = document.getElementById('md-desc')?.value?.trim();
+  const expiry = document.getElementById('md-expiry')?.value;
+  if (!title || !desc || !expiry) { alert('Bitte Titel, Beschreibung und Ablaufdatum ausfüllen.'); return; }
+  const state = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const merchantId = state.currentMerchant?.id || state.merchantProfile?.id || 'unknown';
+  const merchantName = state.currentMerchant?.name || state.merchantProfile?.name || 'Unbekannt';
+  const imagePreview = document.getElementById('md-image-preview');
+  const submission = {
+    id: 'deal_' + Date.now(),
+    type: 'deal',
+    status: 'pending',
+    merchantId, merchantName,
+    title,
+    description: desc,
+    discount: document.getElementById('md-discount')?.value?.trim() || '',
+    expiry,
+    limit: document.getElementById('md-limit')?.value || '',
+    category: document.getElementById('md-category')?.value || 'other',
+    note: document.getElementById('md-note')?.value?.trim() || '',
+    image: imagePreview?.style.display !== 'none' ? imagePreview?.src : null,
+    submittedAt: new Date().toISOString(),
+    adminNote: ''
+  };
+  const list = getMerchantSubmissions();
+  list.unshift(submission);
+  saveMerchantSubmissions(list);
+  closeMerchantDealModal();
+  showToast('✅ Deal eingereicht! Das Team prüft deinen Vorschlag.');
+  renderMerchantDashboard();
+}
+function renderMerchantSubmissionsSection(merchantId) {
+  const all = getMerchantSubmissions();
+  const mine = all.filter(s => s.merchantId === merchantId);
+  if (!mine.length) return '<p style="color:var(--dim);font-size:0.82rem;text-align:center;padding:20px 0">Noch keine Einreichungen.</p>';
+  const statusLabel = { pending:'⏳ Wartet', approved:'✅ Freigegeben', live:'🟢 Live', rejected:'❌ Abgelehnt', draft:'📝 Entwurf' };
+  const statusClass = { pending:'status-pending', approved:'status-approved', live:'status-live', rejected:'status-rejected', draft:'status-draft' };
+  return mine.map(s => `
+    <div class="submission-card">
+      <div class="submission-card-header">
+        <span class="submission-type-badge submission-type-${s.type}">${s.type === 'event' ? '📅 Event' : '🏷️ Deal'}</span>
+        <span class="submission-status ${statusClass[s.status] || 'status-draft'}">${statusLabel[s.status] || s.status}</span>
+      </div>
+      <div class="submission-card-title">${s.title}</div>
+      <div class="submission-card-meta">${new Date(s.submittedAt).toLocaleDateString('de-DE')}${s.type==='event'?' · '+s.date:''}${s.type==='deal'?' · bis '+s.expiry:''}</div>
+      ${s.adminNote ? `<div class="submission-card-note">💬 ${s.adminNote}</div>` : ''}
+    </div>
+  `).join('');
+}
+function renderAdminMerchantSubmissions() {
+  const all = getMerchantSubmissions();
+  const container = document.getElementById('admin-merchant-submissions');
+  if (!container) return;
+  if (!all.length) { container.innerHTML = '<p style="color:var(--dim);text-align:center;padding:20px">Keine Einreichungen vorhanden.</p>'; return; }
+  const statusLabel = { pending:'⏳ Wartet', approved:'✅ Freigegeben', live:'🟢 Live', rejected:'❌ Abgelehnt', draft:'📝 Entwurf' };
+  const statusClass = { pending:'status-pending', approved:'status-approved', live:'status-live', rejected:'status-rejected', draft:'status-draft' };
+  container.innerHTML = all.map(s => `
+    <div class="admin-submission-card">
+      <div class="admin-submission-card-header">
+        <span class="submission-type-badge submission-type-${s.type}">${s.type==='event'?'📅 Event':'🏷️ Deal'}</span>
+        <span class="submission-status ${statusClass[s.status]||'status-draft'}">${statusLabel[s.status]||s.status}</span>
+        <span style="margin-left:auto;font-size:0.72rem;color:var(--dim)">${s.merchantName}</span>
+      </div>
+      <div class="admin-submission-card-body">
+        <strong>${s.title}</strong><br>
+        ${s.description}<br>
+        ${s.type==='event'?`<br>📅 ${s.date}${s.time?' '+s.time:''}${s.location?' · '+s.location:''}`:'' }
+        ${s.type==='deal'?`<br>🏷️ ${s.discount||''}${s.expiry?' · bis '+s.expiry:''}${s.limit?' · max '+s.limit+' Stk':''}`:'' }
+        ${s.note?`<br><em>Notiz: ${s.note}</em>`:''}
+      </div>
+      <div class="admin-submission-actions">
+        <button class="btn-approve" onclick="adminApproveSubmission('${s.id}')">✅ Freigeben</button>
+        <button class="btn-reject" onclick="adminRejectSubmission('${s.id}')">❌ Ablehnen</button>
+        <button class="btn-feature" onclick="adminFeatureSubmission('${s.id}')">⭐ Featured</button>
+      </div>
+    </div>
+  `).join('');
+}
+function adminApproveSubmission(id) {
+  const list = getMerchantSubmissions();
+  const s = list.find(x => x.id === id);
+  if (s) { s.status = 'approved'; saveMerchantSubmissions(list); renderAdminMerchantSubmissions(); showToast('✅ Freigegeben!'); }
+}
+function adminRejectSubmission(id) {
+  const note = prompt('Ablehnungsgrund (optional):') || '';
+  const list = getMerchantSubmissions();
+  const s = list.find(x => x.id === id);
+  if (s) { s.status = 'rejected'; s.adminNote = note; saveMerchantSubmissions(list); renderAdminMerchantSubmissions(); showToast('❌ Abgelehnt.'); }
+}
+function adminFeatureSubmission(id) {
+  const list = getMerchantSubmissions();
+  const s = list.find(x => x.id === id);
+  if (s) { s.status = 'live'; s.featured = true; saveMerchantSubmissions(list); renderAdminMerchantSubmissions(); showToast('⭐ Als Featured markiert!'); }
+}

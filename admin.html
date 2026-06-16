@@ -447,6 +447,23 @@
       .admin-header-inner { gap: 8px; }
       .card { padding: 14px; }
     }
+    .admin-submission-card { background:var(--surface-2,#1a1a2e); border:1px solid var(--border,rgba(255,255,255,0.1)); border-radius:12px; padding:16px; margin-bottom:10px; }
+    .admin-submission-card-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+    .admin-submission-card-body { font-size:0.8rem; color:var(--dim,#888); margin-bottom:12px; line-height:1.5; }
+    .admin-submission-card-body strong { color:#fff; }
+    .admin-submission-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .admin-submission-actions button { padding:7px 14px; border-radius:8px; font-size:0.75rem; font-weight:600; cursor:pointer; border:none; }
+    .submission-type-badge { font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; padding:3px 8px; border-radius:6px; }
+    .submission-type-event { background:rgba(59,130,246,0.15); color:#60a5fa; }
+    .submission-type-deal { background:rgba(245,158,11,0.15); color:#fbbf24; }
+    .submission-status { font-size:0.65rem; font-weight:700; padding:3px 8px; border-radius:6px; }
+    .status-pending { background:rgba(245,158,11,0.15); color:#fbbf24; }
+    .status-approved,.status-live { background:rgba(16,185,129,0.15); color:#34d399; }
+    .status-rejected { background:rgba(239,68,68,0.12); color:#f87171; }
+    .status-draft { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.4); }
+    .btn-approve { background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.3) !important; }
+    .btn-reject { background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.2) !important; }
+    .btn-feature { background:rgba(139,92,246,0.15); color:#c4b5fd; border:1px solid rgba(139,92,246,0.3) !important; }
   </style>
 </head>
 <body>
@@ -709,6 +726,13 @@
 
       <div class="section-title" style="margin-top:20px">Events (von Händlern eingereicht)</div>
       <div class="item-list" id="mod-events-list"></div>
+
+      <div style="margin-top:24px">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:16px">📤 Händler-Einreichungen (Events &amp; Deals)</h3>
+        <div id="admin-merchant-submissions">
+          <p style="color:var(--dim,#888);text-align:center;padding:20px">Lade...</p>
+        </div>
+      </div>
     </div>
 
     <!-- All content overview -->
@@ -916,6 +940,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'moderation') renderAdminMerchantSubmissions();
   });
 });
 
@@ -1786,6 +1811,65 @@ renderPromosList();
 renderModeration();
 updateCounts();
 updateNotifCount();
+
+function getMerchantSubmissions() {
+  try { return JSON.parse(localStorage.getItem('zam_merchant_submissions') || '[]'); } catch { return []; }
+}
+function saveMerchantSubmissions(list) {
+  localStorage.setItem('zam_merchant_submissions', JSON.stringify(list));
+}
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e1e2e;color:#fff;padding:12px 20px;border-radius:12px;z-index:9999;font-size:0.85rem;border:1px solid rgba(255,255,255,0.1)';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+function renderAdminMerchantSubmissions() {
+  const all = getMerchantSubmissions();
+  const container = document.getElementById('admin-merchant-submissions');
+  if (!container) return;
+  if (!all.length) { container.innerHTML = '<p style="color:#888;text-align:center;padding:20px">Keine Einreichungen vorhanden.</p>'; return; }
+  const statusLabel = { pending:'⏳ Wartet', approved:'✅ Freigegeben', live:'🟢 Live', rejected:'❌ Abgelehnt', draft:'📝 Entwurf' };
+  const statusClass = { pending:'status-pending', approved:'status-approved', live:'status-live', rejected:'status-rejected', draft:'status-draft' };
+  container.innerHTML = all.map(s => `
+    <div class="admin-submission-card">
+      <div class="admin-submission-card-header">
+        <span class="submission-type-badge submission-type-${s.type}">${s.type==='event'?'📅 Event':'🏷️ Deal'}</span>
+        <span class="submission-status ${statusClass[s.status]||'status-draft'}">${statusLabel[s.status]||s.status}</span>
+        <span style="margin-left:auto;font-size:0.72rem;color:#888">${s.merchantName}</span>
+      </div>
+      <div class="admin-submission-card-body">
+        <strong>${s.title}</strong><br>
+        ${s.description}<br>
+        ${s.type==='event'?`<br>📅 ${s.date}${s.time?' '+s.time:''}${s.location?' · '+s.location:''}`:'' }
+        ${s.type==='deal'?`<br>🏷️ ${s.discount||''}${s.expiry?' · bis '+s.expiry:''}${s.limit?' · max '+s.limit+' Stk':''}`:'' }
+        ${s.note?`<br><em>Notiz: ${s.note}</em>`:''}
+      </div>
+      <div class="admin-submission-actions">
+        <button class="btn-approve" onclick="adminApproveSubmission('${s.id}')">✅ Freigeben</button>
+        <button class="btn-reject" onclick="adminRejectSubmission('${s.id}')">❌ Ablehnen</button>
+        <button class="btn-feature" onclick="adminFeatureSubmission('${s.id}')">⭐ Featured</button>
+      </div>
+    </div>
+  `).join('');
+}
+function adminApproveSubmission(id) {
+  const list = getMerchantSubmissions();
+  const s = list.find(x => x.id === id);
+  if (s) { s.status = 'approved'; saveMerchantSubmissions(list); renderAdminMerchantSubmissions(); showToast('✅ Freigegeben!'); }
+}
+function adminRejectSubmission(id) {
+  const note = prompt('Ablehnungsgrund (optional):') || '';
+  const list = getMerchantSubmissions();
+  const s = list.find(x => x.id === id);
+  if (s) { s.status = 'rejected'; s.adminNote = note; saveMerchantSubmissions(list); renderAdminMerchantSubmissions(); showToast('❌ Abgelehnt.'); }
+}
+function adminFeatureSubmission(id) {
+  const list = getMerchantSubmissions();
+  const s = list.find(x => x.id === id);
+  if (s) { s.status = 'live'; s.featured = true; saveMerchantSubmissions(list); renderAdminMerchantSubmissions(); showToast('⭐ Als Featured markiert!'); }
+}
 </script>
 </body>
 </html>
