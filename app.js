@@ -156,11 +156,6 @@ function updatePointsDisplay(animate = false) {
 // Navigation
 // =============================================
 function navigateTo(pageId) {
-  // Always release scroll lock first — even if same page (chat may be open)
-  _unlockBodyScroll();
-  $('#chat-room-view')?.classList.remove('open');
-  $('#private-chat-view')?.classList.remove('open');
-
   if (state.currentPage === pageId) return;
 
   const currentEl = $(`#page-${state.currentPage}`);
@@ -2223,14 +2218,12 @@ function _lockBodyScroll() {
 }
 
 function _unlockBodyScroll() {
-  // Always reset — even if we think it's not locked
-  const wasFixed = document.body.style.position === 'fixed';
   document.body.style.position = '';
   document.body.style.top = '';
   document.body.style.left = '';
   document.body.style.right = '';
   document.body.style.overflow = '';
-  if (wasFixed) window.scrollTo(0, _bodyScrollY);
+  window.scrollTo(0, _bodyScrollY);
 }
 
 function _applyChatViewport(el) {
