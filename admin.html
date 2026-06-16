@@ -879,6 +879,12 @@
       <div id="b-system-status"></div>
     </div>
 
+    <!-- 9. Belohnungs-Übersicht -->
+    <div class="card">
+      <div class="card-title">🎁 Belohnungs-Übersicht</div>
+      <div id="admin-rewards-stats" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"></div>
+    </div>
+
   </div>
 
   </div><!-- /.admin-content -->
@@ -1824,6 +1830,26 @@ function _getContracts() {
   } catch { return []; }
 }
 
+function renderAdminRewardStats() {
+  const el = document.getElementById('admin-rewards-stats');
+  if (!el) return;
+  const g = JSON.parse(localStorage.getItem('zamclub_global')||'{}');
+  const accounts = g.accounts || [];
+  const subs     = JSON.parse(localStorage.getItem('zam_photo_submissions')||'[]');
+  const rewards  = JSON.parse(localStorage.getItem('zam_rewards')||'[]');
+  const stats = [
+    { label:'Aktive Gutscheine',    value: rewards.filter(r=>r.status==='available').length, color:'#fbbf24' },
+    { label:'Eingelöst',            value: rewards.filter(r=>r.status==='redeemed').length,  color:'#34d399' },
+    { label:'Challenge-Fotos',      value: subs.length,                                      color:'#a78bfa' },
+    { label:'Referral-Codes',       value: accounts.filter(a=>localStorage.getItem('zam_referral_'+a.id)).length, color:'#60a5fa' },
+  ];
+  el.innerHTML = stats.map(s => `
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;text-align:center">
+      <div style="font-size:1.6rem;font-weight:900;color:${s.color}">${s.value}</div>
+      <div style="font-size:0.7rem;color:#888;margin-top:3px">${s.label}</div>
+    </div>`).join('');
+}
+
 // Tab wechsel
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1870,6 +1896,7 @@ renderPhotoModeration();
 renderAdminRewardStats();
 updateCounts();
 updateNotifCount();
+renderAdminRewardStats();
 
 function getMerchantSubmissions() {
   try { return JSON.parse(localStorage.getItem('zam_merchant_submissions') || '[]'); } catch { return []; }
