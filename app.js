@@ -78,6 +78,60 @@ function el(tag, cls, attrs = {}) {
 }
 
 // =============================================
+// Countdown Timer Badges
+// =============================================
+function _countdownBadge(expiryStr) {
+  if (!expiryStr) return '';
+  // Accept both 'YYYY-MM-DD' (deals) and full ISO datetime (rewards)
+  const expDate = expiryStr.includes('T')
+    ? new Date(expiryStr)
+    : new Date(expiryStr + 'T23:59:59');
+  const msLeft = expDate - Date.now();
+
+  if (msLeft <= 0) {
+    return `<span class="countdown-badge countdown-expired">⌛ Abgelaufen</span>`;
+  }
+  const hoursLeft = msLeft / 3600000;
+  const daysLeft  = Math.ceil(msLeft / 86400000);
+
+  if (hoursLeft < 24) {
+    const h = String(Math.floor(hoursLeft)).padStart(2, '0');
+    const m = String(Math.floor((msLeft % 3600000) / 60000)).padStart(2, '0');
+    const s = String(Math.floor((msLeft % 60000) / 1000)).padStart(2, '0');
+    return `<span class="countdown-badge countdown-urgent" data-expiry="${expiryStr}">⏳ Noch ${h}:${m}:${s}</span>`;
+  }
+  if (daysLeft === 1) {
+    return `<span class="countdown-badge countdown-urgent">⏳ Läuft heute ab</span>`;
+  }
+  if (daysLeft <= 5) {
+    return `<span class="countdown-badge countdown-soon">⏳ Noch ${daysLeft} Tage</span>`;
+  }
+  return `<span class="countdown-badge countdown-active">⏳ Noch ${daysLeft} Tage</span>`;
+}
+
+let _countdownInterval = null;
+function _startCountdownTicker() {
+  if (_countdownInterval) return;
+  _countdownInterval = setInterval(() => {
+    document.querySelectorAll('[data-expiry]').forEach(badge => {
+      const expiryStr = badge.dataset.expiry;
+      const expDate = expiryStr.includes('T') ? new Date(expiryStr) : new Date(expiryStr + 'T23:59:59');
+      const msLeft  = expDate - Date.now();
+      if (msLeft <= 0) {
+        badge.textContent  = '⌛ Abgelaufen';
+        badge.className    = 'countdown-badge countdown-expired';
+        badge.removeAttribute('data-expiry');
+      } else {
+        const h = String(Math.floor(msLeft / 3600000)).padStart(2, '0');
+        const m = String(Math.floor((msLeft % 3600000) / 60000)).padStart(2, '0');
+        const s = String(Math.floor((msLeft % 60000) / 1000)).padStart(2, '0');
+        badge.textContent = `⏳ Noch ${h}:${m}:${s}`;
+      }
+    });
+  }, 1000);
+}
+
+// =============================================
 // Toast Notifications
 // =============================================
 let toastTimer = null;
@@ -381,6 +435,7 @@ async function renderHomeDeals() {
       <div class="discount-badge">${deal.discount}</div>
       <div class="store-name">${deal.store_name || deal.merchant_name || ''}</div>
       <div class="deal-title">${deal.title}</div>
+      <div style="margin-top:6px">${_countdownBadge(deal.expiry_date)}</div>
       <button class="bookmark-btn ${saved ? 'saved' : ''}" data-id="${deal.id}" data-type="deal" style="margin-top:8px" aria-label="Merken">
         ${saved ? '🔖 Gespeichert' : '🏷️ Merken'}
       </button>
@@ -619,7 +674,10 @@ async function doSpin() {
               </div>
             </div>
             <div style="font-size:0.72rem;color:rgba(255,255,255,0.55);line-height:1.5;margin-bottom:8px">${escHtml(reward.description)}</div>
-            <div style="font-size:0.65rem;color:#F7AB00;font-weight:700">⏰ Einlösefrist: bis ${expDate}</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:0.65rem;color:rgba(255,255,255,0.4)">Einlösbar bis ${expDate}</span>
+              ${_countdownBadge(wonReward.expires_at)}
+            </div>
           </div>
           <div style="display:flex;gap:8px">
             <button onclick="showQRVoucher('${wonReward.id}')" style="flex:1;padding:11px;background:linear-gradient(135deg,#8a5f00,#F7AB00);border:none;color:#fff;border-radius:12px;font-size:0.8rem;font-weight:800;font-family:var(--font);cursor:pointer">📱 QR-Code</button>
@@ -1116,7 +1174,10 @@ function renderDealCard(deal, idx) {
     <div class="deal-title">${deal.title}</div>
     <p class="deal-description">${deal.description}</p>
     <div class="deal-footer">
-      <div class="deal-validity">📅 ${deal.expiry_formatted}</div>
+      <div class="deal-validity" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="font-size:0.72rem;color:rgba(255,255,255,0.4)">📅 ${deal.expiry_formatted}</span>
+        ${_countdownBadge(deal.expiry_date)}
+      </div>
       <div class="deal-actions">
         <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn deal-action-social">👥 Gemeinsam</button>
         <button onclick="openVoucherQR('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}','${deal.merchant_id||''}');event.stopPropagation()" class="deal-action-btn deal-action-redeem">🎟 Einlösen</button>
@@ -4950,6 +5011,7 @@ function init() {
   initNavigation();
   initModals();
   initDailySpin();
+  _startCountdownTicker();
   initQRCheckin();
   initEventFilters();
   initButtonAnimations();
@@ -5853,9 +5915,9 @@ function renderRewards() {
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <span style="font-size:0.62rem;padding:3px 9px;border-radius:20px;background:rgba(250,70,21,0.12);color:#ff6b3d;border:1px solid rgba(250,70,21,0.2)">${typeLabel[r.type]||r.type}</span>
         <span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">ID: ${r.voucher_id}</span>
-        <span style="font-size:0.62rem;color:${daysLeft < 5 && isAvail ? '#F7AB00' : 'rgba(255,255,255,0.3)'}">
-          ${r.status === 'redeemed' ? '✓ Eingelöst am '+new Date(r.redeemed_at).toLocaleDateString('de-DE') : daysLeft > 0 ? `Gültig noch ${daysLeft} Tag${daysLeft!==1?'e':''}` : 'Abgelaufen'}
-        </span>
+        ${r.status === 'redeemed'
+          ? `<span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">✓ Eingelöst am ${new Date(r.redeemed_at).toLocaleDateString('de-DE')}</span>`
+          : _countdownBadge(r.expires_at)}
       </div>
       ${isAvail ? `
         <div style="display:flex;gap:8px">
