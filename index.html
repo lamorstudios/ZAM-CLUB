@@ -533,6 +533,12 @@
       </button>
     </div>
     <div style="padding: 0 16px 4px">
+      <button class="btn btn-ghost btn-full" onclick="navigateTo('my-events')" style="display:flex;align-items:center;gap:10px;justify-content:flex-start">
+        🎟 <span>Meine Events</span>
+        <span id="my-events-badge" style="margin-left:auto;font-size:0.7rem;color:rgba(255,255,255,0.35)"></span>
+      </button>
+    </div>
+    <div style="padding: 0 16px 4px">
       <button class="btn btn-ghost btn-full" onclick="navigateTo('nearby-settings')" style="display:flex;align-items:center;gap:10px;justify-content:flex-start">
         📍 <span>Nearby Alerts</span>
         <span id="nearby-profile-badge" style="margin-left:auto;font-size:0.7rem;color:rgba(255,255,255,0.35)">Deaktiviert</span>
@@ -1575,6 +1581,14 @@
     <h1 class="page-title">Meine Gutscheine</h1>
   </div>
   <div id="my-vouchers-content" style="padding-bottom:100px"></div>
+</div>
+
+<div id="page-my-events" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('profile')">←</button>
+    <h1 class="page-title">Meine Events</h1>
+  </div>
+  <div id="my-events-content" style="padding-bottom:100px"></div>
 </div>
 
 <!-- Referral Bottom Sheet -->

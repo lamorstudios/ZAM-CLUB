@@ -249,7 +249,7 @@ function navigateTo(pageId) {
   // Sub-pages live OUTSIDE #app-shell in the DOM. When active, app-shell's
   // min-height:100dvh would create 100dvh of black space before the sub-page.
   // Collapse app-shell to height:0 when on a sub-page.
-  const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings','merchant-preview','nearby-settings']);
+  const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings','merchant-preview','nearby-settings','my-events','my-vouchers']);
   document.body.classList.toggle('subpage-active', !MAIN_PAGES.has(pageId));
 
   // Triple scroll reset — ensure top of page on all mobile browsers
@@ -319,6 +319,9 @@ function navigateTo(pageId) {
   } else if (pageId === 'my-vouchers') {
     window.scrollTo(0, 0);
     renderMyVouchers();
+  } else if (pageId === 'my-events') {
+    window.scrollTo(0, 0);
+    renderMyEvents();
   }
 }
 
@@ -1327,7 +1330,10 @@ function renderEventCard(evt, idx) {
         ${evt.is_joined ? '✓ Angemeldet' : 'Teilnehmen'}
       </button>
     </div>
-    ${evt.is_joined ? `<button onclick="eventCheckIn('${evt.id}','${(evt.title||'').replace(/'/g,"\\'")}')" style="width:100%;margin-top:10px;padding:11px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">📍 Beim Event einchecken • +50 Punkte</button>` : ''}
+    ${evt.is_joined ? _eventCheckinBtn(evt) : ''}
+      '<div style="width:100%;margin-top:10px;padding:11px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);color:#34d399;border-radius:10px;font-size:0.82rem;font-weight:700;text-align:center">✅ Eingecheckt • +' + (evt.points_reward||50) + ' Punkte erhalten</div>' :
+      '<button onclick="eventCheckIn('' + evt.id + '','' + (evt.title||'').replace(/'/g,"\'") + '',' + (evt.points_reward||50) + ')" style="width:100%;margin-top:10px;padding:11px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">📍 Vor Ort einchecken • +' + (evt.points_reward||50) + ' Punkte</button>'
+    ) : ''}
   `;
 
   div.querySelector('.bookmark-btn').addEventListener('click', (e) => {
@@ -1364,12 +1370,10 @@ async function joinEvent(idx, cardEl) {
   const btn = cardEl.querySelector('.btn');
   if (btn) { btn.className = 'btn btn-sm joined'; btn.textContent = '✓ Angemeldet'; }
 
-  await addPoints(evt.points_reward || 0, evt.title);
   const eventsEl = $('#profile-stat-events');
   if (eventsEl) eventsEl.textContent = ZAMData.currentUser.stats?.events_attended || 0;
-  showToast(`🎉 Angemeldet! +${evt.points_reward || 0} Punkte`, 'success');
-  await checkBadgesAfterAction();
-  renderChallenges();
+  showToast('🎉 Angemeldet! Checke vor Ort ein um Punkte zu erhalten.', 'success');
+  renderEvents();
 }
 
 // =============================================
@@ -6614,25 +6618,111 @@ function shareWhatsApp() {
 // EVENT CHECK-IN
 // ═══════════════════════════════════════════════
 
-function eventCheckIn(eventId, eventName) {
+// ── Event Check-In with Location Verification ──────────────────
+const _EVT_CHECKIN_KEY = 'zam_event_checkins_v2'; // {eventId, userId, ts, lat, lng}
+const EVT_CHECKIN_RADIUS_M = 100; // metres from ZAM centre
+
+function _getEventCheckins() {
+  try { return JSON.parse(localStorage.getItem(_EVT_CHECKIN_KEY)||'[]'); } catch { return []; }
+}
+function _saveEventCheckins(c) { localStorage.setItem(_EVT_CHECKIN_KEY, JSON.stringify(c)); }
+
+function _isEventCheckedIn(eventId) {
   const user = ZAMApi.auth.currentUser();
-  if (!user) { showToast('Bitte einloggen'); return; }
-  const key = 'zam_checkins_' + user.id;
-  const checkins = JSON.parse(localStorage.getItem(key)||'[]');
-  if (checkins.includes(eventId)) { showToast('Du hast dich bereits eingecheckt!'); return; }
-  navigator.geolocation?.getCurrentPosition(pos => {
-    const dist = typeof _geoDistance === 'function' ? Math.round(_geoDistance(pos.coords.latitude, pos.coords.longitude, ZAM_LAT, ZAM_LNG)) : 0;
-    if (dist > 1000) { showToast('❌ Du bist nicht im ZAM-Bereich'); return; }
-    _doEventCheckin(eventId, key, checkins, user);
-  }, () => _doEventCheckin(eventId, key, checkins, user));
+  if (!user) return false;
+  return _getEventCheckins().some(c => c.eventId === eventId && c.userId === user.id);
 }
 
-function _doEventCheckin(eventId, key, checkins, user) {
-  checkins.push(eventId);
-  localStorage.setItem(key, JSON.stringify(checkins));
-  try { ZAMApi.points?.add(50, 'Event Check-In').catch(()=>{}); } catch {}
-  user.points = (user.points||0) + 50;
-  ZAMData.currentUser = {...ZAMData.currentUser, points: user.points};
+function _eventCheckinBtn(evt) {
+  if (_isEventCheckedIn(evt.id)) {
+    return '<div style="width:100%;margin-top:10px;padding:11px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);color:#34d399;border-radius:10px;font-size:0.82rem;font-weight:700;text-align:center">✅ Eingecheckt • +' + (evt.points_reward||50) + ' Punkte erhalten</div>';
+  }
+  const safeId    = evt.id.replace(/'/g, '');
+  const safeTitle = (evt.title||'').replace(/'/g, '').replace(/"/g, '');
+  const pts       = evt.points_reward || 50;
+  return '<button onclick="eventCheckIn(\''+safeId+'\',\''+safeTitle+'\',' + pts + ')" style="width:100%;margin-top:10px;padding:11px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">📍 Vor Ort einchecken • +' + pts + ' Punkte</button>';
+}
+
+// Store pending check-in context to avoid inline onclick escaping
+let _pendingCheckin = null;
+
+function eventCheckIn(eventId, eventName, pts) {
+  const user = ZAMApi.auth.currentUser();
+  if (!user) { showToast('Bitte einloggen'); return; }
+  if (_isEventCheckedIn(eventId)) { showToast('Du hast dich bei diesem Event bereits eingecheckt!', 'info'); return; }
+  _pendingCheckin = { eventId, eventName, points: pts || 50 };
+
+  _buildMerchantModal('_evt_checkin_modal', '📍 Vor Ort einchecken',
+    '<div style="text-align:center;padding:8px 0 20px">' +
+      '<div style="font-size:2.5rem;margin-bottom:12px">📍</div>' +
+      '<div style="font-size:0.92rem;font-weight:800;color:#fff;margin-bottom:8px">' + escHtml(eventName) + '</div>' +
+      '<div style="font-size:0.75rem;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:20px">Um die Prämie zu erhalten, musst du dich im ZAM-Bereich befinden.<br>Dein Standort wird nur kurz geprüft und nicht gespeichert.</div>' +
+      '<div id="_evt_ci_status" style="font-size:0.8rem;color:rgba(255,255,255,0.5);min-height:24px;margin-bottom:16px">Klicke unten um deinen Standort zu prüfen.</div>' +
+    '</div>' +
+    '<button id="_evt_ci_btn" onclick="_doEventCheckinFlow()" style="width:100%;background:#FA4615;border:none;border-radius:12px;padding:13px;color:#fff;font-size:0.88rem;font-weight:800;font-family:var(--font);cursor:pointer">📍 Standort prüfen & einchecken</button>' +
+    '<button onclick="_merchantModalClose(\'_evt_checkin_modal\')" style="width:100%;margin-top:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px;color:rgba(255,255,255,0.45);font-size:0.78rem;font-weight:600;font-family:var(--font);cursor:pointer">Abbrechen</button>'
+  );
+}
+
+function _doEventCheckinFlow() {
+  const { eventId, eventName, points } = _pendingCheckin || {};
+  if (!eventId) return;
+  const btn    = document.getElementById('_evt_ci_btn');
+  const status = document.getElementById('_evt_ci_status');
+  if (btn) { btn.disabled = true; btn.textContent = '🔄 Prüfe Standort…'; }
+  if (status) status.textContent = '📡 Standort wird ermittelt…';
+
+  if (!navigator.geolocation) {
+    // Geolocation not supported — fallback: allow check-in (demo/desktop)
+    _finalizeEventCheckin(eventId, eventName, points, null, null, 'no_geo');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat  = pos.coords.latitude;
+      const lng  = pos.coords.longitude;
+      const dist = Math.round(_geoDistance(lat, lng, ZAM_LAT, ZAM_LNG));
+      if (status) status.textContent = '📍 Abstand zum ZAM: ' + dist + ' m';
+
+      if (dist > EVT_CHECKIN_RADIUS_M) {
+        if (btn) { btn.disabled = false; btn.textContent = '📍 Standort prüfen & einchecken'; }
+        if (status) {
+          status.textContent = '❌ Du bist ' + dist + ' m entfernt — zu weit vom ZAM.';
+          status.style.color = '#f87171';
+        }
+        showToast('Du musst vor Ort im ZAM sein, um diese Event-Prämie abzuholen.', 'error');
+        return;
+      }
+      _finalizeEventCheckin(eventId, eventName, points, lat, lng, 'geo_ok');
+    },
+    err => {
+      // Permission denied or timeout — in demo mode allow check-in
+      if (status) status.textContent = '⚠️ Standort nicht verfügbar (Demo-Modus)';
+      _finalizeEventCheckin(eventId, eventName, points, null, null, 'geo_denied');
+    },
+    { timeout: 8000, maximumAge: 30000, enableHighAccuracy: false }
+  );
+}
+
+async function _finalizeEventCheckin(eventId, eventName, points, lat, lng, mode) {
+  const user = ZAMApi.auth.currentUser();
+  if (!user) return;
+
+  // Save check-in record (no raw coords stored — only confirmation)
+  const checkins = _getEventCheckins();
+  checkins.push({
+    eventId,
+    userId:  user.id,
+    ts:      Date.now(),
+    mode,                        // 'geo_ok' | 'geo_denied' | 'no_geo'
+    verified: mode === 'geo_ok'  // true only when GPS confirmed within radius
+  });
+  _saveEventCheckins(checkins);
+
+  // Award points
+  user.points = (user.points||0) + points;
+  ZAMData.currentUser = { ...ZAMData.currentUser, points: user.points };
   try {
     const g = JSON.parse(localStorage.getItem('zamclub_global')||'{}');
     if (g.session_user) g.session_user.points = user.points;
@@ -6640,8 +6730,120 @@ function _doEventCheckin(eventId, key, checkins, user) {
     if (acc) acc.points = user.points;
     localStorage.setItem('zamclub_global', JSON.stringify(g));
   } catch {}
-  showToast('✅ Eingecheckt! +50 Punkte');
-  if (typeof renderEvents === 'function') renderEvents();
+
+  updatePointsDisplay();
+  await checkBadgesAfterAction();
+
+  // Show success inside modal with optional QR
+  const modal = document.getElementById('_evt_checkin_modal');
+  const sheet = modal?.querySelector('div[style*="background:#212121"]') || modal;
+  if (sheet) {
+    const user2 = ZAMApi.auth.currentUser();
+    const qrPayload = JSON.stringify({ type:'evt_checkin', eventId, userId: user2?.id, ts: Date.now() });
+    const qrId = '_evt_qr_' + eventId;
+    sheet.innerHTML =
+      '<div style="width:40px;height:4px;background:rgba(255,255,255,0.15);border-radius:99px;margin:0 auto 18px"></div>' +
+      '<div style="text-align:center;padding:12px 0 24px">' +
+        '<div style="font-size:3rem;margin-bottom:12px">✅</div>' +
+        '<div style="font-size:1rem;font-weight:900;color:#34d399;margin-bottom:8px">Eingecheckt!</div>' +
+        '<div style="font-size:0.78rem;color:rgba(255,255,255,0.5);margin-bottom:6px">' + escHtml(eventName) + '</div>' +
+        '<div style="font-size:1.1rem;font-weight:900;color:#F7AB00;margin-bottom:20px">+' + points + ' Punkte gutgeschrieben 🎉</div>' +
+        '<div style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-bottom:14px">Persönlicher QR-Code für den Eventgeber:</div>' +
+        '<div id="' + qrId + '" style="display:flex;justify-content:center;margin-bottom:20px"></div>' +
+      '</div>' +
+      '<button onclick="_merchantModalClose(\'_evt_checkin_modal\')" style="width:100%;background:#FA4615;border:none;border-radius:12px;padding:12px;color:#fff;font-size:0.85rem;font-weight:700;font-family:var(--font);cursor:pointer">Fertig</button>';
+
+    // Render QR code
+    setTimeout(() => {
+      const qrEl = document.getElementById(qrId);
+      if (qrEl && typeof QRCode !== 'undefined') {
+        new QRCode(qrEl, { text: qrPayload, width:160, height:160, colorDark:'#ffffff', colorLight:'#1a1a1a' });
+      }
+    }, 100);
+  }
+
+  showToast('✅ Eingecheckt! +' + points + ' Punkte', 'success');
+  renderEvents();
+}
+
+// ── Meine Events page ─────────────────────────────────────────
+function renderMyEvents() {
+  const container = document.getElementById('my-events-content');
+  if (!container) return;
+  const user = ZAMApi.auth.currentUser();
+  if (!user) return;
+
+  const joinedKey = 'zam_joined_events_' + user.id;
+  const joined    = JSON.parse(localStorage.getItem(joinedKey)||'[]'); // [{id, title, date, pts}]
+  const checkins  = _getEventCheckins().filter(c => c.userId === user.id);
+  const allEvents = (state.events && state.events.length) ? state.events : (ZAMData.events || []);
+
+  if (!joined.length && !allEvents.filter(e => e.is_joined).length) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.35);font-size:0.82rem">Noch keine Events angemeldet.</div>';
+    return;
+  }
+
+  const myEvts = allEvents.filter(e => e.is_joined);
+  container.innerHTML = myEvts.map(evt => {
+    const ci = checkins.find(c => c.eventId === evt.id);
+    const checkedIn = !!ci;
+    return '<div style="margin:0 16px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' +
+        '<div style="font-size:1.8rem">' + ({'Food':'🍜','Kultur':'🎵','Sport':'🏋️','Shopping':'👗','Community':'👥'}[evt.category?.split(' ')[0]] || '🎉') + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:0.88rem;font-weight:800;color:#fff">' + escHtml(evt.title) + '</div>' +
+          '<div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">📅 ' + (evt.date_formatted||evt.date||'') + ' · ' + (evt.location||'ZAM Freiham') + '</div>' +
+        '</div>' +
+        '<span style="font-size:0.6rem;font-weight:700;padding:3px 8px;border-radius:6px;background:' + (checkedIn ? 'rgba(52,211,153,0.12)' : 'rgba(59,130,246,0.12)') + ';color:' + (checkedIn ? '#34d399' : '#60a5fa') + ';border:1px solid ' + (checkedIn ? 'rgba(52,211,153,0.25)' : 'rgba(59,130,246,0.25)') + '">' + (checkedIn ? '✅ Eingecheckt' : '📋 Angemeldet') + '</span>' +
+      '</div>' +
+      (!checkedIn ?
+        '<button class="_mye_ci_btn" data-evtid="' + evt.id + '" data-evttitle="' + (evt.title||'').replace(/"/g,'&quot;') + '" data-pts="' + (evt.points_reward||50) + '" style="width:100%;padding:10px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer">📍 Vor Ort einchecken • +' + (evt.points_reward||50) + ' Punkte</button>'
+        : '<div style="font-size:0.68rem;color:rgba(52,211,153,0.7);text-align:center;padding:4px 0">✅ Punkte erhalten · ' + new Date(ci.ts).toLocaleDateString("de-DE",{day:"2-digit",month:"long"}) + '</div>') +
+    '</div>';
+  }).join('') || '<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.35);font-size:0.82rem">Noch keine Events angemeldet.</div>';
+
+  // Wire delegated click for check-in buttons
+  container.querySelectorAll('._mye_ci_btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      eventCheckIn(btn.dataset.evtid, btn.dataset.evttitle, parseInt(btn.dataset.pts)||50);
+    });
+  });
+}
+
+// ── Event Check-In Stats (Admin/Eventgeber) ───────────────────
+function _renderEventCheckinStats() {
+  let wrap = document.getElementById('evt-checkin-admin-wrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'evt-checkin-admin-wrap';
+    wrap.style.cssText = 'margin:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px';
+    const target = document.getElementById('admin-merchant-submissions');
+    if (target) target.parentNode?.insertBefore(wrap, target);
+    else return;
+  }
+  const checkins = _getEventCheckins();
+  const byEvent  = {};
+  checkins.forEach(c => {
+    if (!byEvent[c.eventId]) byEvent[c.eventId] = { total:0, verified:0, pts:0 };
+    byEvent[c.eventId].total++;
+    if (c.verified) byEvent[c.eventId].verified++;
+    byEvent[c.eventId].pts += 50;
+  });
+  const allEvents = state.events || ZAMData.events || [];
+  const rows = allEvents.filter(e => byEvent[e.id]).map(e => {
+    const s = byEvent[e.id];
+    const rate = allEvents.find(ev => ev.id === e.id);
+    const joined = (rate?.spots_total||500) - (rate?.spots_left||0);
+    const pct    = joined ? Math.round((s.total/joined)*100) : 0;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">' +
+      '<div style="flex:1;min-width:0"><div style="font-size:0.78rem;font-weight:700;color:#fff">' + escHtml(e.title) + '</div>' +
+      '<div style="font-size:0.6rem;color:rgba(255,255,255,0.35);margin-top:2px">' + joined + ' angemeldet · ' + s.total + ' eingecheckt · ' + pct + '% Quote · ' + s.pts + ' Pkt. vergeben</div></div>' +
+      '<span style="font-size:0.7rem;font-weight:800;color:#34d399">' + s.total + '</span>' +
+    '</div>';
+  }).join('');
+  wrap.innerHTML =
+    '<div style="font-size:0.78rem;font-weight:800;color:#fff;margin-bottom:12px">📊 Event Check-In Übersicht</div>' +
+    (rows || '<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);text-align:center;padding:12px">Noch keine Check-ins</div>');
 }
 
 document.readyState === 'loading'
