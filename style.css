@@ -59,9 +59,7 @@ body {
   color: var(--text);
   min-height: 100dvh;
   overflow-x: hidden;
-  max-width: 100vw;
   overscroll-behavior-y: none;
-  touch-action: pan-y;
   -webkit-font-smoothing: antialiased;
 }
 button { border: none; outline: none; cursor: pointer; font-family: inherit; }
@@ -76,7 +74,7 @@ ul, ol { list-style: none; }
   min-height: 100dvh;
   position: relative;
   background: var(--bg);
-  overflow-x: hidden;
+  overflow: hidden;
   overscroll-behavior: none;
 }
 
@@ -95,8 +93,6 @@ ul, ol { list-style: none; }
   flex-direction: column;
   min-height: 100dvh;
   padding-bottom: calc(var(--nav-h) + 24px);
-  overflow-x: hidden;
-  /* overflow-y via body — page must not scroll independently */
   opacity: 0;
   transform: translateY(10px);
   transition: opacity var(--tn) var(--ease), transform var(--tn) var(--ease);
@@ -210,7 +206,6 @@ a.nav-tab-map { text-decoration: none; }
   padding: 4px 20px 16px;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
   scrollbar-width: none;
   max-width: 100%;
   box-sizing: border-box;
