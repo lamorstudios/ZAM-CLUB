@@ -27,19 +27,19 @@
      AUTH SHELL (shown when not logged in)
 ========================== -->
 <!-- Offline Banner -->
-<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#1e0a3c;border-bottom:1px solid rgba(139,92,246,0.4);padding:10px 16px;text-align:center;font-size:0.78rem;font-weight:600;color:#c4b5fd;font-family:'Poppins',sans-serif">
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#1e1e1e;border-bottom:1px solid rgba(250,70,21,0.4);padding:10px 16px;text-align:center;font-size:0.78rem;font-weight:600;color:#ffb399;font-family:'Poppins',sans-serif">
   📡 Kein Internet – Du bist im Offline-Modus
 </div>
 
 <!-- PWA Install Banner -->
-<div id="pwa-install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:linear-gradient(135deg,#1a0533,#111118);border-top:1px solid rgba(139,92,246,0.3);padding:14px 16px;padding-bottom:max(14px,env(safe-area-inset-bottom,14px));font-family:'Poppins',sans-serif">
+<div id="pwa-install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:linear-gradient(135deg,#1e1616,#212121);border-top:1px solid rgba(250,70,21,0.3);padding:14px 16px;padding-bottom:max(14px,env(safe-area-inset-bottom,14px));font-family:'Poppins',sans-serif">
   <div style="display:flex;align-items:center;gap:12px;max-width:480px;margin:0 auto">
-    <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">Z</div>
+    <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#c43510,#FA4615);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">Z</div>
     <div style="flex:1">
       <div style="font-weight:700;font-size:0.85rem;color:#e2e8f0">ZAM Club installieren</div>
       <div style="font-size:0.72rem;color:rgba(255,255,255,0.5)">App auf dem Homescreen speichern</div>
     </div>
-    <button onclick="installPWA()" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer">Installieren</button>
+    <button onclick="installPWA()" style="background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer">Installieren</button>
     <button onclick="dismissInstallBanner()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;padding:4px">×</button>
   </div>
 </div>
@@ -69,7 +69,7 @@
         <span style="font-size:0.7rem;color:rgba(255,255,255,0.3)">oder</span>
         <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
       </div>
-      <button class="btn btn-full" id="btn-google-login" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1a1a2e;border:none;border-radius:10px;padding:12px;font-size:0.88rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:4px">
+      <button class="btn btn-full" id="btn-google-login" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1a1a1a;border:none;border-radius:10px;padding:12px;font-size:0.88rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:4px">
         <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
         Mit Google anmelden
       </button>
@@ -121,7 +121,7 @@
         <span style="font-size:0.7rem;color:rgba(255,255,255,0.3)">oder</span>
         <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
       </div>
-      <button class="btn btn-full" id="btn-google-register" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1a1a2e;border:none;border-radius:10px;padding:12px;font-size:0.88rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:4px">
+      <button class="btn btn-full" id="btn-google-register" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1a1a1a;border:none;border-radius:10px;padding:12px;font-size:0.88rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:4px">
         <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
         Mit Google registrieren
       </button>
@@ -160,7 +160,7 @@
 
 <div id="app-shell" style="display:none">
 <!-- Global Demo Role Badge — shown when role != user -->
-<div id="global-role-badge" style="display:none;position:fixed;top:0;left:0;right:0;z-index:8000;padding:6px 16px;background:rgba(245,158,11,0.92);backdrop-filter:blur(8px);align-items:center;justify-content:center;gap:10px">
+<div id="global-role-badge" style="display:none;position:fixed;top:0;left:0;right:0;z-index:8000;padding:6px 16px;background:rgba(247,171,0,0.92);backdrop-filter:blur(8px);align-items:center;justify-content:center;gap:10px">
   <span id="global-role-badge-text" style="font-size:0.72rem;font-weight:800;color:#1a1a00;letter-spacing:0.03em">🎭 Demo-Modus: Händler</span>
   <button onclick="switchDemoRole('user')" style="font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(0,0,0,0.2);border:1px solid rgba(0,0,0,0.15);color:#1a1a00;cursor:pointer;font-family:inherit">× Zurück zu Nutzer</button>
 </div>
@@ -235,19 +235,19 @@
           <div class="referral-cta-icon">👥</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:1rem;font-weight:900;color:#fff;line-height:1.2;margin-bottom:3px">Freund einladen</div>
-            <div style="font-size:0.72rem;color:rgba(255,255,255,0.55);line-height:1.5">Erhalte <strong style="color:#fbbf24">+250 Punkte</strong>, sobald sich dein Freund registriert</div>
+            <div style="font-size:0.72rem;color:rgba(255,255,255,0.55);line-height:1.5">Erhalte <strong style="color:#F7AB00">+250 Punkte</strong>, sobald sich dein Freund registriert</div>
           </div>
-          <div style="flex-shrink:0;background:linear-gradient(135deg,rgba(180,130,30,0.5),rgba(251,191,36,0.3));border:1px solid rgba(251,191,36,0.4);border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:800;color:#fef3c7;white-space:nowrap">Einladen →</div>
+          <div style="flex-shrink:0;background:linear-gradient(135deg,rgba(180,130,30,0.5),rgba(247,171,0,0.3));border:1px solid rgba(247,171,0,0.4);border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:800;color:#fef3c7;white-space:nowrap">Einladen →</div>
         </div>
         <div style="position:relative;z-index:1;display:flex;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08)">
           <div style="display:flex;align-items:center;gap:6px">
             <div style="font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.06em">Dein Code</div>
-            <div id="home-referral-code" style="font-size:0.78rem;font-weight:900;color:#c4b5fd;letter-spacing:0.1em;font-family:monospace">ZAM---</div>
+            <div id="home-referral-code" style="font-size:0.78rem;font-weight:900;color:#ffb399;letter-spacing:0.1em;font-family:monospace">ZAM---</div>
           </div>
           <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
             <div style="text-align:right">
               <div style="font-size:0.65rem;color:rgba(255,255,255,0.35)">Eingeladen</div>
-              <div id="home-referral-count" style="font-size:0.82rem;font-weight:900;color:#fbbf24">0</div>
+              <div id="home-referral-count" style="font-size:0.82rem;font-weight:900;color:#F7AB00">0</div>
             </div>
             <div style="text-align:right">
               <div style="font-size:0.65rem;color:rgba(255,255,255,0.35)">Punkte</div>
@@ -294,10 +294,10 @@
     <div style="padding:14px 16px 0">
       <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:8px">Neu in der Community</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <button onclick="navigateTo('photo-challenges')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(135deg,rgba(109,40,217,0.25),rgba(139,92,246,0.1));border:1px solid rgba(139,92,246,0.3);border-radius:14px;cursor:pointer;font-family:var(--font);text-align:left">
+        <button onclick="navigateTo('photo-challenges')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(135deg,rgba(196,53,16,0.25),rgba(250,70,21,0.1));border:1px solid rgba(250,70,21,0.3);border-radius:14px;cursor:pointer;font-family:var(--font);text-align:left">
           <span style="font-size:1.6rem;flex-shrink:0">📸</span>
           <div>
-            <div style="font-size:0.78rem;font-weight:800;color:#c4b5fd;line-height:1.2">Foto-Challenges</div>
+            <div style="font-size:0.78rem;font-weight:800;color:#ffb399;line-height:1.2">Foto-Challenges</div>
             <div style="font-size:0.65rem;color:rgba(255,255,255,0.45);margin-top:2px">4 aktiv</div>
           </div>
         </button>
@@ -490,7 +490,7 @@
     <div style="padding: 0 16px 4px">
       <button class="btn btn-ghost btn-full" onclick="navigateTo('rewards')" style="display:flex;align-items:center;gap:10px;justify-content:flex-start">
         🎁 <span>Meine Belohnungen</span>
-        <span id="rewards-count-badge" style="margin-left:auto;background:rgba(251,191,36,0.2);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);border-radius:12px;padding:2px 8px;font-size:0.7rem;font-weight:700;display:none">0</span>
+        <span id="rewards-count-badge" style="margin-left:auto;background:rgba(247,171,0,0.2);color:#F7AB00;border:1px solid rgba(247,171,0,0.3);border-radius:12px;padding:2px 8px;font-size:0.7rem;font-weight:700;display:none">0</span>
       </button>
     </div>
     <div style="padding: 0 16px 4px">
@@ -504,7 +504,7 @@
     <div style="padding: 16px 16px 4px">
       <button class="btn btn-ghost btn-full" onclick="navigateTo('rewards')" style="display:flex;align-items:center;gap:10px;justify-content:flex-start">
         🎁 <span>Meine Belohnungen</span>
-        <span id="rewards-count-badge" style="margin-left:auto;background:rgba(251,191,36,0.2);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);border-radius:12px;padding:2px 8px;font-size:0.7rem;font-weight:700;display:none">0</span>
+        <span id="rewards-count-badge" style="margin-left:auto;background:rgba(247,171,0,0.2);color:#F7AB00;border:1px solid rgba(247,171,0,0.3);border-radius:12px;padding:2px 8px;font-size:0.7rem;font-weight:700;display:none">0</span>
       </button>
     </div>
     <div style="padding: 0 16px 4px">
@@ -525,14 +525,14 @@
     </div>
 
     <!-- Demo Rollen Umschalter -->
-    <div style="margin:12px 16px 4px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:14px;padding:14px 16px">
+    <div style="margin:12px 16px 4px;background:rgba(247,171,0,0.06);border:1px solid rgba(247,171,0,0.2);border-radius:14px;padding:14px 16px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-        <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:rgba(245,158,11,0.8)">🎭 Demo Rollen</span>
+        <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:rgba(247,171,0,0.8)">🎭 Demo Rollen</span>
         <span style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-left:auto">Nur für Präsentationen</span>
       </div>
       <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
         <span style="font-size:0.72rem;color:rgba(255,255,255,0.45)">Aktuelle Rolle:</span>
-        <span id="demo-role-badge" style="font-size:0.78rem;font-weight:800;padding:3px 10px;border-radius:20px;background:rgba(139,92,246,0.2);color:#c4b5fd;border:1px solid rgba(139,92,246,0.3)">👤 Nutzer</span>
+        <span id="demo-role-badge" style="font-size:0.78rem;font-weight:800;padding:3px 10px;border-radius:20px;background:rgba(250,70,21,0.2);color:#ffb399;border:1px solid rgba(250,70,21,0.3)">👤 Nutzer</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
         <button onclick="switchDemoRole('user')" id="demo-role-btn-user" style="padding:10px 6px;border-radius:10px;border:2px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-family:var(--font);font-size:0.76rem;font-weight:700;cursor:pointer;transition:all 0.2s">
@@ -563,7 +563,7 @@
       <a href="legal.html#community" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Community-Richtlinien</a>
     </div>
     <div style="padding:0 20px 20px;text-align:center;font-size:0.67rem;color:rgba(255,255,255,0.2)">
-      Powered by <a href="https://lamoragency.de" target="_blank" rel="noopener" style="color:rgba(139,92,246,0.55);text-decoration:none;font-weight:600">LAMOR Agency</a>
+      Powered by <a href="https://lamoragency.de" target="_blank" rel="noopener" style="color:rgba(250,70,21,0.55);text-decoration:none;font-weight:600">LAMOR Agency</a>
     </div>
 
   </section>
@@ -619,7 +619,7 @@
     <div class="settings-section">
       <h3 class="settings-section-title">Push-Benachrichtigungen</h3>
       <div id="push-status-row" class="settings-row">
-        <span>Status</span><span id="push-status-val" style="color:#8b5cf6">Prüfen...</span>
+        <span>Status</span><span id="push-status-val" style="color:#FA4615">Prüfen...</span>
       </div>
       <button id="btn-push-toggle" class="btn-settings-action" onclick="togglePushPermission()">Aktivieren</button>
     </div>
@@ -977,7 +977,7 @@
       <video id="qr-video" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover" playsinline autoplay muted></video>
       <canvas id="qr-canvas" style="display:none"></canvas>
       <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
-        <div style="width:60%;height:60%;border:2px solid #8b5cf6;border-radius:8px;box-shadow:0 0 0 999px rgba(0,0,0,0.4)"></div>
+        <div style="width:60%;height:60%;border:2px solid #FA4615;border-radius:8px;box-shadow:0 0 0 999px rgba(0,0,0,0.4)"></div>
       </div>
     </div>
     <div id="qr-scan-result" style="min-height:60px;text-align:center;font-size:0.9rem;font-weight:600;padding:12px;border-radius:10px;background:var(--surface-2)">
@@ -1004,7 +1004,7 @@
     <button class="back-btn" id="merchant-dash-back-btn" onclick="navigateTo('profile')">←</button>
     <h1 class="page-title" id="merchant-dash-title">Mein Dashboard</h1>
     <div class="dash-period-select">
-      <select id="dash-period" onchange="renderMerchantDashboard()" style="background:var(--surface);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-family:var(--font)">
+      <select id="dash-period" onchange="renderMerchantDashboard()" style="background:var(--surface);border:1px solid rgba(250,70,21,0.3);color:#ffb399;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-family:var(--font)">
         <option value="7">7 Tage</option>
         <option value="30" selected>30 Tage</option>
         <option value="90">90 Tage</option>
@@ -1051,11 +1051,11 @@
     <h2 style="font-size:1.1rem;font-weight:800;color:#e2e8f0;margin-bottom:10px">Nur auf Einladung</h2>
     <p style="font-size:0.8rem;color:rgba(255,255,255,0.45);line-height:1.7;margin-bottom:24px">
       Händlerzugänge werden ausschließlich vom<br>
-      <strong style="color:#c4b5fd">ZAM Center Management</strong> vergeben.<br><br>
+      <strong style="color:#ffb399">ZAM Center Management</strong> vergeben.<br><br>
       Bitte wende dich direkt an das Center Management,<br>wenn du als Händler teilnehmen möchtest.
     </p>
-    <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:14px;padding:16px 20px;margin-bottom:24px;text-align:left">
-      <div style="font-size:0.76rem;font-weight:700;color:#c4b5fd;margin-bottom:6px">📞 Kontakt Center Management</div>
+    <div style="background:rgba(250,70,21,0.08);border:1px solid rgba(250,70,21,0.2);border-radius:14px;padding:16px 20px;margin-bottom:24px;text-align:left">
+      <div style="font-size:0.76rem;font-weight:700;color:#ffb399;margin-bottom:6px">📞 Kontakt Center Management</div>
       <div style="font-size:0.74rem;color:rgba(255,255,255,0.5);line-height:1.7">
         ZAM Freiham<br>
         Mahatma-Gandhi-Platz 1<br>
@@ -1109,7 +1109,7 @@
   <div class="page-header">
     <button class="back-btn" onclick="navigateTo('profile')">←</button>
     <h1 class="page-title">Center Analytics</h1>
-    <select id="admin-period" onchange="renderAdminDashboard()" style="background:var(--surface);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-family:var(--font)">
+    <select id="admin-period" onchange="renderAdminDashboard()" style="background:var(--surface);border:1px solid rgba(250,70,21,0.3);color:#ffb399;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-family:var(--font)">
       <option value="7">7 Tage</option>
       <option value="30" selected>30 Tage</option>
     </select>
@@ -1147,13 +1147,13 @@
 
 <!-- Voucher Redeemer Modal -->
 <div id="voucher-modal" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.8);align-items:flex-end;justify-content:center">
-  <div style="width:100%;max-width:480px;background:#0f0f1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(139,92,246,0.3);padding:20px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px))">
+  <div style="width:100%;max-width:480px;background:#0f0f1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(250,70,21,0.3);padding:20px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px))">
     <div style="width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,0.12);margin:0 auto 16px"></div>
     <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px">🎟️ Gutschein einlösen</h3>
-    <input id="voucher-code-input" placeholder="ZAM-XXXX-XXXX eingeben" style="width:100%;background:var(--surface-2);border:1px solid rgba(139,92,246,0.3);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.9rem;font-family:var(--font);outline:none;margin-bottom:10px"/>
-    <div id="voucher-result" style="font-size:0.78rem;margin-bottom:10px;min-height:20px;color:#c4b5fd"></div>
+    <input id="voucher-code-input" placeholder="ZAM-XXXX-XXXX eingeben" style="width:100%;background:var(--surface-2);border:1px solid rgba(250,70,21,0.3);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.9rem;font-family:var(--font);outline:none;margin-bottom:10px"/>
+    <div id="voucher-result" style="font-size:0.78rem;margin-bottom:10px;min-height:20px;color:#ffb399"></div>
     <div style="display:flex;gap:8px">
-      <button onclick="redeemVoucher()" style="flex:1;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border-radius:10px;padding:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer;border:none">Einlösen</button>
+      <button onclick="redeemVoucher()" style="flex:1;background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border-radius:10px;padding:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer;border:none">Einlösen</button>
       <button onclick="closeVoucherModal()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.82rem;font-weight:600;font-family:var(--font);cursor:pointer">Abbrechen</button>
     </div>
   </div>
@@ -1269,12 +1269,12 @@
      DEMO / PITCH PAGE
 ========================== -->
 <div id="page-demo" class="page" style="background:var(--bg);min-height:100vh;padding-bottom:100px">
-  <div style="background:linear-gradient(135deg,#1a0533,#0d0d1a);padding:28px 20px 24px;text-align:center;border-bottom:1px solid rgba(139,92,246,0.2)">
-    <div style="font-size:2.2rem;font-weight:900;background:linear-gradient(135deg,#8b5cf6,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.02em">ZAM Club</div>
+  <div style="background:linear-gradient(135deg,#1e1616,#1e1e1e);padding:28px 20px 24px;text-align:center;border-bottom:1px solid rgba(250,70,21,0.2)">
+    <div style="font-size:2.2rem;font-weight:900;background:linear-gradient(135deg,#FA4615,#ff6b3d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.02em">ZAM Club</div>
     <div style="font-size:0.82rem;color:rgba(255,255,255,0.5);margin-top:4px">Live Demo · Freiham München</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px">
       <span class="demo-pulse-dot"></span>
-      <span style="font-size:0.72rem;color:#8b5cf6;font-weight:600">Live-Daten</span>
+      <span style="font-size:0.72rem;color:#FA4615;font-weight:600">Live-Daten</span>
     </div>
   </div>
   <div style="padding:20px 16px 0">
@@ -1289,7 +1289,7 @@
     </div>
   </div>
   <div style="padding:20px 16px 0;text-align:center">
-    <button onclick="navigateTo('home')" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:14px;padding:14px 32px;font-size:0.9rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;width:100%;max-width:300px">App öffnen →</button>
+    <button onclick="navigateTo('home')" style="background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border:none;border-radius:14px;padding:14px 32px;font-size:0.9rem;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;width:100%;max-width:300px">App öffnen →</button>
   </div>
 </div>
 
@@ -1297,7 +1297,7 @@
      PHASE 18: ACTIVE USERS SHEET
 ========================== -->
 <div id="active-users-sheet" style="display:none;position:fixed;inset:0;z-index:350;background:rgba(0,0,0,0.7);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeActiveUsersSheet()">
-  <div id="active-users-sheet-inner" style="width:min(100vw,480px);background:#0f0f1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(139,92,246,0.3);padding:16px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px));max-height:82vh;overflow-y:auto;transform:translateX(-50%) translateY(100%);transition:transform 0.32s cubic-bezier(0.16,1,0.3,1);position:relative;left:50%">
+  <div id="active-users-sheet-inner" style="width:min(100vw,480px);background:#0f0f1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(250,70,21,0.3);padding:16px;padding-bottom:max(20px,env(safe-area-inset-bottom,20px));max-height:82vh;overflow-y:auto;transform:translateX(-50%) translateY(100%);transition:transform 0.32s cubic-bezier(0.16,1,0.3,1);position:relative;left:50%">
     <div style="width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,0.12);margin:0 auto 14px"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div>
@@ -1307,8 +1307,8 @@
       <button onclick="closeActiveUsersSheet()" style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:1.1rem;font-family:var(--font);cursor:pointer">×</button>
     </div>
     <!-- My Status Section -->
-    <div id="my-status-row" style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:14px;padding:12px;margin-bottom:14px">
-      <div style="font-size:0.68rem;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Mein Status</div>
+    <div id="my-status-row" style="background:rgba(250,70,21,0.08);border:1px solid rgba(250,70,21,0.2);border-radius:14px;padding:12px;margin-bottom:14px">
+      <div style="font-size:0.68rem;font-weight:700;color:#ff6b3d;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Mein Status</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
         <button class="au-chip" onclick="setMyAppStatus('🍔 Hungrig')">🍔 Hungrig</button>
         <button class="au-chip" onclick="setMyAppStatus('🤝 Suche 2-für-1')">🤝 Suche 2-für-1</button>
@@ -1317,7 +1317,7 @@
         <button class="au-chip" onclick="setMyAppStatus('☕ Beim Kaffee')">☕ Beim Kaffee</button>
         <button class="au-chip au-chip-ghost" onclick="setMyAppStatus('')">Kein Status</button>
       </div>
-      <div id="my-current-status" style="font-size:0.72rem;color:#c4b5fd;min-height:16px"></div>
+      <div id="my-current-status" style="font-size:0.72rem;color:#ffb399;min-height:16px"></div>
     </div>
     <!-- Active Users List -->
     <div id="active-users-list"></div>
@@ -1496,7 +1496,7 @@
     <h3 class="dash-section-title">🎟️ Letzte Einlösungen</h3>
     <div class="dash-table-wrap" id="mp-vouchers">
       <div class="dash-row"><div class="dash-row-icon">🎟️</div><div class="dash-row-main"><div class="dash-row-name" style="font-family:monospace">ZAM-CF-001</div><div class="dash-row-sub">✅ Eingelöst – vor 2h</div></div><div class="dash-row-val" style="color:#34d399;font-size:0.65rem">OK</div></div>
-      <div class="dash-row"><div class="dash-row-icon">🎟️</div><div class="dash-row-main"><div class="dash-row-name" style="font-family:monospace">ZAM-CF-002</div><div class="dash-row-sub">⏳ Aktiv</div></div><div class="dash-row-val" style="color:#f59e0b;font-size:0.65rem">AKTIV</div></div>
+      <div class="dash-row"><div class="dash-row-icon">🎟️</div><div class="dash-row-main"><div class="dash-row-name" style="font-family:monospace">ZAM-CF-002</div><div class="dash-row-sub">⏳ Aktiv</div></div><div class="dash-row-val" style="color:#F7AB00;font-size:0.65rem">AKTIV</div></div>
     </div>
   </div>
 
@@ -1535,7 +1535,7 @@
 
 <!-- Referral Bottom Sheet -->
 <div id="referral-sheet" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px)" onclick="if(event.target===this)closeReferralSheet()">
-  <div style="position:absolute;bottom:0;left:0;right:0;background:#111118;border-radius:24px 24px 0 0;max-height:90vh;overflow-y:auto;padding:20px 16px 48px">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:#212121;border-radius:24px 24px 0 0;max-height:90vh;overflow-y:auto;padding:20px 16px 48px">
     <div style="width:40px;height:4px;background:rgba(255,255,255,0.15);border-radius:99px;margin:0 auto 20px"></div>
     <div id="referral-sheet-body"></div>
   </div>
@@ -1543,7 +1543,7 @@
 
 <!-- QR Voucher Modal -->
 <div id="qr-voucher-modal" style="display:none;position:fixed;inset:0;z-index:9300;background:rgba(0,0,0,0.82);backdrop-filter:blur(10px);align-items:center;justify-content:center" onclick="if(event.target===this)closeQRVoucher()">
-  <div style="background:#111118;border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:24px 20px;width:min(92vw,370px)">
+  <div style="background:#212121;border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:24px 20px;width:min(92vw,370px)">
     <div id="qr-voucher-body"></div>
   </div>
 </div>
@@ -1559,16 +1559,16 @@
 
 <!-- Share / Invite Dialog -->
 <div id="share-dialog" style="display:none;position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px)" onclick="if(event.target===this)closeShareDialog()">
-  <div style="position:absolute;bottom:0;left:0;right:0;background:#111118;border-radius:24px 24px 0 0;padding:20px 16px 48px">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:#212121;border-radius:24px 24px 0 0;padding:20px 16px 48px">
     <div style="width:40px;height:4px;background:rgba(255,255,255,0.15);border-radius:99px;margin:0 auto 20px"></div>
     <h2 style="font-size:1.15rem;font-weight:900;color:#fff;margin-bottom:6px;text-align:center">👥 Freund einladen</h2>
-    <p style="font-size:0.76rem;color:rgba(255,255,255,0.45);text-align:center;margin-bottom:20px;line-height:1.6">Teile deinen persönlichen Einladungslink und verdiene <strong style="color:#fbbf24">+250 Punkte</strong> pro Freund.</p>
-    <div style="background:rgba(139,92,246,0.1);border:1.5px dashed rgba(139,92,246,0.35);border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+    <p style="font-size:0.76rem;color:rgba(255,255,255,0.45);text-align:center;margin-bottom:20px;line-height:1.6">Teile deinen persönlichen Einladungslink und verdiene <strong style="color:#F7AB00">+250 Punkte</strong> pro Freund.</p>
+    <div style="background:rgba(250,70,21,0.1);border:1.5px dashed rgba(250,70,21,0.35);border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
       <div style="flex:1;min-width:0">
-        <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:rgba(139,92,246,0.7);margin-bottom:4px">Dein Einladungslink</div>
-        <div id="share-invite-link" style="font-size:0.74rem;color:#c4b5fd;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">https://zamclub.de/invite/DEMO250</div>
+        <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:rgba(250,70,21,0.7);margin-bottom:4px">Dein Einladungslink</div>
+        <div id="share-invite-link" style="font-size:0.74rem;color:#ffb399;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">https://zamclub.de/invite/DEMO250</div>
       </div>
-      <button onclick="copyShareLink()" style="flex-shrink:0;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:10px;padding:8px 12px;font-family:var(--font);font-size:0.74rem;font-weight:700;cursor:pointer">📋 Kopieren</button>
+      <button onclick="copyShareLink()" style="flex-shrink:0;background:rgba(250,70,21,0.2);border:1px solid rgba(250,70,21,0.3);color:#ffb399;border-radius:10px;padding:8px 12px;font-family:var(--font);font-size:0.74rem;font-weight:700;cursor:pointer">📋 Kopieren</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <button onclick="shareWhatsApp()" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:linear-gradient(135deg,#075e54,#128c7e);border:none;color:#fff;border-radius:14px;font-size:0.84rem;font-weight:800;font-family:var(--font);cursor:pointer">💬 WhatsApp</button>
@@ -1576,12 +1576,12 @@
     </div>
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:center">
       <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:6px">Einladungscode</div>
-      <div id="share-invite-code" style="font-size:1.8rem;font-weight:900;letter-spacing:0.15em;color:#c4b5fd;font-family:monospace">DEMO250</div>
+      <div id="share-invite-code" style="font-size:1.8rem;font-weight:900;letter-spacing:0.15em;color:#ffb399;font-family:monospace">DEMO250</div>
       <div style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-top:4px">Freund gibt diesen Code bei der Registrierung ein</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:13px;text-align:center">
-        <div style="font-size:1.4rem;font-weight:900;color:#fbbf24" id="share-ref-count">0</div>
+        <div style="font-size:1.4rem;font-weight:900;color:#F7AB00" id="share-ref-count">0</div>
         <div style="font-size:0.68rem;color:rgba(255,255,255,0.4)">Eingeladene Freunde</div>
       </div>
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:13px;text-align:center">
@@ -1596,13 +1596,13 @@
 </body>
 <!-- Merchant Stats Overlay -->
 <div id="merchant-stats-overlay" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.7);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeMerchantStatsOverlay()">
-  <div style="background:#111118;border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:20px 16px 40px;max-height:85vh;overflow-y:auto">
+  <div style="background:#212121;border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:20px 16px 40px;max-height:85vh;overflow-y:auto">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
       <div style="flex:1">
         <div style="font-size:1rem;font-weight:800">📊 Meine Statistiken</div>
         <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px" id="stats-period-label">Letzte 30 Tage</div>
       </div>
-      <select onchange="updateMerchantStats(this.value)" style="background:#18181f;border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:8px;padding:5px 8px;font-size:0.72rem;font-family:inherit">
+      <select onchange="updateMerchantStats(this.value)" style="background:#282828;border:1px solid rgba(250,70,21,0.3);color:#ffb399;border-radius:8px;padding:5px 8px;font-size:0.72rem;font-family:inherit">
         <option value="7">7 Tage</option>
         <option value="30" selected>30 Tage</option>
         <option value="90">90 Tage</option>
@@ -1632,7 +1632,7 @@
 
 <!-- Challenge Detail Bottom Sheet -->
 <div id="challenge-detail-sheet" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px)" onclick="if(event.target===this)closeChallengeDetail()">
-  <div style="position:absolute;bottom:0;left:0;right:0;background:#111118;border-radius:24px 24px 0 0;max-height:92vh;overflow-y:auto;padding:20px 16px 40px">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:#212121;border-radius:24px 24px 0 0;max-height:92vh;overflow-y:auto;padding:20px 16px 40px">
     <div style="width:40px;height:4px;background:rgba(255,255,255,0.15);border-radius:99px;margin:0 auto 20px"></div>
     <div id="challenge-detail-body"></div>
   </div>
@@ -1676,7 +1676,7 @@
 
   <!-- Bottom overlay: location + shutter (viewfinder mode) -->
   <div id="camera-shutter-ui" style="position:absolute;bottom:0;left:0;right:0;z-index:10;padding:0 20px calc(env(safe-area-inset-bottom,0px) + 24px);background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,transparent 100%)">
-    <div id="camera-location-status" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border-radius:20px;font-size:0.74rem;font-weight:700;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#fbbf24;width:fit-content;margin:0 auto 20px">
+    <div id="camera-location-status" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border-radius:20px;font-size:0.74rem;font-weight:700;background:rgba(247,171,0,0.15);border:1px solid rgba(247,171,0,0.3);color:#F7AB00;width:fit-content;margin:0 auto 20px">
       <span>📍</span><span>Standort wird geprüft…</span>
     </div>
     <div style="display:flex;align-items:center;justify-content:center;gap:32px">
@@ -1702,7 +1702,7 @@
     <!-- Bottom action bar -->
     <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 24px);background:linear-gradient(to top,rgba(0,0,0,0.75),transparent);display:flex;gap:12px">
       <button onclick="retakePhoto()" style="flex:1;padding:15px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:14px;cursor:pointer;font-family:inherit;font-size:0.88rem;font-weight:700">↩ Neu aufnehmen</button>
-      <button onclick="submitChallengePhoto()" id="btn-submit-photo" style="flex:2;padding:15px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:none;color:#fff;border-radius:14px;cursor:pointer;font-family:inherit;font-size:0.88rem;font-weight:800;box-shadow:0 4px 16px rgba(109,40,217,0.5)">✅ Foto verwenden</button>
+      <button onclick="submitChallengePhoto()" id="btn-submit-photo" style="flex:2;padding:15px;background:linear-gradient(135deg,#c43510,#FA4615);border:none;color:#fff;border-radius:14px;cursor:pointer;font-family:inherit;font-size:0.88rem;font-weight:800;box-shadow:0 4px 16px rgba(196,53,16,0.5)">✅ Foto verwenden</button>
     </div>
   </div>
 

@@ -17,9 +17,9 @@
       --border:     rgba(255,255,255,0.07);
       --text:       #f0f0f8;
       --text-muted: #8b8ba0;
-      --primary:    #6d28d9;
+      --primary:    #c43510;
       --primary2:   #a855f7;
-      --grad:       linear-gradient(135deg, #6d28d9, #a855f7);
+      --grad:       linear-gradient(135deg, #c43510, #a855f7);
       --success:    #10b981;
       --danger:     #ef4444;
       --radius:     16px;
@@ -447,7 +447,7 @@
       .admin-header-inner { gap: 8px; }
       .card { padding: 14px; }
     }
-    .admin-submission-card { background:var(--surface-2,#1a1a2e); border:1px solid var(--border,rgba(255,255,255,0.1)); border-radius:12px; padding:16px; margin-bottom:10px; }
+    .admin-submission-card { background:var(--surface-2,#1a1a1a); border:1px solid var(--border,rgba(255,255,255,0.1)); border-radius:12px; padding:16px; margin-bottom:10px; }
     .admin-submission-card-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
     .admin-submission-card-body { font-size:0.8rem; color:var(--dim,#888); margin-bottom:12px; line-height:1.5; }
     .admin-submission-card-body strong { color:#fff; }
@@ -455,15 +455,15 @@
     .admin-submission-actions button { padding:7px 14px; border-radius:8px; font-size:0.75rem; font-weight:600; cursor:pointer; border:none; }
     .submission-type-badge { font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; padding:3px 8px; border-radius:6px; }
     .submission-type-event { background:rgba(59,130,246,0.15); color:#60a5fa; }
-    .submission-type-deal { background:rgba(245,158,11,0.15); color:#fbbf24; }
+    .submission-type-deal { background:rgba(247,171,0,0.15); color:#F7AB00; }
     .submission-status { font-size:0.65rem; font-weight:700; padding:3px 8px; border-radius:6px; }
-    .status-pending { background:rgba(245,158,11,0.15); color:#fbbf24; }
+    .status-pending { background:rgba(247,171,0,0.15); color:#F7AB00; }
     .status-approved,.status-live { background:rgba(16,185,129,0.15); color:#34d399; }
     .status-rejected { background:rgba(239,68,68,0.12); color:#f87171; }
     .status-draft { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.4); }
     .btn-approve { background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.3) !important; }
     .btn-reject { background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.2) !important; }
-    .btn-feature { background:rgba(139,92,246,0.15); color:#c4b5fd; border:1px solid rgba(139,92,246,0.3) !important; }
+    .btn-feature { background:rgba(250,70,21,0.15); color:#ffb399; border:1px solid rgba(250,70,21,0.3) !important; }
   </style>
 </head>
 <body>
@@ -491,7 +491,7 @@
 
   <!-- Händler-Dashboard Vorschau Button (always visible) -->
   <div style="padding:16px 0 4px">
-    <button onclick="openDemoMerchantPreview()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:16px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:14px;font-size:0.95rem;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 20px rgba(139,92,246,0.4)">
+    <button onclick="openDemoMerchantPreview()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:16px;background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border:none;border-radius:14px;font-size:0.95rem;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 20px rgba(250,70,21,0.4)">
       <span style="font-size:1.3rem">🏪</span>
       Händler-Dashboard öffnen
       <span style="font-size:0.75rem;background:rgba(255,255,255,0.2);padding:3px 8px;border-radius:6px;font-weight:600">Café Freiham Demo</span>
@@ -515,7 +515,7 @@
       </button>
       <button class="tab-btn" data-tab="moderation" role="tab">
         ✅ Freigabe
-        <span class="count" id="count-moderation" style="background:#f59e0b;color:#000">0</span>
+        <span class="count" id="count-moderation" style="background:#F7AB00;color:#000">0</span>
       </button>
       <button class="tab-btn" data-tab="notifications" role="tab">
         🔔 Inbox
@@ -699,7 +699,7 @@
           </div>
           <div class="form-group">
             <label for="promo-color">Aktions-Farbe</label>
-            <input type="color" id="promo-color" value="#f59e0b" />
+            <input type="color" id="promo-color" value="#F7AB00" />
           </div>
           <div class="form-group full">
             <label for="promo-text">Aktions-Text *</label>
@@ -780,7 +780,7 @@
     <div class="card">
       <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
         📊 Center Analytics
-        <select id="admin-analytics-period" onchange="renderAdminAnalyticsTab()" style="background:#1c1c28;border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-family:inherit">
+        <select id="admin-analytics-period" onchange="renderAdminAnalyticsTab()" style="background:#1c1c28;border:1px solid rgba(250,70,21,0.3);color:#ffb399;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-family:inherit">
           <option value="7">7 Tage</option>
           <option value="30" selected>30 Tage</option>
         </select>
@@ -802,7 +802,7 @@
 
     <!-- Refresh Button -->
     <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-      <button onclick="renderBetreiberDashboard()" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:10px;padding:8px 16px;font-size:0.75rem;font-weight:600;font-family:inherit;cursor:pointer">↻ Aktualisieren</button>
+      <button onclick="renderBetreiberDashboard()" style="background:rgba(250,70,21,0.15);border:1px solid rgba(250,70,21,0.3);color:#ffb399;border-radius:10px;padding:8px 16px;font-size:0.75rem;font-weight:600;font-family:inherit;cursor:pointer">↻ Aktualisieren</button>
     </div>
 
     <!-- Rewards Stats -->
@@ -903,10 +903,10 @@ const ADMIN_KEY = 'zamclub_admin';
 
 const CAT_COLORS = {
   'Sport':         '#10b981',
-  'Food & Drinks': '#f59e0b',
+  'Food & Drinks': '#F7AB00',
   'Familie':       '#3b82f6',
   'Musik':         '#ec4899',
-  'Shopping':      '#8b5cf6',
+  'Shopping':      '#FA4615',
   'Sonstiges':     '#6b7280',
   'Mode':          '#ec4899',
   'Restaurant':    '#ef4444',
@@ -941,7 +941,7 @@ const MOCK_DEALS = [
 ];
 
 const MOCK_PROMOS = [
-  { merchant_id: 'mer_001', merchant_name: 'Café Aroma', promo_text: '20% auf alle Heißgetränke', promo_color: '#f59e0b' },
+  { merchant_id: 'mer_001', merchant_name: 'Café Aroma', promo_text: '20% auf alle Heißgetränke', promo_color: '#F7AB00' },
   { merchant_id: 'mer_002', merchant_name: 'FashionHub', promo_text: '15% Sommerrabatt', promo_color: '#ec4899' },
   { merchant_id: 'mer_003', merchant_name: 'Trattoria Bella', promo_text: '2+1 Pizza-Aktion', promo_color: '#ef4444' },
   { merchant_id: 'mer_004', merchant_name: 'FitZone', promo_text: '1 Monat gratis testen', promo_color: '#10b981' },
@@ -1133,7 +1133,7 @@ function renderPromosList() {
   container.innerHTML = '';
   all.forEach(promo => {
     const isAdmin = promo.id && promo.id.startsWith('adm_');
-    const color   = promo.promo_color || '#f59e0b';
+    const color   = promo.promo_color || '#F7AB00';
     const card    = document.createElement('div');
     card.className = 'item-card';
     card.innerHTML = `
@@ -1322,7 +1322,7 @@ document.getElementById('form-promos').addEventListener('submit', function(e) {
   setAdminPromos(promos);
 
   this.reset();
-  colorEl.value = '#f59e0b';
+  colorEl.value = '#F7AB00';
 
   showSuccess('success-promos');
   renderPromosList();
@@ -1347,7 +1347,7 @@ function appStoreSet(key, value) {
 }
 
 function statusBadge(status) {
-  const map = { pending: { bg: '#f59e0b22', color: '#f59e0b', label: 'Ausstehend' }, approved: { bg: '#10b98122', color: '#10b981', label: 'Freigegeben' }, rejected: { bg: '#ef444422', color: '#ef4444', label: 'Abgelehnt' } };
+  const map = { pending: { bg: '#F7AB0022', color: '#F7AB00', label: 'Ausstehend' }, approved: { bg: '#10b98122', color: '#10b981', label: 'Freigegeben' }, rejected: { bg: '#ef444422', color: '#ef4444', label: 'Abgelehnt' } };
   const s = map[status] || map.pending;
   return `<span style="background:${s.bg};color:${s.color};border:1px solid ${s.color}44;border-radius:6px;padding:2px 8px;font-size:0.72rem;font-weight:700">${s.label}</span>`;
 }
@@ -1356,7 +1356,7 @@ function itemCard(item, approveFn, rejectFn, deactivateFn = null) {
   const isPending  = (item.status || 'pending') === 'pending';
   const isHandled  = ['approved','rejected','inactive'].includes(item.status);
   return `
-    <div style="background:#111118;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;margin-bottom:10px">
+    <div style="background:#212121;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;margin-bottom:10px">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
         <strong style="font-size:0.88rem;flex:1">${item.title || item.content?.slice(0,60) || '(Kein Titel)'}</strong>
         ${statusBadge(item.status || 'pending')}
@@ -1367,7 +1367,7 @@ function itemCard(item, approveFn, rejectFn, deactivateFn = null) {
       ${item.store_name ? `<div style="font-size:0.75rem;color:#888;margin-bottom:4px">🏪 ${item.store_name}</div>` : ''}
       ${item.expiry_formatted ? `<div style="font-size:0.75rem;color:#888;margin-bottom:4px">🗓 Bis ${item.expiry_formatted}</div>` : ''}
       ${item.date_formatted   ? `<div style="font-size:0.75rem;color:#888;margin-bottom:4px">📅 ${item.date_formatted}</div>` : ''}
-      ${item.discount ? `<div style="font-size:0.75rem;color:#8b5cf6;margin-bottom:4px;font-weight:600">${item.discount}</div>` : ''}
+      ${item.discount ? `<div style="font-size:0.75rem;color:#FA4615;margin-bottom:4px;font-weight:600">${item.discount}</div>` : ''}
       ${item.reject_reason ? `<div style="font-size:0.75rem;color:#ef4444;margin-bottom:4px">Ablehnungsgrund: ${item.reject_reason}</div>` : ''}
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
         ${isPending ? `
@@ -1447,14 +1447,14 @@ async function renderNotifications() {
     const d = new Date(n.created_at);
     const dateStr = d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' }) + ' ' + d.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
     return `
-      <div style="background:${n.is_read ? '#111118' : '#1a1a2e'};border:1px solid ${n.is_read ? 'rgba(255,255,255,0.06)' : 'rgba(139,92,246,0.3)'};border-radius:10px;padding:14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start" onclick="markNotifRead('${n.id}');this.style.background='#111118';this.style.borderColor='rgba(255,255,255,0.06)'">
+      <div style="background:${n.is_read ? '#212121' : '#1a1a1a'};border:1px solid ${n.is_read ? 'rgba(255,255,255,0.06)' : 'rgba(250,70,21,0.3)'};border-radius:10px;padding:14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start" onclick="markNotifRead('${n.id}');this.style.background='#212121';this.style.borderColor='rgba(255,255,255,0.06)'">
         <div style="font-size:1.4rem">${n.type === 'deal' ? '🏷️' : n.type === 'event' ? '📅' : '💬'}</div>
         <div style="flex:1">
           <div style="font-size:0.85rem;font-weight:600;margin-bottom:3px">${n.title}</div>
           <div style="font-size:0.78rem;color:#aaa">${n.body}</div>
           <div style="font-size:0.7rem;color:#666;margin-top:4px">${dateStr}</div>
         </div>
-        ${!n.is_read ? '<div style="width:8px;height:8px;background:#8b5cf6;border-radius:50%;flex-shrink:0;margin-top:4px"></div>' : ''}
+        ${!n.is_read ? '<div style="width:8px;height:8px;background:#FA4615;border-radius:50%;flex-shrink:0;margin-top:4px"></div>' : ''}
       </div>
     `;
   }).join('');
@@ -1514,7 +1514,7 @@ function renderAdminAnalyticsTab() {
       {icon:'📊', value: stats.totalEvents, label: 'Events total'},
     ];
     kpiEl.innerHTML = kpis.map(k => `
-      <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:12px;text-align:center">
+      <div style="background:rgba(250,70,21,0.08);border:1px solid rgba(250,70,21,0.2);border-radius:12px;padding:12px;text-align:center">
         <div style="font-size:1.4rem;font-weight:800;color:#fff">${k.value}</div>
         <div style="font-size:0.58rem;color:rgba(255,255,255,0.4);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em">${k.icon} ${k.label}</div>
       </div>`).join('');
@@ -1526,7 +1526,7 @@ function renderAdminAnalyticsTab() {
     const max = Math.max(...stats.growth.map(g => g.count), 1);
     chartEl.innerHTML = stats.growth.map(g => `
       <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%">
-        <div style="width:100%;border-radius:3px 3px 0 0;background:linear-gradient(to top,#6d28d9,#a78bfa);min-height:2px;margin-top:auto;height:${Math.max(4,(g.count/max)*100)}%"></div>
+        <div style="width:100%;border-radius:3px 3px 0 0;background:linear-gradient(to top,#c43510,#ff6b3d);min-height:2px;margin-top:auto;height:${Math.max(4,(g.count/max)*100)}%"></div>
         <div style="font-size:0.44rem;color:rgba(255,255,255,0.3);white-space:nowrap">${g.label}</div>
       </div>`).join('');
   }
@@ -1535,14 +1535,14 @@ function renderAdminAnalyticsTab() {
   const zonesEl = document.getElementById('admin-analytics-zones');
   if (zonesEl && stats.zoneVisits) {
     const zoneNames  = {mk2_1:'MK 2(1)', mk2_2:'MK 2(2)', mk2_3:'MK 2(3)', mk2_4:'MK 2(4)', plaza:'Gandhi-Platz'};
-    const zoneColors = {mk2_1:'#d97706', mk2_2:'#7c3aed', mk2_3:'#059669', mk2_4:'#2563eb', plaza:'#8b5cf6'};
+    const zoneColors = {mk2_1:'#d97706', mk2_2:'#d93e12', mk2_3:'#059669', mk2_4:'#2563eb', plaza:'#FA4615'};
     const entries = Object.entries(stats.zoneVisits).sort((a,b)=>b[1]-a[1]);
     const maxV = Math.max(...entries.map(z=>z[1]), 1);
     zonesEl.innerHTML = entries.map(([z, c]) => `
       <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
         <div style="font-size:0.7rem;font-weight:600;width:80px;flex-shrink:0;color:${zoneColors[z]||'#e2e8f0'}">${zoneNames[z]||z}</div>
         <div style="flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.07);overflow:hidden">
-          <div style="height:100%;border-radius:4px;background:${zoneColors[z]||'#8b5cf6'};width:${(c/maxV*100).toFixed(0)}%"></div>
+          <div style="height:100%;border-radius:4px;background:${zoneColors[z]||'#FA4615'};width:${(c/maxV*100).toFixed(0)}%"></div>
         </div>
         <div style="font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.5);width:25px;text-align:right">${c}</div>
       </div>`).join('');
@@ -1564,7 +1564,7 @@ function renderAdminAnalyticsTab() {
             <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
               <span style="font-size:0.9rem">${i===0?'🥇':i===1?'🥈':'🥉'}</span>
               <span style="flex:1;font-size:0.72rem;color:#e2e8f0">${s.icon} ${id}</span>
-              <span style="font-size:0.72rem;font-weight:700;color:#8b5cf6">${count} Aufrufe</span>
+              <span style="font-size:0.72rem;font-weight:700;color:#FA4615">${count} Aufrufe</span>
             </div>`).join('')}
       </div>`).join('');
   }
@@ -1575,8 +1575,8 @@ function renderAdminAnalyticsTab() {
 // ═══════════════════════════════════════════════
 
 function bKpi(num, label, color) {
-  return `<div style="background:var(--surface2);border:1px solid rgba(139,92,246,0.15);border-radius:12px;padding:14px;text-align:center">
-    <div style="font-size:1.4rem;font-weight:800;color:${color||'#8b5cf6'}">${num}</div>
+  return `<div style="background:var(--surface2);border:1px solid rgba(250,70,21,0.15);border-radius:12px;padding:14px;text-align:center">
+    <div style="font-size:1.4rem;font-weight:800;color:${color||'#FA4615'}">${num}</div>
     <div style="font-size:0.62rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-top:4px">${label}</div>
   </div>`;
 }
@@ -1587,7 +1587,7 @@ function bTopList(items, icon, metricLabel) {
     <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
       <span style="font-size:0.9rem">${['🥇','🥈','🥉','4️⃣','5️⃣'][i]||'#'}</span>
       <span style="flex:1;font-size:0.75rem;color:#e2e8f0">${icon} ${bEsc(id)}</span>
-      <span style="font-size:0.72rem;font-weight:700;color:#8b5cf6">${count} ${metricLabel}</span>
+      <span style="font-size:0.72rem;font-weight:700;color:#FA4615">${count} ${metricLabel}</span>
     </div>`).join('');
 }
 
@@ -1597,12 +1597,12 @@ function bEsc(str) {
 
 function bZoneBar(zone, count, maxV) {
   const names  = {mk2_1:'MK 2(1) Orange', mk2_2:'MK 2(2) Lila', mk2_3:'MK 2(3) Grün', mk2_4:'MK 2(4) Blau', plaza:'Gandhi-Platz'};
-  const colors = {mk2_1:'#d97706', mk2_2:'#7c3aed', mk2_3:'#059669', mk2_4:'#2563eb', plaza:'#8b5cf6'};
+  const colors = {mk2_1:'#d97706', mk2_2:'#d93e12', mk2_3:'#059669', mk2_4:'#2563eb', plaza:'#FA4615'};
   const pct = maxV > 0 ? (count / maxV * 100).toFixed(0) : 0;
   return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
     <div style="font-size:0.7rem;font-weight:600;width:110px;flex-shrink:0;color:${colors[zone]||'#e2e8f0'}">${names[zone]||zone}</div>
     <div style="flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.07);overflow:hidden">
-      <div style="height:100%;width:${pct}%;border-radius:4px;background:${colors[zone]||'#8b5cf6'}"></div>
+      <div style="height:100%;width:${pct}%;border-radius:4px;background:${colors[zone]||'#FA4615'}"></div>
     </div>
     <div style="font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.5);width:30px;text-align:right">${count}</div>
   </div>`;
@@ -1632,10 +1632,10 @@ function renderBetreiberDashboard() {
   const activeMerchants = merchants.filter(m => m.status === 'active').length;
   const el1 = document.getElementById('b-platform-kpis');
   if (el1) el1.innerHTML = [
-    bKpi(totalUsers,    'Nutzer gesamt',   '#8b5cf6'),
+    bKpi(totalUsers,    'Nutzer gesamt',   '#FA4615'),
     bKpi(activeToday,   'Aktiv heute',     '#22c55e'),
     bKpi(activeWeek,    'Aktiv diese Woche','#3b82f6'),
-    bKpi(newThisWeek,   'Neu diese Woche', '#f59e0b'),
+    bKpi(newThisWeek,   'Neu diese Woche', '#F7AB00'),
     bKpi(activeMerchants,'Aktive Händler', '#d97706'),
     bKpi(accounts.filter(a=>a.role==='merchant').length, 'Händler-Accounts', '#a855f7'),
   ].join('');
@@ -1645,8 +1645,8 @@ function renderBetreiberDashboard() {
   const allLikes    = posts.reduce((s, p) => s + (p.likes || 0), 0);
   const el2 = document.getElementById('b-community-kpis');
   if (el2) el2.innerHTML = [
-    bKpi(posts.filter(p=>p.status==='approved').length, 'Beiträge', '#8b5cf6'),
-    bKpi(posts.filter(p=>p.status==='pending').length,  'In Warteschlange', '#f59e0b'),
+    bKpi(posts.filter(p=>p.status==='approved').length, 'Beiträge', '#FA4615'),
+    bKpi(posts.filter(p=>p.status==='pending').length,  'In Warteschlange', '#F7AB00'),
     bKpi(allComments, 'Kommentare', '#22c55e'),
     bKpi(allLikes,    'Likes', '#ec4899'),
   ].join('');
@@ -1669,10 +1669,10 @@ function renderBetreiberDashboard() {
   const totalRegs  = events.reduce((s, e) => s + (e.registrations||[]).length, 0);
   const el3 = document.getElementById('b-event-kpis');
   if (el3) el3.innerHTML = [
-    bKpi(events.filter(e=>e.status==='active').length, 'Aktive Events', '#8b5cf6'),
+    bKpi(events.filter(e=>e.status==='active').length, 'Aktive Events', '#FA4615'),
     bKpi(totalRegs,  'Anmeldungen gesamt', '#22c55e'),
     bKpi(evViews,    'Aufrufe (Analytics)', '#3b82f6'),
-    bKpi(evCheckins, 'Check-ins', '#f59e0b'),
+    bKpi(evCheckins, 'Check-ins', '#F7AB00'),
   ].join('');
 
   // Top events by registrations
@@ -1689,10 +1689,10 @@ function renderBetreiberDashboard() {
   const dealRedeem = analytics.filter(e => e.type === 'deal_redeem').length;
   const el4 = document.getElementById('b-deal-kpis');
   if (el4) el4.innerHTML = [
-    bKpi(deals.filter(d=>d.status==='active').length, 'Aktive Deals', '#8b5cf6'),
+    bKpi(deals.filter(d=>d.status==='active').length, 'Aktive Deals', '#FA4615'),
     bKpi(dealViews,  'Deal-Aufrufe', '#3b82f6'),
     bKpi(dealSaves,  'Gespeichert', '#22c55e'),
-    bKpi(dealRedeem, 'Eingelöst', '#f59e0b'),
+    bKpi(dealRedeem, 'Eingelöst', '#F7AB00'),
   ].join('');
 
   // Top deals by views (from analytics)
@@ -1755,8 +1755,8 @@ function renderBetreiberDashboard() {
   const el7 = document.getElementById('b-revenue-kpis');
   if (el7) el7.innerHTML = [
     bKpi(activeContracts.length, 'Aktive Pakete', '#22c55e'),
-    bKpi(monthlyRevenue+'€', 'Monatl. Umsatz', '#8b5cf6'),
-    bKpi(premiumCount, 'Premium-Händler', '#f59e0b'),
+    bKpi(monthlyRevenue+'€', 'Monatl. Umsatz', '#FA4615'),
+    bKpi(premiumCount, 'Premium-Händler', '#F7AB00'),
     bKpi(trialContracts.length, 'In Testphase', '#3b82f6'),
   ].join('');
 
@@ -1768,7 +1768,7 @@ function renderBetreiberDashboard() {
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
         <div style="font-size:0.75rem;font-weight:600;color:#e2e8f0;width:110px;flex-shrink:0">${planNames[id]||id}</div>
         <div style="flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,0.07);overflow:hidden">
-          <div style="height:100%;width:${(count/maxC*100).toFixed(0)}%;border-radius:4px;background:linear-gradient(90deg,#6d28d9,#a78bfa)"></div>
+          <div style="height:100%;width:${(count/maxC*100).toFixed(0)}%;border-radius:4px;background:linear-gradient(90deg,#c43510,#ff6b3d)"></div>
         </div>
         <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.5);width:20px;text-align:right">${count}</div>
       </div>`).join('');
@@ -1779,8 +1779,8 @@ function renderBetreiberDashboard() {
     contractsEl.innerHTML = contracts.length ? contracts.slice().reverse().slice(0,10).map(c=>`
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
         <div style="flex:1"><div style="font-size:0.78rem;font-weight:600;color:#e2e8f0">${bEsc(c.plan_name)}</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.35)">${new Date(c.created_at).toLocaleDateString('de-DE')} · ${c.months} Mon.</div></div>
-        <div style="text-align:right"><div style="font-size:0.8rem;font-weight:700;color:#a78bfa">${c.price}€</div>
-        <span style="font-size:0.62rem;font-weight:700;padding:2px 8px;border-radius:12px;background:${c.status==='active'?'rgba(34,197,94,0.15)':c.status==='trial'?'rgba(245,158,11,0.15)':'rgba(239,68,68,0.1)'};color:${c.status==='active'?'#22c55e':c.status==='trial'?'#f59e0b':'#ef4444'}">${{active:'Aktiv',trial:'Test',cancelled:'Gekündigt',expired:'Abgelaufen'}[c.status]||c.status}</span></div>
+        <div style="text-align:right"><div style="font-size:0.8rem;font-weight:700;color:#ff6b3d">${c.price}€</div>
+        <span style="font-size:0.62rem;font-weight:700;padding:2px 8px;border-radius:12px;background:${c.status==='active'?'rgba(34,197,94,0.15)':c.status==='trial'?'rgba(247,171,0,0.15)':'rgba(239,68,68,0.1)'};color:${c.status==='active'?'#22c55e':c.status==='trial'?'#F7AB00':'#ef4444'}">${{active:'Aktiv',trial:'Test',cancelled:'Gekündigt',expired:'Abgelaufen'}[c.status]||c.status}</span></div>
       </div>`).join('') : '<div style="font-size:0.72rem;color:rgba(255,255,255,0.3);padding:8px 0">Noch keine Verträge</div>';
   }
 
@@ -1789,7 +1789,7 @@ function renderBetreiberDashboard() {
   try { for (let k in localStorage) { if (k.startsWith('zamclub')) storageUsed += (localStorage[k]||'').length; } } catch {}
   const storageMB = (storageUsed / 1024).toFixed(1);
   const pushPerm = ('Notification' in window) ? Notification.permission : 'unsupported';
-  const pushColor = {granted:'#22c55e',denied:'#ef4444',default:'#f59e0b',unsupported:'rgba(255,255,255,0.3)'}[pushPerm]||'#fff';
+  const pushColor = {granted:'#22c55e',denied:'#ef4444',default:'#F7AB00',unsupported:'rgba(255,255,255,0.3)'}[pushPerm]||'#fff';
   const swStatus = ('serviceWorker' in navigator) ? 'Unterstützt' : 'Nicht verfügbar';
   const analyticsCount = analytics.length;
   const errors = (() => { try { return JSON.parse(localStorage.getItem('zamclub_errors')||'[]'); } catch { return []; } })();
@@ -1797,7 +1797,7 @@ function renderBetreiberDashboard() {
   if (sysEl) sysEl.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       ${bKpi('OK', 'App-Status', '#22c55e')}
-      ${bKpi(storageMB+'KB', 'Speicher genutzt', '#8b5cf6')}
+      ${bKpi(storageMB+'KB', 'Speicher genutzt', '#FA4615')}
       ${bKpi(analyticsCount, 'Analytics-Events', '#3b82f6')}
       ${bKpi(errors.length, 'Fehler-Logs', errors.length>0?'#ef4444':'#22c55e')}
     </div>
@@ -1808,7 +1808,7 @@ function renderBetreiberDashboard() {
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
         <span style="font-size:0.78rem;color:#e2e8f0">Service Worker</span>
-        <span style="font-size:0.75rem;font-weight:700;color:${swStatus==='Unterstützt'?'#22c55e':'#f59e0b'}">${swStatus}</span>
+        <span style="font-size:0.75rem;font-weight:700;color:${swStatus==='Unterstützt'?'#22c55e':'#F7AB00'}">${swStatus}</span>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
         <span style="font-size:0.78rem;color:#e2e8f0">localStorage</span>
@@ -1816,7 +1816,7 @@ function renderBetreiberDashboard() {
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
         <span style="font-size:0.78rem;color:#e2e8f0">Supabase</span>
-        <span style="font-size:0.75rem;font-weight:700;color:#f59e0b">Vorbereitet (localStorage-Modus)</span>
+        <span style="font-size:0.75rem;font-weight:700;color:#F7AB00">Vorbereitet (localStorage-Modus)</span>
       </div>
     </div>
     ${errors.length ? `<div style="margin-top:12px"><div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(239,68,68,0.6);margin-bottom:8px">Fehler-Logs</div>${errors.slice(-5).reverse().map(e=>`<div style="font-size:0.7rem;color:#fca5a5;padding:6px 10px;background:rgba(239,68,68,0.08);border-radius:8px;margin-bottom:4px;font-family:monospace">${bEsc(JSON.stringify(e))}</div>`).join('')}</div>` : ''}`;
@@ -1838,9 +1838,9 @@ function renderAdminRewardStats() {
   const subs     = JSON.parse(localStorage.getItem('zam_photo_submissions')||'[]');
   const rewards  = JSON.parse(localStorage.getItem('zam_rewards')||'[]');
   const stats = [
-    { label:'Aktive Gutscheine',    value: rewards.filter(r=>r.status==='available').length, color:'#fbbf24' },
+    { label:'Aktive Gutscheine',    value: rewards.filter(r=>r.status==='available').length, color:'#F7AB00' },
     { label:'Eingelöst',            value: rewards.filter(r=>r.status==='redeemed').length,  color:'#34d399' },
-    { label:'Challenge-Fotos',      value: subs.length,                                      color:'#a78bfa' },
+    { label:'Challenge-Fotos',      value: subs.length,                                      color:'#ff6b3d' },
     { label:'Referral-Codes',       value: accounts.filter(a=>localStorage.getItem('zam_referral_'+a.id)).length, color:'#60a5fa' },
   ];
   el.innerHTML = stats.map(s => `
@@ -1873,9 +1873,9 @@ function renderAdminRewardStats() {
   chs.forEach(ch => { const c = subs.filter(s=>s.challenge_id===ch.id).length; if (c >= ch.required_photos_count) completed++; });
   const refCodes = accounts.filter(a => localStorage.getItem('zam_refcode_'+a.id)).length;
   [
-    { label:'Aktive Gutscheine',   value: rewards.filter(r=>r.status==='available').length, color:'#fbbf24' },
+    { label:'Aktive Gutscheine',   value: rewards.filter(r=>r.status==='available').length, color:'#F7AB00' },
     { label:'Eingelöst',           value: rewards.filter(r=>r.status==='redeemed').length,  color:'#34d399' },
-    { label:'Challenges abgesch.', value: completed,                                         color:'#a78bfa' },
+    { label:'Challenges abgesch.', value: completed,                                         color:'#ff6b3d' },
     { label:'Referral-Codes',      value: refCodes,                                          color:'#60a5fa' },
   ].forEach(s => {
     const d = document.createElement('div');
@@ -2018,11 +2018,11 @@ function renderAdminMerchantPreviewSelect() {
     return;
   }
   wrap.innerHTML = `
-    <select id="admin-preview-betreiber-select" style="width:100%;background:var(--surface-2,#18181f);border:1px solid rgba(139,92,246,0.3);color:#e2e8f0;border-radius:8px;padding:8px 12px;font-size:0.8rem;font-family:inherit;margin-bottom:10px">
+    <select id="admin-preview-betreiber-select" style="width:100%;background:var(--surface-2,#282828);border:1px solid rgba(250,70,21,0.3);color:#e2e8f0;border-radius:8px;padding:8px 12px;font-size:0.8rem;font-family:inherit;margin-bottom:10px">
       <option value="">— Händler auswählen —</option>
       ${invites.map(i => `<option value='${JSON.stringify(i).replace(/'/g,"&apos;")}'>${i.shopname}</option>`).join('')}
     </select>
-    <button onclick="adminOpenMerchantPreviewFromSelect()" style="width:100%;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:8px;padding:10px;font-size:0.8rem;font-weight:700;font-family:inherit;cursor:pointer">
+    <button onclick="adminOpenMerchantPreviewFromSelect()" style="width:100%;background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border:none;border-radius:8px;padding:10px;font-size:0.8rem;font-weight:700;font-family:inherit;cursor:pointer">
       👁 Dashboard ansehen
     </button>`;
 }

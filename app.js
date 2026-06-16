@@ -290,19 +290,19 @@ function renderHome() {
       const shopLabel = user.role === 'admin' ? 'Admin-Vorschau aktiv' : (user.display_name || user.name || 'Demo Händler');
       toolsCard.style.display = 'block';
       toolsCard.innerHTML = `
-        <div style="background:linear-gradient(135deg,rgba(109,40,217,0.25),rgba(139,92,246,0.15));border:1px solid rgba(139,92,246,0.35);border-radius:16px;padding:16px">
+        <div style="background:linear-gradient(135deg,rgba(196,53,16,0.25),rgba(250,70,21,0.15));border:1px solid rgba(250,70,21,0.35);border-radius:16px;padding:16px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
             <span style="font-size:1.3rem">🏪</span>
             <div>
-              <div style="font-size:0.9rem;font-weight:800;color:#c4b5fd">Händler Tools</div>
-              <div style="font-size:0.68rem;color:rgba(139,92,246,0.7)">${escHtml(shopLabel)}</div>
+              <div style="font-size:0.9rem;font-weight:800;color:#ffb399">Händler Tools</div>
+              <div style="font-size:0.68rem;color:rgba(250,70,21,0.7)">${escHtml(shopLabel)}</div>
             </div>
             <div style="margin-left:auto;background:rgba(16,185,129,0.15);border:1px solid rgba(52,211,153,0.3);border-radius:6px;padding:2px 8px;font-size:0.62rem;font-weight:700;color:#34d399">● AKTIV</div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <button id="ht-qr"     style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:10px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer;grid-column:1/-1"><span style="font-size:1.1rem">📷</span> QR-Code scannen</button>
+            <button id="ht-qr"     style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border:none;border-radius:10px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer;grid-column:1/-1"><span style="font-size:1.1rem">📷</span> QR-Code scannen</button>
             <button id="ht-event"  style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>📅</span> Event einreichen</button>
-            <button id="ht-deal"   style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#fbbf24;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>🏷️</span> Deal einreichen</button>
+            <button id="ht-deal"   style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(247,171,0,0.15);border:1px solid rgba(247,171,0,0.3);color:#F7AB00;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>🏷️</span> Deal einreichen</button>
             <button id="ht-stats"  style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>📊</span> Statistiken</button>
             <button id="ht-dash"   style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>⚙️</span> Mein Dashboard</button>
           </div>
@@ -518,7 +518,7 @@ function initDailySpin() {
 function _spinKey() { return 'zamclub_spin_' + (ZAMApi.auth.currentUser()?.id || 'guest'); }
 function _todayStr() { return new Date().toISOString().slice(0, 10); }
 
-const _SPIN_COLORS = ['#f59e0b', '#8b5cf6', '#10b981', '#3b82f6', '#ec4899', '#ef4444'];
+const _SPIN_COLORS = ['#F7AB00', '#FA4615', '#10b981', '#3b82f6', '#ec4899', '#ef4444'];
 
 function _buildSpinCards(disabled = false) {
   const grid = $('#spin-cards-grid');
@@ -723,7 +723,7 @@ function generateQRGrid() {
   for (let i = 0; i < size * size; i++) {
     const cell = el('div', 'qr-cell');
     const filled = ((i * 13 + 7) % 3 !== 0);
-    cell.style.background = filled ? '#1a1a2e' : 'white';
+    cell.style.background = filled ? '#1a1a1a' : 'white';
     container.appendChild(cell);
   }
 }
@@ -755,11 +755,11 @@ function renderPostCard(post, idx) {
 
   const tagsHtml = (post.tags || []).map(t => `<span class="post-tag">${t}</span>`).join('');
   const deleteBtn = isOwn ? `<button class="post-delete-btn" title="Löschen" aria-label="Beitrag löschen">🗑</button>` : '';
-  const statusBadge = post.status === 'pending' ? `<span style="font-size:0.68rem;color:#f59e0b;margin-left:6px">⏳ ausstehend</span>` : '';
+  const statusBadge = post.status === 'pending' ? `<span style="font-size:0.68rem;color:#F7AB00;margin-left:6px">⏳ ausstehend</span>` : '';
 
   div.innerHTML = `
     <div class="post-header">
-      <div class="post-avatar" style="background:${post.author?.avatar_color || '#8b5cf6'}">${post.author?.initials || '?'}</div>
+      <div class="post-avatar" style="background:${post.author?.avatar_color || '#FA4615'}">${post.author?.initials || '?'}</div>
       <div class="post-author-info">
         <div class="post-author-name">${post.author?.name || 'Unbekannt'}${statusBadge}</div>
         <div class="post-author-level">${post.author?.level || 'Member'}</div>
@@ -1144,7 +1144,7 @@ async function renderSavedSummary() {
   container.innerHTML = [
     savedEventsArr.length ? `<div class="saved-chip" onclick="navigateTo('events')">🔖 ${savedEventsArr.length} Event${savedEventsArr.length !== 1 ? 's' : ''} gemerkt</div>` : '',
     savedDealsArr.length ? `<div class="saved-chip" onclick="navigateTo('deals')">🏷️ ${savedDealsArr.length} Deal${savedDealsArr.length !== 1 ? 's' : ''} gemerkt</div>` : '',
-    savedDealsArr.length ? `<div class="saved-chip" onclick="openSavedDeals()" style="background:var(--primary,#8b5cf6);color:white;border-color:var(--primary,#8b5cf6)">Gespeicherte Deals →</div>` : '',
+    savedDealsArr.length ? `<div class="saved-chip" onclick="openSavedDeals()" style="background:var(--primary,#FA4615);color:white;border-color:var(--primary,#FA4615)">Gespeicherte Deals →</div>` : '',
   ].join('');
 }
 
@@ -1177,16 +1177,16 @@ function renderRoleActions() {
     });
     // Admin can also see merchant tools
     container.innerHTML += `
-      <div style="background:rgba(109,40,217,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:14px;padding:14px 16px;margin-top:4px">
-        <div style="font-size:0.72rem;font-weight:700;color:rgba(196,181,253,0.7);margin-bottom:10px">🏪 Händler Tools (Admin)</div>
+      <div style="background:rgba(196,53,16,0.1);border:1px solid rgba(250,70,21,0.2);border-radius:14px;padding:14px 16px;margin-top:4px">
+        <div style="font-size:0.72rem;font-weight:700;color:rgba(255,179,153,0.7);margin-bottom:10px">🏪 Händler Tools (Admin)</div>
         <button class="btn btn-ghost btn-full" onclick="openQRScanner()" style="margin-bottom:6px">📷 QR-Code scannen</button>
         <button class="btn btn-ghost btn-full" onclick="openMerchantStatsOverlay()" style="margin-bottom:6px">📊 Händler-Statistiken</button>
         <button class="btn btn-ghost btn-full" onclick="openMerchantDealModal()">🏷️ Demo Deal einreichen</button>
       </div>`;
   } else if (user.role === 'merchant') {
     container.innerHTML = `
-      <div style="background:linear-gradient(135deg,rgba(109,40,217,0.2),rgba(139,92,246,0.1));border:1px solid rgba(139,92,246,0.3);border-radius:14px;padding:14px 16px;margin-bottom:12px">
-        <div style="font-size:0.78rem;font-weight:800;color:#c4b5fd;margin-bottom:12px">🏪 Händler Tools</div>
+      <div style="background:linear-gradient(135deg,rgba(196,53,16,0.2),rgba(250,70,21,0.1));border:1px solid rgba(250,70,21,0.3);border-radius:14px;padding:14px 16px;margin-bottom:12px">
+        <div style="font-size:0.78rem;font-weight:800;color:#ffb399;margin-bottom:12px">🏪 Händler Tools</div>
         <button class="btn btn-primary btn-full" onclick="openQRScanner()" style="margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px">
           📷 QR-Code scannen
         </button>
@@ -1205,9 +1205,9 @@ function renderRoleActions() {
       </div>`;
   } else if (user.role === 'merchant' && user.merchant_status === 'pending') {
     container.innerHTML = `
-      <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:14px 16px;text-align:center;margin-bottom:8px">
+      <div style="background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.25);border-radius:12px;padding:14px 16px;text-align:center;margin-bottom:8px">
         <div style="font-size:1.4rem;margin-bottom:6px">⏳</div>
-        <div style="font-size:0.8rem;font-weight:700;color:#fbbf24;margin-bottom:4px">Zugang wird geprüft</div>
+        <div style="font-size:0.8rem;font-weight:700;color:#F7AB00;margin-bottom:4px">Zugang wird geprüft</div>
         <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);line-height:1.6">Das ZAM Center Management prüft deinen Händlerzugang. Du wirst benachrichtigt.</div>
       </div>`;
   } else {
@@ -1356,7 +1356,7 @@ function _renderMessages() {
     const time  = new Date(m.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     return `
       <div class="chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}" data-msg-id="${m.id}">
-        ${!isOwn ? `<div class="chat-msg-avatar" style="background:${m.author.color || '#8b5cf6'}">${m.author.initials || '?'}</div>` : ''}
+        ${!isOwn ? `<div class="chat-msg-avatar" style="background:${m.author.color || '#FA4615'}">${m.author.initials || '?'}</div>` : ''}
         <div class="chat-msg-bubble-wrap">
           ${!isOwn ? `<div class="chat-msg-name">${m.author.name}</div>` : ''}
           <div class="chat-msg-bubble">${m.content}</div>
@@ -1786,7 +1786,7 @@ function openVoucherQR(dealId, dealTitle, merchantId) {
     new QRCode(canvas, {
       text: qrPayload,
       width: 200, height: 200,
-      colorDark: '#090910', colorLight: '#ffffff',
+      colorDark: '#1a1a1a', colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.M
     });
   } else {
@@ -2043,7 +2043,7 @@ async function loadComments(postId) {
   comments.forEach(c => {
     const item = el('div', 'comment-item');
     item.innerHTML = `
-      <div class="comment-avatar" style="background:${c.author.avatar_color || '#8b5cf6'}">${c.author.initials}</div>
+      <div class="comment-avatar" style="background:${c.author.avatar_color || '#FA4615'}">${c.author.initials}</div>
       <div class="comment-body">
         <div class="comment-author">${c.author.name}</div>
         <div class="comment-text">${c.content}</div>
@@ -2077,7 +2077,7 @@ function initComments() {
     if (listEl) {
       const item = el('div', 'comment-item');
       item.innerHTML = `
-        <div class="comment-avatar" style="background:${comment.author.avatar_color || '#8b5cf6'}">${comment.author.initials}</div>
+        <div class="comment-avatar" style="background:${comment.author.avatar_color || '#FA4615'}">${comment.author.initials}</div>
         <div class="comment-body">
           <div class="comment-author">${comment.author.name}</div>
           <div class="comment-text">${comment.content}</div>
@@ -2226,7 +2226,7 @@ async function openSavedDeals() {
         <div style="flex:1">
           <div style="font-weight:600;font-size:0.88rem">${d.title}</div>
           <div style="font-size:0.75rem;color:var(--color-text-muted)">${d.store_name || ''} · ${d.expiry_formatted || ''}</div>
-          <div style="font-size:0.78rem;color:${d.category_color || '#8b5cf6'};margin-top:2px">${d.discount}</div>
+          <div style="font-size:0.78rem;color:${d.category_color || '#FA4615'};margin-top:2px">${d.discount}</div>
         </div>
       </div>
     </div>
@@ -2369,7 +2369,7 @@ function renderContacts() {
 }
 
 function _avatarColor(userId) {
-  const colors = ['#8b5cf6', '#7c3aed', '#10b981', '#3b82f6', '#ec4899', '#f59e0b', '#06b6d4'];
+  const colors = ['#FA4615', '#d93e12', '#10b981', '#3b82f6', '#ec4899', '#F7AB00', '#06b6d4'];
   let hash = 0;
   for (let i = 0; i < userId.length; i++) hash = userId.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];
@@ -2429,10 +2429,10 @@ function renderNudgeInbox() {
       updateCommunityBadge();
       // Show toast with chat button
       const toastEl = document.createElement('div');
-      toastEl.style.cssText = 'position:fixed;bottom:calc(var(--nav-h,64px) + 12px);left:50%;transform:translateX(-50%);z-index:9999;background:#1a0533;border:1px solid rgba(139,92,246,0.4);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);font-family:var(--font);max-width:92vw;animation:fadeUp 0.25s ease both';
+      toastEl.style.cssText = 'position:fixed;bottom:calc(var(--nav-h,64px) + 12px);left:50%;transform:translateX(-50%);z-index:9999;background:#2a1a10;border:1px solid rgba(250,70,21,0.4);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);font-family:var(--font);max-width:92vw;animation:fadeUp 0.25s ease both';
       toastEl.innerHTML = `
         <span style="font-size:0.84rem;color:#e2e8f0;font-weight:600">🤝 Verbunden mit <strong>${n.from_name}</strong>!</span>
-        <button style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:none;border-radius:9px;padding:7px 14px;color:#fff;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap" onclick="this.closest('div[style]').remove();navigateTo('community');setTimeout(()=>openPrivateChat('${n.from_id}','${(n.from_name||'').replace(/'/g,"\\'")}','${(n.from_initials||'').replace(/'/g,"\\'")}',null),250)">💬 Jetzt chatten</button>`;
+        <button style="background:linear-gradient(135deg,#c43510,#FA4615);border:none;border-radius:9px;padding:7px 14px;color:#fff;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap" onclick="this.closest('div[style]').remove();navigateTo('community');setTimeout(()=>openPrivateChat('${n.from_id}','${(n.from_name||'').replace(/'/g,"\\'")}','${(n.from_initials||'').replace(/'/g,"\\'")}',null),250)">💬 Jetzt chatten</button>`;
       document.body.appendChild(toastEl);
       setTimeout(() => toastEl.remove(), 6000);
     });
@@ -3155,9 +3155,9 @@ function renderMerchantDashboard() {
   if (!previewMerchant && me.merchant_status === 'pending') {
     const kpiGrid = document.getElementById('merchant-kpi-grid');
     if (kpiGrid) kpiGrid.innerHTML = `
-      <div style="grid-column:1/-1;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:14px;padding:28px 20px;text-align:center">
+      <div style="grid-column:1/-1;background:rgba(247,171,0,0.1);border:1px solid rgba(247,171,0,0.3);border-radius:14px;padding:28px 20px;text-align:center">
         <div style="font-size:2.5rem;margin-bottom:12px">⏳</div>
-        <div style="font-size:0.95rem;font-weight:700;color:#fbbf24;margin-bottom:8px">Zugang wird geprüft</div>
+        <div style="font-size:0.95rem;font-weight:700;color:#F7AB00;margin-bottom:8px">Zugang wird geprüft</div>
         <div style="font-size:0.76rem;color:rgba(255,255,255,0.45);line-height:1.7">Dein Händlerzugang wurde beantragt und wird<br>vom ZAM Center Management geprüft.<br><br>Du erhältst eine Benachrichtigung,<br>sobald dein Zugang freigeschaltet ist.</div>
       </div>`;
     return;
@@ -3258,7 +3258,7 @@ function renderMerchantDashboard() {
             <div class="dash-row-name" style="font-family:monospace;letter-spacing:0.05em">${v.code}</div>
             <div class="dash-row-sub">${v.status === 'redeemed' ? '✅ Eingelöst' : '⏳ Aktiv'}</div>
           </div>
-          <div class="dash-row-val" style="font-size:0.65rem;color:${v.status==='redeemed'?'#34d399':'#f59e0b'}">${v.status.toUpperCase()}</div>
+          <div class="dash-row-val" style="font-size:0.65rem;color:${v.status==='redeemed'?'#34d399':'#F7AB00'}">${v.status.toUpperCase()}</div>
         </div>`).join('');
     }
   }
@@ -3328,7 +3328,7 @@ function renderAdminMerchants(containerId) {
   const invites = _getMerchantInvites();
   const pending = _getPendingMerchants();
 
-  const inputStyle = 'width:100%;background:var(--surface-2);border:1px solid rgba(139,92,246,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none;box-sizing:border-box';
+  const inputStyle = 'width:100%;background:var(--surface-2);border:1px solid rgba(250,70,21,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none;box-sizing:border-box';
 
   ct.innerHTML = `
     <div style="margin-bottom:20px">
@@ -3352,7 +3352,7 @@ function renderAdminMerchants(containerId) {
           <option value="plaza">Mahatma-Gandhi-Platz</option>
         </select>
         <div id="inv-error" style="display:none;font-size:0.74rem;color:#f87171;padding:4px 0"></div>
-        <button onclick="adminSendMerchantInvite()" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.84rem;font-weight:700;font-family:var(--font);cursor:pointer;width:100%">
+        <button onclick="adminSendMerchantInvite()" style="background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.84rem;font-weight:700;font-family:var(--font);cursor:pointer;width:100%">
           📧 Händler einladen
         </button>
       </div>
@@ -3360,9 +3360,9 @@ function renderAdminMerchants(containerId) {
 
     ${pending.length ? `
     <div style="margin-bottom:20px">
-      <h3 style="font-size:0.88rem;font-weight:700;color:#fbbf24;margin-bottom:10px">⏳ Händler freigeben (${pending.length})</h3>
+      <h3 style="font-size:0.88rem;font-weight:700;color:#F7AB00;margin-bottom:10px">⏳ Händler freigeben (${pending.length})</h3>
       ${pending.map(m => `
-        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:12px 14px;margin-bottom:8px">
+        <div style="background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.25);border-radius:12px;padding:12px 14px;margin-bottom:8px">
           <div style="font-size:0.84rem;font-weight:700;color:#e2e8f0;margin-bottom:2px">${escHtml(m.shopname)}</div>
           <div style="font-size:0.7rem;color:rgba(255,255,255,0.45);margin-bottom:10px">${escHtml(m.email)} · ${escHtml(m.category||'')} · ${escHtml(m.zone||'')}</div>
           <div style="display:flex;gap:6px">
@@ -3381,10 +3381,10 @@ function renderAdminMerchants(containerId) {
               ? 'background:rgba(5,150,105,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3)'
               : inv.status === 'rejected'
               ? 'background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)'
-              : 'background:rgba(245,158,11,0.1);color:#fbbf24;border:1px solid rgba(245,158,11,0.25)';
+              : 'background:rgba(247,171,0,0.1);color:#F7AB00;border:1px solid rgba(247,171,0,0.25)';
             const statusLabel = inv.status === 'approved' ? 'Aktiv' : inv.status === 'rejected' ? 'Abgelehnt' : 'Ausstehend';
             return `
-            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(139,92,246,0.15);border-radius:12px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px">
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(250,70,21,0.15);border-radius:12px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px">
               <div style="flex:1;min-width:0">
                 <div style="font-size:0.82rem;font-weight:700;color:#e2e8f0">${escHtml(inv.shopname)}</div>
                 <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(inv.email)}</div>
@@ -3466,14 +3466,14 @@ function renderAdminMerchants(containerId) {
     <div style="margin-bottom:20px">
       <h3 style="font-size:0.9rem;font-weight:700;color:#e2e8f0;margin-bottom:12px">➕ Händler einladen</h3>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <input id="inv-shopname" placeholder="Shopname *" class="input-field" style="background:var(--surface-2);border:1px solid rgba(139,92,246,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none"/>
-        <input id="inv-email" type="email" placeholder="Händler E-Mail *" class="input-field" style="background:var(--surface-2);border:1px solid rgba(139,92,246,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none"/>
-        <input id="inv-contact" placeholder="Ansprechpartner *" class="input-field" style="background:var(--surface-2);border:1px solid rgba(139,92,246,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none"/>
-        <select id="inv-category" style="background:var(--surface-2);border:1px solid rgba(139,92,246,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none">
+        <input id="inv-shopname" placeholder="Shopname *" class="input-field" style="background:var(--surface-2);border:1px solid rgba(250,70,21,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none"/>
+        <input id="inv-email" type="email" placeholder="Händler E-Mail *" class="input-field" style="background:var(--surface-2);border:1px solid rgba(250,70,21,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none"/>
+        <input id="inv-contact" placeholder="Ansprechpartner *" class="input-field" style="background:var(--surface-2);border:1px solid rgba(250,70,21,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none"/>
+        <select id="inv-category" style="background:var(--surface-2);border:1px solid rgba(250,70,21,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none">
           <option value="">Kategorie wählen…</option>
           <option>Mode</option><option>Gastronomie</option><option>Elektronik</option><option>Drogerie</option><option>Sport</option><option>Lebensmittel</option><option>Bücher &amp; Medien</option><option>Kosmetik &amp; Beauty</option><option>Dienstleistungen</option><option>Sonstiges</option>
         </select>
-        <select id="inv-zone" style="background:var(--surface-2);border:1px solid rgba(139,92,246,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none">
+        <select id="inv-zone" style="background:var(--surface-2);border:1px solid rgba(250,70,21,0.25);color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-family:var(--font);outline:none">
           <option value="mk2_1">MK 2(1) – Nahversorgung / Gastro</option>
           <option value="mk2_2">MK 2(2) – Zentrenrelevante Sortimente</option>
           <option value="mk2_3">MK 2(3) – Zentrenrelevante Sortimente</option>
@@ -3481,7 +3481,7 @@ function renderAdminMerchants(containerId) {
           <option value="plaza">Mahatma-Gandhi-Platz</option>
         </select>
         <div id="inv-error" style="display:none;font-size:0.74rem;color:#f87171;padding:6px 0"></div>
-        <button onclick="adminSendMerchantInvite()" style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.84rem;font-weight:700;font-family:var(--font);cursor:pointer">
+        <button onclick="adminSendMerchantInvite()" style="background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border:none;border-radius:10px;padding:12px;font-size:0.84rem;font-weight:700;font-family:var(--font);cursor:pointer">
           📧 Händler einladen
         </button>
       </div>
@@ -3489,9 +3489,9 @@ function renderAdminMerchants(containerId) {
 
     ${pending.length ? `
     <div style="margin-bottom:20px">
-      <h3 style="font-size:0.9rem;font-weight:700;color:#fbbf24;margin-bottom:10px">⏳ Händler freigeben (${pending.length})</h3>
+      <h3 style="font-size:0.9rem;font-weight:700;color:#F7AB00;margin-bottom:10px">⏳ Händler freigeben (${pending.length})</h3>
       ${pending.map(m => `
-        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:12px 14px;margin-bottom:8px">
+        <div style="background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.25);border-radius:12px;padding:12px 14px;margin-bottom:8px">
           <div style="font-size:0.84rem;font-weight:700;color:#e2e8f0;margin-bottom:2px">${escHtml(m.shopname)}</div>
           <div style="font-size:0.7rem;color:rgba(255,255,255,0.45);margin-bottom:10px">${escHtml(m.email)} · ${escHtml(m.category||'')} · ${escHtml(m.zone||'')}</div>
           <div style="display:flex;gap:6px">
@@ -3505,20 +3505,20 @@ function renderAdminMerchants(containerId) {
       <h3 style="font-size:0.9rem;font-weight:700;color:#e2e8f0;margin-bottom:10px">📋 Eingeladene Händler (${invites.length})</h3>
       ${invites.length === 0 ? `<div style="font-size:0.74rem;color:rgba(255,255,255,0.3);text-align:center;padding:16px 0">Noch keine Einladungen</div>` :
         invites.map(inv => `
-          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(139,92,246,0.15);border-radius:12px;padding:12px 14px;margin-bottom:6px">
+          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(250,70,21,0.15);border-radius:12px;padding:12px 14px;margin-bottom:6px">
             <div style="display:flex;align-items:center;gap:10px">
               <div style="flex:1">
                 <div style="font-size:0.82rem;font-weight:700;color:#e2e8f0">${escHtml(inv.shopname)}</div>
                 <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);margin-top:2px">${escHtml(inv.email)} · ${escHtml(inv.category||'')} · ${escHtml(inv.zone||'')}</div>
                 <div style="font-size:0.65rem;color:rgba(255,255,255,0.25);margin-top:2px">Eingeladen: ${new Date(inv.ts).toLocaleDateString('de-DE')}</div>
               </div>
-              <div style="font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:6px;flex-shrink:0;${inv.status==='approved'?'background:rgba(5,150,105,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3)':inv.status==='rejected'?'background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)':'background:rgba(245,158,11,0.1);color:#fbbf24;border:1px solid rgba(245,158,11,0.25)'}">
+              <div style="font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:6px;flex-shrink:0;${inv.status==='approved'?'background:rgba(5,150,105,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3)':inv.status==='rejected'?'background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)':'background:rgba(247,171,0,0.1);color:#F7AB00;border:1px solid rgba(247,171,0,0.25)'}">
                 ${inv.status==='approved'?'Aktiv':inv.status==='rejected'?'Abgelehnt':'Ausstehend'}
               </div>
             </div>
             ${inv.status === 'approved' ? `
             <div style="margin-top:8px">
-              <button onclick="adminOpenMerchantPreview(${JSON.stringify(JSON.stringify(inv))})" style="width:100%;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);border-radius:8px;padding:7px;color:#c4b5fd;font-size:0.74rem;font-weight:700;font-family:var(--font);cursor:pointer">
+              <button onclick="adminOpenMerchantPreview(${JSON.stringify(JSON.stringify(inv))})" style="width:100%;background:rgba(250,70,21,0.12);border:1px solid rgba(250,70,21,0.3);border-radius:8px;padding:7px;color:#ffb399;font-size:0.74rem;font-weight:700;font-family:var(--font);cursor:pointer">
                 👁 Als Händler anzeigen
               </button>
             </div>` : ''}
@@ -3611,13 +3611,13 @@ function renderAdminDashboard() {
   const zoneEl = document.getElementById('zone-popularity');
   if (zoneEl && stats.zoneVisits) {
     const zoneNames  = {mk2_1:'MK 2(1)', mk2_2:'MK 2(2)', mk2_3:'MK 2(3)', mk2_4:'MK 2(4)', plaza:'Gandhi-Platz'};
-    const zoneColors = {mk2_1:'#d97706', mk2_2:'#7c3aed', mk2_3:'#059669', mk2_4:'#2563eb', plaza:'#8b5cf6'};
+    const zoneColors = {mk2_1:'#d97706', mk2_2:'#d93e12', mk2_3:'#059669', mk2_4:'#2563eb', plaza:'#FA4615'};
     const zoneEntries = Object.entries(stats.zoneVisits).sort((a,b)=>b[1]-a[1]);
     const maxV = Math.max(...zoneEntries.map(z=>z[1]), 1);
     zoneEl.innerHTML = `<div class="dash-table-wrap">${zoneEntries.map(([zone, count]) => `
       <div class="zone-bar-row">
         <div class="zone-bar-name" style="color:${zoneColors[zone]||'#e2e8f0'}">${zoneNames[zone]||zone}</div>
-        <div class="zone-bar-track"><div class="zone-bar-fill" style="width:${(count/maxV*100).toFixed(0)}%;background:${zoneColors[zone]||'#8b5cf6'}"></div></div>
+        <div class="zone-bar-track"><div class="zone-bar-fill" style="width:${(count/maxV*100).toFixed(0)}%;background:${zoneColors[zone]||'#FA4615'}"></div></div>
         <div class="zone-bar-count">${count}</div>
       </div>`).join('')}</div>`;
   }
@@ -3640,14 +3640,14 @@ function renderAdminDashboard() {
   }
   const invites = _getMerchantInvites().filter(i => i.status === 'approved');
   previewBtnWrap.innerHTML = `
-    <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.25);border-radius:14px;padding:14px 16px;margin-bottom:12px">
-      <div style="font-size:0.82rem;font-weight:700;color:#c4b5fd;margin-bottom:10px">👁 Händler-Dashboard ansehen</div>
+    <div style="background:rgba(250,70,21,0.08);border:1px solid rgba(250,70,21,0.25);border-radius:14px;padding:14px 16px;margin-bottom:12px">
+      <div style="font-size:0.82rem;font-weight:700;color:#ffb399;margin-bottom:10px">👁 Händler-Dashboard ansehen</div>
       ${invites.length === 0 ? '<div style="font-size:0.74rem;color:var(--dim)">Noch keine freigegebenen Händler.</div>' :
-        `<select id="admin-preview-select" style="width:100%;background:var(--surface-2);border:1px solid rgba(139,92,246,0.3);color:#e2e8f0;border-radius:8px;padding:8px 12px;font-size:0.8rem;font-family:var(--font);margin-bottom:8px">
+        `<select id="admin-preview-select" style="width:100%;background:var(--surface-2);border:1px solid rgba(250,70,21,0.3);color:#e2e8f0;border-radius:8px;padding:8px 12px;font-size:0.8rem;font-family:var(--font);margin-bottom:8px">
           <option value="">— Händler auswählen —</option>
           ${invites.map(i => `<option value="${escHtml(i.id)}">${escHtml(i.shopname)}</option>`).join('')}
         </select>
-        <button onclick="adminQuickPreviewSelected()" style="width:100%;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:8px;padding:10px;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer">
+        <button onclick="adminQuickPreviewSelected()" style="width:100%;background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border:none;border-radius:8px;padding:10px;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer">
           👁 Dashboard ansehen
         </button>`
       }
@@ -3797,10 +3797,10 @@ function renderMerchantPackages() {
   const active = ZAMApi.contracts.getActive();
   const plans = ZAMApi.packages.PLANS;
   el.innerHTML = `
-    ${active ? `<div class="contract-card" style="margin-bottom:16px;border-color:rgba(139,92,246,0.3)">
+    ${active ? `<div class="contract-card" style="margin-bottom:16px;border-color:rgba(250,70,21,0.3)">
       <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-bottom:4px">AKTUELLES PAKET</div>
-      <div style="font-size:1.1rem;font-weight:800;color:#8b5cf6">${active.plan_name}</div>
-      <div style="margin-top:6px"><span class="contract-status" style="background:${active.status==='active'?'rgba(34,197,94,0.15)':'rgba(245,158,11,0.15)'};color:${ZAMApi.contracts.statusColor(active.status)}">${ZAMApi.contracts.statusLabel(active.status)}</span>
+      <div style="font-size:1.1rem;font-weight:800;color:#FA4615">${active.plan_name}</div>
+      <div style="margin-top:6px"><span class="contract-status" style="background:${active.status==='active'?'rgba(34,197,94,0.15)':'rgba(247,171,0,0.15)'};color:${ZAMApi.contracts.statusColor(active.status)}">${ZAMApi.contracts.statusLabel(active.status)}</span>
       <span style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-left:8px">bis ${new Date(active.ends_at).toLocaleDateString('de-DE')}</span></div>
     </div>` : '<p style="font-size:0.82rem;color:rgba(255,255,255,0.5);margin-bottom:16px">Kein aktives Paket. Wähle ein Paket um loszulegen.</p>'}
     <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:12px">${active ? 'Upgrade' : 'Paket wählen'}</div>
@@ -3841,9 +3841,9 @@ function renderMerchantContracts() {
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
         <div><div class="contract-card-title">${escHtml(c.plan_name)}</div>
         <div class="contract-card-meta">${new Date(c.started_at).toLocaleDateString('de-DE')} – ${new Date(c.ends_at).toLocaleDateString('de-DE')} · ${c.months} Monat${c.months>1?'e':''}</div></div>
-        <span class="contract-status" style="background:${c.status==='active'?'rgba(34,197,94,0.15)':c.status==='trial'?'rgba(245,158,11,0.15)':'rgba(239,68,68,0.1)'};color:${ZAMApi.contracts.statusColor(c.status)};white-space:nowrap">${ZAMApi.contracts.statusLabel(c.status)}</span>
+        <span class="contract-status" style="background:${c.status==='active'?'rgba(34,197,94,0.15)':c.status==='trial'?'rgba(247,171,0,0.15)':'rgba(239,68,68,0.1)'};color:${ZAMApi.contracts.statusColor(c.status)};white-space:nowrap">${ZAMApi.contracts.statusLabel(c.status)}</span>
       </div>
-      <div style="font-size:0.85rem;font-weight:700;color:#8b5cf6;margin-top:10px">${c.price}€ gesamt</div>
+      <div style="font-size:0.85rem;font-weight:700;color:#FA4615;margin-top:10px">${c.price}€ gesamt</div>
       ${c.status==='trial' ? `<div style="margin-top:10px"><button class="btn btn-primary" style="padding:8px 16px;font-size:0.75rem" onclick="activateContract('${c.id}')">Jetzt aktivieren</button></div>` : ''}
       ${c.status==='active' ? `<div style="margin-top:10px"><button class="btn btn-ghost" style="padding:8px 16px;font-size:0.75rem;color:rgba(239,68,68,0.7);border-color:rgba(239,68,68,0.2)" onclick="cancelContract('${c.id}')">Kündigen</button></div>` : ''}
     </div>`).join('');
@@ -3863,9 +3863,9 @@ function renderMerchantBilling() {
     return;
   }
   el.innerHTML = `
-    ${active ? `<div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:14px;margin-bottom:16px">
+    ${active ? `<div style="background:rgba(250,70,21,0.1);border:1px solid rgba(250,70,21,0.2);border-radius:12px;padding:14px;margin-bottom:16px">
       <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-bottom:4px">LAUFENDES PAKET</div>
-      <div style="font-size:0.95rem;font-weight:700;color:#c4b5fd">${escHtml(active.plan_name)} — ${ZAMApi.packages.PLANS[active.plan_id]?.price||0}€/Monat</div>
+      <div style="font-size:0.95rem;font-weight:700;color:#ffb399">${escHtml(active.plan_name)} — ${ZAMApi.packages.PLANS[active.plan_id]?.price||0}€/Monat</div>
       <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:4px">Status: <span style="color:${ZAMApi.contracts.statusColor(active.status)}">${ZAMApi.contracts.statusLabel(active.status)}</span></div>
     </div>` : ''}
     <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.35);margin-bottom:10px">Rechnungshistorie</div>
@@ -3876,7 +3876,7 @@ function renderMerchantBilling() {
           <div style="margin-left:auto;text-align:right">
             <div class="invoice-amount">${inv.amount}€</div>
             <span class="invoice-status ${inv.status}">${inv.status==='paid'?'Bezahlt':'Ausstehend'}</span>
-            ${inv.status==='pending' ? `<br><button style="font-size:0.65rem;color:#8b5cf6;background:none;border:none;cursor:pointer;margin-top:4px;font-family:var(--font)" onclick="markInvoicePaid('${inv.id}')">Als bezahlt markieren</button>` : ''}
+            ${inv.status==='pending' ? `<br><button style="font-size:0.65rem;color:#FA4615;background:none;border:none;cursor:pointer;margin-top:4px;font-family:var(--font)" onclick="markInvoicePaid('${inv.id}')">Als bezahlt markieren</button>` : ''}
           </div>
         </div>`).join('')}
     </div>`;
@@ -3935,7 +3935,7 @@ function renderAdminRevenue() {
       ${contracts.length ? contracts.slice().reverse().map(c => `
         <div class="invoice-row">
           <div><div style="font-size:0.78rem;font-weight:600;color:#e2e8f0">${escHtml(c.plan_name)}</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.3)">${new Date(c.created_at).toLocaleDateString('de-DE')} · ${c.months} Mon.</div></div>
-          <div style="margin-left:auto;text-align:right"><div style="font-size:0.85rem;font-weight:700;color:#a78bfa">${c.price}€</div><span class="contract-status" style="background:${c.status==='active'?'rgba(34,197,94,0.15)':c.status==='trial'?'rgba(245,158,11,0.15)':'rgba(239,68,68,0.1)'};color:${ZAMApi.contracts.statusColor(c.status)}">${ZAMApi.contracts.statusLabel(c.status)}</span></div>
+          <div style="margin-left:auto;text-align:right"><div style="font-size:0.85rem;font-weight:700;color:#ff6b3d">${c.price}€</div><span class="contract-status" style="background:${c.status==='active'?'rgba(34,197,94,0.15)':c.status==='trial'?'rgba(247,171,0,0.15)':'rgba(239,68,68,0.1)'};color:${ZAMApi.contracts.statusColor(c.status)}">${ZAMApi.contracts.statusLabel(c.status)}</span></div>
         </div>`).join('') : '<div style="padding:16px;font-size:0.78rem;color:rgba(255,255,255,0.3)">Noch keine Verträge</div>'}
     </div>`;
 }
@@ -4061,7 +4061,7 @@ function renderDemoMode() {
   // Zone Heatmap
   const heatmap = ZAMApi.analytics.getZoneHeatmap();
   const zoneNames = { mk2_1: 'MK 2(1) Orange', mk2_2: 'MK 2(2) Lila', mk2_3: 'MK 2(3) Grün', mk2_4: 'MK 2(4) Blau', plaza: 'Gandhi-Platz' };
-  const zoneColors = { mk2_1: '#d97706', mk2_2: '#7c3aed', mk2_3: '#059669', mk2_4: '#2563eb', plaza: '#8b5cf6' };
+  const zoneColors = { mk2_1: '#d97706', mk2_2: '#d93e12', mk2_3: '#059669', mk2_4: '#2563eb', plaza: '#FA4615' };
   const zoneEl = document.getElementById('demo-zone-heatmap');
   if (zoneEl) {
     const entries = Object.entries(heatmap).sort((a, b) => b[1] - a[1]);
@@ -4069,7 +4069,7 @@ function renderDemoMode() {
     zoneEl.innerHTML = entries.map(([zone, count]) => `
       <div class="zone-bar-row">
         <div class="zone-bar-name" style="color:${zoneColors[zone] || '#e2e8f0'}">${zoneNames[zone] || zone}</div>
-        <div class="zone-bar-track"><div class="zone-bar-fill" style="width:${(count / maxV * 100).toFixed(0)}%;background:${zoneColors[zone] || '#8b5cf6'}"></div></div>
+        <div class="zone-bar-track"><div class="zone-bar-fill" style="width:${(count / maxV * 100).toFixed(0)}%;background:${zoneColors[zone] || '#FA4615'}"></div></div>
         <div class="zone-bar-count">${count}</div>
       </div>`).join('');
   }
@@ -4397,10 +4397,10 @@ function renderRecommendations() {
     html += `<div class="rec-section-title">👥 Vielleicht kennst du…</div><div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:8px">`;
     html += suggestedUsers.map(u => {
       const initials = (u.display_name||u.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-      return `<div style="display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid rgba(139,92,246,0.12);border-radius:14px;padding:12px 14px">
-        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#6d28d9,#8b5cf6);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
+      return `<div style="display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid rgba(250,70,21,0.12);border-radius:14px;padding:12px 14px">
+        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#c43510,#FA4615);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
         <div style="flex:1"><div style="font-size:0.85rem;font-weight:600;color:#e2e8f0">${esc(u.display_name||u.name||'')}</div><div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">${esc(u.level||'Mitglied')}</div></div>
-        <button onclick="navigateTo('community')" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:8px;padding:6px 12px;font-size:0.72rem;font-weight:600;color:#c4b5fd;font-family:var(--font);cursor:pointer">Verbinden</button>
+        <button onclick="navigateTo('community')" style="background:rgba(250,70,21,0.15);border:1px solid rgba(250,70,21,0.3);border-radius:8px;padding:6px 12px;font-size:0.72rem;font-weight:600;color:#ffb399;font-family:var(--font);cursor:pointer">Verbinden</button>
       </div>`;
     }).join('');
     html += '</div>';
@@ -4520,7 +4520,7 @@ function renderAdminAIInsights(containerId) {
 // PHASE 18: Aktive Nutzer, Status & Deal Matching
 // =============================================
 
-const AU_ZONE_COLORS = { mk2_1: '#d97706', mk2_2: '#7c3aed', mk2_3: '#059669', mk2_4: '#2563eb', plaza: '#8b5cf6' };
+const AU_ZONE_COLORS = { mk2_1: '#d97706', mk2_2: '#d93e12', mk2_3: '#059669', mk2_4: '#2563eb', plaza: '#FA4615' };
 const AU_ZONE_LABELS = { mk2_1: 'MK 2(1)', mk2_2: 'MK 2(2)', mk2_3: 'MK 2(3)', mk2_4: 'MK 2(4)', plaza: 'Gandhi-Platz' };
 const AU_DEAL_STATUSES = ['🍔 Hungrig', '🤝 Suche 2-für-1', '🎉 Wer kommt mit?', '🛍️ Suche Begleitung'];
 
@@ -4528,7 +4528,7 @@ function getActiveUsers() {
   const me = ZAMApi.auth.currentUser();
   const ud = me ? JSON.parse(localStorage.getItem(`zamclub_u_${me.id}`) || '{}') : {};
   const blocked = ud.blocked_users || [];
-  const avatarColors = ['#6d28d9', '#059669', '#d97706', '#2563eb', '#7c3aed', '#8b5cf6'];
+  const avatarColors = ['#c43510', '#059669', '#d97706', '#2563eb', '#d93e12', '#FA4615'];
   const demoSeed = [
     { id: 'demo_mia',   name: 'Mia K.',   status: '☕ Beim Kaffee',      zone: 'mk2_1' },
     { id: 'demo_felix', name: 'Felix B.',  status: '🤝 Suche 2-für-1',   zone: 'mk2_2' },
@@ -4584,7 +4584,7 @@ function _renderActiveUsersList(users) {
     return;
   }
   list.innerHTML = users.map(u => {
-    const zoneColor = AU_ZONE_COLORS[u.zone] || '#8b5cf6';
+    const zoneColor = AU_ZONE_COLORS[u.zone] || '#FA4615';
     const zoneLabel = AU_ZONE_LABELS[u.zone] || u.zone;
     const connected = me ? ZAMApi.nudges.isConnected(u.id) : false;
     const hasPending = me ? ZAMApi.nudges.hasPendingNudgeTo(u.id) : false;
@@ -4859,15 +4859,15 @@ function updateMerchantStats(days) {
   const kpiEl = document.getElementById('merchant-stats-kpis');
   if (kpiEl) {
     const kpis = [
-      { icon:'👁️', val:stats.profileViews,   lbl:'Profilaufrufe',       color:'#c4b5fd' },
-      { icon:'🏷️', val:stats.dealViews,       lbl:'Deal-Aufrufe',        color:'#fbbf24' },
+      { icon:'👁️', val:stats.profileViews,   lbl:'Profilaufrufe',       color:'#ffb399' },
+      { icon:'🏷️', val:stats.dealViews,       lbl:'Deal-Aufrufe',        color:'#F7AB00' },
       { icon:'💾', val:stats.dealSaves,       lbl:'Gespeicherte Deals',  color:'#60a5fa' },
       { icon:'✅', val:stats.dealRedemptions, lbl:'Eingelöste Gutscheine',color:'#34d399' },
       { icon:'🎉', val:stats.eventViews,      lbl:'Event-Aufrufe',       color:'#f472b6' },
       { icon:'🙋', val:stats.eventJoins,      lbl:'Event-Teilnahmen',    color:'#fb923c' },
     ];
     kpiEl.innerHTML = kpis.map(k => `
-      <div style="background:#18181f;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px">
+      <div style="background:#282828;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px">
         <div style="font-size:1.1rem;margin-bottom:4px">${k.icon}</div>
         <div style="font-size:1.3rem;font-weight:800;color:${k.color}">${k.val}</div>
         <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">${k.lbl}</div>
@@ -4880,7 +4880,7 @@ function updateMerchantStats(days) {
     const subs = getMerchantSubmissions().filter(s => s.merchantId === merchantId).slice(0, 5);
     if (!subs.length) { dealsEl.innerHTML = ''; return; }
     const statusLabel = { pending:'⏳ Wartet', approved:'✅ Freigegeben', live:'🟢 Live', rejected:'❌ Abgelehnt', draft:'📝 Entwurf' };
-    const statusColor = { pending:'#fbbf24', approved:'#34d399', live:'#34d399', rejected:'#f87171', draft:'rgba(255,255,255,0.3)' };
+    const statusColor = { pending:'#F7AB00', approved:'#34d399', live:'#34d399', rejected:'#f87171', draft:'rgba(255,255,255,0.3)' };
     dealsEl.innerHTML = `<div style="font-size:0.78rem;font-weight:700;margin-bottom:8px">Meine Einreichungen</div>` +
       subs.map(s => `
         <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
@@ -4939,7 +4939,7 @@ function _seedChallenges() {
   localStorage.removeItem('zam_photo_challenges');
   localStorage.setItem('zam_photo_challenges', JSON.stringify([
     { id:'ch_001', merchant_id:'demo_pitsburger', merchant_name:'Pitsburger', merchant_icon:'🍔',
-      banner_color:'#7c3aed', demo_count:2,
+      banner_color:'#d93e12', demo_count:2,
       title:'Pitsburger Fan Challenge',
       description:'Fotografiere dein Burger-Menü bei Pitsburger an 5 verschiedenen Tagen und sichere dir deinen Gratis-Bonus.',
       reward_description:'Gratis Pommes oder 20 % auf dein nächstes Menü',
@@ -4955,7 +4955,7 @@ function _seedChallenges() {
       required_photos_count:3, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
     { id:'ch_003', merchant_id:'demo_cafe_freiham', merchant_name:'Café Freiham', merchant_icon:'☕',
-      banner_color:'#b45309', demo_count:0,
+      banner_color:'#8a5f00', demo_count:0,
       title:'Coffee Moments Challenge',
       description:'5 Coffee-Moments an 5 verschiedenen Tagen im Café Freiham. Dein zweites Heißgetränk bekommst du für nur 1 €!',
       reward_description:'2. Heißgetränk für 1 € + 200 Punkte',
@@ -4992,7 +4992,7 @@ function _makeDemoPhotoDataUrl(emoji, color, label) {
 function _seedDemoPhotoSubmissions() {
   if (_getPhotoSubs().length) return;
   const demos = [
-    { id:'sub_d1', challenge_id:'ch_001', challenge_name:'Pitsburger Fan Challenge', user_id:'demo_user1', username:'julia_m', image_data: _makeDemoPhotoDataUrl('🍔','#7c3aed','Pitsburger Fan'), lat:48.1523, lng:11.4386, submission_day:'2026-06-10', created_at:'2026-06-10T12:00:00Z', status:'auto_approved' },
+    { id:'sub_d1', challenge_id:'ch_001', challenge_name:'Pitsburger Fan Challenge', user_id:'demo_user1', username:'julia_m', image_data: _makeDemoPhotoDataUrl('🍔','#d93e12','Pitsburger Fan'), lat:48.1523, lng:11.4386, submission_day:'2026-06-10', created_at:'2026-06-10T12:00:00Z', status:'auto_approved' },
     { id:'sub_d2', challenge_id:'ch_002', challenge_name:'Gelato Summer Challenge', user_id:'demo_user2', username:'max_k', image_data: _makeDemoPhotoDataUrl('🍦','#0891b2','Gelato Moment'), lat:48.1524, lng:11.4387, submission_day:'2026-06-11', created_at:'2026-06-11T14:30:00Z', status:'auto_approved' },
     { id:'sub_d3', challenge_id:'ch_003', challenge_name:'Asia Street Food Challenge', user_id:'demo_user3', username:'sarah_l', image_data: _makeDemoPhotoDataUrl('🥢','#059669','Asian Food'), lat:48.1522, lng:11.4385, submission_day:'2026-06-12', created_at:'2026-06-12T13:00:00Z', status:'auto_approved' },
     { id:'sub_d4', challenge_id:'ch_001', challenge_name:'Pitsburger Fan Challenge', user_id:'demo_user4', username:'tom_w', image_data: _makeDemoPhotoDataUrl('🍔','#dc2626','Burger Moment'), lat:48.1523, lng:11.4386, submission_day:'2026-06-13', created_at:'2026-06-13T18:00:00Z', status:'auto_approved' },
@@ -5016,10 +5016,10 @@ function renderPhotoChallenges() {
 
   // ── Hero ──────────────────────────────────────────
   const hero = `
-  <div style="background:linear-gradient(160deg,#1e1040 0%,#0f172a 60%,#090910 100%);padding:0 20px 24px;position:relative;overflow:hidden">
+  <div style="background:linear-gradient(160deg,#1e1616 0%,#1a1a1a 60%,#1a1a1a 100%);padding:0 20px 24px;position:relative;overflow:hidden">
     <div style="display:flex;align-items:center;gap:10px;padding:14px 0 16px">
       <button onclick="navigateTo('community')" style="background:rgba(255,255,255,0.08);border:none;color:#fff;border-radius:10px;width:36px;height:36px;font-size:1.1rem;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;flex-shrink:0">←</button>
-      <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#a78bfa">ZAM Community</span>
+      <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#ff6b3d">ZAM Community</span>
     </div>
     <div style="position:absolute;top:0;right:-20px;font-size:9rem;opacity:0.06;pointer-events:none">📸</div>
     <h1 style="font-size:1.55rem;font-weight:900;line-height:1.2;margin-bottom:10px;color:#fff">📸 Foto-Challenges</h1>
@@ -5035,11 +5035,11 @@ function renderPhotoChallenges() {
     ['5','Belohnung einlösen','Scanne deinen QR-Code beim Händler für die Prämie'],
   ];
   const howItWorks = `
-  <div style="margin:0 16px 20px;background:rgba(139,92,246,0.07);border:1px solid rgba(139,92,246,0.18);border-radius:16px;padding:16px">
-    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:#a78bfa;margin-bottom:14px">💡 So funktioniert's</div>
+  <div style="margin:0 16px 20px;background:rgba(250,70,21,0.07);border:1px solid rgba(250,70,21,0.18);border-radius:16px;padding:16px">
+    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:#ff6b3d;margin-bottom:14px">💡 So funktioniert's</div>
     ${steps.map(([n,t,d]) => `
     <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
-      <div style="width:24px;height:24px;border-radius:50%;background:rgba(139,92,246,0.25);border:1px solid rgba(139,92,246,0.4);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:#c4b5fd;flex-shrink:0">${n}</div>
+      <div style="width:24px;height:24px;border-radius:50%;background:rgba(250,70,21,0.25);border:1px solid rgba(250,70,21,0.4);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:#ffb399;flex-shrink:0">${n}</div>
       <div>
         <div style="font-size:0.8rem;font-weight:700;color:#e2e8f0;line-height:1.2">${t}</div>
         <div style="font-size:0.71rem;color:rgba(255,255,255,0.4);margin-top:2px;line-height:1.4">${d}</div>
@@ -5057,7 +5057,7 @@ function renderPhotoChallenges() {
     const done  = count >= total;
     const today = new Date().toISOString().slice(0,10);
     const doneToday = allSubs.some(s => s.challenge_id===ch.id && s.user_id===uid && s.submission_day===today && s.status!=='rejected');
-    const c = ch.banner_color || '#6d28d9';
+    const c = ch.banner_color || '#c43510';
 
     const slots = Array.from({length: total}, (_, i) =>
       i < count
@@ -5066,7 +5066,7 @@ function renderPhotoChallenges() {
     ).join('');
 
     return `
-    <div style="background:#111118;border:1px solid rgba(255,255,255,0.07);border-radius:18px;overflow:hidden;margin-bottom:14px">
+    <div style="background:#212121;border:1px solid rgba(255,255,255,0.07);border-radius:18px;overflow:hidden;margin-bottom:14px">
       <!-- Banner -->
       <div style="background:linear-gradient(135deg,${c},${c}99);padding:16px;display:flex;align-items:center;gap:14px">
         <div style="font-size:2.6rem;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))">${ch.merchant_icon}</div>
@@ -5074,7 +5074,7 @@ function renderPhotoChallenges() {
           <div style="font-size:1rem;font-weight:800;color:#fff;line-height:1.25">${escHtml(ch.title)}</div>
           <div style="font-size:0.72rem;color:rgba(255,255,255,0.65);margin-top:3px">${escHtml(ch.merchant_name)}</div>
         </div>
-        <span style="font-size:0.6rem;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;${done ? 'background:rgba(251,191,36,0.2);color:#fbbf24;border:1px solid rgba(251,191,36,0.3)' : 'background:rgba(255,255,255,0.15);color:#fff'}">${done ? '✅ Fertig' : '🔥 Aktiv'}</span>
+        <span style="font-size:0.6rem;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;${done ? 'background:rgba(247,171,0,0.2);color:#F7AB00;border:1px solid rgba(247,171,0,0.3)' : 'background:rgba(255,255,255,0.15);color:#fff'}">${done ? '✅ Fertig' : '🔥 Aktiv'}</span>
       </div>
       <!-- Body -->
       <div style="padding:14px 16px">
@@ -5108,7 +5108,7 @@ function renderPhotoChallenges() {
           <span style="font-size:0.63rem;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.08)">📅 Max. 1 Foto/Tag</span>
           <span style="font-size:0.63rem;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.08)">📍 Standort erforderlich</span>
           <span style="font-size:0.63rem;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.08)">🔍 Vor Veröffentlichung geprüft</span>
-          ${doneToday ? '<span style="font-size:0.63rem;padding:4px 9px;border-radius:20px;background:rgba(245,158,11,0.1);color:#fbbf24;border:1px solid rgba(245,158,11,0.2)">⚠️ Heute bereits eingereicht</span>' : ''}
+          ${doneToday ? '<span style="font-size:0.63rem;padding:4px 9px;border-radius:20px;background:rgba(247,171,0,0.1);color:#F7AB00;border:1px solid rgba(247,171,0,0.2)">⚠️ Heute bereits eingereicht</span>' : ''}
         </div>
 
         <!-- Actions -->
@@ -5139,8 +5139,8 @@ function renderPhotoChallenges() {
         const liked  = (item.liked_by||[]).includes(uid);
         const likes  = item.likes || item.likes_count || 0;
         return `
-        <div style="background:#111118;border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden">
-          <div style="aspect-ratio:1;overflow:hidden;background:#0d0d18">
+        <div style="background:#212121;border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden">
+          <div style="aspect-ratio:1;overflow:hidden;background:#1a1a1a">
             ${imgSrc ? `<img src="${imgSrc}" alt="" style="width:100%;height:100%;object-fit:cover">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem">📷</div>'}
           </div>
           <div style="padding:8px 10px 10px">
@@ -5167,7 +5167,7 @@ function renderPhotoChallenges() {
         <div style="font-size:1rem;font-weight:800;color:#e2e8f0">🖼️ ZAM Community Galerie</div>
         <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-top:2px">Fotos aus bestätigten ZAM-Challenges</div>
       </div>
-      <button onclick="navigateTo('community-gallery')" style="font-size:0.72rem;font-weight:700;color:#a78bfa;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:var(--font)">Alle →</button>
+      <button onclick="navigateTo('community-gallery')" style="font-size:0.72rem;font-weight:700;color:#ff6b3d;background:rgba(250,70,21,0.1);border:1px solid rgba(250,70,21,0.2);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:var(--font)">Alle →</button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">${galleryHtml}</div>
     <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;display:flex;align-items:center;gap:8px">
@@ -5192,7 +5192,7 @@ function openChallengeDetail(challengeId) {
   const count = mySubs.length > 0 ? mySubs.length : (ch.demo_count || 0);
   const total = ch.required_photos_count;
   const pct = Math.min(100, Math.round((count/total)*100));
-  const c = ch.banner_color || '#6d28d9';
+  const c = ch.banner_color || '#c43510';
   const today = new Date().toISOString().slice(0,10);
   const doneToday = allSubs.some(s => s.challenge_id===ch.id && s.user_id===uid && s.submission_day===today && s.status!=='rejected');
 
@@ -5310,9 +5310,9 @@ function _showCameraDemo() {
     if (vf && !vf.querySelector('.camera-demo-placeholder')) {
       const div = document.createElement('div');
       div.className = 'camera-demo-placeholder';
-      div.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:linear-gradient(160deg,#1a1040,#0a0a1a)';
+      div.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:linear-gradient(160deg,#1e1616,#1a1a1a)';
       div.innerHTML = `
-        <div style="font-size:5rem;filter:drop-shadow(0 4px 20px rgba(139,92,246,0.5))">📷</div>
+        <div style="font-size:5rem;filter:drop-shadow(0 4px 20px rgba(250,70,21,0.5))">📷</div>
         <div style="font-size:1.1rem;font-weight:800;color:#fff">Kamera wird geöffnet</div>
         <div style="font-size:0.78rem;color:rgba(255,255,255,0.45);text-align:center;padding:0 40px;line-height:1.6">Demo-Modus aktiv.<br>Tippe auf den Auslöser für ein Demo-Foto.</div>`;
       vf.appendChild(div);
@@ -5324,8 +5324,8 @@ function _showCameraDemo() {
 
 function _captureDemoPhoto() {
   const ch = _getChallenges().find(c => c.id === _activeChallengeId);
-  const colors = { ch_001:'#7c3aed', ch_002:'#0891b2', ch_003:'#b45309', ch_004:'#059669' };
-  const color = (ch && colors[ch.id]) || '#6d28d9';
+  const colors = { ch_001:'#d93e12', ch_002:'#0891b2', ch_003:'#8a5f00', ch_004:'#059669' };
+  const color = (ch && colors[ch.id]) || '#c43510';
   const emoji = ch?.merchant_icon || '📸';
   const label = ch?.merchant_name || 'ZAM';
   const canvas = document.createElement('canvas');
@@ -5366,7 +5366,7 @@ function _stopCamera() {
 function _checkLocation() {
   const el = document.getElementById('camera-location-status');
   if (!el) return;
-  el.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border-radius:20px;font-size:0.74rem;font-weight:700;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#fbbf24;width:fit-content;margin:0 auto 20px';
+  el.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border-radius:20px;font-size:0.74rem;font-weight:700;background:rgba(247,171,0,0.15);border:1px solid rgba(247,171,0,0.3);color:#F7AB00;width:fit-content;margin:0 auto 20px';
   el.innerHTML = '<span>📍</span><span>Standort wird geprüft…</span>';
   if (!navigator.geolocation) { _locationFallback(el); return; }
   navigator.geolocation.getCurrentPosition(pos => {
@@ -5513,7 +5513,7 @@ function toggleGalleryLike(itemId, btn) {
 // ═══════════════════════════════════════════════
 
 const _DEMO_ROLE_META = {
-  user:     { label:'👤 Nutzer',  color:'#c4b5fd', bg:'rgba(139,92,246,0.2)', border:'rgba(139,92,246,0.3)', btnColor:'#a78bfa' },
+  user:     { label:'👤 Nutzer',  color:'#ffb399', bg:'rgba(250,70,21,0.2)', border:'rgba(250,70,21,0.3)', btnColor:'#ff6b3d' },
   merchant: { label:'🏪 Händler', color:'#6ee7b7', bg:'rgba(16,185,129,0.2)', border:'rgba(16,185,129,0.3)', btnColor:'#34d399' },
   admin:    { label:'🛡️ Admin',   color:'#fca5a5', bg:'rgba(239,68,68,0.18)', border:'rgba(239,68,68,0.3)',  btnColor:'#f87171' },
 };
@@ -5691,7 +5691,7 @@ function renderRewards() {
     const exp = new Date(r.expires_at);
     const daysLeft = Math.ceil((exp - Date.now()) / 86400000);
     return `
-    <div style="background:#111118;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:16px;margin-bottom:12px;${isAvail ? '' : 'opacity:0.6'}">
+    <div style="background:#212121;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:16px;margin-bottom:12px;${isAvail ? '' : 'opacity:0.6'}">
       <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
         <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">${r.merchant_icon}</div>
         <div style="flex:1;min-width:0">
@@ -5702,15 +5702,15 @@ function renderRewards() {
       </div>
       <div style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:12px;line-height:1.5">${escHtml(r.description)}</div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-        <span style="font-size:0.62rem;padding:3px 9px;border-radius:20px;background:rgba(139,92,246,0.12);color:#a78bfa;border:1px solid rgba(139,92,246,0.2)">${typeLabel[r.type]||r.type}</span>
+        <span style="font-size:0.62rem;padding:3px 9px;border-radius:20px;background:rgba(250,70,21,0.12);color:#ff6b3d;border:1px solid rgba(250,70,21,0.2)">${typeLabel[r.type]||r.type}</span>
         <span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">ID: ${r.voucher_id}</span>
-        <span style="font-size:0.62rem;color:${daysLeft < 5 && isAvail ? '#f59e0b' : 'rgba(255,255,255,0.3)'}">
+        <span style="font-size:0.62rem;color:${daysLeft < 5 && isAvail ? '#F7AB00' : 'rgba(255,255,255,0.3)'}">
           ${r.status === 'redeemed' ? '✓ Eingelöst am '+new Date(r.redeemed_at).toLocaleDateString('de-DE') : daysLeft > 0 ? `Gültig noch ${daysLeft} Tag${daysLeft!==1?'e':''}` : 'Abgelaufen'}
         </span>
       </div>
       ${isAvail ? `
         <div style="display:flex;gap:8px">
-          <button onclick="showQRVoucher('${r.id}')" style="flex:1;padding:11px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:none;color:#fff;border-radius:12px;font-size:0.82rem;font-weight:800;font-family:var(--font);cursor:pointer">📱 QR-Code anzeigen</button>
+          <button onclick="showQRVoucher('${r.id}')" style="flex:1;padding:11px;background:linear-gradient(135deg,#c43510,#FA4615);border:none;color:#fff;border-radius:12px;font-size:0.82rem;font-weight:800;font-family:var(--font);cursor:pointer">📱 QR-Code anzeigen</button>
           <button onclick="markRewardRedeemed('${r.id}')" style="flex:1;padding:11px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">✓ Als eingelöst markieren</button>
         </div>` : ''}
     </div>`;
@@ -5720,35 +5720,35 @@ function renderRewards() {
   const catalogHtml = POINTS_CATALOG.map(p => {
     const canAfford = pts >= p.points;
     return `
-    <div style="background:#111118;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px">
+    <div style="background:#212121;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px">
       <div style="font-size:2rem;flex-shrink:0">${p.icon}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:0.88rem;font-weight:800;color:#e2e8f0">${p.title}</div>
         <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px">${p.merchant}</div>
-        <div style="font-size:0.7rem;color:#fbbf24;margin-top:3px;font-weight:700">⭐ ${p.points.toLocaleString('de-DE')} Punkte</div>
+        <div style="font-size:0.7rem;color:#F7AB00;margin-top:3px;font-weight:700">⭐ ${p.points.toLocaleString('de-DE')} Punkte</div>
       </div>
-      <button onclick="redeemPointsReward('${p.id}')" ${canAfford ? '' : 'disabled'} style="padding:9px 14px;border-radius:10px;font-size:0.75rem;font-weight:800;font-family:var(--font);cursor:${canAfford ? 'pointer' : 'default'};border:none;background:${canAfford ? 'linear-gradient(135deg,#b45309,#f59e0b)' : 'rgba(255,255,255,0.05)'};color:${canAfford ? '#fff' : 'rgba(255,255,255,0.25)'};white-space:nowrap">${canAfford ? 'Einlösen' : 'Zu wenig'}</button>
+      <button onclick="redeemPointsReward('${p.id}')" ${canAfford ? '' : 'disabled'} style="padding:9px 14px;border-radius:10px;font-size:0.75rem;font-weight:800;font-family:var(--font);cursor:${canAfford ? 'pointer' : 'default'};border:none;background:${canAfford ? 'linear-gradient(135deg,#8a5f00,#F7AB00)' : 'rgba(255,255,255,0.05)'};color:${canAfford ? '#fff' : 'rgba(255,255,255,0.25)'};white-space:nowrap">${canAfford ? 'Einlösen' : 'Zu wenig'}</button>
     </div>`;
   }).join('');
 
   container.innerHTML = `
   <!-- Hero -->
-  <div style="background:linear-gradient(160deg,#1a1040,#0f172a,#090910);padding:0 20px 24px">
+  <div style="background:linear-gradient(160deg,#1e1616,#1a1a1a,#1a1a1a);padding:0 20px 24px">
     <div style="display:flex;align-items:center;gap:12px;padding:14px 0 16px">
       <button onclick="navigateTo('profile')" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">←</button>
-      <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#fbbf24">Mein ZAM Club</span>
+      <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#F7AB00">Mein ZAM Club</span>
     </div>
     <h1 style="font-size:1.5rem;font-weight:900;color:#fff;margin-bottom:8px">🎁 Meine Belohnungen</h1>
     <p style="font-size:0.8rem;color:rgba(255,255,255,0.45);line-height:1.6">Aktive Gutscheine, Challenge-Prämien und Punkte-Belohnungen</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
-      <div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2);border-radius:12px;padding:12px">
-        <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.06em;font-weight:800;color:rgba(251,191,36,0.7);margin-bottom:4px">Verfügbar</div>
-        <div style="font-size:1.6rem;font-weight:900;color:#fbbf24">${available.length}</div>
+      <div style="background:rgba(247,171,0,0.1);border:1px solid rgba(247,171,0,0.2);border-radius:12px;padding:12px">
+        <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.06em;font-weight:800;color:rgba(247,171,0,0.7);margin-bottom:4px">Verfügbar</div>
+        <div style="font-size:1.6rem;font-weight:900;color:#F7AB00">${available.length}</div>
         <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Gutscheine</div>
       </div>
-      <div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:12px">
-        <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.06em;font-weight:800;color:rgba(139,92,246,0.7);margin-bottom:4px">Meine Punkte</div>
-        <div style="font-size:1.6rem;font-weight:900;color:#c4b5fd">${(pts||0).toLocaleString('de-DE')}</div>
+      <div style="background:rgba(250,70,21,0.1);border:1px solid rgba(250,70,21,0.2);border-radius:12px;padding:12px">
+        <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.06em;font-weight:800;color:rgba(250,70,21,0.7);margin-bottom:4px">Meine Punkte</div>
+        <div style="font-size:1.6rem;font-weight:900;color:#ffb399">${(pts||0).toLocaleString('de-DE')}</div>
         <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">⭐ Punkte</div>
       </div>
     </div>
@@ -5763,7 +5763,7 @@ function renderRewards() {
   <!-- Points catalog -->
   <div style="padding:20px 16px 0">
     <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:6px">⭐ Punkte-Prämien</div>
-    <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-bottom:14px">Du hast <strong style="color:#fbbf24">${(pts||0).toLocaleString('de-DE')} Punkte</strong>. Tausche sie gegen Prämien ein.</div>
+    <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-bottom:14px">Du hast <strong style="color:#F7AB00">${(pts||0).toLocaleString('de-DE')} Punkte</strong>. Tausche sie gegen Prämien ein.</div>
     ${catalogHtml}
   </div>
 
@@ -5812,7 +5812,7 @@ function showQRVoucher(rewardId) {
         <div style="font-size:0.9rem;font-weight:700;color:#f87171;margin-bottom:6px">QR-Code abgelaufen</div>
         <div style="font-size:0.75rem;color:rgba(255,255,255,0.4)">Aus Sicherheitsgründen ist der Code nicht mehr gültig.</div>
       </div>
-      <button onclick="showQRVoucher('${r.id}')" style="width:100%;padding:13px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:none;color:#fff;border-radius:12px;font-size:0.85rem;font-weight:800;font-family:var(--font);cursor:pointer;margin-bottom:10px">🔄 QR-Code erneuern</button>` : `
+      <button onclick="showQRVoucher('${r.id}')" style="width:100%;padding:13px;background:linear-gradient(135deg,#c43510,#FA4615);border:none;color:#fff;border-radius:12px;font-size:0.85rem;font-weight:800;font-family:var(--font);cursor:pointer;margin-bottom:10px">🔄 QR-Code erneuern</button>` : `
       <div id="qr-code-display" style="background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;min-height:180px"></div>
       <div style="background:${remaining < 120000 ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.08)'};border:1px solid ${remaining < 120000 ? 'rgba(239,68,68,0.2)' : 'rgba(52,211,153,0.2)'};border-radius:10px;padding:10px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px">
         <span style="font-size:0.8rem">${remaining < 120000 ? '⚠️' : '🔒'}</span>
@@ -5829,9 +5829,9 @@ function showQRVoucher(rewardId) {
       if (qrEl) {
         qrEl.innerHTML = '';
         if (typeof QRCode !== 'undefined') {
-          new QRCode(qrEl, { text: `ZAM:${r.voucher_id}:${r.qr_expires_at}`, width:160, height:160, colorDark:'#1a1a2e', colorLight:'#ffffff' });
+          new QRCode(qrEl, { text: `ZAM:${r.voucher_id}:${r.qr_expires_at}`, width:160, height:160, colorDark:'#1a1a1a', colorLight:'#ffffff' });
         } else {
-          qrEl.innerHTML = `<div style="text-align:center;color:#1a1a2e;font-weight:800;font-size:0.9rem;padding:20px">${r.voucher_id}<br><span style="font-size:0.7rem;font-weight:400;opacity:0.6">Dem Händler zeigen</span></div>`;
+          qrEl.innerHTML = `<div style="text-align:center;color:#1a1a1a;font-weight:800;font-size:0.9rem;padding:20px">${r.voucher_id}<br><span style="font-size:0.7rem;font-weight:400;opacity:0.6">Dem Händler zeigen</span></div>`;
         }
       }
     }
@@ -5918,19 +5918,19 @@ function openReferralSheet() {
   const refCount = JSON.parse(localStorage.getItem(refKey) || '[]').length;
   body.innerHTML = `
     <h2 style="font-size:1.2rem;font-weight:900;color:#fff;margin-bottom:6px">👥 Freunde einladen</h2>
-    <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:20px;line-height:1.6">Für jeden Freund der sich mit deinem Code anmeldet bekommst du <strong style="color:#fbbf24">+100 Punkte</strong>. Dein Freund erhält ebenfalls 100 Punkte!</p>
-    <div style="background:rgba(139,92,246,0.1);border:2px dashed rgba(139,92,246,0.35);border-radius:14px;padding:18px;text-align:center;margin-bottom:16px">
-      <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(139,92,246,0.7);margin-bottom:8px">Dein Referral-Code</div>
-      <div style="font-size:2rem;font-weight:900;letter-spacing:0.12em;color:#c4b5fd;font-family:monospace">${code}</div>
-      <button onclick="navigator.clipboard?.writeText('${code}').then(()=>showToast('✓ Code kopiert!'))" style="margin-top:12px;padding:8px 20px;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:10px;font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer">📋 Code kopieren</button>
+    <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:20px;line-height:1.6">Für jeden Freund der sich mit deinem Code anmeldet bekommst du <strong style="color:#F7AB00">+100 Punkte</strong>. Dein Freund erhält ebenfalls 100 Punkte!</p>
+    <div style="background:rgba(250,70,21,0.1);border:2px dashed rgba(250,70,21,0.35);border-radius:14px;padding:18px;text-align:center;margin-bottom:16px">
+      <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(250,70,21,0.7);margin-bottom:8px">Dein Referral-Code</div>
+      <div style="font-size:2rem;font-weight:900;letter-spacing:0.12em;color:#ffb399;font-family:monospace">${code}</div>
+      <button onclick="navigator.clipboard?.writeText('${code}').then(()=>showToast('✓ Code kopiert!'))" style="margin-top:12px;padding:8px 20px;background:rgba(250,70,21,0.2);border:1px solid rgba(250,70,21,0.3);color:#ffb399;border-radius:10px;font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer">📋 Code kopieren</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;text-align:center">
-        <div style="font-size:1.6rem;font-weight:900;color:#c4b5fd">${refCount}</div>
+        <div style="font-size:1.6rem;font-weight:900;color:#ffb399">${refCount}</div>
         <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Eingeladene Freunde</div>
       </div>
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;text-align:center">
-        <div style="font-size:1.6rem;font-weight:900;color:#fbbf24">${refCount * 100}</div>
+        <div style="font-size:1.6rem;font-weight:900;color:#F7AB00">${refCount * 100}</div>
         <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Punkte verdient</div>
       </div>
     </div>
@@ -5938,7 +5938,7 @@ function openReferralSheet() {
       <div style="font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em">So funktioniert's</div>
       ${[['1','Deinen Code teilen','Sende deinen persönlichen Code an Freunde'],['2','Freund registriert sich','Mit deinem Code im ZAM Club anmelden'],['3','Beide erhalten Punkte','+100 Punkte für dich, +100 Punkte für den Freund']].map(([n,t,d]) => `
       <div style="display:flex;gap:10px;margin-bottom:8px">
-        <div style="width:20px;height:20px;border-radius:50%;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#c4b5fd;flex-shrink:0;margin-top:1px">${n}</div>
+        <div style="width:20px;height:20px;border-radius:50%;background:rgba(250,70,21,0.2);border:1px solid rgba(250,70,21,0.3);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#ffb399;flex-shrink:0;margin-top:1px">${n}</div>
         <div><div style="font-size:0.78rem;font-weight:700;color:#e2e8f0">${t}</div><div style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-top:1px">${d}</div></div>
       </div>`).join('')}
     </div>
@@ -6056,7 +6056,7 @@ function _buildMerchantModal(id, title, bodyHtml) {
   overlay.addEventListener('click', e => { if (e.target === overlay) _merchantModalClose(id); });
 
   const sheet = document.createElement('div');
-  sheet.style.cssText = `width:100%;max-width:520px;background:#111118;border-radius:24px 24px 0 0;padding:20px 20px max(40px,env(safe-area-inset-bottom,40px));max-height:90vh;overflow-y:auto;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,1,.36,1),opacity .25s`;
+  sheet.style.cssText = `width:100%;max-width:520px;background:#212121;border-radius:24px 24px 0 0;padding:20px 20px max(40px,env(safe-area-inset-bottom,40px));max-height:90vh;overflow-y:auto;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,1,.36,1),opacity .25s`;
   sheet.innerHTML = `
     <div style="width:40px;height:4px;background:rgba(255,255,255,0.15);border-radius:99px;margin:0 auto 18px"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
@@ -6081,7 +6081,7 @@ function _sel(label, id, options) {
   return `<div style="margin-bottom:14px"><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">${label}</label><select id="${id}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:inherit;font-size:0.85rem;outline:none">${options}</select></div>`;
 }
 function _submitBtn(label, onclick) {
-  return `<button onclick="${onclick}" style="width:100%;padding:14px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:none;color:#fff;border-radius:14px;font-size:0.9rem;font-weight:800;font-family:inherit;cursor:pointer;margin-top:6px">${label}</button>`;
+  return `<button onclick="${onclick}" style="width:100%;padding:14px;background:linear-gradient(135deg,#c43510,#FA4615);border:none;color:#fff;border-radius:14px;font-size:0.9rem;font-weight:800;font-family:inherit;cursor:pointer;margin-top:6px">${label}</button>`;
 }
 
 function openMerchantEventModal() {
