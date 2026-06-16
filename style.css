@@ -244,15 +244,7 @@ a.nav-tab-map { text-decoration: none; }
 /* ══════════════════════════════════════════
    HOME
 ══════════════════════════════════════════ */
-#page-home {
-  padding-top: 0;
-  padding-bottom: 0;
-  height: 100dvh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: none;
-}
+#page-home { padding-top: 0; }
 
 .home-header { padding: 28px 20px 12px; }
 
