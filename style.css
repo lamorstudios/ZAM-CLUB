@@ -2251,7 +2251,7 @@ a.nav-tab-map { text-decoration: none; }
 
 /* AI Chat Page */
 #page-ai{height:100dvh;overflow:hidden;padding-bottom:0;min-height:unset}
-.ai-chat-window{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;min-height:0}
+.ai-chat-window{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;justify-content:flex-start;gap:12px;min-height:0}
 .ai-bubble{display:flex;align-items:flex-start;gap:10px}
 .ai-bubble-bot{flex-direction:row}
 .ai-bubble-user{flex-direction:row-reverse}

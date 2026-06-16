@@ -168,6 +168,7 @@ function navigateTo(pageId) {
     nextEl.classList.add('active');
     nextEl.scrollTop = 0;
   }
+  window.scrollTo(0, 0);
 
   $$('.nav-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.page === pageId);
@@ -3656,7 +3657,11 @@ function renderAIConcierge(scrollToBottom) {
     }
     win.appendChild(div);
   });
-  if (scrollToBottom) win.scrollTop = win.scrollHeight;
+  if (scrollToBottom) {
+    win.scrollTop = win.scrollHeight;
+  } else {
+    win.scrollTop = 0; // always show welcome bubble at top
+  }
 }
 
 function aiSend() {
