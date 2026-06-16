@@ -269,6 +269,17 @@ function renderHome() {
   renderHomeEvents();
   renderHomeDeals();
 
+  // Referral CTA widget
+  const refCode = _getReferralCode(user);
+  const refCodeEl = document.getElementById('home-referral-code');
+  if (refCodeEl && refCode) refCodeEl.textContent = refCode;
+  const refKey = 'zam_referrals_' + (user?.id || 'guest');
+  const refCount = JSON.parse(localStorage.getItem(refKey) || '[]').length;
+  const refCountEl = document.getElementById('home-referral-count');
+  const refPtsEl   = document.getElementById('home-referral-pts');
+  if (refCountEl) refCountEl.textContent = refCount;
+  if (refPtsEl)   refPtsEl.textContent   = refCount * 250;
+
   // Show Händler Tools card for merchant/admin
   const toolsCard = document.getElementById('home-merchant-tools');
   if (toolsCard) {
@@ -5144,7 +5155,8 @@ function renderPhotoChallenges() {
 
   container.innerHTML = hero + howItWorks
     + `<div style="padding:0 16px;margin-bottom:4px"><div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:12px">🔥 Aktive Challenges (${challenges.length})</div>${challengeCards}</div>`
-    + gallerySection;
+    + gallerySection
+    + `<footer class="zam-footer">App by <a href="https://lamor.agency" target="_blank" rel="noopener">LAMOR Agency</a></footer>`;
 }
 
 function openChallengeDetail(challengeId) {
@@ -5736,7 +5748,8 @@ function renderRewards() {
   ${redeemed.length ? `<div style="padding:20px 16px 0">
     <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:14px">✓ Bereits eingelöst (${redeemed.length})</div>
     ${redeemed.map(rewardCard).join('')}
-  </div>` : ''}`;
+  </div>` : ''}
+  <footer class="zam-footer" style="padding-top:8px">App by <a href="https://lamor.agency" target="_blank" rel="noopener">LAMOR Agency</a></footer>`;
 }
 
 let _qrCodeInstance = null;
@@ -5915,6 +5928,55 @@ function closeReferralSheet() {
   const s = document.getElementById('referral-sheet');
   if (s) s.style.display = 'none';
   document.body.style.overflow = '';
+}
+
+// ═══════════════════════════════════════════════
+// SHARE / INVITE DIALOG
+// ═══════════════════════════════════════════════
+
+function openShareDialog() {
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const code = _getReferralCode(user) || 'DEMO250';
+  const link = `https://zamclub.de/invite/${code}`;
+  const refKey = 'zam_referrals_' + (user?.id || 'guest');
+  const refCount = JSON.parse(localStorage.getItem(refKey) || '[]').length;
+
+  const linkEl = document.getElementById('share-invite-link');
+  const codeEl = document.getElementById('share-invite-code');
+  const countEl = document.getElementById('share-ref-count');
+  const ptsEl   = document.getElementById('share-ref-pts');
+  if (linkEl) linkEl.textContent = link;
+  if (codeEl) codeEl.textContent = code;
+  if (countEl) countEl.textContent = refCount;
+  if (ptsEl)   ptsEl.textContent  = refCount * 250;
+
+  const d = document.getElementById('share-dialog');
+  if (d) d.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeShareDialog() {
+  const d = document.getElementById('share-dialog');
+  if (d) d.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function copyShareLink() {
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const code = _getReferralCode(user) || 'DEMO250';
+  const link = `https://zamclub.de/invite/${code}`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link).then(() => showToast('✓ Link kopiert!'));
+  } else {
+    showToast('✓ ' + link);
+  }
+}
+
+function shareWhatsApp() {
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const code = _getReferralCode(user) || 'DEMO250';
+  const msg = encodeURIComponent(`Hey! Ich nutze die ZAM Club App und lade dich ein. Meld dich mit meinem Code ${code} an und wir bekommen beide Punkte! 🎉\nhttps://zamclub.de/invite/${code}`);
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
 }
 
 // ═══════════════════════════════════════════════

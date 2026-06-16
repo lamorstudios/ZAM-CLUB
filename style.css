@@ -2466,3 +2466,65 @@ a.nav-tab-map { text-decoration: none; }
 .gallery-item-meta { font-size:0.62rem; color:var(--dim); margin-top:1px; }
 .gallery-like-btn { background:none; border:none; color:var(--dim); font-size:0.72rem; cursor:pointer; font-family:var(--font); padding:0; margin-top:5px; display:flex; align-items:center; gap:3px; }
 .gallery-like-btn.liked { color:#f87171; }
+
+/* =============================================
+   Referral CTA Card
+   ============================================= */
+.referral-cta-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1e1040 0%, #150e30 50%, #0f0820 100%);
+  border: 1px solid rgba(139,92,246,0.35);
+  border-radius: 18px;
+  padding: 16px;
+}
+.referral-cta-glow {
+  position: absolute;
+  top: -40px;
+  right: -20px;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: referralPulse 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes referralPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.15); }
+}
+.referral-cta-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(109,40,217,0.6), rgba(139,92,246,0.4));
+  border: 1px solid rgba(139,92,246,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  animation: referralBounce 4s ease-in-out infinite;
+}
+@keyframes referralBounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+/* =============================================
+   Footer — App by LAMOR Agency
+   ============================================= */
+.zam-footer {
+  text-align: center;
+  padding: 16px 16px 28px;
+  font-size: 0.67rem;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.04em;
+}
+.zam-footer a {
+  color: rgba(139,92,246,0.55);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.zam-footer a:hover { color: rgba(139,92,246,0.9); }
