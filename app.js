@@ -2051,9 +2051,16 @@ function renderNudgeInbox() {
     `;
     item.querySelector('.nudge-accept-btn').addEventListener('click', () => {
       ZAMApi.nudges.accept(n.id);
-      showToast(`🤝 Verbunden mit ${n.from_name}!`, 'connection');
       renderNudgeInbox();
       updateCommunityBadge();
+      // Show toast with chat button
+      const toastEl = document.createElement('div');
+      toastEl.style.cssText = 'position:fixed;bottom:calc(var(--nav-h,64px) + 12px);left:50%;transform:translateX(-50%);z-index:9999;background:#1a0533;border:1px solid rgba(139,92,246,0.4);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);font-family:var(--font);max-width:92vw;animation:fadeUp 0.25s ease both';
+      toastEl.innerHTML = `
+        <span style="font-size:0.84rem;color:#e2e8f0;font-weight:600">🤝 Verbunden mit <strong>${n.from_name}</strong>!</span>
+        <button style="background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:none;border-radius:9px;padding:7px 14px;color:#fff;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap" onclick="this.closest('div[style]').remove();navigateTo('community');setTimeout(()=>openPrivateChat('${n.from_id}','${(n.from_name||'').replace(/'/g,"\\'")}','${(n.from_initials||'').replace(/'/g,"\\'")}',null),250)">💬 Jetzt chatten</button>`;
+      document.body.appendChild(toastEl);
+      setTimeout(() => toastEl.remove(), 6000);
     });
     item.querySelector('.nudge-reject-btn').addEventListener('click', () => {
       ZAMApi.nudges.reject(n.id);
@@ -2311,8 +2318,9 @@ function openUserProfileSheet(userId, userName, initials, avatarUrl) {
       msgBtn.innerHTML = '💬 Nachricht schreiben';
       msgBtn.addEventListener('click', () => {
         closeUserProfileSheet();
-        openPrivateChat(userId, userName, initials, avatarUrl);
+        // Navigate first, then open chat overlay on top
         navigateTo('community');
+        setTimeout(() => openPrivateChat(userId, userName, initials, avatarUrl), 250);
       });
       actionsEl.appendChild(msgBtn);
 
@@ -2557,16 +2565,10 @@ function checkMapRedirect() {
     try {
       const target = JSON.parse(pcTarget);
       navigateTo('community');
+      // Use longer delay to ensure page is fully rendered after page load
       setTimeout(() => {
-        // Switch to contacts tab
-        $$('.community-tab').forEach(t => t.classList.remove('active'));
-        $$('.community-panel').forEach(p => p.classList.remove('active'));
-        const contactsTab = $('.community-tab[data-ctab="contacts"]');
-        if (contactsTab) contactsTab.classList.add('active');
-        $('#cpanel-contacts')?.classList.add('active');
-        renderContacts();
-        setTimeout(() => openPrivateChat(target.userId, target.userName, target.initials, target.avatarUrl), 200);
-      }, 300);
+        openPrivateChat(target.userId, target.userName, target.initials || (target.userName||'').slice(0,2).toUpperCase(), target.avatarUrl);
+      }, 500);
     } catch {}
   }
 }
