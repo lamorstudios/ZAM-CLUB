@@ -1331,9 +1331,6 @@ function renderEventCard(evt, idx) {
       </button>
     </div>
     ${evt.is_joined ? _eventCheckinBtn(evt) : ''}
-      '<div style="width:100%;margin-top:10px;padding:11px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);color:#34d399;border-radius:10px;font-size:0.82rem;font-weight:700;text-align:center">✅ Eingecheckt • +' + (evt.points_reward||50) + ' Punkte erhalten</div>' :
-      '<button onclick="eventCheckIn('' + evt.id + '','' + (evt.title||'').replace(/'/g,"\'") + '',' + (evt.points_reward||50) + ')" style="width:100%;margin-top:10px;padding:11px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">📍 Vor Ort einchecken • +' + (evt.points_reward||50) + ' Punkte</button>'
-    ) : ''}
   `;
 
   div.querySelector('.bookmark-btn').addEventListener('click', (e) => {
