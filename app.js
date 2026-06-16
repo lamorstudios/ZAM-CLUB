@@ -897,10 +897,10 @@ function renderDealCard(deal, idx) {
     <p class="deal-description">${deal.description}</p>
     <div class="deal-card-footer">
       <div class="deal-expiry">🗓 ${deal.expiry_formatted}</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" style="background:rgba(5,150,105,0.12);border:1px solid rgba(5,150,105,0.25);border-radius:8px;padding:5px 10px;font-size:0.66rem;font-weight:600;color:#34d399;font-family:var(--font);cursor:pointer;flex-shrink:0">👥 Gemeinsam</button>
-        <button onclick="openVoucherQR('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}','${deal.merchant_id||''}');event.stopPropagation()" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:8px;padding:5px 10px;font-size:0.66rem;font-weight:600;color:#c4b5fd;font-family:var(--font);cursor:pointer;flex-shrink:0">🎟 Einlösen</button>
-        <button class="${deal.is_claimed ? 'btn btn-sm claimed' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
+      <div class="deal-actions">
+        <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn deal-action-social">👥 Gemeinsam</button>
+        <button onclick="openVoucherQR('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}','${deal.merchant_id||''}');event.stopPropagation()" class="deal-action-btn deal-action-redeem">🎟 Einlösen</button>
+        <button class="${deal.is_claimed ? 'btn btn-sm claimed deal-action-save' : 'btn btn-primary btn-sm deal-action-save'}" data-idx="${idx}">
           ${deal.is_claimed ? '✓ Eingelöst' : 'Gutschein sichern'}
         </button>
       </div>
