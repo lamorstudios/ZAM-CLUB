@@ -59,7 +59,6 @@ html {
   min-height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
-  touch-action: pan-y;
 }
 body {
   font-family: var(--font);
@@ -70,7 +69,6 @@ body {
   min-height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
-  touch-action: pan-y;
   -webkit-font-smoothing: antialiased;
 }
 button { border: none; outline: none; cursor: pointer; font-family: inherit; }
@@ -106,25 +104,28 @@ ul, ol { list-style: none; }
   height: auto;
   min-height: auto;
   overflow: visible;
-  touch-action: pan-y;
   padding-bottom: calc(var(--nav-h) + 40px);
+  /* No transform on page — causes "doorstop" on first scroll touch */
   opacity: 0;
-  transform: translateY(10px);
-  transition: opacity var(--tn) var(--ease), transform var(--tn) var(--ease);
+  transition: opacity var(--tn) var(--ease);
 }
 .page.active {
   display: flex;
   opacity: 1;
-  transform: translateY(0);
 }
 
-/* Stagger entry */
-.page.active > *:nth-child(1) { animation: fadeUp .32s var(--ease) .03s both; }
-.page.active > *:nth-child(2) { animation: fadeUp .32s var(--ease) .07s both; }
-.page.active > *:nth-child(3) { animation: fadeUp .32s var(--ease) .11s both; }
-.page.active > *:nth-child(4) { animation: fadeUp .32s var(--ease) .15s both; }
-.page.active > *:nth-child(5) { animation: fadeUp .32s var(--ease) .19s both; }
+/* Stagger entry — only opacity, no translateY on page children (blocks scroll) */
+.page.active > *:nth-child(1) { animation: fadeIn .28s var(--ease) .03s both; }
+.page.active > *:nth-child(2) { animation: fadeIn .28s var(--ease) .07s both; }
+.page.active > *:nth-child(3) { animation: fadeIn .28s var(--ease) .11s both; }
+.page.active > *:nth-child(4) { animation: fadeIn .28s var(--ease) .15s both; }
+.page.active > *:nth-child(5) { animation: fadeIn .28s var(--ease) .19s both; }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+/* Keep fadeUp for cards/modals only */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -217,16 +218,15 @@ a.nav-tab-map { text-decoration: none; }
 .scroll-row {
   display: flex; gap: 12px;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
   padding: 4px 20px 16px;
-  scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   max-width: 100%;
   box-sizing: border-box;
 }
 .scroll-row::-webkit-scrollbar { display: none; }
-.scroll-row > * { scroll-snap-align: start; flex-shrink: 0; max-width: calc(100vw - 48px); }
+.scroll-row > * { flex-shrink: 0; max-width: calc(100vw - 48px); }
 
 /* ── Section labels ── */
 .section-label {
