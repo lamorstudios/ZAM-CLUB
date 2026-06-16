@@ -483,6 +483,19 @@
     <!-- Role-based actions -->
     <div id="profile-role-actions" style="padding: 0 16px 4px"></div>
 
+    <div style="padding: 0 16px 4px">
+      <button class="btn btn-ghost btn-full" onclick="navigateTo('rewards')" style="display:flex;align-items:center;gap:10px;justify-content:flex-start">
+        🎁 <span>Meine Belohnungen</span>
+        <span id="rewards-count-badge" style="margin-left:auto;background:rgba(251,191,36,0.2);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);border-radius:12px;padding:2px 8px;font-size:0.7rem;font-weight:700;display:none">0</span>
+      </button>
+    </div>
+    <div style="padding: 0 16px 4px">
+      <button class="btn btn-ghost btn-full" onclick="openReferralSheet()" style="display:flex;align-items:center;gap:10px;justify-content:flex-start">
+        👥 <span>Freunde einladen</span>
+        <span style="margin-left:auto;font-size:0.7rem;color:rgba(255,255,255,0.35)">+100 Punkte</span>
+      </button>
+    </div>
+
     <!-- Settings -->
     <div style="padding: 16px 16px 4px">
       <button class="btn btn-ghost btn-full" onclick="openProfileEdit()">
@@ -1506,6 +1519,19 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
+<div id="referral-sheet" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px)" onclick="if(event.target===this)closeReferralSheet()">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:#111118;border-radius:24px 24px 0 0;padding:20px 16px 48px">
+    <div style="width:40px;height:4px;background:rgba(255,255,255,0.15);border-radius:99px;margin:0 auto 20px"></div>
+    <div id="referral-sheet-body"></div>
+  </div>
+</div>
+
+<div id="qr-voucher-modal" style="display:none;position:fixed;inset:0;z-index:9300;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);align-items:center;justify-content:center" onclick="if(event.target===this)closeQRVoucher()">
+  <div style="background:#111118;border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:24px 20px;width:min(90vw,360px);text-align:center">
+    <div id="qr-voucher-body"></div>
+  </div>
+</div>
+
 </body>
 <!-- Merchant Stats Overlay -->
 <div id="merchant-stats-overlay" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.7);align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeMerchantStatsOverlay()">
@@ -1527,6 +1553,13 @@
   </div>
 </div>
 
+
+<!-- =============================================
+     REWARDS PAGE
+     ============================================= -->
+<div id="page-rewards" class="page">
+  <div id="rewards-content" style="padding-bottom:100px"></div>
+</div>
 
 <!-- =============================================
      PHOTO CHALLENGES PAGE

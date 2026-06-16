@@ -229,6 +229,9 @@ function navigateTo(pageId) {
     // static page, nothing to render dynamically
   } else if (pageId === 'admin-ai-insights') {
     renderAdminAIInsights('admin-ai-insights');
+  } else if (pageId === 'rewards') {
+    window.scrollTo(0, 0);
+    renderRewards();
   } else if (pageId === 'photo-challenges') {
     window.scrollTo(0, 0);
     renderPhotoChallenges();
@@ -839,6 +842,7 @@ function renderEventCard(evt, idx) {
         ${evt.is_joined ? '✓ Angemeldet' : 'Teilnehmen'}
       </button>
     </div>
+    ${evt.is_joined ? `<button onclick="eventCheckIn('${evt.id}','${(evt.title||'').replace(/'/g,"\\'")}')" style="width:100%;margin-top:10px;padding:11px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">📍 Beim Event einchecken • +50 Punkte</button>` : ''}
   `;
 
   div.querySelector('.bookmark-btn').addEventListener('click', (e) => {
@@ -5593,6 +5597,358 @@ function _initDemoRoleBadge() {
   const user = ZAMApi.auth.currentUser();
   if (!user) return;
   switchDemoRole(user.role || 'user');
+}
+
+// ═══════════════════════════════════════════════
+// REWARDS SYSTEM
+// ═══════════════════════════════════════════════
+
+function _getRewards() { try { return JSON.parse(localStorage.getItem('zam_rewards')||'[]'); } catch { return []; } }
+function _saveRewards(l) { localStorage.setItem('zam_rewards', JSON.stringify(l)); }
+
+const POINTS_CATALOG = [
+  { id:'pc_001', points:500,  icon:'☕', title:'Gratis Kaffee',      merchant:'Café Freiham',   description:'Ein Heißgetränk deiner Wahl gratis.' },
+  { id:'pc_002', points:1000, icon:'🍦', title:'Gratis Eis',         merchant:'Gelato World',   description:'Eine Kugel Eis nach Wahl gratis.' },
+  { id:'pc_003', points:2500, icon:'🎟️', title:'Eventticket',        merchant:'ZAM Freiham',    description:'Freier Eintritt zu einem ZAM-Community-Event.' },
+  { id:'pc_004', points:5000, icon:'💎', title:'Premium Vorteil',    merchant:'ZAM Freiham',    description:'Exklusiver Vorteil: VIP-Zugang + Händler-Rabatte.' },
+];
+
+function _seedRewards() {
+  if (_getRewards().length) return;
+  const demos = [
+    { id:'rew_d1', type:'challenge', merchant_name:'Asia Street Food', merchant_icon:'🥢', title:'Gratis Frühlingsrollen', description:'Einzulösen bei Asia Street Food im ZAM.', voucher_id:'ZAM-AS7742', status:'available', challenge_id:'ch_004', expires_at: new Date(Date.now()+30*86400000).toISOString(), earned_at: new Date().toISOString() },
+    { id:'rew_d2', type:'points',    merchant_name:'Café Freiham',     merchant_icon:'☕', title:'Gratis Kaffee',         description:'Ein Heißgetränk deiner Wahl gratis.',   voucher_id:'ZAM-CF4419', status:'available', points_cost:500, expires_at: new Date(Date.now()+14*86400000).toISOString(), earned_at: new Date().toISOString() },
+    { id:'rew_d3', type:'event',     merchant_name:'ZAM Freiham',      merchant_icon:'🎫', title:'Summer Event Ticket',  description:'Einlass zum ZAM Summer Community Event.', voucher_id:'ZAM-EV1123', status:'redeemed',  expires_at: new Date(Date.now()-2*86400000).toISOString(), earned_at: new Date(Date.now()-5*86400000).toISOString(), redeemed_at: new Date(Date.now()-2*86400000).toISOString() },
+    { id:'rew_d4', type:'challenge', merchant_name:'Pitsburger',       merchant_icon:'🍔', title:'Gratis Pommes',        description:'Beilage deiner Wahl bei Pitsburger gratis.', voucher_id:'ZAM-PB9931', status:'available', challenge_id:'ch_001', expires_at: new Date(Date.now()+21*86400000).toISOString(), earned_at: new Date().toISOString() },
+  ];
+  _saveRewards(demos);
+}
+
+function _generateVoucherId() {
+  return 'ZAM-' + Math.random().toString(36).slice(2,6).toUpperCase() + Math.floor(Math.random()*9000+1000);
+}
+
+function renderRewards() {
+  _seedRewards();
+  const container = document.getElementById('rewards-content');
+  if (!container) return;
+  const rewards = _getRewards();
+  const user = ZAMApi.auth.currentUser();
+  const pts = user?.points || 0;
+
+  const available = rewards.filter(r => r.status === 'available');
+  const redeemed  = rewards.filter(r => r.status === 'redeemed');
+
+  // Update profile badge
+  const badge = document.getElementById('rewards-count-badge');
+  if (badge) { badge.textContent = available.length; badge.style.display = available.length ? 'block' : 'none'; }
+
+  const typeLabel = { challenge:'🏆 Challenge', points:'⭐ Punkte', event:'🎫 Event' };
+  const statusStyle = {
+    available: 'background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.25)',
+    redeemed:  'background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.35);border:1px solid rgba(255,255,255,0.08)',
+    expired:   'background:rgba(239,68,68,0.08);color:#f87171;border:1px solid rgba(239,68,68,0.15)',
+  };
+  const statusLabel = { available:'✅ Verfügbar', redeemed:'✓ Eingelöst', expired:'⌛ Abgelaufen' };
+
+  function rewardCard(r) {
+    const isAvail = r.status === 'available';
+    const exp = new Date(r.expires_at);
+    const daysLeft = Math.ceil((exp - Date.now()) / 86400000);
+    return `
+    <div style="background:#111118;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:16px;margin-bottom:12px;${isAvail ? '' : 'opacity:0.6'}">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
+        <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">${r.merchant_icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.94rem;font-weight:800;color:#e2e8f0;line-height:1.2;margin-bottom:3px">${escHtml(r.title)}</div>
+          <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">${escHtml(r.merchant_name)}</div>
+        </div>
+        <span style="font-size:0.62rem;font-weight:700;padding:4px 9px;border-radius:20px;white-space:nowrap;${statusStyle[r.status]}">${statusLabel[r.status]}</span>
+      </div>
+      <div style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:12px;line-height:1.5">${escHtml(r.description)}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <span style="font-size:0.62rem;padding:3px 9px;border-radius:20px;background:rgba(139,92,246,0.12);color:#a78bfa;border:1px solid rgba(139,92,246,0.2)">${typeLabel[r.type]||r.type}</span>
+        <span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">ID: ${r.voucher_id}</span>
+        <span style="font-size:0.62rem;color:${daysLeft < 5 && isAvail ? '#f59e0b' : 'rgba(255,255,255,0.3)'}">
+          ${r.status === 'redeemed' ? '✓ Eingelöst am '+new Date(r.redeemed_at).toLocaleDateString('de-DE') : daysLeft > 0 ? `Gültig noch ${daysLeft} Tag${daysLeft!==1?'e':''}` : 'Abgelaufen'}
+        </span>
+      </div>
+      ${isAvail ? `
+        <div style="display:flex;gap:8px">
+          <button onclick="showQRVoucher('${r.id}')" style="flex:1;padding:11px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:none;color:#fff;border-radius:12px;font-size:0.82rem;font-weight:800;font-family:var(--font);cursor:pointer">📱 QR-Code anzeigen</button>
+          <button onclick="markRewardRedeemed('${r.id}')" style="flex:1;padding:11px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">✓ Als eingelöst markieren</button>
+        </div>` : ''}
+    </div>`;
+  }
+
+  // Points catalog
+  const catalogHtml = POINTS_CATALOG.map(p => {
+    const canAfford = pts >= p.points;
+    return `
+    <div style="background:#111118;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px">
+      <div style="font-size:2rem;flex-shrink:0">${p.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.88rem;font-weight:800;color:#e2e8f0">${p.title}</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px">${p.merchant}</div>
+        <div style="font-size:0.7rem;color:#fbbf24;margin-top:3px;font-weight:700">⭐ ${p.points.toLocaleString('de-DE')} Punkte</div>
+      </div>
+      <button onclick="redeemPointsReward('${p.id}')" ${canAfford ? '' : 'disabled'} style="padding:9px 14px;border-radius:10px;font-size:0.75rem;font-weight:800;font-family:var(--font);cursor:${canAfford ? 'pointer' : 'default'};border:none;background:${canAfford ? 'linear-gradient(135deg,#b45309,#f59e0b)' : 'rgba(255,255,255,0.05)'};color:${canAfford ? '#fff' : 'rgba(255,255,255,0.25)'};white-space:nowrap">${canAfford ? 'Einlösen' : 'Zu wenig'}</button>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+  <!-- Hero -->
+  <div style="background:linear-gradient(160deg,#1a1040,#0f172a,#090910);padding:0 20px 24px">
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 0 16px">
+      <button onclick="navigateTo('profile')" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">←</button>
+      <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#fbbf24">Mein ZAM Club</span>
+    </div>
+    <h1 style="font-size:1.5rem;font-weight:900;color:#fff;margin-bottom:8px">🎁 Meine Belohnungen</h1>
+    <p style="font-size:0.8rem;color:rgba(255,255,255,0.45);line-height:1.6">Aktive Gutscheine, Challenge-Prämien und Punkte-Belohnungen</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
+      <div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.2);border-radius:12px;padding:12px">
+        <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.06em;font-weight:800;color:rgba(251,191,36,0.7);margin-bottom:4px">Verfügbar</div>
+        <div style="font-size:1.6rem;font-weight:900;color:#fbbf24">${available.length}</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Gutscheine</div>
+      </div>
+      <div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:12px">
+        <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.06em;font-weight:800;color:rgba(139,92,246,0.7);margin-bottom:4px">Meine Punkte</div>
+        <div style="font-size:1.6rem;font-weight:900;color:#c4b5fd">${(pts||0).toLocaleString('de-DE')}</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">⭐ Punkte</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active rewards -->
+  <div style="padding:20px 16px 0">
+    <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:14px">🎫 Aktive Gutscheine (${available.length})</div>
+    ${available.length ? available.map(rewardCard).join('') : '<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);font-size:0.82rem">Noch keine aktiven Gutscheine.<br>Schließe eine Challenge ab!</div>'}
+  </div>
+
+  <!-- Points catalog -->
+  <div style="padding:20px 16px 0">
+    <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:6px">⭐ Punkte-Prämien</div>
+    <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-bottom:14px">Du hast <strong style="color:#fbbf24">${(pts||0).toLocaleString('de-DE')} Punkte</strong>. Tausche sie gegen Prämien ein.</div>
+    ${catalogHtml}
+  </div>
+
+  <!-- Redeemed -->
+  ${redeemed.length ? `<div style="padding:20px 16px 0">
+    <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:14px">✓ Bereits eingelöst (${redeemed.length})</div>
+    ${redeemed.map(rewardCard).join('')}
+  </div>` : ''}`;
+}
+
+let _qrCodeInstance = null;
+let _qrExpiryTimer  = null;
+
+function showQRVoucher(rewardId) {
+  const rewards = _getRewards();
+  const r = rewards.find(x => x.id === rewardId);
+  if (!r) return;
+
+  const modal = document.getElementById('qr-voucher-modal');
+  const body  = document.getElementById('qr-voucher-body');
+  if (!modal || !body) return;
+
+  // Set/refresh 15-min expiry
+  const now = Date.now();
+  r.qr_expires_at = new Date(now + 15 * 60 * 1000).toISOString();
+  _saveRewards(rewards);
+
+  function renderQR() {
+    const remaining = Math.max(0, new Date(r.qr_expires_at) - Date.now());
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    const expired = remaining <= 0;
+
+    body.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;text-align:left">
+      <div style="font-size:2rem">${r.merchant_icon}</div>
+      <div>
+        <div style="font-size:1rem;font-weight:800;color:#fff">${escHtml(r.title)}</div>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.45)">${escHtml(r.merchant_name)}</div>
+      </div>
+    </div>
+    ${expired ? `
+      <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:14px;padding:20px;text-align:center;margin-bottom:16px">
+        <div style="font-size:1.5rem;margin-bottom:8px">⌛</div>
+        <div style="font-size:0.9rem;font-weight:700;color:#f87171;margin-bottom:6px">QR-Code abgelaufen</div>
+        <div style="font-size:0.75rem;color:rgba(255,255,255,0.4)">Aus Sicherheitsgründen ist der Code nicht mehr gültig.</div>
+      </div>
+      <button onclick="showQRVoucher('${r.id}')" style="width:100%;padding:13px;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border:none;color:#fff;border-radius:12px;font-size:0.85rem;font-weight:800;font-family:var(--font);cursor:pointer;margin-bottom:10px">🔄 QR-Code erneuern</button>` : `
+      <div id="qr-code-display" style="background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;min-height:180px"></div>
+      <div style="background:${remaining < 120000 ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.08)'};border:1px solid ${remaining < 120000 ? 'rgba(239,68,68,0.2)' : 'rgba(52,211,153,0.2)'};border-radius:10px;padding:10px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px">
+        <span style="font-size:0.8rem">${remaining < 120000 ? '⚠️' : '🔒'}</span>
+        <span style="font-size:0.78rem;font-weight:700;color:${remaining < 120000 ? '#f87171' : '#34d399'}">Gültig noch ${mins}:${secs.toString().padStart(2,'0')} Min</span>
+      </div>`}
+    <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Gutschein-ID</span>
+      <span style="font-size:0.78rem;font-weight:800;color:#e2e8f0;letter-spacing:0.08em">${r.voucher_id}</span>
+    </div>
+    <button onclick="closeQRVoucher()" style="width:100%;padding:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">Schließen</button>`;
+
+    if (!expired) {
+      const qrEl = document.getElementById('qr-code-display');
+      if (qrEl) {
+        qrEl.innerHTML = '';
+        if (typeof QRCode !== 'undefined') {
+          new QRCode(qrEl, { text: `ZAM:${r.voucher_id}:${r.qr_expires_at}`, width:160, height:160, colorDark:'#1a1a2e', colorLight:'#ffffff' });
+        } else {
+          qrEl.innerHTML = `<div style="text-align:center;color:#1a1a2e;font-weight:800;font-size:0.9rem;padding:20px">${r.voucher_id}<br><span style="font-size:0.7rem;font-weight:400;opacity:0.6">Dem Händler zeigen</span></div>`;
+        }
+      }
+    }
+  }
+
+  renderQR();
+  modal.style.display = 'flex';
+
+  if (_qrExpiryTimer) clearInterval(_qrExpiryTimer);
+  _qrExpiryTimer = setInterval(() => {
+    if (!document.getElementById('qr-voucher-modal') || document.getElementById('qr-voucher-modal').style.display === 'none') { clearInterval(_qrExpiryTimer); return; }
+    renderQR();
+    if (new Date(r.qr_expires_at) <= Date.now()) clearInterval(_qrExpiryTimer);
+  }, 1000);
+}
+
+function closeQRVoucher() {
+  const m = document.getElementById('qr-voucher-modal');
+  if (m) m.style.display = 'none';
+  if (_qrExpiryTimer) { clearInterval(_qrExpiryTimer); _qrExpiryTimer = null; }
+}
+
+function markRewardRedeemed(rewardId) {
+  if (!confirm('Gutschein als eingelöst markieren?')) return;
+  const rewards = _getRewards();
+  const r = rewards.find(x => x.id === rewardId);
+  if (r) { r.status = 'redeemed'; r.redeemed_at = new Date().toISOString(); _saveRewards(rewards); renderRewards(); showToast('✓ Gutschein eingelöst!'); }
+}
+
+function redeemPointsReward(catalogId) {
+  const item = POINTS_CATALOG.find(p => p.id === catalogId);
+  if (!item) return;
+  const user = ZAMApi.auth.currentUser();
+  if (!user || (user.points || 0) < item.points) { showToast('Nicht genug Punkte'); return; }
+  if (!confirm(`${item.title} für ${item.points} Punkte einlösen?`)) return;
+  user.points = (user.points || 0) - item.points;
+  ZAMData.currentUser = { ...ZAMData.currentUser, points: user.points };
+  try {
+    const g = JSON.parse(localStorage.getItem('zamclub_global')||'{}');
+    if (g.session_user) g.session_user.points = user.points;
+    const acc = (g.accounts||[]).find(a => a.id === user.id);
+    if (acc) acc.points = user.points;
+    localStorage.setItem('zamclub_global', JSON.stringify(g));
+  } catch {}
+  const rewards = _getRewards();
+  rewards.unshift({ id:'rew_'+Date.now(), type:'points', merchant_name:item.merchant, merchant_icon:item.icon, title:item.title, description:item.description, voucher_id:_generateVoucherId(), status:'available', points_cost:item.points, expires_at:new Date(Date.now()+30*86400000).toISOString(), earned_at:new Date().toISOString() });
+  _saveRewards(rewards);
+  renderRewards();
+  showToast(`🎁 ${item.title} freigeschaltet!`);
+}
+
+function _awardChallengeReward(challengeId) {
+  const ch = _getChallenges().find(c => c.id === challengeId);
+  if (!ch) return;
+  const rewards = _getRewards();
+  if (rewards.some(r => r.challenge_id === challengeId && r.status !== 'expired')) return;
+  rewards.unshift({ id:'rew_'+Date.now(), type:'challenge', merchant_name:ch.merchant_name, merchant_icon:ch.merchant_icon, title:ch.reward_description, description:`Belohnung für: ${ch.title}`, voucher_id:_generateVoucherId(), status:'available', challenge_id:challengeId, expires_at:new Date(Date.now()+30*86400000).toISOString(), earned_at:new Date().toISOString() });
+  _saveRewards(rewards);
+  showToast(`🎁 Belohnung freigeschaltet: ${ch.reward_description}`);
+}
+
+// ═══════════════════════════════════════════════
+// REFERRAL SYSTEM
+// ═══════════════════════════════════════════════
+
+function _getReferralCode(user) {
+  if (!user) return null;
+  const key = 'zam_referral_' + user.id;
+  let code = localStorage.getItem(key);
+  if (!code) {
+    code = 'ZAM' + (user.username || user.id).slice(0,4).toUpperCase() + Math.floor(Math.random()*900+100);
+    localStorage.setItem(key, code);
+  }
+  return code;
+}
+
+function openReferralSheet() {
+  const sheet = document.getElementById('referral-sheet');
+  const body  = document.getElementById('referral-sheet-body');
+  if (!sheet || !body) return;
+  const user = ZAMApi.auth.currentUser();
+  const code = _getReferralCode(user);
+  const refKey = 'zam_referrals_' + (user?.id || 'guest');
+  const refCount = JSON.parse(localStorage.getItem(refKey) || '[]').length;
+  body.innerHTML = `
+    <h2 style="font-size:1.2rem;font-weight:900;color:#fff;margin-bottom:6px">👥 Freunde einladen</h2>
+    <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:20px;line-height:1.6">Für jeden Freund der sich mit deinem Code anmeldet bekommst du <strong style="color:#fbbf24">+100 Punkte</strong>. Dein Freund erhält ebenfalls 100 Punkte!</p>
+    <div style="background:rgba(139,92,246,0.1);border:2px dashed rgba(139,92,246,0.35);border-radius:14px;padding:18px;text-align:center;margin-bottom:16px">
+      <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(139,92,246,0.7);margin-bottom:8px">Dein Referral-Code</div>
+      <div style="font-size:2rem;font-weight:900;letter-spacing:0.12em;color:#c4b5fd;font-family:monospace">${code}</div>
+      <button onclick="navigator.clipboard?.writeText('${code}').then(()=>showToast('✓ Code kopiert!'))" style="margin-top:12px;padding:8px 20px;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:10px;font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer">📋 Code kopieren</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:900;color:#c4b5fd">${refCount}</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Eingeladene Freunde</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:900;color:#fbbf24">${refCount * 100}</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Punkte verdient</div>
+      </div>
+    </div>
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;margin-bottom:16px">
+      <div style="font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em">So funktioniert's</div>
+      ${[['1','Deinen Code teilen','Sende deinen persönlichen Code an Freunde'],['2','Freund registriert sich','Mit deinem Code im ZAM Club anmelden'],['3','Beide erhalten Punkte','+100 Punkte für dich, +100 Punkte für den Freund']].map(([n,t,d]) => `
+      <div style="display:flex;gap:10px;margin-bottom:8px">
+        <div style="width:20px;height:20px;border-radius:50%;background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#c4b5fd;flex-shrink:0;margin-top:1px">${n}</div>
+        <div><div style="font-size:0.78rem;font-weight:700;color:#e2e8f0">${t}</div><div style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-top:1px">${d}</div></div>
+      </div>`).join('')}
+    </div>
+    <button onclick="closeReferralSheet()" style="width:100%;padding:13px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.84rem;font-weight:700;font-family:var(--font);cursor:pointer">Schließen</button>`;
+  sheet.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeReferralSheet() {
+  const s = document.getElementById('referral-sheet');
+  if (s) s.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// ═══════════════════════════════════════════════
+// EVENT CHECK-IN
+// ═══════════════════════════════════════════════
+
+function eventCheckIn(eventId, eventName) {
+  const user = ZAMApi.auth.currentUser();
+  if (!user) { showToast('Bitte einloggen'); return; }
+  const key = 'zam_checkins_' + user.id;
+  const checkins = JSON.parse(localStorage.getItem(key)||'[]');
+  if (checkins.includes(eventId)) { showToast('Du hast dich bereits eingecheckt!'); return; }
+  navigator.geolocation?.getCurrentPosition(pos => {
+    const dist = typeof _geoDistance === 'function' ? Math.round(_geoDistance(pos.coords.latitude, pos.coords.longitude, ZAM_LAT, ZAM_LNG)) : 0;
+    if (dist > 1000) { showToast('❌ Du bist nicht im ZAM-Bereich'); return; }
+    _doEventCheckin(eventId, key, checkins, user);
+  }, () => _doEventCheckin(eventId, key, checkins, user));
+}
+
+function _doEventCheckin(eventId, key, checkins, user) {
+  checkins.push(eventId);
+  localStorage.setItem(key, JSON.stringify(checkins));
+  try { ZAMApi.points?.add(50, 'Event Check-In').catch(()=>{}); } catch {}
+  user.points = (user.points||0) + 50;
+  ZAMData.currentUser = {...ZAMData.currentUser, points: user.points};
+  try {
+    const g = JSON.parse(localStorage.getItem('zamclub_global')||'{}');
+    if (g.session_user) g.session_user.points = user.points;
+    const acc = (g.accounts||[]).find(a => a.id === user.id);
+    if (acc) acc.points = user.points;
+    localStorage.setItem('zamclub_global', JSON.stringify(g));
+  } catch {}
+  showToast('✅ Eingecheckt! +50 Punkte');
+  if (typeof renderEvents === 'function') renderEvents();
 }
 
 document.readyState === 'loading'
