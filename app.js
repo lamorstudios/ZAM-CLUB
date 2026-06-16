@@ -1450,13 +1450,82 @@ async function renderDeals() {
   });
 }
 
+// ── Deal Media Renderer ─────────────────────────────────────────
+// Lazy: thumbnails on card, full media only after user click.
+// Future hook for "Neu im ZAM" feed: _ZAM_NEW_FEED_KEY
+const _ZAM_NEW_FEED_KEY = 'zam_new_in_zam_feed';
+
+function _dealMediaHtml(deal) {
+  const type = deal.media_type;
+  const url  = deal.media_url || '';
+  if (!type || type === 'text' || !url) return '';
+
+  if (type === 'image') {
+    return '<div style="margin:-16px -16px 14px;height:180px;border-radius:14px 14px 0 0;overflow:hidden">' +
+      '<img src="' + escHtml(url) + '" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" alt="Deal-Bild"></div>';
+  }
+
+  if (type === 'video') {
+    // Poster frame: show play button overlay, load video only on click
+    const safeVideoUrl = url.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return '<div id="dmv_' + deal.id + '" onclick="_playDealVideo(this,\'' + safeVideoUrl + '\')" style="margin:-16px -16px 14px;height:200px;border-radius:14px 14px 0 0;overflow:hidden;cursor:pointer;background:#000;display:flex;align-items:center;justify-content:center;position:relative">' +
+      (deal.media_thumbnail ? '<img src="' + escHtml(deal.media_thumbnail) + '" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.7">' : '<div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(250,70,21,0.3),rgba(0,0,0,0.6))"></div>') +
+      '<div style="position:relative;width:56px;height:56px;border-radius:50%;background:rgba(250,70,21,0.9);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(250,70,21,0.5)">' +
+        '<span style="font-size:1.4rem;margin-left:4px">▶</span>' +
+      '</div>' +
+      '<div style="position:absolute;bottom:10px;left:12px;font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.7)">📹 Video</div>' +
+    '</div>';
+  }
+
+  if (type === 'instagram') {
+    return '<a href="' + escHtml(url) + '" target="_blank" rel="noopener" style="display:block;margin:-16px -16px 14px;text-decoration:none">' +
+      '<div style="height:160px;border-radius:14px 14px 0 0;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden">' +
+        '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.25)"></div>' +
+        '<div style="position:relative;font-size:2rem">📸</div>' +
+        '<div style="position:relative;display:flex;align-items:center;gap:6px">' +
+          '<span style="font-size:0.72rem;font-weight:800;color:#fff">Instagram Reel ansehen</span>' +
+          '<span style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:0.8rem">▶</span>' +
+        '</div>' +
+        '<div style="position:absolute;top:10px;right:12px;font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.6)">Instagram</div>' +
+      '</div>' +
+    '</a>';
+  }
+
+  if (type === 'tiktok') {
+    return '<a href="' + escHtml(url) + '" target="_blank" rel="noopener" style="display:block;margin:-16px -16px 14px;text-decoration:none">' +
+      '<div style="height:160px;border-radius:14px 14px 0 0;background:linear-gradient(135deg,#010101,#161823);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden">' +
+        '<div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,242,234,0.15),rgba(254,44,85,0.15))"></div>' +
+        '<div style="position:relative;font-size:2rem">🎵</div>' +
+        '<div style="position:relative;display:flex;align-items:center;gap:6px">' +
+          '<span style="font-size:0.72rem;font-weight:800;color:#fff">TikTok Video ansehen</span>' +
+          '<span style="width:28px;height:28px;border-radius:50%;background:rgba(254,44,85,0.5);display:flex;align-items:center;justify-content:center;font-size:0.8rem">▶</span>' +
+        '</div>' +
+        '<div style="position:absolute;top:10px;right:12px;font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.5)">TikTok</div>' +
+      '</div>' +
+    '</a>';
+  }
+  return '';
+}
+
+function _playDealVideo(container, src) {
+  const video = document.createElement('video');
+  video.src = src;
+  video.controls = true;
+  video.autoplay = true;
+  video.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+  container.innerHTML = '';
+  container.appendChild(video);
+  container.style.cursor = 'default';
+}
+
 function renderDealCard(deal, idx) {
   const div = el('div', 'deal-card-full card-dark');
   div.style.cssText = 'border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.3);padding:16px';
 
-  div.innerHTML = `
+  const _mediaHtml = _dealMediaHtml(deal);
+  div.innerHTML = _mediaHtml + `
     <!-- Merchant Logo Banner -->
-    <div style="margin:-16px -16px 14px;height:72px;border-radius:14px 14px 0 0;background:linear-gradient(135deg,${deal.category_color}33,${deal.category_color}11);display:flex;align-items:center;padding:0 16px;gap:14px;position:relative;overflow:hidden">
+    <div style="margin:-16px -16px 14px;height:72px;border-radius:${_mediaHtml ? '0' : '14px 14px'} 0 0;background:linear-gradient(135deg,${deal.category_color}33,${deal.category_color}11);display:flex;align-items:center;padding:0 16px;gap:14px;position:relative;overflow:hidden">
       <div style="width:52px;height:52px;border-radius:14px;background:${deal.category_color}22;border:1px solid ${deal.category_color}33;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0">${deal.store_icon}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:0.72rem;font-weight:800;color:${deal.category_color};text-transform:uppercase;letter-spacing:0.06em">${deal.store_name}</div>
@@ -6971,6 +7040,19 @@ function openMerchantDealModal() {
     _inp('Gültig bis', '_dl_exp', 'date', '', true) +
     '</div>' +
     '<div style="margin-bottom:14px">' +
+      '<div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">📎 Medien (optional)</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' +
+        '<label style="flex:1;min-width:70px"><input type="radio" name="_dl_media_type" value="text" checked onchange="_onDealMediaTypeChange()" style="display:none"><div class="_dl_mtype_btn" style="padding:7px 10px;border-radius:10px;border:1px solid rgba(250,70,21,0.4);background:rgba(250,70,21,0.15);color:#FA4615;font-size:0.72rem;font-weight:700;text-align:center;cursor:pointer">Nur Text</div></label>' +
+        '<label style="flex:1;min-width:70px"><input type="radio" name="_dl_media_type" value="image" onchange="_onDealMediaTypeChange()" style="display:none"><div class="_dl_mtype_btn" style="padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-size:0.72rem;font-weight:700;text-align:center;cursor:pointer">🖼 Bild</div></label>' +
+        '<label style="flex:1;min-width:70px"><input type="radio" name="_dl_media_type" value="video" onchange="_onDealMediaTypeChange()" style="display:none"><div class="_dl_mtype_btn" style="padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-size:0.72rem;font-weight:700;text-align:center;cursor:pointer">📹 Video</div></label>' +
+        '<label style="flex:1;min-width:70px"><input type="radio" name="_dl_media_type" value="instagram" onchange="_onDealMediaTypeChange()" style="display:none"><div class="_dl_mtype_btn" style="padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-size:0.72rem;font-weight:700;text-align:center;cursor:pointer">📸 Instagram</div></label>' +
+        '<label style="flex:1;min-width:70px"><input type="radio" name="_dl_media_type" value="tiktok" onchange="_onDealMediaTypeChange()" style="display:none"><div class="_dl_mtype_btn" style="padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-size:0.72rem;font-weight:700;text-align:center;cursor:pointer">🎵 TikTok</div></label>' +
+      '</div>' +
+      '<div id="_dl_media_url_wrap" style="display:none">' +
+        '<input id="_dl_media_url" type="url" placeholder="Link / URL eingeben" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:inherit;font-size:0.85rem;outline:none">' +
+      '</div>' +
+    '</div>' +
+    '<div style="margin-bottom:14px">' +
       '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px;background:rgba(250,70,21,0.07);border:1px solid rgba(250,70,21,0.2);border-radius:12px">' +
         '<input type="checkbox" id="_dl_partner_toggle" onchange="togglePartnerDealFields()" style="width:18px;height:18px;accent-color:#FA4615;cursor:pointer">' +
         '<div>' +
@@ -6999,6 +7081,23 @@ function togglePartnerDealFields() {
   if (fields) fields.style.display = checked ? 'block' : 'none';
   const submitBtn = document.querySelector('#_dyn_deal_modal button[onclick="submitNewDeal()"]');
   if (submitBtn) submitBtn.textContent = checked ? '📨 Anfrage senden' : '📤 Deal einreichen';
+}
+
+function _onDealMediaTypeChange() {
+  const selected = document.querySelector('input[name="_dl_media_type"]:checked')?.value || 'text';
+  document.querySelectorAll('._dl_mtype_btn').forEach(b => {
+    const isActive = b.parentElement.querySelector('input').value === selected;
+    b.style.background = isActive ? 'rgba(250,70,21,0.15)' : 'rgba(255,255,255,0.05)';
+    b.style.color = isActive ? '#FA4615' : 'rgba(255,255,255,0.55)';
+    b.style.border = isActive ? '1px solid rgba(250,70,21,0.4)' : '1px solid rgba(255,255,255,0.12)';
+  });
+  const urlWrap = document.getElementById('_dl_media_url_wrap');
+  if (!urlWrap) return;
+  urlWrap.style.display = selected === 'text' ? 'none' : 'block';
+  const urlInput = document.getElementById('_dl_media_url');
+  if (!urlInput) return;
+  const placeholders = { image: 'Bild-URL (https://...)', video: 'Video-URL (https://...)', instagram: 'Instagram Reel-Link', tiktok: 'TikTok-Video-Link' };
+  urlInput.placeholder = placeholders[selected] || 'URL';
 }
 
 function closeMerchantEventModal() { _merchantModalClose('_dyn_event_modal'); }
@@ -7063,11 +7162,15 @@ function submitNewDeal() {
   }
 
   // Regular deal
+  const mediaType = document.querySelector('input[name="_dl_media_type"]:checked')?.value || 'text';
+  const mediaUrl  = (document.getElementById('_dl_media_url')?.value || '').trim();
   const btn = document.querySelector('#_dyn_deal_modal button:last-child');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird eingereicht…'; }
   const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
   const list = getMerchantSubmissions();
-  list.unshift({ id:'deal_'+Date.now(), type:'deal', status:'pending', title, description:desc, discount:disc, expiry:exp, merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() });
+  const dealEntry = { id:'deal_'+Date.now(), type:'deal', status:'pending', title, description:desc, discount:disc, expiry:exp, merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() };
+  if (mediaType && mediaType !== 'text' && mediaUrl) { dealEntry.media_type = mediaType; dealEntry.media_url = mediaUrl; }
+  list.unshift(dealEntry);
   saveMerchantSubmissions(list);
   setTimeout(() => { _merchantModalClose('_dyn_deal_modal'); showToast('✅ Deal erfolgreich eingereicht!'); }, 500);
 }
