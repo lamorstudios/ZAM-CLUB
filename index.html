@@ -1150,5 +1150,36 @@
 <script src="api.js"></script>
 <script src="app.js"></script>
 
+<!-- DEBUG OVERLAY — remove after diagnosis -->
+<div id="dbg" style="position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:99999;background:rgba(0,0,0,0.9);color:#0f0;font-family:monospace;font-size:10px;padding:6px 10px;border-radius:8px;border:1px solid #0f0;max-width:95vw;word-break:break-all;pointer-events:none;display:none"></div>
+<script>
+(function(){
+  var dbg = document.getElementById('dbg');
+  function showDbg(x, y) {
+    var el = document.elementFromPoint(x, y);
+    if (!el) return;
+    var cs = window.getComputedStyle(el);
+    var r = el.getBoundingClientRect();
+    dbg.style.display = 'block';
+    dbg.textContent =
+      'TAG: ' + el.tagName +
+      ' | ID: ' + (el.id||'-') +
+      ' | CLASS: ' + (el.className||'-').toString().slice(0,30) +
+      '\npos: ' + cs.position +
+      ' | z: ' + cs.zIndex +
+      ' | pe: ' + cs.pointerEvents +
+      ' | ov: ' + cs.overflow +
+      '\nW: ' + Math.round(r.width) + ' H: ' + Math.round(r.height);
+  }
+  document.addEventListener('touchstart', function(e){
+    var t = e.touches[0];
+    showDbg(t.clientX, t.clientY);
+  }, {passive:true});
+  document.addEventListener('touchend', function(){
+    setTimeout(function(){ dbg.style.display='none'; }, 3000);
+  }, {passive:true});
+})();
+</script>
+
 </body>
 </html>
