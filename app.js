@@ -171,8 +171,9 @@ function navigateTo(pageId) {
   const nextEl = $(`#page-${pageId}`);
   if (nextEl) {
     nextEl.classList.add('active');
+    nextEl.scrollTop = 0;
   }
-  window.scrollTo(0, 0);
+  if (pageId !== 'home') window.scrollTo(0, 0);
 
   $$('.nav-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.page === pageId);
