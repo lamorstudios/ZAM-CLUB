@@ -1375,6 +1375,21 @@ async function joinEvent(idx, cardEl) {
 // =============================================
 // Deals Page
 // =============================================
+let _dealsActiveTab = 'all';
+
+function setDealsTab(tab) {
+  _dealsActiveTab = tab;
+  ['all','deals','partner'].forEach(t => {
+    const btn = document.getElementById('deals-tab-'+t);
+    if (!btn) return;
+    const active = t === tab;
+    btn.style.background = active ? 'rgba(250,70,21,1)' : 'rgba(255,255,255,0.07)';
+    btn.style.color = active ? '#fff' : 'rgba(255,255,255,0.55)';
+    btn.style.border = active ? 'none' : '1px solid rgba(255,255,255,0.1)';
+  });
+  renderDeals();
+}
+
 async function renderDeals() {
   const container = $('#deals-list');
   if (!container) return;
@@ -1382,6 +1397,26 @@ async function renderDeals() {
 
   state.deals = await ZAMApi.deals.list();
   container.innerHTML = '';
+
+  // Partner deals from localStorage
+  const partnerDeals = _getPD2ActiveDeals();
+
+  if (_dealsActiveTab === 'partner') {
+    if (!partnerDeals.length) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.35);font-size:0.82rem">Noch keine Partner-Deals aktiv</div>';
+      return;
+    }
+    partnerDeals.forEach(pd => container.appendChild(_renderPartnerDealCard(pd)));
+    return;
+  }
+
+  if (_dealsActiveTab === 'deals') {
+    state.deals.forEach((deal, idx) => container.appendChild(renderDealCard(deal, idx)));
+    return;
+  }
+
+  // 'all': partner deals first, then regular deals
+  partnerDeals.forEach(pd => container.appendChild(_renderPartnerDealCard(pd)));
   state.deals.forEach((deal, idx) => container.appendChild(renderDealCard(deal, idx)));
 }
 
