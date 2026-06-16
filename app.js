@@ -7304,15 +7304,22 @@ function renderMyVouchers() {
 }
 
 function _myVoucherCard(v) {
-  return `<div onclick="${v.redeemed?'':``showMyVoucherQR('${v.id}')``}" style="margin:0 16px 10px;background:${v.redeemed?'rgba(255,255,255,0.03)':'rgba(250,70,21,0.07)'};border:1px solid ${v.redeemed?'rgba(255,255,255,0.07)':'rgba(250,70,21,0.2)'};border-radius:16px;padding:14px;cursor:${v.redeemed?'default':'pointer'};${v.redeemed?'opacity:0.55':''}">
+  const clickAttr = v.redeemed ? '' : ("showMyVoucherQR('" + v.id + "')");
+  const bg   = v.redeemed ? 'rgba(255,255,255,0.03)' : 'rgba(250,70,21,0.07)';
+  const bdr  = v.redeemed ? 'rgba(255,255,255,0.07)' : 'rgba(250,70,21,0.2)';
+  const cur  = v.redeemed ? 'default' : 'pointer';
+  const opc  = v.redeemed ? 'opacity:0.55' : '';
+  const ttlC = v.redeemed ? 'rgba(255,255,255,0.4)' : '#fff';
+  const codeC= v.redeemed ? 'rgba(52,211,153,0.5)' : '#F7AB00';
+  return `<div onclick="${clickAttr}" style="margin:0 16px 10px;background:${bg};border:1px solid ${bdr};border-radius:16px;padding:14px;cursor:${cur};${opc}">
     <div style="display:flex;align-items:center;gap:12px">
       <div style="font-size:1.7rem">${v.store_icon}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:0.82rem;font-weight:700;color:${v.redeemed?'rgba(255,255,255,0.4)':'#fff'};line-height:1.3">${v.title}</div>
+        <div style="font-size:0.82rem;font-weight:700;color:${ttlC};line-height:1.3">${v.title}</div>
         <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">${v.store_name}</div>
-        <div style="font-size:0.65rem;font-weight:800;color:${v.redeemed?'rgba(52,211,153,0.5)':'#F7AB00'};margin-top:3px;letter-spacing:0.06em">${v.code}</div>
+        <div style="font-size:0.65rem;font-weight:800;color:${codeC};margin-top:3px;letter-spacing:0.06em">${v.code}</div>
       </div>
-      <div style="font-size:1.3rem">${v.redeemed?'✅':'🎟'}</div>
+      <div style="font-size:1.3rem">${v.redeemed ? '✅' : '🎟'}</div>
     </div>
   </div>`;
 }
