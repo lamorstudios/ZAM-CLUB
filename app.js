@@ -322,8 +322,10 @@ function renderHome() {
   if (nameEl) nameEl.textContent = firstName + '! 👋';
 
   updatePointsDisplay();
+  _renderHomeRankStats(user);
   _initSpinMerchantPrizes();
   _renderHomeSpinPreview();
+  _renderHomeRankingCard();
   renderHomeRecs();
   renderHomeEvents();
   renderHomeDeals();
@@ -401,7 +403,10 @@ async function renderHomeEvents() {
     const card = el('div', 'event-card-mini card-dark');
     card.style.setProperty('--accent-color', evt.category_color);
     card.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="margin:-12px -12px 10px;height:54px;border-radius:10px 10px 0 0;background:linear-gradient(135deg,${evt.category_color}55,${evt.category_color}22);display:flex;align-items:center;justify-content:center;font-size:1.8rem;overflow:hidden">
+        ${{'Food':'🍜','Kultur':'🎵','Sport':'🏋️','Shopping':'👗','Community':'👥'}[evt.category?.split(' ')[0]] || '🎉'}
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div class="category-tag" style="background:${evt.category_color}22;color:${evt.category_color}">${evt.category}</div>
         <button class="bookmark-btn ${saved ? 'saved' : ''}" data-id="${evt.id}" data-type="event" aria-label="Merken">
           ${saved ? '🔖' : '🏷️'}
@@ -411,9 +416,11 @@ async function renderHomeEvents() {
       <div class="event-meta">
         <span>📅 ${evt.date_formatted}</span>
         <span>⏰ ${evt.time}</span>
-        <span>📍 ${evt.location}</span>
       </div>
-      <div class="event-points-badge">+${evt.points_reward} Punkte</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+        <div class="event-points-badge">+${evt.points_reward} Punkte</div>
+        <span style="font-size:0.62rem;color:rgba(255,255,255,0.4)">👥 ${(evt.spots_total||500)-(evt.spots_left||0)} dabei</span>
+      </div>
     `;
     card.querySelector('.bookmark-btn').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -433,15 +440,16 @@ async function renderHomeDeals() {
     const saved = ZAMApi.deals.isSaved(deal.id);
     const card = el('div', 'deal-card-mini card-dark');
     card.innerHTML = `
-      ${deal.is_hot ? '<div class="hot-badge">🔥 Hot</div>' : ''}
-      <div class="store-icon">${deal.store_icon || deal.icon || '🏪'}</div>
-      <div class="discount-badge">${deal.discount}</div>
-      <div class="store-name">${deal.store_name || deal.merchant_name || ''}</div>
+      <div style="margin:-12px -12px 10px;height:60px;border-radius:10px 10px 0 0;background:linear-gradient(135deg,${deal.category_color||'#FA4615'}44,${deal.category_color||'#FA4615'}11);display:flex;align-items:center;padding:0 12px;gap:10px;overflow:hidden;position:relative">
+        <div style="font-size:1.6rem">${deal.store_icon || '🏪'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.6rem;font-weight:700;color:${deal.category_color||'#FA4615'};text-transform:uppercase;letter-spacing:0.05em">${deal.store_name || ''}</div>
+          <div style="font-size:1rem;font-weight:900;color:#fff">${deal.discount}</div>
+        </div>
+        ${deal.is_hot ? '<div class="hot-badge" style="position:absolute;top:6px;right:6px;font-size:0.55rem">🔥 Hot</div>' : ''}
+      </div>
       <div class="deal-title">${deal.title}</div>
       <div style="margin-top:6px">${_countdownBadge(deal.expiry_date)}</div>
-      <button class="bookmark-btn ${saved ? 'saved' : ''}" data-id="${deal.id}" data-type="deal" style="margin-top:8px" aria-label="Merken">
-        ${saved ? '🔖 Gespeichert' : '🏷️ Merken'}
-      </button>
       <button class="btn btn-primary" style="margin-top:10px;padding:6px 12px;font-size:0.72rem;width:100%" onclick="openVoucherQR('${deal.id}','${esc(deal.title)}','${deal.merchant_id||''}');event.stopPropagation()">🎟 Einlösen</button>
     `;
     card.querySelector('.bookmark-btn').addEventListener('click', (e) => {
@@ -451,6 +459,145 @@ async function renderHomeDeals() {
     card.addEventListener('click', () => navigateTo('deals'));
     container.appendChild(card);
   });
+}
+
+// =============================================
+// Home — Rank Stats & Ranking Cards
+// =============================================
+const _RANKING_DEMO = [
+  {rank:1,  name:'Tom W.',     initials:'TW', pts:4820, color:'#d97706', bg:'#78350f'},
+  {rank:2,  name:'Sarah L.',   initials:'SL', pts:4210, color:'#6b7280', bg:'#374151'},
+  {rank:3,  name:'Emma R.',    initials:'ER', pts:3950, color:'#b45309', bg:'#78350f'},
+  {rank:4,  name:'Felix B.',   initials:'FB', pts:3640, color:'#059669', bg:'#064e3b'},
+  {rank:5,  name:'Anna P.',    initials:'AP', pts:3380, color:'#7c3aed', bg:'#2d1b69'},
+  {rank:16, name:'Mia K.',     initials:'MK', pts:2640, color:'#7c3aed', bg:'#2d1b69'},
+  {rank:17, name:'Julia M.',   initials:'JM', pts:2460, color:'#d97706', bg:'#78350f', isMe:true},
+  {rank:18, name:'Leo M.',     initials:'LM', pts:2390, color:'#2563eb', bg:'#1e3a8a'},
+];
+
+function _renderHomeRankStats(user) {
+  const el = document.getElementById('home-rank-stats');
+  if (!el) return;
+  const pts = user?.points || 2460;
+  const rank = 17;
+  const ptsToPlatin = 3000 - pts;
+  const todayPts = parseInt(localStorage.getItem('zam_today_pts_' + Storage.todayKey()) || '25');
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)">
+      <div style="text-align:center">
+        <div style="font-size:1.1rem;font-weight:900;color:#F7AB00">🏆 #${rank}</div>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">Monatsrang</div>
+      </div>
+      <div style="text-align:center;border-left:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:1.1rem;font-weight:900;color:#34d399">+${todayPts}</div>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">Heute</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:1.1rem;font-weight:900;color:#ffb399">${ptsToPlatin}</div>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">bis Platin</div>
+      </div>
+    </div>`;
+}
+
+function _renderHomeRankingCard() {
+  const el = document.getElementById('home-ranking-card');
+  if (!el) return;
+  const now = new Date();
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  const daysLeft = Math.ceil((endOfMonth - now) / 86400000);
+  const top3 = _RANKING_DEMO.slice(0, 3);
+  const medals = ['🥇','🥈','🥉'];
+  const prizeTitles = ['Geheimer Hauptgewinn 🎁','Geheimer Premiumgewinn 🎁','Geheimer Bonusgewinn 🎁'];
+  const me = _RANKING_DEMO.find(r => r.isMe);
+
+  el.innerHTML = `
+    <div style="margin:0 16px 4px;background:linear-gradient(135deg,rgba(247,171,0,0.1),rgba(250,70,21,0.07));border:1px solid rgba(247,171,0,0.22);border-radius:18px;padding:16px;cursor:pointer" onclick="openRankingModal()">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#F7AB00">🏆 Monats-Champions</div>
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px">⏳ Noch ${daysLeft} Tage</div>
+        </div>
+        <span style="font-size:0.7rem;color:rgba(247,171,0,0.6);font-weight:700">Ranking →</span>
+      </div>
+      ${top3.map((u, i) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;${i < 2 ? 'border-bottom:1px solid rgba(255,255,255,0.05)' : ''}">
+        <div style="width:24px;text-align:center;font-size:1rem">${medals[i]}</div>
+        <div style="width:32px;height:32px;border-radius:50%;background:${u.bg};border:2px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.78rem;font-weight:700;color:#e2e8f0">${u.name}</div>
+          <div style="font-size:0.62rem;color:rgba(255,255,255,0.35)">${prizeTitles[i]}</div>
+        </div>
+        <div style="font-size:0.74rem;font-weight:800;color:#F7AB00">${u.pts.toLocaleString('de-DE')}</div>
+      </div>`).join('')}
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.5)">Dein Rang: <strong style="color:#F7AB00">#${me?.rank || 17}</strong> · ${(me?.pts || 2460).toLocaleString('de-DE')} Pkt.</div>
+        <button onclick="event.stopPropagation();openRankingModal()" style="font-size:0.68rem;font-weight:700;color:#F7AB00;background:none;border:none;cursor:pointer;font-family:var(--font)">Ranking ansehen →</button>
+      </div>
+    </div>`;
+}
+
+function openRankingModal() {
+  const now = new Date();
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  const endOfQ = new Date(now.getFullYear(), Math.ceil((now.getMonth()+1)/3)*3, 0, 23, 59, 59);
+  const daysMonth = Math.ceil((endOfMonth - now) / 86400000);
+  const daysQ = Math.ceil((endOfQ - now) / 86400000);
+  const medals = ['🥇','🥈','🥉'];
+  const prizes = ['Geheimer Hauptgewinn 🎁','Geheimer Premiumgewinn 🎁','Geheimer Bonusgewinn 🎁'];
+  const me = _RANKING_DEMO.find(r => r.isMe);
+  const modal = _buildMerchantModal('ranking-modal','🏆 Rankings', `
+    <!-- Month tab -->
+    <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:12px;padding:3px;margin-bottom:18px">
+      <button id="rank-tab-month" onclick="rankTab('month')" style="flex:1;border:none;border-radius:10px;padding:8px 4px;font-size:0.75rem;font-weight:800;font-family:var(--font);background:rgba(247,171,0,0.25);color:#F7AB00;cursor:pointer">🗓️ Monat</button>
+      <button id="rank-tab-quarter" onclick="rankTab('quarter')" style="flex:1;border:none;border-radius:10px;padding:8px 4px;font-size:0.75rem;font-weight:800;font-family:var(--font);background:none;color:rgba(255,255,255,0.4);cursor:pointer">👑 Quartal</button>
+    </div>
+    <div id="rank-content-month">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-bottom:4px">⏳ Noch ${daysMonth} Tage bis Monatsende</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">Die Top 3 gewinnen exklusive ZAM-Preise.</div>
+      </div>
+      ${_RANKING_DEMO.map((u, i) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${u.isMe ? 'rgba(247,171,0,0.08)' : 'rgba(255,255,255,0.03)'};border:1px solid ${u.isMe ? 'rgba(247,171,0,0.25)' : 'rgba(255,255,255,0.06)'};border-radius:12px;margin-bottom:7px">
+        <div style="width:28px;text-align:center;font-size:${i < 3 ? '1.1rem' : '0.8rem'};font-weight:800;color:${i===0?'#d97706':i===1?'#9ca3af':i===2?'#b45309':'rgba(255,255,255,0.3)'}">${i < 3 ? medals[i] : '#'+u.rank}</div>
+        <div style="width:36px;height:36px;border-radius:50%;background:${u.bg};border:2px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.82rem;font-weight:${u.isMe?'900':'700'};color:${u.isMe?'#F7AB00':'#e2e8f0'}">${u.name}${u.isMe?' (Du)':''}</div>
+          ${i < 3 ? `<div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-top:1px">${prizes[i]}</div>` : ''}
+        </div>
+        <div style="font-size:0.8rem;font-weight:800;color:${u.isMe?'#F7AB00':'rgba(255,255,255,0.6)'}">${u.pts.toLocaleString('de-DE')} Pkt.</div>
+      </div>`).join('')}
+    </div>
+    <div id="rank-content-quarter" style="display:none">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-bottom:4px">⏳ Noch ${daysQ} Tage bis Quartalsende</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">Die Top 3 des Quartals gewinnen exklusive Hauptpreise.</div>
+      </div>
+      ${['🥇 Hauptgewinn','🥈 Premiumgewinn','🥉 Spezialgewinn'].map(p => `
+      <div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;margin-bottom:8px">
+        <div style="font-size:1.5rem">${p.split(' ')[0]}</div>
+        <div>
+          <div style="font-size:0.84rem;font-weight:800;color:#e2e8f0">Geheimer Gewinn 🎁</div>
+          <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px">${p.slice(3)}</div>
+        </div>
+      </div>`).join('')}
+      <div style="margin-top:16px;padding:14px;background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.2);border-radius:14px">
+        <div style="font-size:0.72rem;font-weight:700;color:#F7AB00;margin-bottom:4px">Dein Quartals-Stand</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.6)">Rang <strong style="color:#F7AB00">#${me?.rank||17}</strong> · ${(me?.pts||2460).toLocaleString('de-DE')} Punkte</div>
+      </div>
+    </div>
+    <button onclick="_merchantModalClose('ranking-modal')" style="width:100%;margin-top:16px;padding:12px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:0.84rem;font-weight:600;font-family:var(--font);cursor:pointer">Schließen</button>
+  `);
+  document.body.appendChild(modal);
+  modal.style.display = 'flex';
+}
+
+function rankTab(tab) {
+  document.getElementById('rank-content-month').style.display = tab === 'month' ? 'block' : 'none';
+  document.getElementById('rank-content-quarter').style.display = tab === 'quarter' ? 'block' : 'none';
+  document.getElementById('rank-tab-month').style.background = tab === 'month' ? 'rgba(247,171,0,0.25)' : 'none';
+  document.getElementById('rank-tab-month').style.color = tab === 'month' ? '#F7AB00' : 'rgba(255,255,255,0.4)';
+  document.getElementById('rank-tab-quarter').style.background = tab === 'quarter' ? 'rgba(247,171,0,0.25)' : 'none';
+  document.getElementById('rank-tab-quarter').style.color = tab === 'quarter' ? '#F7AB00' : 'rgba(255,255,255,0.4)';
 }
 
 // =============================================
@@ -1070,15 +1217,27 @@ function renderEventCard(evt, idx) {
   const div = el('div', 'event-card-full card-dark');
   div.style.setProperty('--accent-color', evt.category_color);
   const spotsLow = evt.spots_left <= 10;
+  const attendees = (evt.spots_total || 500) - (evt.spots_left || 0);
+  // Cover gradient derived from category color
+  const coverEmojis = {'Food & Lifestyle':'🍜🎵🌿','Kultur & Musik':'🎶🎸🎺','Sport & Wellness':'🏋️⚡🏃','Shopping & Mode':'👗✨🛍️','Community':'👥🎉💬'};
+  const coverEmoji = Object.entries(coverEmojis).find(([k]) => evt.category?.includes(k.split(' ')[0]))?.[1] || '🎉✨🌟';
 
   div.innerHTML = `
-    <div class="event-card-top">
-      <div class="category-tag tag" style="background:${evt.category_color}22;color:${evt.category_color}">${evt.category}</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="bookmark-btn ${evt.is_saved ? 'saved' : ''}" data-type="event" data-id="${evt.id}" aria-label="${evt.is_saved ? 'Gespeichert' : 'Merken'}">
+    <!-- Event Cover Banner -->
+    <div style="margin:-16px -16px 14px;height:100px;border-radius:14px 14px 0 0;background:linear-gradient(135deg,${evt.category_color}55,${evt.category_color}22);display:flex;align-items:center;justify-content:center;font-size:3rem;letter-spacing:8px;overflow:hidden;position:relative">
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,${evt.category_color}44 0%,rgba(0,0,0,0.2) 100%)"></div>
+      <span style="position:relative;z-index:1;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))">${coverEmoji.split('').join(' ')}</span>
+      <div style="position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:6px">
+        <button class="bookmark-btn ${evt.is_saved ? 'saved' : ''}" data-type="event" data-id="${evt.id}" aria-label="${evt.is_saved ? 'Gespeichert' : 'Merken'}" style="width:30px;height:30px;border-radius:8px;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:0.85rem;cursor:pointer">
           ${evt.is_saved ? '🔖' : '🏷️'}
         </button>
         <div class="event-points-badge">+${evt.points_reward}P</div>
+      </div>
+    </div>
+    <div class="event-card-top" style="margin-bottom:8px">
+      <div class="category-tag tag" style="background:${evt.category_color}22;color:${evt.category_color}">${evt.category}</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.65rem;color:rgba(255,255,255,0.45)">
+        <span>👥</span><span>${attendees.toLocaleString('de-DE')} Teilnehmer</span>
       </div>
     </div>
     <h3>${evt.title}</h3>
@@ -1160,19 +1319,20 @@ function renderDealCard(deal, idx) {
   const div = el('div', 'deal-card-full card-dark');
 
   div.innerHTML = `
-    ${deal.is_hot ? '<div class="hot-badge" style="margin-bottom:10px">🔥 Beliebt</div>' : ''}
-    <div class="deal-card-header">
-      <div class="deal-store-icon">${deal.store_icon}</div>
-      <div class="deal-info">
-        <div class="deal-store-name">${deal.store_name}</div>
-        <div class="deal-discount-big">${deal.discount}</div>
+    <!-- Merchant Logo Banner -->
+    <div style="margin:-16px -16px 14px;height:72px;border-radius:14px 14px 0 0;background:linear-gradient(135deg,${deal.category_color}33,${deal.category_color}11);display:flex;align-items:center;padding:0 16px;gap:14px;position:relative;overflow:hidden">
+      <div style="width:52px;height:52px;border-radius:14px;background:rgba(0,0,0,0.35);border:1.5px solid ${deal.category_color}44;display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0">${deal.store_icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.72rem;font-weight:800;color:${deal.category_color};text-transform:uppercase;letter-spacing:0.06em">${deal.store_name}</div>
+        <div style="font-size:1.2rem;font-weight:900;color:#fff;line-height:1.1">${deal.discount}</div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-        <div class="category-tag tag" style="background:${deal.category_color}22;color:${deal.category_color}">${deal.category}</div>
-        <button class="bookmark-btn ${deal.is_saved ? 'saved' : ''}" data-type="deal" data-id="${deal.id}" aria-label="Merken">
-          ${deal.is_saved ? '🔖' : '🏷️'}
-        </button>
-      </div>
+      ${deal.is_hot ? '<div class="hot-badge" style="position:absolute;top:10px;right:10px">🔥 Hot</div>' : ''}
+      <button class="bookmark-btn ${deal.is_saved ? 'saved' : ''}" data-type="deal" data-id="${deal.id}" aria-label="Merken" style="position:absolute;bottom:10px;right:10px;width:28px;height:28px;border-radius:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:0.8rem;cursor:pointer">
+        ${deal.is_saved ? '🔖' : '🏷️'}
+      </button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div class="category-tag tag" style="background:${deal.category_color}22;color:${deal.category_color}">${deal.category}</div>
     </div>
     <div class="deal-title">${deal.title}</div>
     <p class="deal-description">${deal.description}</p>
@@ -5243,15 +5403,37 @@ function renderPhotoChallenges() {
   const gallery  = _getGallery();
 
   // ── Hero ──────────────────────────────────────────
+  const totalPhotos = gallery.length + 41;
+  const totalRedeemed = 12;
+  const activeChallengesCount = challenges.length;
+  const availableRewards = challenges.length;
   const hero = `
-  <div style="background:linear-gradient(160deg,#1e1616 0%,#1a1a1a 60%,#1a1a1a 100%);padding:0 20px 24px;position:relative;overflow:hidden">
-    <div style="display:flex;align-items:center;gap:10px;padding:14px 0 16px">
+  <div style="background:linear-gradient(160deg,#1e1616 0%,#1a1a1a 60%,#1a1a1a 100%);padding:0 20px 20px;position:relative;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 0 14px">
       <button onclick="navigateTo('community')" style="background:rgba(255,255,255,0.08);border:none;color:#fff;border-radius:10px;width:36px;height:36px;font-size:1.1rem;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;flex-shrink:0">←</button>
       <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#ff6b3d">ZAM Community</span>
     </div>
     <div style="position:absolute;top:0;right:-20px;font-size:9rem;opacity:0.06;pointer-events:none">📸</div>
-    <h1 style="font-size:1.55rem;font-weight:900;line-height:1.2;margin-bottom:10px;color:#fff">📸 Foto-Challenges</h1>
-    <p style="font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.65;max-width:320px">Mach Fotos im ZAM, sammle Fortschritt und sichere dir exklusive Belohnungen von teilnehmenden Händlern.</p>
+    <h1 style="font-size:1.45rem;font-weight:900;line-height:1.2;margin-bottom:14px;color:#fff">📸 Foto-Challenges</h1>
+    <!-- Live Stats -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
+      <div style="background:rgba(250,70,21,0.12);border:1px solid rgba(250,70,21,0.2);border-radius:12px;padding:10px 8px;text-align:center">
+        <div style="font-size:1.1rem;font-weight:900;color:#ffb399">${totalPhotos}</div>
+        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">📸 Community<br>Fotos</div>
+      </div>
+      <div style="background:rgba(247,171,0,0.1);border:1px solid rgba(247,171,0,0.2);border-radius:12px;padding:10px 8px;text-align:center">
+        <div style="font-size:1.1rem;font-weight:900;color:#F7AB00">${totalRedeemed}</div>
+        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">🏆 Belohnungen<br>eingelöst</div>
+      </div>
+      <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:10px 8px;text-align:center">
+        <div style="font-size:1.1rem;font-weight:900;color:#f87171">${activeChallengesCount}</div>
+        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">🔥 Aktive<br>Challenges</div>
+      </div>
+      <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:10px 8px;text-align:center">
+        <div style="font-size:1.1rem;font-weight:900;color:#34d399">${availableRewards}</div>
+        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">🎁 Verfügbare<br>Prämien</div>
+      </div>
+    </div>
   </div>`;
 
   // ── How it works ──────────────────────────────────

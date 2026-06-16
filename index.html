@@ -202,6 +202,8 @@
         </div>
         <div class="points-progress-label">2.460 / 3.000 Pkt. bis Platin</div>
       </div>
+      <!-- Rank Stats (rendered by JS) -->
+      <div id="home-rank-stats"></div>
       <div class="points-actions">
         <button class="points-btn" id="btn-daily-spin">
           <span class="btn-icon">🎰</span>
@@ -217,12 +219,15 @@
     <!-- Spin Prize Preview (rendered by app.js) -->
     <div id="home-spin-preview" style="display:none"></div>
 
-    <!-- AI Concierge Banner -->
-    <div class="ai-home-banner" onclick="navigateTo('ai')">
-      <div class="ai-home-banner-icon">🤖</div>
+    <!-- Ranking Card (rendered by JS) -->
+    <div id="home-ranking-card" style="margin-top:4px"></div>
+
+    <!-- AI Concierge Banner — compact -->
+    <div class="ai-home-banner" onclick="navigateTo('ai')" style="padding:10px 14px;margin:4px 16px 0">
+      <div class="ai-home-banner-icon" style="font-size:1.2rem;width:32px;height:32px">🤖</div>
       <div class="ai-home-banner-text">
-        <div class="ai-home-banner-title">ZAM Assistent</div>
-        <div class="ai-home-banner-sub">Frag mich, was du im ZAM machen kannst!</div>
+        <div class="ai-home-banner-title" style="font-size:0.8rem">ZAM Assistent</div>
+        <div class="ai-home-banner-sub" style="font-size:0.65rem">Frag mich, was du im ZAM machen kannst!</div>
       </div>
       <div class="ai-home-banner-arrow">→</div>
     </div>
@@ -230,34 +235,25 @@
     <!-- Händler Tools Card — rendered dynamically by renderHome() -->
     <div id="home-merchant-tools" style="display:none;margin:0 16px 8px"></div>
 
-    <!-- Referral CTA -->
-    <div id="home-referral-cta" style="margin:12px 16px 4px;cursor:pointer" onclick="openShareDialog()">
-      <div class="referral-cta-card">
+    <!-- Referral CTA — compact -->
+    <div id="home-referral-cta" style="margin:6px 16px 0;cursor:pointer" onclick="openShareDialog()">
+      <div class="referral-cta-card" style="padding:12px 14px">
         <div class="referral-cta-glow"></div>
-        <div style="display:flex;align-items:center;gap:14px;position:relative;z-index:1">
-          <div class="referral-cta-icon">👥</div>
+        <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
+          <div class="referral-cta-icon" style="width:36px;height:36px;font-size:1.2rem">👥</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:1rem;font-weight:900;color:#fff;line-height:1.2;margin-bottom:3px">Freund einladen</div>
-            <div style="font-size:0.72rem;color:rgba(255,255,255,0.55);line-height:1.5">Erhalte <strong style="color:#F7AB00">+250 Punkte</strong>, sobald sich dein Freund registriert</div>
+            <div style="font-size:0.85rem;font-weight:900;color:#fff;margin-bottom:1px">Freund einladen</div>
+            <div style="font-size:0.68rem;color:rgba(255,255,255,0.5)">+250 Punkte für dich · Code: <span id="home-referral-code" style="color:#ffb399;font-family:monospace;font-weight:700">ZAM---</span></div>
           </div>
-          <div style="flex-shrink:0;background:linear-gradient(135deg,rgba(180,130,30,0.5),rgba(247,171,0,0.3));border:1px solid rgba(247,171,0,0.4);border-radius:10px;padding:8px 14px;font-size:0.78rem;font-weight:800;color:#fef3c7;white-space:nowrap">Einladen →</div>
-        </div>
-        <div style="position:relative;z-index:1;display:flex;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08)">
-          <div style="display:flex;align-items:center;gap:6px">
-            <div style="font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.06em">Dein Code</div>
-            <div id="home-referral-code" style="font-size:0.78rem;font-weight:900;color:#ffb399;letter-spacing:0.1em;font-family:monospace">ZAM---</div>
-          </div>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
             <div style="text-align:right">
-              <div style="font-size:0.65rem;color:rgba(255,255,255,0.35)">Eingeladen</div>
-              <div id="home-referral-count" style="font-size:0.82rem;font-weight:900;color:#F7AB00">0</div>
+              <div style="font-size:0.8rem;font-weight:900;color:#F7AB00" id="home-referral-count">0</div>
+              <div style="font-size:0.58rem;color:rgba(255,255,255,0.3)">eingeladen</div>
             </div>
-            <div style="text-align:right">
-              <div style="font-size:0.65rem;color:rgba(255,255,255,0.35)">Punkte</div>
-              <div id="home-referral-pts" style="font-size:0.82rem;font-weight:900;color:#34d399">0</div>
-            </div>
+            <div style="font-size:0.7rem;font-weight:800;color:#fef3c7;background:rgba(247,171,0,0.2);border:1px solid rgba(247,171,0,0.35);border-radius:8px;padding:6px 10px;white-space:nowrap">Einladen →</div>
           </div>
         </div>
+        <div id="home-referral-pts" style="display:none">0</div>
       </div>
     </div>
 
