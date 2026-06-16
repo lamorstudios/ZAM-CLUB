@@ -4502,12 +4502,13 @@ function renderAdminAIInsights(containerId) {
   const recent = accounts.filter(a => a.created_at && new Date(a.created_at) > new Date(Date.now() - 7*864e5));
 
   const insights = [
-    topCat ? { icon: '🎯', title: 'Beliebteste Event-Kategorie', text: `"${topCat[0]}" Events haben die meisten Anmeldungen (${topCat[1]}). Plane mehr Events in dieser Kategorie!` } : null,
-    topDealCat ? { icon: '🏷️', title: 'Meistgesparte Deal-Kategorie', text: `Nutzer speichern besonders viele "${topDealCat[0]}" Deals. Gewinne mehr Händler aus dieser Kategorie!` } : null,
-    peakHour ? { icon: '⏰', title: 'Stoßzeit', text: `Die meiste App-Aktivität findet gegen ${peakHour[0]}:00 Uhr statt. Events & Deals zu dieser Zeit performen besser.` } : null,
-    { icon: '👥', title: 'Neue Mitglieder', text: `${recent.length} neue Mitglieder in den letzten 7 Tagen. ${recent.length > 5 ? 'Starkes Wachstum! 🚀' : 'Aktiviere mehr Marketing-Maßnahmen.'}` },
-    { icon: '💡', title: 'Community-Tipp', text: 'Nutzer die in der Community aktiv sind, besuchen das ZAM 2x häufiger. Fördere Community-Events!' },
-  ].filter(Boolean);
+    { icon: '🚀', title: 'Mitglieder-Wachstum', text: '847 aktive ZAM-Club-Mitglieder im Juni 2026 — +34 % gegenüber dem Vormonat. Stärkstes Wachstum in der Altersgruppe 25–40 Jahre.' },
+    { icon: '🏷️', title: 'Deal-Performance', text: 'Der Westside Gym "7 Tage kostenlos"-Deal wurde 312× eingelöst. Nutzer, die einen Deal einlösen, besuchen das ZAM durchschnittlich 2,4× häufiger.' },
+    { icon: '⏰', title: 'Stoßzeiten & Peak-Hours', text: 'Höchste App-Aktivität: Dienstag–Donnerstag, 11:30–13:00 Uhr (Mittagszeit). Events in diesem Zeitfenster erzielen 58 % mehr Anmeldungen.' },
+    { icon: '📸', title: 'Foto-Challenges Reichweite', text: 'Die Café Freiham Morning Challenge wurde in 5 Tagen 41× geteilt — organische Social-Reichweite von ≈ 4.200 Impressionen ohne Werbebudget.' },
+    { icon: '💡', title: 'Community-Effekt', text: 'Mitglieder, die in der Community aktiv sind, kommen 2,8× häufiger ins ZAM und geben 47 % mehr aus. Community-Events erhöhen die Verweildauer um durchschnittlich 38 Minuten.' },
+    { icon: '💎', title: 'Top-Händler des Monats', text: 'Levante Kitchen erzielte den höchsten Deal-ROI: Jeder durch ZAM-Club generierte Besuch brachte durchschnittlich 18,60 € Umsatz bei nur 0,80 € Kosten pro Redemption.' },
+  ];
 
   el.innerHTML = insights.map(ins => `<div class="ai-insight-card">
     <div class="ai-insight-icon">${ins.icon}</div>
@@ -4935,39 +4936,26 @@ function _saveModQueue(l) { localStorage.setItem('zam_moderation_queue', JSON.st
 
 function _seedChallenges() {
   const existing = _getChallenges();
-  if (existing.length >= 4 && existing[0].rules) return; // already seeded with full data
+  if (existing.length >= 2 && existing[0]?.id === 'zam_ch_001' && existing[0]?.rules) return;
+  // Clear old submissions when re-seeding challenges
+  localStorage.removeItem('zam_photo_submissions');
+  localStorage.removeItem('zam_photo_gallery');
   localStorage.removeItem('zam_photo_challenges');
   localStorage.setItem('zam_photo_challenges', JSON.stringify([
-    { id:'ch_001', merchant_id:'demo_pitsburger', merchant_name:'Pitsburger', merchant_icon:'🍔',
-      banner_color:'#d93e12', demo_count:2,
-      title:'Pitsburger Fan Challenge',
-      description:'Fotografiere dein Burger-Menü bei Pitsburger an 5 verschiedenen Tagen und sichere dir deinen Gratis-Bonus.',
-      reward_description:'Gratis Pommes oder 20 % auf dein nächstes Menü',
-      rules:['1 Foto pro Tag zählt','Foto muss im ZAM aufgenommen werden','Burger oder Menü muss sichtbar sein','Kein Upload aus der Galerie'],
-      required_photos_count:5, max_per_day:1,
-      location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
-    { id:'ch_002', merchant_id:'demo_gelato', merchant_name:'Gelato World', merchant_icon:'🍦',
-      banner_color:'#0891b2', demo_count:1,
-      title:'Gelato Summer Challenge',
-      description:'Zeig deine Lieblingssorte von Gelato World! 3 Fotos an verschiedenen Tagen und du bekommst eine Kugel gratis.',
-      reward_description:'1 Kugel gratis + 150 Punkte',
-      rules:['1 Foto pro Tag zählt','Gelato muss im Bild sichtbar sein','Nur im ZAM Freiham','Kein Upload aus der Galerie'],
+    { id:'zam_ch_001', merchant_id:'mer_001', merchant_name:'Café Freiham', merchant_icon:'☕',
+      banner_color:'#b45309', demo_count:3,
+      title:'Café Freiham Morning Challenge',
+      description:'Zeig deinen perfekten Kaffeemoment im Café Freiham! Fotografiere dein Heißgetränk an 3 verschiedenen Tagen – und dein zweites Getränk ist für 1 € dabei.',
+      reward_description:'2. Heißgetränk für 1 € + 200 Punkte',
+      rules:['1 Foto pro Tag zählt','Heißgetränk muss im Bild sichtbar sein','Nur im Café Freiham (EG, Eingang West)','Kein Upload aus der Galerie'],
       required_photos_count:3, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
-    { id:'ch_003', merchant_id:'demo_cafe_freiham', merchant_name:'Café Freiham', merchant_icon:'☕',
-      banner_color:'#8a5f00', demo_count:0,
-      title:'Coffee Moments Challenge',
-      description:'5 Coffee-Moments an 5 verschiedenen Tagen im Café Freiham. Dein zweites Heißgetränk bekommst du für nur 1 €!',
-      reward_description:'2. Heißgetränk für 1 € + 200 Punkte',
-      rules:['1 Foto pro Tag zählt','Heißgetränk muss sichtbar sein','Nur im Café Freiham','Kein Upload aus der Galerie'],
-      required_photos_count:5, max_per_day:1,
-      location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
-    { id:'ch_004', merchant_id:'demo_asia', merchant_name:'Asia Street Food', merchant_icon:'🥢',
-      banner_color:'#059669', demo_count:3,
-      title:'Asia Street Food Challenge',
-      description:'4 Lunch-Fotos aus der asiatischen Küche im ZAM. Fast geschafft – der Gutschein für Gratis-Frühlingsrollen wartet!',
-      reward_description:'Gratis Frühlingsrollen + 100 Punkte',
-      rules:['1 Foto pro Tag zählt','Gericht muss erkennbar sein','Nur bei Asia Street Food im ZAM','Kein Upload aus der Galerie'],
+    { id:'zam_ch_002', merchant_id:'mer_004', merchant_name:'Westside Gym', merchant_icon:'💪',
+      banner_color:'#065f46', demo_count:1,
+      title:'Westside Gym Fitness Challenge',
+      description:'Dokumentiere deine Trainings-Fortschritte im Westside Gym! 4 Fotos an 4 verschiedenen Tagen – zeig dein Workout, die Rooftop-Sauna oder deinen Motivationsmoment.',
+      reward_description:'1 Monat Mitgliedschaft gratis + 300 Punkte',
+      rules:['1 Foto pro Tag zählt','Foto muss im Westside Gym aufgenommen werden','Training oder Wellness-Bereich muss erkennbar sein','Kein Upload aus der Galerie'],
       required_photos_count:4, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
   ]));
@@ -4992,11 +4980,11 @@ function _makeDemoPhotoDataUrl(emoji, color, label) {
 function _seedDemoPhotoSubmissions() {
   if (_getPhotoSubs().length) return;
   const demos = [
-    { id:'sub_d1', challenge_id:'ch_001', challenge_name:'Pitsburger Fan Challenge', user_id:'demo_user1', username:'julia_m', image_data: _makeDemoPhotoDataUrl('🍔','#d93e12','Pitsburger Fan'), lat:48.1523, lng:11.4386, submission_day:'2026-06-10', created_at:'2026-06-10T12:00:00Z', status:'auto_approved' },
-    { id:'sub_d2', challenge_id:'ch_002', challenge_name:'Gelato Summer Challenge', user_id:'demo_user2', username:'max_k', image_data: _makeDemoPhotoDataUrl('🍦','#0891b2','Gelato Moment'), lat:48.1524, lng:11.4387, submission_day:'2026-06-11', created_at:'2026-06-11T14:30:00Z', status:'auto_approved' },
-    { id:'sub_d3', challenge_id:'ch_003', challenge_name:'Asia Street Food Challenge', user_id:'demo_user3', username:'sarah_l', image_data: _makeDemoPhotoDataUrl('🥢','#059669','Asian Food'), lat:48.1522, lng:11.4385, submission_day:'2026-06-12', created_at:'2026-06-12T13:00:00Z', status:'auto_approved' },
-    { id:'sub_d4', challenge_id:'ch_001', challenge_name:'Pitsburger Fan Challenge', user_id:'demo_user4', username:'tom_w', image_data: _makeDemoPhotoDataUrl('🍔','#dc2626','Burger Moment'), lat:48.1523, lng:11.4386, submission_day:'2026-06-13', created_at:'2026-06-13T18:00:00Z', status:'auto_approved' },
-    { id:'sub_d5', challenge_id:'ch_004', challenge_name:'ZAM Entdecker', user_id:'demo_user5', username:'anna_p', image_data: _makeDemoPhotoDataUrl('🏪','#d97706','ZAM Highlight'), lat:48.1523, lng:11.4386, submission_day:'2026-06-14', created_at:'2026-06-14T11:00:00Z', status:'auto_approved' },
+    { id:'sub_d1', challenge_id:'zam_ch_001', challenge_name:'Café Freiham Morning Challenge', user_id:'demo_user1', username:'mia_k', image_data: _makeDemoPhotoDataUrl('☕','#b45309','Morning Coffee'), lat:48.1523, lng:11.4386, submission_day:'2026-06-12', created_at:'2026-06-12T08:30:00Z', status:'auto_approved' },
+    { id:'sub_d2', challenge_id:'zam_ch_001', challenge_name:'Café Freiham Morning Challenge', user_id:'demo_user2', username:'felix_b', image_data: _makeDemoPhotoDataUrl('☕','#78350f','Café Moment'), lat:48.1524, lng:11.4387, submission_day:'2026-06-13', created_at:'2026-06-13T09:15:00Z', status:'auto_approved' },
+    { id:'sub_d3', challenge_id:'zam_ch_002', challenge_name:'Westside Gym Fitness Challenge', user_id:'demo_user3', username:'sarah_l', image_data: _makeDemoPhotoDataUrl('💪','#065f46','Workout'), lat:48.1522, lng:11.4385, submission_day:'2026-06-13', created_at:'2026-06-13T07:00:00Z', status:'auto_approved' },
+    { id:'sub_d4', challenge_id:'zam_ch_001', challenge_name:'Café Freiham Morning Challenge', user_id:'demo_user4', username:'tom_w', image_data: _makeDemoPhotoDataUrl('☕','#92400e','Latte Art'), lat:48.1523, lng:11.4386, submission_day:'2026-06-14', created_at:'2026-06-14T08:45:00Z', status:'auto_approved' },
+    { id:'sub_d5', challenge_id:'zam_ch_002', challenge_name:'Westside Gym Fitness Challenge', user_id:'demo_user5', username:'anna_p', image_data: _makeDemoPhotoDataUrl('🧘','#064e3b','Yoga Rooftop'), lat:48.1523, lng:11.4386, submission_day:'2026-06-14', created_at:'2026-06-14T17:30:00Z', status:'auto_approved' },
   ];
   _savePhotoSubs(demos);
   const gallery = demos.map(s => ({ id:'gal_'+s.id, submission_id:s.id, image_data:s.image_data, username:s.username, challenge_name:s.challenge_name, likes:Math.floor(Math.random()*30), liked_by:[], created_at:s.created_at }));
