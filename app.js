@@ -504,7 +504,7 @@ async function renderHomeDeals() {
   container.innerHTML = '';
   const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
   const isPerfMode = user.role === 'merchant' || user.role === 'admin';
-  const deals = await ZAMApi.deals.list();
+  const deals = _shuffleDeals(await ZAMApi.deals.list());
   deals.slice(0, isPerfMode ? 2 : 5).forEach(deal => {
     const saved = ZAMApi.deals.isSaved(deal.id);
     const card = el('div', 'deal-card-mini card-dark');
@@ -1390,16 +1390,39 @@ function setDealsTab(tab) {
   renderDeals();
 }
 
+// Weighted shuffle: new deals and expiring deals get a score boost,
+// then a random tiebreaker so the order is different on every page load.
+function _shuffleDeals(deals) {
+  const now = Date.now();
+  const scored = deals.map(d => {
+    let score = Math.random(); // base: fully random
+    // Boost deals expiring within 3 days
+    if (d.expiry_date) {
+      const msLeft = new Date(d.expiry_date) - now;
+      if (msLeft > 0 && msLeft < 3 * 86400000) score += 0.35;
+    }
+    // Boost deals created within last 7 days
+    if (d.created_at || d.submittedAt) {
+      const age = now - new Date(d.created_at || d.submittedAt);
+      if (age < 7 * 86400000) score += 0.25;
+    }
+    return { d, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.map(s => s.d);
+}
+
 async function renderDeals() {
   const container = $('#deals-list');
   if (!container) return;
   container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-muted)">Lädt…</div>';
 
-  state.deals = await ZAMApi.deals.list();
+  const rawDeals = await ZAMApi.deals.list();
+  state.deals = _shuffleDeals(rawDeals);
   container.innerHTML = '';
 
-  // Partner deals from localStorage
-  const partnerDeals = _getPD2ActiveDeals();
+  // Partner deals from localStorage (also shuffled)
+  const partnerDeals = _shuffleDeals(_getPD2ActiveDeals());
 
   if (_dealsActiveTab === 'partner') {
     if (!partnerDeals.length) {
@@ -1415,9 +1438,15 @@ async function renderDeals() {
     return;
   }
 
-  // 'all': partner deals first, then regular deals
-  partnerDeals.forEach(pd => container.appendChild(_renderPartnerDealCard(pd)));
-  state.deals.forEach((deal, idx) => container.appendChild(renderDealCard(deal, idx)));
+  // 'all': interleave partner deals randomly with regular deals
+  const allMixed = _shuffleDeals([
+    ...state.deals,
+    ...partnerDeals.map(pd => ({ ...pd, _isPartner: true }))
+  ]);
+  allMixed.forEach((item, idx) => {
+    if (item._isPartner) container.appendChild(_renderPartnerDealCard(item));
+    else container.appendChild(renderDealCard(item, idx));
+  });
 }
 
 function renderDealCard(deal, idx) {
