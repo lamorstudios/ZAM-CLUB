@@ -510,18 +510,23 @@ let pinching=false, pinchDist=0, pinchCx=0, pinchCy=0;
 const wrap=document.getElementById('map-wrap');
 const stage=document.getElementById('map-stage');
 
-function applyT(){stage.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`}
+// Cache wrap dimensions to avoid layout reads every frame
+let wrapW=0, wrapH=0;
+function updateWrapSize(){wrapW=wrap.clientWidth;wrapH=wrap.clientHeight;}
+updateWrapSize();
+window.addEventListener('resize',updateWrapSize,{passive:true});
+
+function applyT(){stage.style.transform=`translate(${tx|0}px,${ty|0}px) scale(${scale})`}
 function scheduleT(){if(!rafId)rafId=requestAnimationFrame(()=>{rafId=null;applyT()})}
 
 function clamp(){
-  const W=wrap.clientWidth, H=wrap.clientHeight;
   const mw=MAP_W*scale, mh=MAP_H*scale;
-  tx = mw<W ? (W-mw)/2 : Math.min(0, Math.max(W-mw, tx));
-  ty = mh<H ? (H-mh)/2 : Math.min(0, Math.max(H-mh, ty));
+  tx = mw<wrapW ? (wrapW-mw)/2 : Math.min(0, Math.max(wrapW-mw, tx));
+  ty = mh<wrapH ? (wrapH-mh)/2 : Math.min(0, Math.max(wrapH-mh, ty));
 }
 
 function mapZoom(f,cx,cy){
-  cx=cx??wrap.clientWidth/2; cy=cy??wrap.clientHeight/2;
+  cx=cx??wrapW/2; cy=cy??wrapH/2;
   const ns=Math.min(MAX_S,Math.max(MIN_S,scale*f));
   if(ns===scale)return;
   tx=cx-(cx-tx)*(ns/scale);
@@ -611,9 +616,9 @@ wrap.addEventListener('touchend',e=>{
 },{passive:true});
 
 function initMap(){
-  const W=wrap.clientWidth,H=wrap.clientHeight;
-  scale=Math.min(W/520,H/800)*0.9;
-  tx=(W-520*scale)/2;ty=(H-800*scale)/2;
+  updateWrapSize();
+  scale=Math.min(wrapW/520,wrapH/800)*0.9;
+  tx=(wrapW-520*scale)/2;ty=(wrapH-800*scale)/2;
   applyT();renderUsers();renderMarkers();loadMyState();
 }
 
@@ -777,7 +782,7 @@ function openPanelPopup(panel){
   document.getElementById('pop-content').innerHTML=contents[panel]||'';showPopup();
 }
 
-function locateMe(){const z=localStorage.getItem('zam_map_zone')||'mk2_1';const p=ZONE_POS[z][7]||ZONE_POS[z][0];const W=wrap.clientWidth,H=wrap.clientHeight;tx=W/2-p.x*scale;ty=H/2-p.y*scale;clamp();applyT()}
+function locateMe(){const z=localStorage.getItem('zam_map_zone')||'mk2_1';const p=ZONE_POS[z][7]||ZONE_POS[z][0];tx=wrapW/2-p.x*scale;ty=wrapH/2-p.y*scale;clamp();applyT()}
 
 function consentOk(){document.getElementById('consent').style.display='none';localStorage.setItem('zam_map_consent','yes');toggleStatus()}
 function consentNo(){document.getElementById('consent').style.display='none';localStorage.setItem('zam_map_consent','view')}
@@ -936,10 +941,9 @@ function zoomToUser(u) {
   if (!posArr) return;
   const p = posArr[u.posIdx !== undefined ? u.posIdx : 0] || posArr[0];
   if (!p) return;
-  const W = wrap.clientWidth, H = wrap.clientHeight;
   const targetScale = Math.min(2.8, MAX_S);
-  const newTx = W/2 - p.x * targetScale;
-  const newTy = H/2 - p.y * targetScale;
+  const newTx = wrapW/2 - p.x * targetScale;
+  const newTy = wrapH/2 - p.y * targetScale;
   // Animate via CSS transition
   stage.style.transition = 'transform 0.6s cubic-bezier(0.16,1,0.3,1)';
   scale = targetScale; tx = newTx; ty = newTy;
