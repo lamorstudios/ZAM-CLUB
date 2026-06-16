@@ -2616,3 +2616,25 @@ body.perf-mode .referral-icon,
 body.perf-mode .skeleton { animation: none !important; }
 
 body.perf-mode [style*="animation"] { animation-duration: 0s !important; }
+
+/* Kill all transitions/shadows on cards in perf-mode */
+body.perf-mode .deal-card-mini,
+body.perf-mode .event-card-mini,
+body.perf-mode .card-dark {
+  box-shadow: none !important;
+  transition: none !important;
+}
+
+/* Kill any glow / backdrop-filter cost on static elements */
+body.perf-mode .kpi-card,
+body.perf-mode .merchant-quick-btn {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: none !important;
+}
+
+/* Freeze countdown badges in perf-mode — updated by ticker only */
+body.perf-mode .countdown-badge {
+  transition: none !important;
+  animation: none !important;
+}

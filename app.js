@@ -142,7 +142,11 @@ function _startCountdownTicker() {
   }
   _countdownInterval = setInterval(() => {
     _slowTicks++;
-    if (_tickFast || _slowTicks % 60 === 0) _tick();
+    const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+    const inPerfMode = user?.role === 'merchant' || user?.role === 'admin';
+    // In perf-mode, only tick every 60s regardless of hasSeconds
+    if (!inPerfMode && _tickFast) { _tick(); return; }
+    if (_slowTicks % 60 === 0) _tick();
   }, 1000);
 }
 
@@ -342,25 +346,50 @@ function renderHome() {
   const firstName = (user.display_name || 'Gast').split(' ')[0];
   if (nameEl) nameEl.textContent = firstName + '! 👋';
 
+  const isPerfMode = user.role === 'merchant' || user.role === 'admin';
   updatePointsDisplay();
   _renderHomeRankStats(user);
-  _initSpinMerchantPrizes();
-  _renderHomeSpinPreview();
+
+  if (!isPerfMode) {
+    _initSpinMerchantPrizes();
+    _renderHomeSpinPreview();
+  } else {
+    // hide spin widget in merchant/admin mode
+    const spinEl = document.getElementById('home-spin-preview');
+    if (spinEl) spinEl.style.display = 'none';
+  }
+
   renderHomeEvents();
   renderHomeDeals();
-  const _idle = typeof requestIdleCallback === 'function' ? requestIdleCallback : (fn) => setTimeout(fn, 80);
-  _idle(() => { _renderHomeRankingCard(); renderHomeRecs(); });
 
-  // Referral CTA widget
-  const refCode = _getReferralCode(user);
-  const refCodeEl = document.getElementById('home-referral-code');
-  if (refCodeEl && refCode) refCodeEl.textContent = refCode;
-  const refKey = 'zam_referrals_' + (user?.id || 'guest');
-  const refCount = JSON.parse(localStorage.getItem(refKey) || '[]').length;
-  const refCountEl = document.getElementById('home-referral-count');
-  const refPtsEl   = document.getElementById('home-referral-pts');
-  if (refCountEl) refCountEl.textContent = refCount;
-  if (refPtsEl)   refPtsEl.textContent   = refCount * 250;
+  const _idle = typeof requestIdleCallback === 'function' ? requestIdleCallback : (fn) => setTimeout(fn, 120);
+  if (!isPerfMode) {
+    _idle(() => { _renderHomeRankingCard(); renderHomeRecs(); });
+  } else {
+    // skip full ranking card and recs in perf-mode — just show rank stats
+    const rankCard = document.getElementById('home-ranking-card');
+    if (rankCard) rankCard.style.display = 'none';
+    const recsLabel = document.getElementById('home-rec-label');
+    if (recsLabel) recsLabel.style.display = 'none';
+    const recsScroll = document.getElementById('home-recs-scroll');
+    if (recsScroll) recsScroll.style.display = 'none';
+  }
+
+  if (!isPerfMode) {
+    // Referral CTA widget
+    const refCode = _getReferralCode(user);
+    const refCodeEl = document.getElementById('home-referral-code');
+    if (refCodeEl && refCode) refCodeEl.textContent = refCode;
+    const refKey = 'zam_referrals_' + (user?.id || 'guest');
+    const refCount = JSON.parse(localStorage.getItem(refKey) || '[]').length;
+    const refCountEl = document.getElementById('home-referral-count');
+    const refPtsEl   = document.getElementById('home-referral-pts');
+    if (refCountEl) refCountEl.textContent = refCount;
+    if (refPtsEl)   refPtsEl.textContent   = refCount * 250;
+  } else {
+    const refEl = document.getElementById('home-referral-cta');
+    if (refEl) refEl.style.display = 'none';
+  }
 
   // Händler Tools card — collapsed by default, expand on click
   const toolsCard = document.getElementById('home-merchant-tools');
@@ -414,6 +443,11 @@ function renderHome() {
 }
 
 function animateNumber(el, from, to, duration) {
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  if (user.role === 'merchant' || user.role === 'admin') {
+    el.textContent = to.toLocaleString('de-DE');
+    return;
+  }
   const start = performance.now();
   function step(now) {
     const p = Math.min((now - start) / duration, 1);
@@ -428,8 +462,10 @@ async function renderHomeEvents() {
   const container = $('#home-events-scroll');
   if (!container) return;
   container.innerHTML = '';
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const isPerfMode = user.role === 'merchant' || user.role === 'admin';
   const events = await ZAMApi.events.list();
-  events.slice(0, 5).forEach(evt => {
+  events.slice(0, isPerfMode ? 2 : 5).forEach(evt => {
     const saved = ZAMApi.events.isSaved(evt.id);
     const card = el('div', 'event-card-mini card-dark');
     card.style.setProperty('--accent-color', evt.category_color);
@@ -466,8 +502,10 @@ async function renderHomeDeals() {
   const container = $('#home-deals-scroll');
   if (!container) return;
   container.innerHTML = '';
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const isPerfMode = user.role === 'merchant' || user.role === 'admin';
   const deals = await ZAMApi.deals.list();
-  deals.slice(0, 5).forEach(deal => {
+  deals.slice(0, isPerfMode ? 2 : 5).forEach(deal => {
     const saved = ZAMApi.deals.isSaved(deal.id);
     const card = el('div', 'deal-card-mini card-dark');
     card.innerHTML = `
