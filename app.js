@@ -259,6 +259,19 @@ function renderHome() {
   renderHomeRecs();
   renderHomeEvents();
   renderHomeDeals();
+
+  // Show Händler Tools card for merchant/admin
+  const toolsCard = document.getElementById('home-merchant-tools');
+  if (toolsCard) {
+    const isMerchant = user.role === 'merchant' || user.role === 'admin';
+    toolsCard.style.display = isMerchant ? 'block' : 'none';
+    const shopName = document.getElementById('home-merchant-shopname');
+    if (shopName && user.role === 'merchant') {
+      shopName.textContent = user.display_name || user.name || 'Mein Shop';
+    } else if (shopName && user.role === 'admin') {
+      shopName.textContent = 'Admin-Vorschau aktiv';
+    }
+  }
 }
 
 function animateNumber(el, from, to, duration) {
@@ -1118,26 +1131,34 @@ function renderRoleActions() {
       const badge = $('#admin-notif-badge');
       if (badge && count > 0) { badge.textContent = count; badge.style.display = 'inline'; }
     });
+    // Admin can also see merchant tools
+    container.innerHTML += `
+      <div style="background:rgba(109,40,217,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:14px;padding:14px 16px;margin-top:4px">
+        <div style="font-size:0.72rem;font-weight:700;color:rgba(196,181,253,0.7);margin-bottom:10px">🏪 Händler Tools (Admin)</div>
+        <button class="btn btn-ghost btn-full" onclick="openQRScanner()" style="margin-bottom:6px">📷 QR-Code scannen</button>
+        <button class="btn btn-ghost btn-full" onclick="openMerchantStatsOverlay()" style="margin-bottom:6px">📊 Händler-Statistiken</button>
+        <button class="btn btn-ghost btn-full" onclick="openMerchantDealModal()">🏷️ Demo Deal einreichen</button>
+      </div>`;
   } else if (user.role === 'merchant') {
     container.innerHTML = `
-      <a href="merchant.html" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;padding:13px">
-        🏪 Händler-Dashboard
-      </a>
-      <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-dashboard')" style="margin-bottom:8px">
-        📊 Mein Dashboard
-      </button>
-      <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-packages')" style="margin-bottom:8px">
-        📦 Mein Paket
-      </button>
-      <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-contracts')" style="margin-bottom:8px">
-        📄 Verträge
-      </button>
-      <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-billing')" style="margin-bottom:8px">
-        🧾 Rechnungen
-      </button>
-      <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-ai')" style="margin-bottom:8px">
-        ✨ KI-Werkzeuge
-      </button>`;
+      <div style="background:linear-gradient(135deg,rgba(109,40,217,0.2),rgba(139,92,246,0.1));border:1px solid rgba(139,92,246,0.3);border-radius:14px;padding:14px 16px;margin-bottom:12px">
+        <div style="font-size:0.78rem;font-weight:800;color:#c4b5fd;margin-bottom:12px">🏪 Händler Tools</div>
+        <button class="btn btn-primary btn-full" onclick="openQRScanner()" style="margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px">
+          📷 QR-Code scannen
+        </button>
+        <button class="btn btn-ghost btn-full" onclick="openMerchantStatsOverlay()" style="margin-bottom:8px">
+          📊 Meine Statistiken
+        </button>
+        <button class="btn btn-ghost btn-full" onclick="openMerchantDealModal()" style="margin-bottom:8px">
+          🏷️ Deal einreichen
+        </button>
+        <button class="btn btn-ghost btn-full" onclick="openMerchantEventModal()" style="margin-bottom:8px">
+          📅 Event einreichen
+        </button>
+        <button class="btn btn-ghost btn-full" onclick="navigateTo('merchant-dashboard')" style="margin-bottom:0">
+          ⚙️ Vollständiges Dashboard
+        </button>
+      </div>`;
   } else if (user.role === 'merchant' && user.merchant_status === 'pending') {
     container.innerHTML = `
       <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:14px 16px;text-align:center;margin-bottom:8px">
@@ -4745,6 +4766,67 @@ if ('serviceWorker' in navigator) {
       if (url.includes('#')) navigateTo(url.split('#')[1]);
     }
   });
+}
+
+// =============================================
+// Merchant Stats Overlay
+// =============================================
+function openMerchantStatsOverlay() {
+  const overlay = document.getElementById('merchant-stats-overlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  updateMerchantStats(30);
+}
+function closeMerchantStatsOverlay() {
+  const overlay = document.getElementById('merchant-stats-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+function updateMerchantStats(days) {
+  days = parseInt(days);
+  const label = document.getElementById('stats-period-label');
+  if (label) label.textContent = `Letzte ${days} Tage`;
+
+  const user = ZAMApi.auth.currentUser();
+  const merchantId = user?.id || 'demo_cafe_freiham';
+  let stats = { profileViews:0, dealViews:0, dealSaves:0, dealRedemptions:0, eventViews:0, eventJoins:0 };
+  try { stats = ZAMApi.analytics.getMerchantStats(merchantId, days); } catch {}
+
+  const kpiEl = document.getElementById('merchant-stats-kpis');
+  if (kpiEl) {
+    const kpis = [
+      { icon:'👁️', val:stats.profileViews,   lbl:'Profilaufrufe',       color:'#c4b5fd' },
+      { icon:'🏷️', val:stats.dealViews,       lbl:'Deal-Aufrufe',        color:'#fbbf24' },
+      { icon:'💾', val:stats.dealSaves,       lbl:'Gespeicherte Deals',  color:'#60a5fa' },
+      { icon:'✅', val:stats.dealRedemptions, lbl:'Eingelöste Gutscheine',color:'#34d399' },
+      { icon:'🎉', val:stats.eventViews,      lbl:'Event-Aufrufe',       color:'#f472b6' },
+      { icon:'🙋', val:stats.eventJoins,      lbl:'Event-Teilnahmen',    color:'#fb923c' },
+    ];
+    kpiEl.innerHTML = kpis.map(k => `
+      <div style="background:#18181f;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px">
+        <div style="font-size:1.1rem;margin-bottom:4px">${k.icon}</div>
+        <div style="font-size:1.3rem;font-weight:800;color:${k.color}">${k.val}</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">${k.lbl}</div>
+      </div>`).join('');
+  }
+
+  // My submissions
+  const dealsEl = document.getElementById('merchant-stats-deals');
+  if (dealsEl) {
+    const subs = getMerchantSubmissions().filter(s => s.merchantId === merchantId).slice(0, 5);
+    if (!subs.length) { dealsEl.innerHTML = ''; return; }
+    const statusLabel = { pending:'⏳ Wartet', approved:'✅ Freigegeben', live:'🟢 Live', rejected:'❌ Abgelehnt', draft:'📝 Entwurf' };
+    const statusColor = { pending:'#fbbf24', approved:'#34d399', live:'#34d399', rejected:'#f87171', draft:'rgba(255,255,255,0.3)' };
+    dealsEl.innerHTML = `<div style="font-size:0.78rem;font-weight:700;margin-bottom:8px">Meine Einreichungen</div>` +
+      subs.map(s => `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+          <span style="font-size:1rem">${s.type==='event'?'📅':'🏷️'}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.78rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.title)}</div>
+            <div style="font-size:0.65rem;color:rgba(255,255,255,0.35)">${new Date(s.submittedAt).toLocaleDateString('de-DE')}</div>
+          </div>
+          <span style="font-size:0.65rem;font-weight:700;color:${statusColor[s.status]||'#888'}">${statusLabel[s.status]||s.status}</span>
+        </div>`).join('');
+  }
 }
 
 function renderMerchantPreviewSubmissions() {
