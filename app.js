@@ -4895,29 +4895,40 @@ function _saveModQueue(l) { localStorage.setItem('zam_moderation_queue', JSON.st
 
 function _seedChallenges() {
   const existing = _getChallenges();
-  if (existing.length >= 4) return;
-  // clear old 3-item seed to upgrade to 4-item seed
+  if (existing.length >= 4 && existing[0].rules) return; // already seeded with full data
   localStorage.removeItem('zam_photo_challenges');
   localStorage.setItem('zam_photo_challenges', JSON.stringify([
     { id:'ch_001', merchant_id:'demo_pitsburger', merchant_name:'Pitsburger', merchant_icon:'🍔',
-      banner_color:'#7c3aed',
-      title:'Pitsburger Fan Challenge', description:'Zeig deinen Lieblingsburger bei Pitsburger! Fotografiere an 3 verschiedenen Tagen deinen Burger-Moment und sicher dir deinen Gratis-Burger.',
-      reward_description:'1 Gratis Burger nach 3 Fotos', required_photos_count:3, max_per_day:1,
+      banner_color:'#7c3aed', demo_count:2,
+      title:'Pitsburger Fan Challenge',
+      description:'Fotografiere dein Burger-Menü bei Pitsburger an 5 verschiedenen Tagen und sichere dir deinen Gratis-Bonus.',
+      reward_description:'Gratis Pommes oder 20 % auf dein nächstes Menü',
+      rules:['1 Foto pro Tag zählt','Foto muss im ZAM aufgenommen werden','Burger oder Menü muss sichtbar sein','Kein Upload aus der Galerie'],
+      required_photos_count:5, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
     { id:'ch_002', merchant_id:'demo_gelato', merchant_name:'Gelato World', merchant_icon:'🍦',
-      banner_color:'#0891b2',
-      title:'Gelato Summer Challenge', description:'Teile deine schönsten Gelato-Momente im ZAM! 5 Fotos an verschiedenen Tagen und du bekommst eine Kugel gratis.',
-      reward_description:'1 Gratis-Kugel + 150 Punkte', required_photos_count:5, max_per_day:1,
+      banner_color:'#0891b2', demo_count:1,
+      title:'Gelato Summer Challenge',
+      description:'Zeig deine Lieblingssorte von Gelato World! 3 Fotos an verschiedenen Tagen und du bekommst eine Kugel gratis.',
+      reward_description:'1 Kugel gratis + 150 Punkte',
+      rules:['1 Foto pro Tag zählt','Gelato muss im Bild sichtbar sein','Nur im ZAM Freiham','Kein Upload aus der Galerie'],
+      required_photos_count:3, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
-    { id:'ch_003', merchant_id:'demo_asia', merchant_name:'Asia Street Food', merchant_icon:'🥢',
-      banner_color:'#059669',
-      title:'Asia Street Food Challenge', description:'Entdecke die Vielfalt der asiatischen Küche im ZAM! Fotografiere 3 verschiedene Gerichte und gewinne einen Gutschein.',
-      reward_description:'5€ Gutschein + 100 Punkte', required_photos_count:3, max_per_day:1,
+    { id:'ch_003', merchant_id:'demo_cafe_freiham', merchant_name:'Café Freiham', merchant_icon:'☕',
+      banner_color:'#b45309', demo_count:0,
+      title:'Coffee Moments Challenge',
+      description:'5 Coffee-Moments an 5 verschiedenen Tagen im Café Freiham. Dein zweites Heißgetränk bekommst du für nur 1 €!',
+      reward_description:'2. Heißgetränk für 1 € + 200 Punkte',
+      rules:['1 Foto pro Tag zählt','Heißgetränk muss sichtbar sein','Nur im Café Freiham','Kein Upload aus der Galerie'],
+      required_photos_count:5, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
-    { id:'ch_004', merchant_id:'demo_zam', merchant_name:'ZAM Freiham', merchant_icon:'🏪',
-      banner_color:'#d97706',
-      title:'ZAM Entdecker', description:'Entdecke 5 verschiedene Bereiche des ZAM Freiham und fotografiere deine Lieblingsmomente. Das beste Foto gewinnt!',
-      reward_description:'Exklusives Badge + 500 Punkte', required_photos_count:5, max_per_day:1,
+    { id:'ch_004', merchant_id:'demo_asia', merchant_name:'Asia Street Food', merchant_icon:'🥢',
+      banner_color:'#059669', demo_count:3,
+      title:'Asia Street Food Challenge',
+      description:'4 Lunch-Fotos aus der asiatischen Küche im ZAM. Fast geschafft – der Gutschein für Gratis-Frühlingsrollen wartet!',
+      reward_description:'Gratis Frühlingsrollen + 100 Punkte',
+      rules:['1 Foto pro Tag zählt','Gericht muss erkennbar sein','Nur bei Asia Street Food im ZAM','Kein Upload aus der Galerie'],
+      required_photos_count:4, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
   ]));
   _seedDemoPhotoSubmissions();
@@ -4954,68 +4965,254 @@ function _seedDemoPhotoSubmissions() {
 
 function renderPhotoChallenges() {
   _seedChallenges();
+  const container = document.getElementById('photo-challenges-content');
+  if (!container) return;
+
   const challenges = _getChallenges().filter(c => c.status === 'active');
   const user = ZAMApi.auth.currentUser();
   const uid = user?.id || 'guest';
   const allSubs = _getPhotoSubs();
-  const container = document.getElementById('photo-challenges-list');
-  if (!container) return;
+  const gallery  = _getGallery();
 
-  if (!challenges.length) { container.innerHTML = '<p style="text-align:center;color:var(--dim);padding:40px 0">Keine aktiven Challenges</p>'; return; }
+  // ── Hero ──────────────────────────────────────────
+  const hero = `
+  <div style="background:linear-gradient(160deg,#1e1040 0%,#0f172a 60%,#090910 100%);padding:28px 20px 24px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:-30px;right:-20px;font-size:9rem;opacity:0.06;pointer-events:none">📸</div>
+    <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.12em;font-weight:800;color:#a78bfa;margin-bottom:8px">ZAM Community</div>
+    <h1 style="font-size:1.55rem;font-weight:900;line-height:1.2;margin-bottom:10px;color:#fff">📸 Foto-Challenges</h1>
+    <p style="font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.65;max-width:320px">Mach Fotos im ZAM, sammle Fortschritt und sichere dir exklusive Belohnungen von teilnehmenden Händlern.</p>
+  </div>`;
 
-  container.innerHTML = challenges.map(ch => {
-    const mySubs = allSubs.filter(s => s.challenge_id===ch.id && s.user_id===uid && s.status==='approved');
-    const count = mySubs.length, total = ch.required_photos_count;
-    const pct = Math.min(100, (count/total)*100);
-    const done = count >= total;
+  // ── How it works ──────────────────────────────────
+  const steps = [
+    ['1','Challenge auswählen','Wähle eine aktive Händler-Challenge aus der Liste'],
+    ['2','Foto aufnehmen','Mach ein Foto direkt in der App – kein Upload erlaubt'],
+    ['3','Standort bestätigen','Die App prüft automatisch, dass du im ZAM bist'],
+    ['4','Fortschritt sammeln','Jeden Tag ein Foto – bis das Ziel erreicht ist'],
+    ['5','Belohnung einlösen','Scanne deinen QR-Code beim Händler für die Prämie'],
+  ];
+  const howItWorks = `
+  <div style="margin:0 16px 20px;background:rgba(139,92,246,0.07);border:1px solid rgba(139,92,246,0.18);border-radius:16px;padding:16px">
+    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:#a78bfa;margin-bottom:14px">💡 So funktioniert's</div>
+    ${steps.map(([n,t,d]) => `
+    <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
+      <div style="width:24px;height:24px;border-radius:50%;background:rgba(139,92,246,0.25);border:1px solid rgba(139,92,246,0.4);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:#c4b5fd;flex-shrink:0">${n}</div>
+      <div>
+        <div style="font-size:0.8rem;font-weight:700;color:#e2e8f0;line-height:1.2">${t}</div>
+        <div style="font-size:0.71rem;color:rgba(255,255,255,0.4);margin-top:2px;line-height:1.4">${d}</div>
+      </div>
+    </div>`).join('')}
+  </div>`;
+
+  // ── Challenge cards ────────────────────────────────
+  const challengeCards = challenges.map(ch => {
+    const mySubs = allSubs.filter(s => s.challenge_id===ch.id && s.user_id===uid && s.status!=='rejected');
+    // Use real count if user has submissions, else demo_count for visual demo
+    const count = mySubs.length > 0 ? mySubs.length : (ch.demo_count || 0);
+    const total = ch.required_photos_count;
+    const pct   = Math.min(100, Math.round((count / total) * 100));
+    const done  = count >= total;
     const today = new Date().toISOString().slice(0,10);
     const doneToday = allSubs.some(s => s.challenge_id===ch.id && s.user_id===uid && s.submission_day===today && s.status!=='rejected');
+    const c = ch.banner_color || '#6d28d9';
 
-    const slots = Array.from({length:total}, (_,i) => {
-      const sub = mySubs[i];
-      return sub
-        ? `<div class="challenge-photo-slot filled"><img src="${sub.image_url}" alt="Foto ${i+1}"></div>`
-        : `<div class="challenge-photo-slot" style="color:rgba(255,255,255,0.2)">${i<count?'✓':'📷'}</div>`;
-    }).join('');
+    const slots = Array.from({length: total}, (_, i) =>
+      i < count
+        ? `<div style="width:38px;height:38px;border-radius:9px;background:${c}33;border:2px solid ${c}88;display:flex;align-items:center;justify-content:center;font-size:1rem">✅</div>`
+        : `<div style="width:38px;height:38px;border-radius:9px;background:rgba(255,255,255,0.04);border:1.5px dashed rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:0.9rem;color:rgba(255,255,255,0.2)">📷</div>`
+    ).join('');
 
-    const bannerColor = ch.banner_color || '#6d28d9';
-    return `<div class="challenge-card" style="overflow:hidden">
-      <div style="height:80px;background:linear-gradient(135deg,${bannerColor},${bannerColor}99);display:flex;align-items:center;gap:14px;padding:14px 16px;margin:-16px -16px 14px">
-        <div style="font-size:2.8rem;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.4))">${ch.merchant_icon}</div>
-        <div>
-          <div style="font-size:1rem;font-weight:800;color:#fff;line-height:1.2">${escHtml(ch.title)}</div>
-          <div style="font-size:0.72rem;color:rgba(255,255,255,0.7);margin-top:2px">${escHtml(ch.merchant_name)}</div>
-          <span style="display:inline-block;margin-top:4px;font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:5px;${done?'background:rgba(245,158,11,0.25);color:#fbbf24':'background:rgba(255,255,255,0.2);color:#fff'}">${done?'✓ Abgeschlossen':'🔥 Aktiv'}</span>
+    return `
+    <div style="background:#111118;border:1px solid rgba(255,255,255,0.07);border-radius:18px;overflow:hidden;margin-bottom:14px">
+      <!-- Banner -->
+      <div style="background:linear-gradient(135deg,${c},${c}99);padding:16px;display:flex;align-items:center;gap:14px">
+        <div style="font-size:2.6rem;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))">${ch.merchant_icon}</div>
+        <div style="flex:1">
+          <div style="font-size:1rem;font-weight:800;color:#fff;line-height:1.25">${escHtml(ch.title)}</div>
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.65);margin-top:3px">${escHtml(ch.merchant_name)}</div>
         </div>
+        <span style="font-size:0.6rem;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;${done ? 'background:rgba(251,191,36,0.2);color:#fbbf24;border:1px solid rgba(251,191,36,0.3)' : 'background:rgba(255,255,255,0.15);color:#fff'}">${done ? '✅ Fertig' : '🔥 Aktiv'}</span>
       </div>
-      <p style="font-size:0.78rem;color:var(--dim);line-height:1.55;margin-bottom:12px">${escHtml(ch.description)}</p>
-      <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
-        <span style="font-size:1.2rem">🎁</span>
-        <div>
-          <div style="font-size:0.68rem;color:var(--dim);text-transform:uppercase;letter-spacing:0.05em;font-weight:700">Belohnung</div>
-          <div style="font-size:0.82rem;font-weight:700;color:#34d399">${escHtml(ch.reward_description)}</div>
+      <!-- Body -->
+      <div style="padding:14px 16px">
+        <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px">${escHtml(ch.description)}</p>
+
+        <!-- Reward -->
+        <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:11px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:1.3rem">🎁</span>
+          <div>
+            <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;font-weight:800;color:rgba(52,211,153,0.7);margin-bottom:2px">Deine Belohnung</div>
+            <div style="font-size:0.85rem;font-weight:700;color:#34d399">${escHtml(ch.reward_description)}</div>
+          </div>
         </div>
+
+        <!-- Progress -->
+        <div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:0.75rem;font-weight:700;color:#e2e8f0">${count} / ${total} Fotos</span>
+            <span style="font-size:0.72rem;font-weight:700;color:${c}">${pct}%</span>
+          </div>
+          <div style="height:8px;background:rgba(255,255,255,0.07);border-radius:99px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${c},${c}cc);border-radius:99px;transition:width .5s ease"></div>
+          </div>
+        </div>
+
+        <!-- Photo slots -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${slots}</div>
+
+        <!-- Info chips -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+          <span style="font-size:0.63rem;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.08)">📅 Max. 1 Foto/Tag</span>
+          <span style="font-size:0.63rem;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.08)">📍 Standort erforderlich</span>
+          <span style="font-size:0.63rem;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.08)">🔍 Vor Veröffentlichung geprüft</span>
+          ${doneToday ? '<span style="font-size:0.63rem;padding:4px 9px;border-radius:20px;background:rgba(245,158,11,0.1);color:#fbbf24;border:1px solid rgba(245,158,11,0.2)">⚠️ Heute bereits eingereicht</span>' : ''}
+        </div>
+
+        <!-- Actions -->
+        ${done
+          ? `<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:14px;text-align:center">
+               <div style="font-size:1.3rem;margin-bottom:6px">🎉</div>
+               <div style="font-size:0.9rem;font-weight:800;color:#34d399;margin-bottom:2px">Challenge abgeschlossen!</div>
+               <div style="font-size:0.75rem;color:rgba(52,211,153,0.7)">${escHtml(ch.reward_description)}</div>
+             </div>`
+          : `<div style="display:flex;gap:8px">
+               <button onclick="openChallengeDetail('${ch.id}')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;border-radius:12px;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer">Details</button>
+               <button onclick="${doneToday ? '' : `openCameraForChallenge('${ch.id}')`}" ${doneToday ? 'disabled' : ''} style="flex:2;padding:12px;background:${doneToday ? 'rgba(255,255,255,0.04)' : `linear-gradient(135deg,${c},${c}cc)`};border:none;color:${doneToday ? 'rgba(255,255,255,0.25)' : '#fff'};border-radius:12px;font-size:0.85rem;font-weight:700;font-family:var(--font);cursor:${doneToday ? 'default' : 'pointer'};display:flex;align-items:center;justify-content:center;gap:8px;${doneToday ? '' : `box-shadow:0 4px 14px ${c}44`}">
+                 ${doneToday ? 'Morgen wieder verfügbar' : '📸 Foto aufnehmen'}
+               </button>
+             </div>`
+        }
       </div>
-      <div style="margin-bottom:10px">
-        <div class="challenge-progress-label"><span style="font-weight:700">${count} / ${total} Fotos</span><span style="color:${bannerColor}">${Math.round(pct)}%</span></div>
-        <div class="challenge-progress-track"><div class="challenge-progress-fill" style="width:${pct}%;background:${bannerColor}"></div></div>
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${slots}</div>
-      <div style="font-size:0.67rem;color:var(--dim);display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
-        <span>📅 Max. 1 Foto/Tag</span><span>📍 Standortprüfung aktiv</span>
-        ${doneToday?'<span style="color:#f59e0b">⚠️ Heute bereits eingereicht</span>':''}
-      </div>
-      ${done
-        ? `<div style="background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:10px;padding:14px;text-align:center">
-             <div style="font-size:1.2rem;margin-bottom:4px">🎉 Challenge abgeschlossen!</div>
-             <div style="font-size:0.8rem;color:#34d399;font-weight:600">${escHtml(ch.reward_description)}</div>
-           </div>`
-        : doneToday
-          ? `<button disabled style="width:100%;padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.25);border-radius:10px;font-size:0.82rem;font-family:var(--font)">Heute bereits eingereicht – morgen wieder</button>`
-          : `<button onclick="openCameraForChallenge('${ch.id}')" style="width:100%;padding:13px;background:linear-gradient(135deg,${bannerColor},${bannerColor}cc);border:none;color:#fff;border-radius:12px;font-size:0.9rem;font-weight:700;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 14px ${bannerColor}44">📸 Foto aufnehmen</button>`
-      }
     </div>`;
   }).join('');
+
+  // ── Community Gallery section ──────────────────────
+  const galleryItems = gallery.slice(0, 6);
+  const galleryHtml = galleryItems.length
+    ? galleryItems.map(item => {
+        const imgSrc = item.image_data || item.image_url;
+        const uname  = item.username || item.user_name || 'Gast';
+        const cname  = item.challenge_name || item.challenge_title || '';
+        const liked  = (item.liked_by||[]).includes(uid);
+        const likes  = item.likes || item.likes_count || 0;
+        return `
+        <div style="background:#111118;border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden">
+          <div style="aspect-ratio:1;overflow:hidden;background:#0d0d18">
+            ${imgSrc ? `<img src="${imgSrc}" alt="" style="width:100%;height:100%;object-fit:cover">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem">📷</div>'}
+          </div>
+          <div style="padding:8px 10px 10px">
+            <div style="font-size:0.72rem;font-weight:700;color:#e2e8f0">@${escHtml(uname)}</div>
+            <div style="font-size:0.63rem;color:rgba(255,255,255,0.35);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(cname)}</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+              <span style="font-size:0.62rem;color:rgba(255,255,255,0.25)">${item.created_at ? new Date(item.created_at).toLocaleDateString('de-DE') : ''}</span>
+              <button onclick="toggleGalleryLike('${item.id}',this)" style="display:flex;align-items:center;gap:3px;background:none;border:none;cursor:pointer;font-size:0.75rem;color:${liked ? '#f43f5e' : 'rgba(255,255,255,0.35)'}">
+                ${liked ? '❤️' : '🤍'} <span>${likes}</span>
+              </button>
+            </div>
+          </div>
+        </div>`;
+      }).join('')
+    : `<div style="grid-column:1/-1;text-align:center;padding:30px;color:rgba(255,255,255,0.3)">
+         <div style="font-size:2rem;margin-bottom:8px">📷</div>
+         <div style="font-size:0.8rem">Noch keine Fotos in der Galerie.<br>Nimm an einer Challenge teil!</div>
+       </div>`;
+
+  const gallerySection = `
+  <div style="margin:8px 16px 20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-size:1rem;font-weight:800;color:#e2e8f0">🖼️ ZAM Community Galerie</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-top:2px">Fotos aus bestätigten ZAM-Challenges</div>
+      </div>
+      <button onclick="navigateTo('community-gallery')" style="font-size:0.72rem;font-weight:700;color:#a78bfa;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:var(--font)">Alle →</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">${galleryHtml}</div>
+    <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;display:flex;align-items:center;gap:8px">
+      <span style="font-size:1rem">🔍</span>
+      <span style="font-size:0.68rem;color:rgba(255,255,255,0.35);line-height:1.5">Alle öffentlichen Fotos werden vor Veröffentlichung automatisch geprüft und können vom Team abgelehnt werden.</span>
+    </div>
+  </div>`;
+
+  container.innerHTML = hero + howItWorks
+    + `<div style="padding:0 16px;margin-bottom:4px"><div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:12px">🔥 Aktive Challenges (${challenges.length})</div>${challengeCards}</div>`
+    + gallerySection;
+}
+
+function openChallengeDetail(challengeId) {
+  const ch = _getChallenges().find(c => c.id === challengeId);
+  if (!ch) return;
+  const allSubs = _getPhotoSubs();
+  const user = ZAMApi.auth.currentUser();
+  const uid = user?.id || 'guest';
+  const mySubs = allSubs.filter(s => s.challenge_id===ch.id && s.user_id===uid && s.status!=='rejected');
+  const count = mySubs.length > 0 ? mySubs.length : (ch.demo_count || 0);
+  const total = ch.required_photos_count;
+  const pct = Math.min(100, Math.round((count/total)*100));
+  const c = ch.banner_color || '#6d28d9';
+  const today = new Date().toISOString().slice(0,10);
+  const doneToday = allSubs.some(s => s.challenge_id===ch.id && s.user_id===uid && s.submission_day===today && s.status!=='rejected');
+
+  const rules = (ch.rules || ['1 Foto pro Tag','Nur im ZAM Freiham','Kein Upload aus der Galerie','Foto wird geprüft'])
+    .map(r => `<li style="margin-bottom:6px">${r}</li>`).join('');
+
+  document.getElementById('challenge-detail-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div style="width:56px;height:56px;border-radius:14px;background:${c}33;border:2px solid ${c}66;display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0">${ch.merchant_icon}</div>
+      <div>
+        <div style="font-size:1.05rem;font-weight:800;color:#fff;line-height:1.2">${escHtml(ch.title)}</div>
+        <div style="font-size:0.74rem;color:rgba(255,255,255,0.45);margin-top:3px">${escHtml(ch.merchant_name)}</div>
+      </div>
+    </div>
+
+    <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:1.4rem">🎁</span>
+      <div>
+        <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;font-weight:800;color:rgba(52,211,153,0.7);margin-bottom:3px">Deine Belohnung</div>
+        <div style="font-size:0.9rem;font-weight:800;color:#34d399">${escHtml(ch.reward_description)}</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px">Dein Fortschritt</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:0.82rem;font-weight:700;color:#e2e8f0">${count} / ${total} Fotos</span>
+        <span style="font-size:0.78rem;font-weight:700;color:${c}">${pct}%</span>
+      </div>
+      <div style="height:10px;background:rgba(255,255,255,0.07);border-radius:99px;overflow:hidden;margin-bottom:14px">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${c},${c}cc);border-radius:99px"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${Array.from({length:total},(_,i) => i < count
+          ? `<div style="width:44px;height:44px;border-radius:10px;background:${c}33;border:2px solid ${c}99;display:flex;align-items:center;justify-content:center;font-size:1.1rem">✅</div>`
+          : `<div style="width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,0.04);border:1.5px dashed rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:0.9rem;color:rgba(255,255,255,0.2)">📷</div>`
+        ).join('')}
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px">Challenge-Regeln</div>
+      <ul style="list-style:none;padding:0;margin:0;font-size:0.78rem;color:rgba(255,255,255,0.55);line-height:1.5">
+        ${rules}
+      </ul>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;padding:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:0.74rem;color:rgba(255,255,255,0.4)"><span>📅</span> Max. 1 Foto pro Tag zählt zum Fortschritt</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:0.74rem;color:rgba(255,255,255,0.4)"><span>📍</span> Standortfreigabe im ZAM Freiham erforderlich</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:0.74rem;color:rgba(255,255,255,0.4)"><span>🔍</span> Foto wird vor Veröffentlichung automatisch geprüft</div>
+    </div>
+
+    <button onclick="${doneToday ? '' : `closeChallengeDetail();openCameraForChallenge('${ch.id}')`}" ${doneToday ? 'disabled' : ''} style="width:100%;padding:15px;background:${doneToday ? 'rgba(255,255,255,0.04)' : `linear-gradient(135deg,${c},${c}cc)`};border:none;color:${doneToday ? 'rgba(255,255,255,0.25)' : '#fff'};border-radius:14px;font-size:0.95rem;font-weight:800;font-family:var(--font);cursor:${doneToday ? 'default' : 'pointer'};${doneToday ? '' : `box-shadow:0 6px 20px ${c}44`}">
+      ${doneToday ? '⏳ Heute bereits eingereicht – morgen wieder' : '📸 Heute Foto aufnehmen'}
+    </button>`;
+
+  document.getElementById('challenge-detail-sheet').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeChallengeDetail() {
+  document.getElementById('challenge-detail-sheet').style.display = 'none';
+  document.body.style.overflow = '';
 }
 
 // ── Camera ──
@@ -5194,7 +5391,7 @@ function submitChallengePhoto() {
 }
 
 function renderCommunityGallery() {
-  _seedChallenges(); // ensure demo data exists
+  _seedChallenges();
   const container = document.getElementById('gallery-grid-container');
   if (!container) return;
   const gallery = _getGallery();
