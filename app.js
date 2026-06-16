@@ -5156,7 +5156,7 @@ function renderPhotoChallenges() {
   container.innerHTML = hero + howItWorks
     + `<div style="padding:0 16px;margin-bottom:4px"><div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:12px">🔥 Aktive Challenges (${challenges.length})</div>${challengeCards}</div>`
     + gallerySection
-    + `<footer class="zam-footer">App by <a href="https://lamor.agency" target="_blank" rel="noopener">LAMOR Agency</a></footer>`;
+;
 }
 
 function openChallengeDetail(challengeId) {
@@ -5749,7 +5749,7 @@ function renderRewards() {
     <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:14px">✓ Bereits eingelöst (${redeemed.length})</div>
     ${redeemed.map(rewardCard).join('')}
   </div>` : ''}
-  <footer class="zam-footer" style="padding-top:8px">App by <a href="https://lamor.agency" target="_blank" rel="noopener">LAMOR Agency</a></footer>`;
+`;
 }
 
 let _qrCodeInstance = null;
