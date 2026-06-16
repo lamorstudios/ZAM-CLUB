@@ -391,7 +391,11 @@
   <section id="page-deals" class="page" role="main">
     <div class="page-header">
       <h1>Deals 🏷️</h1>
-      <button class="header-icon-btn" aria-label="Filtern" onclick="showToast('Filter – demnächst verfügbar')">⚙️</button>
+    </div>
+    <div style="display:flex;gap:8px;padding:0 16px 12px;flex-shrink:0">
+      <button id="deals-tab-all" onclick="setDealsTab('all')" style="flex:1;padding:8px 0;border-radius:10px;background:rgba(250,70,21,1);border:none;color:#fff;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">Alle</button>
+      <button id="deals-tab-deals" onclick="setDealsTab('deals')" style="flex:1;padding:8px 0;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.55);font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">Deals</button>
+      <button id="deals-tab-partner" onclick="setDealsTab('partner')" style="flex:1;padding:8px 0;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.55);font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">🤝 Partner</button>
     </div>
     <div class="page-content" id="deals-list">
       <!-- Rendered by app.js -->

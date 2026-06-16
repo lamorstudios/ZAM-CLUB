@@ -1398,6 +1398,46 @@ function renderDealCard(deal, idx) {
   return div;
 }
 
+function _renderPartnerDealCard(pd) {
+  const div = document.createElement('div');
+  div.style.cssText = 'border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.3);padding:16px;margin-bottom:12px;background:linear-gradient(135deg,rgba(250,70,21,0.08),rgba(247,171,0,0.05));border:1px solid rgba(250,70,21,0.25)';
+  const expiryStr = pd.expires_at ? new Date(pd.expires_at).toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'}) : '—';
+  const aName = pd.a.name; const bName = pd.b.name;
+  const aIcon = pd.a.icon; const bIcon = pd.b.icon;
+  const aBtn = pd.a.name + ' + ' + pd.b.name;
+  div.innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
+      <span style="font-size:0.6rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;padding:3px 8px;background:rgba(250,70,21,0.15);color:#FA4615;border:1px solid rgba(250,70,21,0.3);border-radius:6px">🤝 Partner Deal</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div style="font-size:2rem">${aIcon}</div>
+      <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);font-weight:700">+</div>
+      <div style="font-size:2rem">${bIcon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.92rem;font-weight:900;color:#fff;line-height:1.2">${escHtml(pd.title)}</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">${escHtml(aName)} + ${escHtml(bName)}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px">
+        <div style="font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">${escHtml(aName)}</div>
+        <div style="font-size:0.78rem;font-weight:700;color:#FA4615">${escHtml(pd.a.benefit)}</div>
+        ${pd.a.condition ? '<div style="font-size:0.6rem;color:rgba(255,255,255,0.35);margin-top:4px">' + escHtml(pd.a.condition) + '</div>' : ''}
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px">
+        <div style="font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">${escHtml(bName)}</div>
+        <div style="font-size:0.78rem;font-weight:700;color:#F7AB00">${escHtml(pd.b.benefit)}</div>
+        ${pd.b.condition ? '<div style="font-size:0.6rem;color:rgba(255,255,255,0.35);margin-top:4px">' + escHtml(pd.b.condition) + '</div>' : ''}
+      </div>
+    </div>
+    <div style="font-size:0.68rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px">${escHtml(pd.description||'')}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:0.6rem;color:rgba(255,255,255,0.3)">📅 Bis ${expiryStr} · ${pd.participants||0} Teilnehmer</div>
+      <button onclick="secureVoucherFromDeal('${pd.id}','Partner Deal','🤝','${escHtml(aBtn)}','Partner Deal')" style="background:#FA4615;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">Gutschein sichern</button>
+    </div>`;
+  return div;
+}
+
 async function claimDeal(idx, cardEl, deal) {
   const overlay = $('#modal-barcode');
   if (!overlay) return;
@@ -6567,16 +6607,50 @@ function openMerchantEventModal() {
 }
 
 function openMerchantDealModal() {
+  const merchants = (window.ZAMData?.merchants || []);
+  const me = ZAMApi.auth.currentUser();
+  const others = merchants.filter(m => m.id !== me?.id);
+  const merchantOptions = others.map(m => {
+    const n = m.name.replace(/"/g,'&quot;');
+    return '<option value="' + m.id + '" data-name="' + n + '" data-icon="' + m.icon + '">' + m.icon + ' ' + n + '</option>';
+  }).join('');
+
   _buildMerchantModal('_dyn_deal_modal', '🏷️ Deal einreichen',
-    _inp('Deal-Titel', '_dl_title', 'text', 'z.B. 20% auf alle Burger', true) +
+    _inp('Deal-Titel', '_dl_title', 'text', 'z.B. Fitness + Burger Aktion', true) +
     _ta('Beschreibung', '_dl_desc', 'Was beinhaltet der Deal?') +
-    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">` +
-    _inp('Rabatt', '_dl_disc', 'text', 'z.B. 20% oder 5€') +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+    _inp('Rabatt / Mein Vorteil', '_dl_disc', 'text', 'z.B. 20% oder 5€') +
     _inp('Gültig bis', '_dl_exp', 'date', '', true) +
-    `</div>` +
-    `<div style="margin-bottom:14px"><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Bild (optional)</label><input type="file" id="_dl_img" accept="image/*" onchange="_prvMerchImg('_dl_img','_dl_imgprev')" style="color:rgba(255,255,255,0.5);font-family:inherit;font-size:0.78rem"><img id="_dl_imgprev" style="display:none;width:100%;border-radius:10px;margin-top:8px;max-height:160px;object-fit:cover"></div>` +
+    '</div>' +
+    '<div style="margin-bottom:14px">' +
+      '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px;background:rgba(250,70,21,0.07);border:1px solid rgba(250,70,21,0.2);border-radius:12px">' +
+        '<input type="checkbox" id="_dl_partner_toggle" onchange="togglePartnerDealFields()" style="width:18px;height:18px;accent-color:#FA4615;cursor:pointer">' +
+        '<div>' +
+          '<div style="font-size:0.82rem;font-weight:700;color:#fff">🤝 Partner Deal</div>' +
+          '<div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:1px">Kooperation mit einem anderen Händler</div>' +
+        '</div>' +
+      '</label>' +
+    '</div>' +
+    '<div id="_dl_partner_fields" style="display:none;margin-bottom:14px">' +
+      '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px">' +
+        '<div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.04em">Partner-Shop auswählen</div>' +
+        '<select id="_dl_partner_id" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:inherit;font-size:0.85rem;outline:none;margin-bottom:10px">' +
+          '<option value="">— Händler wählen —</option>' +
+          merchantOptions +
+        '</select>' +
+        '<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);padding:8px;background:rgba(247,171,0,0.08);border-radius:8px;border:1px solid rgba(247,171,0,0.15)">💡 Der Partner erhält eine Anfrage und ergänzt seinen eigenen Vorteil bevor der Deal aktiviert wird.</div>' +
+      '</div>' +
+    '</div>' +
     _submitBtn('📤 Deal einreichen', 'submitNewDeal()')
   );
+}
+
+function togglePartnerDealFields() {
+  const checked = document.getElementById('_dl_partner_toggle')?.checked;
+  const fields = document.getElementById('_dl_partner_fields');
+  if (fields) fields.style.display = checked ? 'block' : 'none';
+  const submitBtn = document.querySelector('#_dyn_deal_modal button[onclick="submitNewDeal()"]');
+  if (submitBtn) submitBtn.textContent = checked ? '📨 Anfrage senden' : '📤 Deal einreichen';
 }
 
 function closeMerchantEventModal() { _merchantModalClose('_dyn_event_modal'); }
@@ -6609,12 +6683,43 @@ function submitNewDeal() {
   const title = document.getElementById('_dl_title')?.value?.trim();
   const desc  = document.getElementById('_dl_desc')?.value?.trim();
   const exp   = document.getElementById('_dl_exp')?.value;
+  const disc  = document.getElementById('_dl_disc')?.value?.trim() || '';
   if (!title || !desc || !exp) { showToast('⚠️ Titel, Beschreibung und Ablaufdatum erforderlich'); return; }
+
+  const isPartner = document.getElementById('_dl_partner_toggle')?.checked;
+  const partnerSel = document.getElementById('_dl_partner_id');
+  const partnerId  = partnerSel?.value;
+  const partnerName = partnerSel?.options[partnerSel.selectedIndex]?.dataset?.name || 'Partner';
+  const partnerIcon = partnerSel?.options[partnerSel.selectedIndex]?.dataset?.icon || '🏪';
+
+  if (isPartner) {
+    if (!partnerId) { showToast('⚠️ Bitte einen Partner-Shop auswählen'); return; }
+    const me = ZAMApi.auth.currentUser();
+    const myM = (window.ZAMData?.merchants || []).find(m => m.id === me?.id) || { name: me?.display_name || 'Händler', icon: '🏪', id: me?.id };
+    const req = {
+      id: 'pdreq_' + Date.now(),
+      status: 'pending',
+      title,
+      description: desc,
+      expires_at: exp,
+      from: { id: myM.id, name: myM.name, icon: myM.icon, benefit: disc, condition: '' },
+      to:   { id: partnerId, name: partnerName, icon: partnerIcon },
+      created_at: new Date().toISOString()
+    };
+    const reqs = _getPD2Requests();
+    reqs.unshift(req);
+    _savePD2Requests(reqs);
+    _merchantModalClose('_dyn_deal_modal');
+    showToast('📨 Anfrage gesendet! ' + partnerName + ' kann jetzt annehmen.', 'success');
+    return;
+  }
+
+  // Regular deal
   const btn = document.querySelector('#_dyn_deal_modal button:last-child');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird eingereicht…'; }
   const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
   const list = getMerchantSubmissions();
-  list.unshift({ id:'deal_'+Date.now(), type:'deal', status:'pending', title, description:desc, discount:document.getElementById('_dl_disc')?.value?.trim()||'', expiry:exp, merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() });
+  list.unshift({ id:'deal_'+Date.now(), type:'deal', status:'pending', title, description:desc, discount:disc, expiry:exp, merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() });
   saveMerchantSubmissions(list);
   setTimeout(() => { _merchantModalClose('_dyn_deal_modal'); showToast('✅ Deal erfolgreich eingereicht!'); }, 500);
 }
@@ -7325,31 +7430,27 @@ function _myVoucherCard(v) {
 }
 
 // =============================================
-// PHASE 2: Partner Deals
+// PHASE 2: Partner Deals v2 — Full Flow
 // =============================================
-const _PARTNER_DEALS_KEY = 'zam_partner_deals_v2';
-const _PARTNER_REQ_KEY   = 'zam_partner_requests_v2';
+const _PD2_REQ_KEY    = 'zam_pd2_requests';
+const _PD2_ACTIVE_KEY = 'zam_pd2_active_deals';
 
-const _DEMO_PARTNER_DEALS = [
-  {id:'pd_001',status:'active',
-   merchant_a:{name:"Pit's Stop Burger",icon:'🍔',id:'mer_012'},
-   merchant_b:{name:'Fit Star',icon:'💪',id:'mer_023'},
-   title:'Burger & Workout Kombi',
-   description:"Kauf 2 Menüs bei Pit's Stop und erhalte 10% auf eine Fit Star Mitgliedschaft.",
-   valid_until:'2026-07-31'},
-  {id:'pd_002',status:'active',
-   merchant_a:{name:'Café Müller',icon:'☕',id:'mer_001'},
-   merchant_b:{name:'TK Maxx',icon:'🛍️',id:'mer_027'},
-   title:'Kaffee & Shopping',
-   description:'Kaffee kaufen bei Café Müller und 5% Rabatt auf deinen nächsten TK Maxx Einkauf erhalten.',
-   valid_until:'2026-06-30'},
-];
+function _getPD2Requests()       { try { return JSON.parse(localStorage.getItem(_PD2_REQ_KEY)   ||'[]');  } catch { return []; } }
+function _savePD2Requests(r)     { localStorage.setItem(_PD2_REQ_KEY,    JSON.stringify(r)); }
+function _getPD2ActiveDeals()    { try { return JSON.parse(localStorage.getItem(_PD2_ACTIVE_KEY)||'null') || _pd2DemoDeals(); } catch { return _pd2DemoDeals(); } }
+function _savePD2ActiveDeals(d)  { localStorage.setItem(_PD2_ACTIVE_KEY, JSON.stringify(d)); }
 
-function _getPartnerDeals() {
-  try { return JSON.parse(localStorage.getItem(_PARTNER_DEALS_KEY)||'null')||_DEMO_PARTNER_DEALS; } catch { return _DEMO_PARTNER_DEALS; }
-}
-function _getPartnerRequests() {
-  try { return JSON.parse(localStorage.getItem(_PARTNER_REQ_KEY)||'[]'); } catch { return []; }
+function _pd2DemoDeals() {
+  return [{
+    id: 'pd2_demo1',
+    title: 'Fitness + Burger Aktion',
+    description: "Aktive Fit Star Mitglieder erhalten 20% Rabatt bei Pit's Stop Burger – einfach Mitgliedsausweis zeigen.",
+    a: { id:'mer_019', name:'Fit Star',         icon:'🏋️', benefit:'12 Monate Mitgliedschaft', condition:'Neukunden' },
+    b: { id:'mer_010', name:"Pit's Stop Burger", icon:'🍔',  benefit:'20% Rabatt auf ein Menü',  condition:'Für aktive Mitglieder' },
+    expires_at: '2026-12-31',
+    participants: 47,
+    created_at: new Date().toISOString()
+  }];
 }
 
 function _renderPartnerDeals(me) {
@@ -7362,86 +7463,120 @@ function _renderPartnerDeals(me) {
     if (target) target.appendChild(wrap);
     else return;
   }
-  const deals = _getPartnerDeals();
-  const reqs  = _getPartnerRequests();
-  const pending = reqs.filter(r => r.to_id === me.id && r.status === 'pending');
-  wrap.innerHTML = `
-    <div style="padding:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div>
-          <div style="font-size:0.92rem;font-weight:800;color:#fff">🤝 Partner-Deals</div>
-          <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">Gemeinsame Aktionen mit anderen Händlern</div>
-        </div>
-        <button onclick="openPartnerDealCreator()" style="background:rgba(250,70,21,0.15);border:1px solid rgba(250,70,21,0.3);border-radius:10px;padding:7px 12px;color:#ffb399;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer">+ Anfragen</button>
-      </div>
-      ${pending.length ? `<div style="background:rgba(247,171,0,0.1);border:1px solid rgba(247,171,0,0.25);border-radius:12px;padding:12px;margin-bottom:12px">
-        <div style="font-size:0.7rem;font-weight:700;color:#F7AB00;margin-bottom:8px">📬 ${pending.length} offene Anfrage${pending.length>1?'n':''}</div>
-        ${pending.map(r=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <span style="font-size:1rem">${r.from_icon}</span>
-          <span style="flex:1;font-size:0.7rem;color:rgba(255,255,255,0.7)">${escHtml(r.from_name)} möchte kooperieren</span>
-          <button onclick="_acceptPartnerReq('${r.id}')" style="background:#FA4615;border:none;border-radius:8px;padding:5px 10px;color:#fff;font-size:0.65rem;font-weight:700;font-family:var(--font);cursor:pointer">✓</button>
-          <button onclick="_declinePartnerReq('${r.id}')" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:5px 10px;color:rgba(255,255,255,0.4);font-size:0.65rem;font-weight:600;font-family:var(--font);cursor:pointer">✕</button>
-        </div>`).join('')}
-      </div>` : ''}
-      ${deals.map(d=>`
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;margin-bottom:10px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <span style="font-size:1.2rem">${d.merchant_a.icon}</span>
-          <span style="font-size:0.65rem;color:rgba(255,255,255,0.3);font-weight:700">×</span>
-          <span style="font-size:1.2rem">${d.merchant_b.icon}</span>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:0.78rem;font-weight:700;color:#fff">${escHtml(d.title)}</div>
-            <div style="font-size:0.6rem;color:rgba(255,255,255,0.35)">${escHtml(d.merchant_a.name)} + ${escHtml(d.merchant_b.name)}</div>
-          </div>
-          <span style="font-size:0.58rem;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.25);white-space:nowrap">● AKTIV</span>
-        </div>
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);line-height:1.5;margin-bottom:6px">${escHtml(d.description)}</div>
-        <div style="font-size:0.6rem;color:rgba(255,255,255,0.28)">Bis ${new Date(d.valid_until).toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'})}</div>
-      </div>`).join('')}
-      ${!deals.length?`<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.75rem">Noch keine Partner-Deals. Klicke auf „Anfragen".</div>`:''}
-    </div>`;
+
+  const allActive = JSON.parse(localStorage.getItem(_PD2_ACTIVE_KEY) || 'null') || _pd2DemoDeals();
+  const activeDeals = allActive.filter(d => d.a.id === me.id || d.b.id === me.id);
+  const reqs    = _getPD2Requests();
+  const incoming = reqs.filter(r => r.to.id   === me.id && r.status === 'pending');
+  const outgoing  = reqs.filter(r => r.from.id === me.id && r.status === 'pending');
+
+  const incomingHtml = incoming.map(r => {
+    const rid = r.id;
+    return '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;margin-bottom:8px">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
+        '<span style="font-size:1.2rem">' + r.from.icon + '</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:0.78rem;font-weight:700;color:#fff">' + escHtml(r.title) + '</div>' +
+          '<div style="font-size:0.62rem;color:rgba(255,255,255,0.4)">von ' + escHtml(r.from.name) + (r.from.benefit ? ' · ' + escHtml(r.from.benefit) : '') + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="font-size:0.68rem;color:rgba(255,255,255,0.5);margin-bottom:10px;line-height:1.5">' + escHtml(r.description || '') + '</div>' +
+      '<div style="margin-bottom:10px">' +
+        '<label style="font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.4);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em">Mein Vorteil *</label>' +
+        '<input id="pd2_benefit_' + rid + '" type="text" placeholder="z.B. 20% Rabatt auf ein Menü" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:9px 12px;color:#fff;font-family:inherit;font-size:0.8rem;outline:none;margin-bottom:6px">' +
+        '<label style="font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.4);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em">Bedingung (optional)</label>' +
+        '<input id="pd2_cond_' + rid + '" type="text" placeholder="z.B. Nur für aktive Mitglieder" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:9px 12px;color:#fff;font-family:inherit;font-size:0.8rem;outline:none">' +
+      '</div>' +
+      '<div style="display:flex;gap:8px">' +
+        '<button onclick="_pd2Accept(\'' + rid + '\')" style="flex:1;background:#FA4615;border:none;border-radius:10px;padding:9px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">✅ Annehmen</button>' +
+        '<button onclick="_pd2Decline(\'' + rid + '\')" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:9px;color:rgba(255,255,255,0.4);font-size:0.75rem;font-weight:600;font-family:var(--font);cursor:pointer">❌ Ablehnen</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  const outgoingHtml = outgoing.map(r =>
+    '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">' +
+      '<span style="font-size:1rem">' + r.to.icon + '</span>' +
+      '<span style="flex:1;font-size:0.7rem;color:rgba(255,255,255,0.5)">' + escHtml(r.title) + ' → ' + escHtml(r.to.name) + '</span>' +
+      '<span style="font-size:0.6rem;color:#F7AB00;font-weight:700">⏳ Ausstehend</span>' +
+    '</div>'
+  ).join('');
+
+  const activeHtml = activeDeals.map(d =>
+    '<div style="background:linear-gradient(135deg,rgba(250,70,21,0.08),rgba(247,171,0,0.05));border:1px solid rgba(250,70,21,0.2);border-radius:14px;padding:14px;margin-bottom:10px">' +
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">' +
+        '<span style="font-size:0.55rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;padding:2px 7px;background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.25);border-radius:6px">● AKTIV</span>' +
+        '<span style="font-size:0.55rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;padding:2px 7px;background:rgba(250,70,21,0.12);color:#FA4615;border:1px solid rgba(250,70,21,0.25);border-radius:6px">🤝 PARTNER DEAL</span>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">' +
+        '<span style="font-size:1.4rem">' + d.a.icon + '</span>' +
+        '<span style="font-size:0.7rem;color:rgba(255,255,255,0.3)">+</span>' +
+        '<span style="font-size:1.4rem">' + d.b.icon + '</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:0.85rem;font-weight:800;color:#fff">' + escHtml(d.title) + '</div>' +
+          '<div style="font-size:0.6rem;color:rgba(255,255,255,0.4)">' + escHtml(d.a.name) + ' + ' + escHtml(d.b.name) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
+        '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px">' +
+          '<div style="font-size:0.6rem;color:rgba(255,255,255,0.35);margin-bottom:3px">' + escHtml(d.a.name) + '</div>' +
+          '<div style="font-size:0.72rem;font-weight:700;color:#FA4615">' + escHtml(d.a.benefit) + '</div>' +
+        '</div>' +
+        '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px">' +
+          '<div style="font-size:0.6rem;color:rgba(255,255,255,0.35);margin-bottom:3px">' + escHtml(d.b.name) + '</div>' +
+          '<div style="font-size:0.72rem;font-weight:700;color:#F7AB00">' + escHtml(d.b.benefit) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="font-size:0.6rem;color:rgba(255,255,255,0.28)">📅 Bis ' + new Date(d.expires_at).toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'}) + ' · 👥 ' + (d.participants||0) + ' Teilnehmer</div>' +
+    '</div>'
+  ).join('');
+
+  wrap.innerHTML =
+    '<div style="padding:16px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">' +
+        '<div>' +
+          '<div style="font-size:0.92rem;font-weight:800;color:#fff">🤝 Partner-Deals</div>' +
+          '<div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">Gemeinsame Aktionen mit anderen Händlern</div>' +
+        '</div>' +
+        '<button onclick="openMerchantDealModal()" style="background:rgba(250,70,21,0.15);border:1px solid rgba(250,70,21,0.3);border-radius:10px;padding:7px 12px;color:#ffb399;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer">+ Deal anfragen</button>' +
+      '</div>' +
+      (incoming.length ? '<div style="background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.2);border-radius:14px;padding:14px;margin-bottom:12px"><div style="font-size:0.7rem;font-weight:800;color:#F7AB00;margin-bottom:10px">📬 ' + incoming.length + ' offene Anfrage' + (incoming.length > 1 ? 'n' : '') + '</div>' + incomingHtml + '</div>' : '') +
+      (outgoing.length ? '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px;margin-bottom:12px"><div style="font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:6px">📤 Gesendete Anfragen</div>' + outgoingHtml + '</div>' : '') +
+      (activeDeals.length ? activeHtml : '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.75rem">Noch keine Partner-Deals. Klicke auf „Deal anfragen" und wähle 🤝 Partner Deal.</div>') +
+    '</div>';
 }
 
-function openPartnerDealCreator() {
-  const merchants = window.ZAMData?.merchants || [];
-  const user = ZAMApi.auth.currentUser();
-  const others = merchants.filter(m=>m.id!==user?.id).slice(0,14);
-  _buildMerchantModal('partner-deal-modal','🤝 Partner anfragen',`
-    <div style="font-size:0.7rem;color:rgba(255,255,255,0.45);margin-bottom:12px">Wähle einen Händler für eine Kooperationsanfrage:</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:260px;overflow-y:auto;padding-right:4px">
-      ${others.map(m=>`<button onclick="_sendPartnerReq('${m.id}','${escHtml(m.name)}','${m.icon}')" style="display:flex;align-items:center;gap:8px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;cursor:pointer;font-family:var(--font);text-align:left;width:100%"><span style="font-size:1.2rem">${m.icon}</span><span style="font-size:0.68rem;font-weight:600;color:rgba(255,255,255,0.8);line-height:1.3">${escHtml(m.name)}</span></button>`).join('')}
-    </div>
-    <button onclick="document.getElementById('partner-deal-modal')?.remove()" style="width:100%;margin-top:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px;color:rgba(255,255,255,0.45);font-size:0.78rem;font-weight:600;font-family:var(--font);cursor:pointer">Abbrechen</button>
-  `);
-}
-
-function _sendPartnerReq(toId, toName, toIcon) {
-  const user = ZAMApi.auth.currentUser();
-  const reqs = _getPartnerRequests();
-  document.getElementById('partner-deal-modal')?.remove();
-  if (reqs.find(r=>r.to_id===toId&&r.from_id===user.id&&r.status==='pending')) { showToast('Anfrage bereits gesendet','info'); return; }
-  reqs.push({id:'pr_'+Date.now(),from_id:user.id,from_name:user.display_name||user.name||'Händler',from_icon:'🏪',to_id:toId,to_name:toName,to_icon:toIcon,status:'pending',created_at:new Date().toISOString()});
-  localStorage.setItem(_PARTNER_REQ_KEY, JSON.stringify(reqs));
-  showToast(`Anfrage an ${toName} gesendet! ✅`,'success');
-}
-
-function _acceptPartnerReq(reqId) {
-  const reqs = _getPartnerRequests();
-  const req = reqs.find(r=>r.id===reqId);
+function _pd2Accept(reqId) {
+  const reqs = _getPD2Requests();
+  const req  = reqs.find(r => r.id === reqId);
   if (!req) return;
-  req.status='accepted';
-  localStorage.setItem(_PARTNER_REQ_KEY, JSON.stringify(reqs));
-  const deals = _getPartnerDeals();
-  deals.push({id:'pd_'+Date.now(),status:'active',merchant_a:{name:req.from_name,icon:req.from_icon,id:req.from_id},merchant_b:{name:req.to_name,icon:req.to_icon,id:req.to_id},title:'Neuer Partner-Deal',description:'Gemeinsames Angebot – Details werden vom Center Management bestätigt.',valid_until:'2026-12-31'});
-  localStorage.setItem(_PARTNER_DEALS_KEY, JSON.stringify(deals));
-  showToast('Partner-Deal akzeptiert! 🤝','success');
+  const benefit = document.getElementById('pd2_benefit_' + reqId)?.value?.trim();
+  const cond    = document.getElementById('pd2_cond_'    + reqId)?.value?.trim() || '';
+  if (!benefit) { showToast('⚠️ Bitte deinen Vorteil eintragen', 'error'); return; }
+  req.status        = 'accepted';
+  req.to.benefit    = benefit;
+  req.to.condition  = cond;
+  _savePD2Requests(reqs);
+  const existing = JSON.parse(localStorage.getItem(_PD2_ACTIVE_KEY) || '[]');
+  existing.unshift({
+    id: 'pd2_' + Date.now(),
+    title:       req.title,
+    description: req.description,
+    a: { id: req.from.id, name: req.from.name, icon: req.from.icon, benefit: req.from.benefit, condition: req.from.condition || '' },
+    b: { id: req.to.id,   name: req.to.name,   icon: req.to.icon,   benefit, condition: cond },
+    expires_at:   req.expires_at,
+    participants: 0,
+    created_at:   new Date().toISOString()
+  });
+  _savePD2ActiveDeals(existing);
+  showToast('🤝 Partner-Deal aktiviert!', 'success');
   renderMerchantDashboard();
 }
 
-function _declinePartnerReq(reqId) {
-  const reqs = _getPartnerRequests().map(r=>r.id===reqId?{...r,status:'declined'}:r);
-  localStorage.setItem(_PARTNER_REQ_KEY, JSON.stringify(reqs));
-  showToast('Anfrage abgelehnt','info');
+function _pd2Decline(reqId) {
+  const reqs = _getPD2Requests().map(r => r.id === reqId ? {...r, status: 'declined'} : r);
+  _savePD2Requests(reqs);
+  showToast('Anfrage abgelehnt', 'info');
   renderMerchantDashboard();
 }
 
