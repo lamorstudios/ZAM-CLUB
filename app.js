@@ -112,8 +112,14 @@ function _countdownBadge(expiryStr) {
 let _countdownInterval = null;
 function _startCountdownTicker() {
   if (_countdownInterval) return;
-  _countdownInterval = setInterval(() => {
-    document.querySelectorAll('[data-expiry]').forEach(badge => {
+  let _tickFast = true;
+  let _slowTicks = 0;
+  function _tick() {
+    if (document.hidden) return;
+    const badges = document.querySelectorAll('[data-expiry]');
+    if (!badges.length) return;
+    let hasSeconds = false;
+    badges.forEach(badge => {
       const expiryStr = badge.dataset.expiry;
       const expDate = expiryStr.includes('T') ? new Date(expiryStr) : new Date(expiryStr + 'T23:59:59');
       const msLeft  = expDate - Date.now();
@@ -121,13 +127,22 @@ function _startCountdownTicker() {
         badge.textContent  = '⌛ Abgelaufen';
         badge.className    = 'countdown-badge countdown-expired';
         badge.removeAttribute('data-expiry');
-      } else {
+      } else if (msLeft < 86400000) {
+        hasSeconds = true;
         const h = String(Math.floor(msLeft / 3600000)).padStart(2, '0');
         const m = String(Math.floor((msLeft % 3600000) / 60000)).padStart(2, '0');
         const s = String(Math.floor((msLeft % 60000) / 1000)).padStart(2, '0');
         badge.textContent = `⏳ Noch ${h}:${m}:${s}`;
+      } else {
+        const days = Math.floor(msLeft / 86400000);
+        badge.textContent = `⏳ Noch ${days} Tag${days !== 1 ? 'e' : ''}`;
       }
     });
+    _tickFast = hasSeconds;
+  }
+  _countdownInterval = setInterval(() => {
+    _slowTicks++;
+    if (_tickFast || _slowTicks % 60 === 0) _tick();
   }, 1000);
 }
 
@@ -325,10 +340,10 @@ function renderHome() {
   _renderHomeRankStats(user);
   _initSpinMerchantPrizes();
   _renderHomeSpinPreview();
-  _renderHomeRankingCard();
-  renderHomeRecs();
   renderHomeEvents();
   renderHomeDeals();
+  const _idle = typeof requestIdleCallback === 'function' ? requestIdleCallback : (fn) => setTimeout(fn, 80);
+  _idle(() => { _renderHomeRankingCard(); renderHomeRecs(); });
 
   // Referral CTA widget
   const refCode = _getReferralCode(user);
@@ -341,7 +356,7 @@ function renderHome() {
   if (refCountEl) refCountEl.textContent = refCount;
   if (refPtsEl)   refPtsEl.textContent   = refCount * 250;
 
-  // Händler Tools card — injected dynamically so event listeners are 100% reliable
+  // Händler Tools card — collapsed by default, expand on click
   const toolsCard = document.getElementById('home-merchant-tools');
   if (toolsCard) {
     const isMerchant = user.role === 'merchant' || user.role === 'admin';
@@ -350,27 +365,37 @@ function renderHome() {
     } else {
       const shopLabel = user.role === 'admin' ? 'Admin-Vorschau aktiv' : (user.display_name || user.name || 'Demo Händler');
       toolsCard.style.display = 'block';
+      const isAdmin = user.role === 'admin';
       toolsCard.innerHTML = `
-        <div style="background:linear-gradient(135deg,rgba(196,53,16,0.25),rgba(250,70,21,0.15));border:1px solid rgba(250,70,21,0.35);border-radius:16px;padding:16px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-            <span style="font-size:1.3rem">🏪</span>
-            <div>
-              <div style="font-size:0.9rem;font-weight:800;color:#ffb399">Händler Tools</div>
-              <div style="font-size:0.68rem;color:rgba(250,70,21,0.7)">${escHtml(shopLabel)}</div>
+        <div style="border:1px solid rgba(250,70,21,0.3);border-radius:16px;overflow:hidden">
+          <button id="ht-toggle" style="width:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(196,53,16,0.18);border:none;cursor:pointer;font-family:var(--font);text-align:left">
+            <span style="font-size:1.2rem">🏪</span>
+            <div style="flex:1">
+              <div style="font-size:0.85rem;font-weight:800;color:#ffb399">Händler Tools</div>
+              <div style="font-size:0.65rem;color:rgba(250,70,21,0.65)">${escHtml(shopLabel)}</div>
             </div>
-            <div style="margin-left:auto;background:rgba(16,185,129,0.15);border:1px solid rgba(52,211,153,0.3);border-radius:6px;padding:2px 8px;font-size:0.62rem;font-weight:700;color:#34d399">● AKTIV</div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <button id="ht-qr"     style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border:none;border-radius:10px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer;grid-column:1/-1"><span style="font-size:1.1rem">📷</span> QR-Code scannen</button>
-            <button id="ht-event"  style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>📅</span> Event einreichen</button>
-            <button id="ht-deal"   style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(247,171,0,0.15);border:1px solid rgba(247,171,0,0.3);color:#F7AB00;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>🏷️</span> Deal einreichen</button>
-            <button id="ht-spin"   style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(247,171,0,0.12);border:1px solid rgba(247,171,0,0.28);color:#F7AB00;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>🎰</span> Spin-Gewinn</button>
-            <button id="ht-stats"  style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>📊</span> Statistiken</button>
-            <button id="ht-dash"   style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>⚙️</span> Dashboard</button>
-            ${user.role === 'admin' ? `<button id="ht-admin-spin" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#f87171;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer;grid-column:1/-1"><span>🛡️</span> Spin-Gewinne verwalten</button>` : ''}
+            <span style="font-size:0.65rem;font-weight:700;color:#34d399;background:rgba(16,185,129,0.15);border:1px solid rgba(52,211,153,0.3);border-radius:5px;padding:2px 7px">● AKTIV</span>
+            <span id="ht-chevron" style="color:rgba(255,255,255,0.4);font-size:0.8rem;transition:transform 0.2s">▼</span>
+          </button>
+          <div id="ht-body" style="display:none;padding:12px;background:rgba(196,53,16,0.08)">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <button id="ht-qr"    style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:#FA4615;color:#fff;border:none;border-radius:10px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer;grid-column:1/-1"><span>📷</span> QR-Code scannen</button>
+              <button id="ht-event" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>📅</span> Event</button>
+              <button id="ht-deal"  style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(247,171,0,0.15);border:1px solid rgba(247,171,0,0.3);color:#F7AB00;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>🏷️</span> Deal</button>
+              <button id="ht-spin"  style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(247,171,0,0.12);border:1px solid rgba(247,171,0,0.28);color:#F7AB00;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>🎰</span> Spin-Preis</button>
+              <button id="ht-stats" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>📊</span> Statistiken</button>
+              <button id="ht-dash"  style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>⚙️</span> Dashboard</button>
+              ${isAdmin ? `<button id="ht-admin-spin" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#f87171;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer;grid-column:1/-1"><span>🛡️</span> Spin-Gewinne verwalten</button>` : ''}
+            </div>
           </div>
         </div>`;
-      // Attach listeners programmatically — no onclick string dependency
+      document.getElementById('ht-toggle').addEventListener('click', () => {
+        const body = document.getElementById('ht-body');
+        const chev = document.getElementById('ht-chevron');
+        const open = body.style.display === 'none';
+        body.style.display = open ? 'block' : 'none';
+        if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
+      });
       document.getElementById('ht-qr')        ?.addEventListener('click', openQRScanner);
       document.getElementById('ht-event')     ?.addEventListener('click', openMerchantEventModal);
       document.getElementById('ht-deal')      ?.addEventListener('click', openMerchantDealModal);
