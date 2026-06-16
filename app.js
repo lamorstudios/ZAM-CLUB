@@ -1670,6 +1670,7 @@ function showApp() {
 
   setTimeout(() => checkBadgesAfterAction(), 900);
   startNotifPolling();
+  setTimeout(_initDemoRoleBadge, 400);
   checkMapRedirect();
 
   // Phase 12: Analytics seed
@@ -5238,6 +5239,132 @@ function toggleGalleryLike(itemId, btn) {
   _saveGallery(gallery);
   btn.className = 'gallery-like-btn ' + (idx===-1?'liked':'');
   btn.innerHTML = `${idx===-1?'❤️':'🤍'} <span>${item.likes_count}</span>`;
+}
+
+// ═══════════════════════════════════════════════
+// DEMO ROLE SWITCHER
+// ═══════════════════════════════════════════════
+
+const _DEMO_ROLE_META = {
+  user:     { label:'👤 Nutzer',  color:'#c4b5fd', bg:'rgba(139,92,246,0.2)', border:'rgba(139,92,246,0.3)', btnColor:'#a78bfa' },
+  merchant: { label:'🏪 Händler', color:'#6ee7b7', bg:'rgba(16,185,129,0.2)', border:'rgba(16,185,129,0.3)', btnColor:'#34d399' },
+  admin:    { label:'🛡️ Admin',   color:'#fca5a5', bg:'rgba(239,68,68,0.18)', border:'rgba(239,68,68,0.3)',  btnColor:'#f87171' },
+};
+
+const _DEMO_ROLE_ACTIONS = {
+  merchant: `
+    <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.35);margin-bottom:8px">Händler-Bereiche</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <button onclick="navigateTo('merchant-dashboard')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:10px;color:#6ee7b7;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer;text-align:left">
+        📊 <span>Händler Dashboard öffnen</span>
+      </button>
+      <button onclick="openMerchantStatsOverlay()" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:10px;color:#6ee7b7;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer;text-align:left">
+        📈 <span>Händler-Statistiken</span>
+      </button>
+      <button onclick="openModal('modal-qr-scanner')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:10px;color:#6ee7b7;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer;text-align:left">
+        🔍 <span>QR-Scanner öffnen</span>
+      </button>
+    </div>`,
+  admin: `
+    <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.35);margin-bottom:8px">Admin-Bereiche</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <button onclick="navigateTo('admin-dashboard')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:10px;color:#fca5a5;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer;text-align:left">
+        🔧 <span>Admin Dashboard</span>
+      </button>
+      <button onclick="navigateTo('admin-revenue')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:10px;color:#fca5a5;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer;text-align:left">
+        💰 <span>Revenue & Analytics</span>
+      </button>
+      <button onclick="navigateTo('admin-ai-insights')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:10px;color:#fca5a5;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer;text-align:left">
+        🤖 <span>KI Insights</span>
+      </button>
+      <button onclick="navigateTo('merchant-dashboard')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:10px;color:#fca5a5;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer;text-align:left">
+        🏪 <span>Händler-Dashboard (Vorschau)</span>
+      </button>
+      <button onclick="window.open('admin.html','_blank')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:10px;color:#fca5a5;font-family:var(--font);font-size:0.8rem;font-weight:700;cursor:pointer;text-align:left">
+        ↗ <span>Admin Panel öffnen</span>
+      </button>
+    </div>`,
+  user: '',
+};
+
+function switchDemoRole(role) {
+  const user = ZAMApi.auth.currentUser();
+  if (!user) { showToast('Bitte zuerst einloggen'); return; }
+
+  // Patch role in all storage locations
+  user.role = role;
+  ZAMData.currentUser = { ...ZAMData.currentUser, role };
+
+  // Ensure merchant_status is set for merchant role
+  if (role === 'merchant') {
+    user.merchant_status = 'approved';
+    user.shopname = user.shopname || 'Demo Händler';
+    ZAMData.currentUser.merchant_status = 'approved';
+    ZAMData.currentUser.shopname = ZAMData.currentUser.shopname || 'Demo Händler';
+  }
+
+  try {
+    const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+    if (g.session_user) { g.session_user.role = role; if (role === 'merchant') { g.session_user.merchant_status = 'approved'; g.session_user.shopname = g.session_user.shopname || 'Demo Händler'; } }
+    const accs = g.accounts || [];
+    const acc = accs.find(a => a.id === user.id);
+    if (acc) { acc.role = role; if (role === 'merchant') { acc.merchant_status = 'approved'; acc.shopname = acc.shopname || 'Demo Händler'; } }
+    localStorage.setItem('zamclub_global', JSON.stringify(g));
+  } catch {}
+
+  // Update global badge
+  const globalBadge = document.getElementById('global-role-badge');
+  const globalBadgeText = document.getElementById('global-role-badge-text');
+  const meta = _DEMO_ROLE_META[role] || _DEMO_ROLE_META.user;
+  if (globalBadge) {
+    if (role === 'user') {
+      globalBadge.style.display = 'none';
+    } else {
+      globalBadge.style.display = 'flex';
+      if (globalBadgeText) globalBadgeText.textContent = `🎭 Demo-Modus: ${meta.label}`;
+    }
+  }
+
+  // Update profile badge
+  const badge = document.getElementById('demo-role-badge');
+  if (badge) {
+    badge.textContent = meta.label;
+    badge.style.color = meta.color;
+    badge.style.background = meta.bg;
+    badge.style.borderColor = meta.border;
+  }
+
+  // Update button highlights
+  ['user','merchant','admin'].forEach(r => {
+    const btn = document.getElementById(`demo-role-btn-${r}`);
+    if (!btn) return;
+    const m = _DEMO_ROLE_META[r];
+    if (r === role) {
+      btn.style.border = `2px solid ${m.btnColor}`;
+      btn.style.background = m.bg;
+      btn.style.color = m.color;
+    } else {
+      btn.style.border = '2px solid rgba(255,255,255,0.12)';
+      btn.style.background = 'rgba(255,255,255,0.04)';
+      btn.style.color = 'rgba(255,255,255,0.7)';
+    }
+  });
+
+  // Show role-specific quick actions
+  const actionsEl = document.getElementById('demo-role-actions');
+  if (actionsEl) actionsEl.innerHTML = _DEMO_ROLE_ACTIONS[role] || '';
+
+  // Re-render home (merchant tools card) and profile (role buttons)
+  renderHome();
+  renderProfile();
+
+  showToast(`Rolle gewechselt: ${meta.label}`);
+}
+
+function _initDemoRoleBadge() {
+  const user = ZAMApi.auth.currentUser();
+  if (!user) return;
+  switchDemoRole(user.role || 'user');
 }
 
 document.readyState === 'loading'

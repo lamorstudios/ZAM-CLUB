@@ -159,6 +159,11 @@
 </div><!-- /#auth-shell -->
 
 <div id="app-shell" style="display:none">
+<!-- Global Demo Role Badge — shown when role != user -->
+<div id="global-role-badge" style="display:none;position:fixed;top:0;left:0;right:0;z-index:8000;padding:6px 16px;background:rgba(245,158,11,0.92);backdrop-filter:blur(8px);align-items:center;justify-content:center;gap:10px">
+  <span id="global-role-badge-text" style="font-size:0.72rem;font-weight:800;color:#1a1a00;letter-spacing:0.03em">🎭 Demo-Modus: Händler</span>
+  <button onclick="switchDemoRole('user')" style="font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(0,0,0,0.2);border:1px solid rgba(0,0,0,0.15);color:#1a1a00;cursor:pointer;font-family:inherit">× Zurück zu Nutzer</button>
+</div>
 
   <!-- =====================
        HOME PAGE
@@ -489,6 +494,32 @@
         📊 Punkte-Historie
       </button>
     </div>
+
+    <!-- Demo Rollen Umschalter -->
+    <div style="margin:12px 16px 4px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:14px;padding:14px 16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:rgba(245,158,11,0.8)">🎭 Demo Rollen</span>
+        <span style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-left:auto">Nur für Präsentationen</span>
+      </div>
+      <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:0.72rem;color:rgba(255,255,255,0.45)">Aktuelle Rolle:</span>
+        <span id="demo-role-badge" style="font-size:0.78rem;font-weight:800;padding:3px 10px;border-radius:20px;background:rgba(139,92,246,0.2);color:#c4b5fd;border:1px solid rgba(139,92,246,0.3)">👤 Nutzer</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <button onclick="switchDemoRole('user')" id="demo-role-btn-user" style="padding:10px 6px;border-radius:10px;border:2px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-family:var(--font);font-size:0.76rem;font-weight:700;cursor:pointer;transition:all 0.2s">
+          👤<br><span style="font-size:0.65rem">Nutzer</span>
+        </button>
+        <button onclick="switchDemoRole('merchant')" id="demo-role-btn-merchant" style="padding:10px 6px;border-radius:10px;border:2px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-family:var(--font);font-size:0.76rem;font-weight:700;cursor:pointer;transition:all 0.2s">
+          🏪<br><span style="font-size:0.65rem">Händler</span>
+        </button>
+        <button onclick="switchDemoRole('admin')" id="demo-role-btn-admin" style="padding:10px 6px;border-radius:10px;border:2px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-family:var(--font);font-size:0.76rem;font-weight:700;cursor:pointer;transition:all 0.2s">
+          🛡️<br><span style="font-size:0.65rem">Admin</span>
+        </button>
+      </div>
+      <!-- Role-specific quick actions -->
+      <div id="demo-role-actions" style="margin-top:12px"></div>
+    </div>
+
     <div style="padding: 0 16px 8px">
       <button class="btn btn-ghost btn-full" data-logout>
         🚪 Abmelden
