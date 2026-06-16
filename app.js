@@ -6631,15 +6631,20 @@ function _isEventCheckedIn(eventId) {
 }
 
 function _eventCheckinBtn(evt) {
+  const pts = evt.points_reward || 50;
   if (_isEventCheckedIn(evt.id)) {
-    return '<div style="width:100%;margin-top:10px;padding:11px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);color:#34d399;border-radius:10px;font-size:0.82rem;font-weight:700;text-align:center">✅ Eingecheckt • +' + (evt.points_reward||50) + ' Punkte erhalten</div>';
+    return '<div style="width:100%;margin-top:10px;padding:11px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);color:#34d399;border-radius:10px;font-size:0.82rem;font-weight:700;text-align:center">✅ Eingecheckt • +' + pts + ' Punkte erhalten</div>';
+  }
+  const tw = _checkEventTimeWindow(evt.id);
+  if (!tw.ok) {
+    const icon  = tw.reason === 'before' ? '⏳' : '🔒';
+    const label = tw.reason === 'before' ? 'Event noch nicht gestartet' : 'Event beendet';
+    return '<div style="width:100%;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.35);border-radius:10px;font-size:0.75rem;font-weight:600;text-align:center">' + icon + ' ' + label + '</div>';
   }
   const safeId    = evt.id.replace(/'/g, '');
   const safeTitle = (evt.title||'').replace(/'/g, '').replace(/"/g, '');
-  const pts       = evt.points_reward || 50;
-  return '<button onclick="eventCheckIn(\''+safeId+'\',\''+safeTitle+'\',' + pts + ')" style="width:100%;margin-top:10px;padding:11px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">📍 Vor Ort einchecken • +' + pts + ' Punkte</button>';
+  return '<button onclick="eventCheckIn(\''+safeId+'\',\''+safeTitle+'\','+pts+')" style="width:100%;margin-top:10px;padding:11px;background:rgba(16,185,129,0.1);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">📍 Vor Ort einchecken • +' + pts + ' Punkte</button>';
 }
-
 // Store pending check-in context to avoid inline onclick escaping
 let _pendingCheckin = null;
 
@@ -6661,16 +6666,62 @@ function eventCheckIn(eventId, eventName, pts) {
   );
 }
 
+// Check-in grace window before event start (minutes)
+const EVT_CHECKIN_GRACE_MIN = 30;
+
+function _getEventTimeWindow(eventId) {
+  const allEvts = (state.events && state.events.length) ? state.events : (ZAMData.events || []);
+  const evt = allEvts.find(e => e.id === eventId);
+  if (!evt) return null;
+  const dateIso = evt.date_iso || evt.date || null;
+  if (!dateIso) return null;
+  // Support optional end_date for multi-day events
+  const endDateIso = evt.end_date_iso || evt.end_date || dateIso;
+  const timeStart  = evt.time_start || '00:00';
+  const timeEnd    = evt.time_end   || '23:59';
+  const start = new Date(dateIso    + 'T' + timeStart + ':00');
+  const end   = new Date(endDateIso + 'T' + timeEnd   + ':00');
+  return { start, end, evt };
+}
+
+function _checkEventTimeWindow(eventId) {
+  const win = _getEventTimeWindow(eventId);
+  if (!win) return { ok: true, reason: null }; // no date info → allow
+  const now   = Date.now();
+  const grace = EVT_CHECKIN_GRACE_MIN * 60 * 1000;
+  if (now < win.start.getTime() - grace) {
+    const fmt = win.start.toLocaleString('de-DE', { day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit' });
+    return { ok: false, reason: 'before', msg: 'Dieses Event hat noch nicht begonnen. Check-in möglich ab ' + fmt + ' Uhr.' };
+  }
+  if (now > win.end.getTime()) {
+    const fmt = win.end.toLocaleString('de-DE', { day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit' });
+    return { ok: false, reason: 'after', msg: 'Dieses Event ist bereits beendet (Ende: ' + fmt + ' Uhr).' };
+  }
+  return { ok: true, reason: null };
+}
+
 function _doEventCheckinFlow() {
   const { eventId, eventName, points } = _pendingCheckin || {};
   if (!eventId) return;
   const btn    = document.getElementById('_evt_ci_btn');
   const status = document.getElementById('_evt_ci_status');
+
+  // ── Step 1: time-window check ──
+  const timeCheck = _checkEventTimeWindow(eventId);
+  if (!timeCheck.ok) {
+    if (btn) { btn.disabled = false; btn.textContent = '📍 Standort prüfen & einchecken'; }
+    if (status) { status.textContent = '⏰ ' + timeCheck.msg; status.style.color = '#f87171'; }
+    showToast(timeCheck.msg, 'error');
+    return;
+  }
+
   if (btn) { btn.disabled = true; btn.textContent = '🔄 Prüfe Standort…'; }
   if (status) status.textContent = '📡 Standort wird ermittelt…';
 
+  // ── Step 2: location check ──
   if (!navigator.geolocation) {
-    // Geolocation not supported — fallback: allow check-in (demo/desktop)
+    // Desktop/no-GPS demo fallback
+    if (status) status.textContent = '⚠️ GPS nicht verfügbar (Demo-Modus aktiv)';
     _finalizeEventCheckin(eventId, eventName, points, null, null, 'no_geo');
     return;
   }
@@ -6684,17 +6735,13 @@ function _doEventCheckinFlow() {
 
       if (dist > EVT_CHECKIN_RADIUS_M) {
         if (btn) { btn.disabled = false; btn.textContent = '📍 Standort prüfen & einchecken'; }
-        if (status) {
-          status.textContent = '❌ Du bist ' + dist + ' m entfernt — zu weit vom ZAM.';
-          status.style.color = '#f87171';
-        }
-        showToast('Du musst vor Ort im ZAM sein, um diese Event-Prämie abzuholen.', 'error');
+        if (status) { status.textContent = '❌ Du bist ' + dist + ' m entfernt — zu weit vom ZAM.'; status.style.color = '#f87171'; }
+        showToast('Du musst vor Ort im ZAM sein, um einzuchecken.', 'error');
         return;
       }
       _finalizeEventCheckin(eventId, eventName, points, lat, lng, 'geo_ok');
     },
-    err => {
-      // Permission denied or timeout — in demo mode allow check-in
+    () => {
       if (status) status.textContent = '⚠️ Standort nicht verfügbar (Demo-Modus)';
       _finalizeEventCheckin(eventId, eventName, points, null, null, 'geo_denied');
     },
