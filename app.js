@@ -312,6 +312,9 @@ function navigateTo(pageId) {
   } else if (pageId === 'nearby-settings') {
     window.scrollTo(0, 0);
     renderNearbySettings();
+  } else if (pageId === 'my-vouchers') {
+    window.scrollTo(0, 0);
+    renderMyVouchers();
   }
 }
 
@@ -3498,12 +3501,15 @@ function renderNotifSettings() {
 
   const settings = ZAMApi.notifications.getSettings();
   const categories = [
-    {key:'messages', label:'💬 Nachrichten'},
-    {key:'nudges',   label:'👋 Anstupsien'},
-    {key:'events',   label:'🎉 Events'},
-    {key:'deals',    label:'🏷️ Deals'},
-    {key:'community',label:'👥 Community'},
-    {key:'badges',   label:'🏆 Abzeichen'},
+    {key:'messages',   label:'💬 Nachrichten'},
+    {key:'nudges',     label:'👋 Anstupsien'},
+    {key:'events',     label:'🎉 Events'},
+    {key:'deals',      label:'🏷️ Neue Deals'},
+    {key:'challenges', label:'📸 Challenges'},
+    {key:'spins',      label:'🎰 Freispiele'},
+    {key:'partner',    label:'🤝 Partner-Angebote'},
+    {key:'community',  label:'👥 Community'},
+    {key:'badges',     label:'🏆 Abzeichen'},
   ];
   const list = document.getElementById('notif-settings-list');
   if (!list) return;
@@ -3712,6 +3718,9 @@ function renderMerchantDashboard() {
       </div>
     `;
   }
+  _renderMerchantStats2(stats);
+  _renderPartnerDeals(me);
+  _renderMerchantNewsfeed(me);
 }
 
 function openVoucherRedeemer() {
@@ -7204,4 +7213,326 @@ function initNearbyAlerts() {
       _nearbyWatchId = navigator.geolocation.watchPosition(_onPositionSuccess, _onPositionError, { maximumAge: 120000, timeout: 15000, enableHighAccuracy: false });
     }
   }
+}
+
+// =============================================
+// PHASE 2: QR Voucher System (My Vouchers)
+// =============================================
+const _MY_VOUCHER_KEY = 'zam_my_vouchers_v2';
+
+function _getMyVouchers() {
+  try { return JSON.parse(localStorage.getItem(_MY_VOUCHER_KEY) || '[]'); } catch { return []; }
+}
+function _saveMyVouchers(v) { localStorage.setItem(_MY_VOUCHER_KEY, JSON.stringify(v)); }
+
+function secureVoucherFromDeal(dealId, dealTitle, storeIcon, storeName, discount) {
+  const vouchers = _getMyVouchers();
+  const existing = vouchers.find(v => v.deal_id === dealId && !v.redeemed);
+  if (existing) { showMyVoucherQR(existing.id); return; }
+  const code = 'ZAM-' + dealId.replace('_','').toUpperCase().slice(-4) + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
+  const expDate = new Date(); expDate.setDate(expDate.getDate() + 14);
+  const voucher = {
+    id: 'mv_' + Date.now(),
+    deal_id: dealId, title: dealTitle, store_icon: storeIcon,
+    store_name: storeName, discount, code,
+    created_at: new Date().toISOString(),
+    expiry: expDate.toISOString().slice(0,10),
+    redeemed: false,
+  };
+  vouchers.unshift(voucher);
+  _saveMyVouchers(vouchers);
+  showToast('🎟 Gutschein gesichert! +10 Punkte', 'success');
+  showMyVoucherQR(voucher.id);
+}
+
+function showMyVoucherQR(voucherId) {
+  const v = _getMyVouchers().find(x => x.id === voucherId);
+  if (!v) return;
+  const modal = document.getElementById('qr-voucher-modal');
+  const body  = document.getElementById('qr-voucher-body');
+  if (!modal || !body) return;
+  body.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:0.95rem;font-weight:800;color:#fff">🎟 Mein Gutschein</div>
+      <button onclick="document.getElementById('qr-voucher-modal').style.display='none'" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;width:28px;height:28px;color:rgba(255,255,255,0.5);font-size:1rem;cursor:pointer;font-family:var(--font)">✕</button>
+    </div>
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:2rem;margin-bottom:4px">${v.store_icon}</div>
+      <div style="font-size:0.9rem;font-weight:800;color:#fff">${v.store_name}</div>
+      <div style="font-size:0.75rem;color:rgba(250,70,21,0.9);font-weight:700;margin-top:2px">${v.title}</div>
+    </div>
+    ${v.redeemed
+      ? `<div style="text-align:center;padding:16px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:14px;margin-bottom:14px"><div style="font-size:2rem">✅</div><div style="font-size:0.85rem;font-weight:700;color:#34d399;margin-top:6px">Bereits eingelöst</div></div>`
+      : `<div id="mv-qr-wrap" style="display:flex;justify-content:center;margin:0 0 14px;padding:16px;background:#fff;border-radius:14px"></div>`
+    }
+    <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px;text-align:center;margin-bottom:14px">
+      <div style="font-size:0.58rem;color:rgba(255,255,255,0.35);margin-bottom:4px;letter-spacing:0.08em">GUTSCHEIN-CODE</div>
+      <div style="font-size:1.05rem;font-weight:900;color:#F7AB00;letter-spacing:0.1em">${v.code}</div>
+      <div style="font-size:0.6rem;color:rgba(255,255,255,0.3);margin-top:4px">Gültig bis ${new Date(v.expiry+'T23:59:59').toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'})}</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="document.getElementById('qr-voucher-modal').style.display='none'" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:var(--font);cursor:pointer">Schließen</button>
+      <button onclick="document.getElementById('qr-voucher-modal').style.display='none';navigateTo('my-vouchers')" style="flex:1;background:#FA4615;border:none;border-radius:12px;padding:11px;color:#fff;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">Alle Gutscheine →</button>
+    </div>`;
+  modal.style.display = 'flex';
+  if (!v.redeemed && window.QRCode) {
+    setTimeout(() => {
+      const wrap = document.getElementById('mv-qr-wrap');
+      if (wrap) { wrap.innerHTML=''; new QRCode(wrap,{text:v.code,width:150,height:150,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M}); }
+    }, 60);
+  }
+}
+
+function renderMyVouchers() {
+  const c = document.getElementById('my-vouchers-content');
+  if (!c) return;
+  const vouchers = _getMyVouchers();
+  if (!vouchers.length) {
+    c.innerHTML = `<div style="text-align:center;padding:60px 20px">
+      <div style="font-size:3.5rem;margin-bottom:14px">🎟</div>
+      <div style="font-size:1rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px">Noch keine Gutscheine</div>
+      <div style="font-size:0.75rem;color:rgba(255,255,255,0.3);line-height:1.6">Klicke bei einem Deal auf<br>„Gutschein sichern"</div>
+      <button onclick="navigateTo('deals')" style="margin-top:20px;background:#FA4615;border:none;border-radius:12px;padding:12px 24px;color:#fff;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">Deals entdecken →</button>
+    </div>`; return;
+  }
+  const active = vouchers.filter(v => !v.redeemed);
+  const used   = vouchers.filter(v => v.redeemed);
+  c.innerHTML = `<div style="padding:0 0 100px">
+    ${active.length ? `<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);padding:16px 16px 8px">Aktiv (${active.length})</div>` + active.map(v => _myVoucherCard(v)).join('') : ''}
+    ${used.length   ? `<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);padding:16px 16px 8px">Verwendet</div>` + used.map(v => _myVoucherCard(v)).join('') : ''}
+  </div>`;
+}
+
+function _myVoucherCard(v) {
+  return `<div onclick="${v.redeemed?'':``showMyVoucherQR('${v.id}')``}" style="margin:0 16px 10px;background:${v.redeemed?'rgba(255,255,255,0.03)':'rgba(250,70,21,0.07)'};border:1px solid ${v.redeemed?'rgba(255,255,255,0.07)':'rgba(250,70,21,0.2)'};border-radius:16px;padding:14px;cursor:${v.redeemed?'default':'pointer'};${v.redeemed?'opacity:0.55':''}">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:1.7rem">${v.store_icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.82rem;font-weight:700;color:${v.redeemed?'rgba(255,255,255,0.4)':'#fff'};line-height:1.3">${v.title}</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">${v.store_name}</div>
+        <div style="font-size:0.65rem;font-weight:800;color:${v.redeemed?'rgba(52,211,153,0.5)':'#F7AB00'};margin-top:3px;letter-spacing:0.06em">${v.code}</div>
+      </div>
+      <div style="font-size:1.3rem">${v.redeemed?'✅':'🎟'}</div>
+    </div>
+  </div>`;
+}
+
+// =============================================
+// PHASE 2: Partner Deals
+// =============================================
+const _PARTNER_DEALS_KEY = 'zam_partner_deals_v2';
+const _PARTNER_REQ_KEY   = 'zam_partner_requests_v2';
+
+const _DEMO_PARTNER_DEALS = [
+  {id:'pd_001',status:'active',
+   merchant_a:{name:"Pit's Stop Burger",icon:'🍔',id:'mer_012'},
+   merchant_b:{name:'Fit Star',icon:'💪',id:'mer_023'},
+   title:'Burger & Workout Kombi',
+   description:"Kauf 2 Menüs bei Pit's Stop und erhalte 10% auf eine Fit Star Mitgliedschaft.",
+   valid_until:'2026-07-31'},
+  {id:'pd_002',status:'active',
+   merchant_a:{name:'Café Müller',icon:'☕',id:'mer_001'},
+   merchant_b:{name:'TK Maxx',icon:'🛍️',id:'mer_027'},
+   title:'Kaffee & Shopping',
+   description:'Kaffee kaufen bei Café Müller und 5% Rabatt auf deinen nächsten TK Maxx Einkauf erhalten.',
+   valid_until:'2026-06-30'},
+];
+
+function _getPartnerDeals() {
+  try { return JSON.parse(localStorage.getItem(_PARTNER_DEALS_KEY)||'null')||_DEMO_PARTNER_DEALS; } catch { return _DEMO_PARTNER_DEALS; }
+}
+function _getPartnerRequests() {
+  try { return JSON.parse(localStorage.getItem(_PARTNER_REQ_KEY)||'[]'); } catch { return []; }
+}
+
+function _renderPartnerDeals(me) {
+  let wrap = document.getElementById('partner-deals-section');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'partner-deals-section';
+    wrap.style.borderTop = '1px solid rgba(255,255,255,0.05)';
+    const target = document.getElementById('merchant-submissions-wrap') || document.getElementById('merchant-kpi-grid')?.parentNode;
+    if (target) target.appendChild(wrap);
+    else return;
+  }
+  const deals = _getPartnerDeals();
+  const reqs  = _getPartnerRequests();
+  const pending = reqs.filter(r => r.to_id === me.id && r.status === 'pending');
+  wrap.innerHTML = `
+    <div style="padding:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div style="font-size:0.92rem;font-weight:800;color:#fff">🤝 Partner-Deals</div>
+          <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">Gemeinsame Aktionen mit anderen Händlern</div>
+        </div>
+        <button onclick="openPartnerDealCreator()" style="background:rgba(250,70,21,0.15);border:1px solid rgba(250,70,21,0.3);border-radius:10px;padding:7px 12px;color:#ffb399;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer">+ Anfragen</button>
+      </div>
+      ${pending.length ? `<div style="background:rgba(247,171,0,0.1);border:1px solid rgba(247,171,0,0.25);border-radius:12px;padding:12px;margin-bottom:12px">
+        <div style="font-size:0.7rem;font-weight:700;color:#F7AB00;margin-bottom:8px">📬 ${pending.length} offene Anfrage${pending.length>1?'n':''}</div>
+        ${pending.map(r=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:1rem">${r.from_icon}</span>
+          <span style="flex:1;font-size:0.7rem;color:rgba(255,255,255,0.7)">${escHtml(r.from_name)} möchte kooperieren</span>
+          <button onclick="_acceptPartnerReq('${r.id}')" style="background:#FA4615;border:none;border-radius:8px;padding:5px 10px;color:#fff;font-size:0.65rem;font-weight:700;font-family:var(--font);cursor:pointer">✓</button>
+          <button onclick="_declinePartnerReq('${r.id}')" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:5px 10px;color:rgba(255,255,255,0.4);font-size:0.65rem;font-weight:600;font-family:var(--font);cursor:pointer">✕</button>
+        </div>`).join('')}
+      </div>` : ''}
+      ${deals.map(d=>`
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:1.2rem">${d.merchant_a.icon}</span>
+          <span style="font-size:0.65rem;color:rgba(255,255,255,0.3);font-weight:700">×</span>
+          <span style="font-size:1.2rem">${d.merchant_b.icon}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.78rem;font-weight:700;color:#fff">${escHtml(d.title)}</div>
+            <div style="font-size:0.6rem;color:rgba(255,255,255,0.35)">${escHtml(d.merchant_a.name)} + ${escHtml(d.merchant_b.name)}</div>
+          </div>
+          <span style="font-size:0.58rem;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.25);white-space:nowrap">● AKTIV</span>
+        </div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);line-height:1.5;margin-bottom:6px">${escHtml(d.description)}</div>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.28)">Bis ${new Date(d.valid_until).toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'})}</div>
+      </div>`).join('')}
+      ${!deals.length?`<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.75rem">Noch keine Partner-Deals. Klicke auf „Anfragen".</div>`:''}
+    </div>`;
+}
+
+function openPartnerDealCreator() {
+  const merchants = window.ZAMData?.merchants || [];
+  const user = ZAMApi.auth.currentUser();
+  const others = merchants.filter(m=>m.id!==user?.id).slice(0,14);
+  _buildMerchantModal('partner-deal-modal','🤝 Partner anfragen',`
+    <div style="font-size:0.7rem;color:rgba(255,255,255,0.45);margin-bottom:12px">Wähle einen Händler für eine Kooperationsanfrage:</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:260px;overflow-y:auto;padding-right:4px">
+      ${others.map(m=>`<button onclick="_sendPartnerReq('${m.id}','${escHtml(m.name)}','${m.icon}')" style="display:flex;align-items:center;gap:8px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;cursor:pointer;font-family:var(--font);text-align:left;width:100%"><span style="font-size:1.2rem">${m.icon}</span><span style="font-size:0.68rem;font-weight:600;color:rgba(255,255,255,0.8);line-height:1.3">${escHtml(m.name)}</span></button>`).join('')}
+    </div>
+    <button onclick="document.getElementById('partner-deal-modal')?.remove()" style="width:100%;margin-top:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px;color:rgba(255,255,255,0.45);font-size:0.78rem;font-weight:600;font-family:var(--font);cursor:pointer">Abbrechen</button>
+  `);
+}
+
+function _sendPartnerReq(toId, toName, toIcon) {
+  const user = ZAMApi.auth.currentUser();
+  const reqs = _getPartnerRequests();
+  document.getElementById('partner-deal-modal')?.remove();
+  if (reqs.find(r=>r.to_id===toId&&r.from_id===user.id&&r.status==='pending')) { showToast('Anfrage bereits gesendet','info'); return; }
+  reqs.push({id:'pr_'+Date.now(),from_id:user.id,from_name:user.display_name||user.name||'Händler',from_icon:'🏪',to_id:toId,to_name:toName,to_icon:toIcon,status:'pending',created_at:new Date().toISOString()});
+  localStorage.setItem(_PARTNER_REQ_KEY, JSON.stringify(reqs));
+  showToast(`Anfrage an ${toName} gesendet! ✅`,'success');
+}
+
+function _acceptPartnerReq(reqId) {
+  const reqs = _getPartnerRequests();
+  const req = reqs.find(r=>r.id===reqId);
+  if (!req) return;
+  req.status='accepted';
+  localStorage.setItem(_PARTNER_REQ_KEY, JSON.stringify(reqs));
+  const deals = _getPartnerDeals();
+  deals.push({id:'pd_'+Date.now(),status:'active',merchant_a:{name:req.from_name,icon:req.from_icon,id:req.from_id},merchant_b:{name:req.to_name,icon:req.to_icon,id:req.to_id},title:'Neuer Partner-Deal',description:'Gemeinsames Angebot – Details werden vom Center Management bestätigt.',valid_until:'2026-12-31'});
+  localStorage.setItem(_PARTNER_DEALS_KEY, JSON.stringify(deals));
+  showToast('Partner-Deal akzeptiert! 🤝','success');
+  renderMerchantDashboard();
+}
+
+function _declinePartnerReq(reqId) {
+  const reqs = _getPartnerRequests().map(r=>r.id===reqId?{...r,status:'declined'}:r);
+  localStorage.setItem(_PARTNER_REQ_KEY, JSON.stringify(reqs));
+  showToast('Anfrage abgelehnt','info');
+  renderMerchantDashboard();
+}
+
+// =============================================
+// PHASE 2: Händler-Newsfeed
+// =============================================
+function _renderMerchantNewsfeed(me) {
+  let wrap = document.getElementById('merchant-newsfeed-section');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'merchant-newsfeed-section';
+    wrap.style.borderTop = '1px solid rgba(255,255,255,0.05)';
+    const partnerSection = document.getElementById('partner-deals-section');
+    if (partnerSection) partnerSection.parentNode.insertBefore(wrap, partnerSection.nextSibling);
+    else return;
+  }
+  const KEY = 'zam_merchant_posts_' + me.id;
+  const posts = (() => { try { return JSON.parse(localStorage.getItem(KEY)||'[]'); } catch { return []; } })();
+  wrap.innerHTML = `
+    <div style="padding:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div style="font-size:0.92rem;font-weight:800;color:#fff">📢 Händler-Newsfeed</div>
+          <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">Beiträge erscheinen im Community-Feed</div>
+        </div>
+        <button onclick="_openMerchantPostForm('${me.id}')" style="background:rgba(250,70,21,0.15);border:1px solid rgba(250,70,21,0.3);border-radius:10px;padding:7px 12px;color:#ffb399;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer">+ Post</button>
+      </div>
+      ${posts.length ? posts.slice(0,3).map(p=>`
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px;margin-bottom:8px">
+          <div style="font-size:0.78rem;color:rgba(255,255,255,0.8);line-height:1.55;margin-bottom:6px">${escHtml(p.content)}</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.3)">${new Date(p.created_at).toLocaleDateString('de-DE',{day:'2-digit',month:'long'})}</div>
+        </div>`).join('') : `<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.75rem">Noch keine Beiträge. Teile Neuheiten und Aktionen.</div>`}
+    </div>`;
+}
+
+function _openMerchantPostForm(merchantId) {
+  _buildMerchantModal('merchant-post-modal','📢 Beitrag erstellen',`
+    <div style="font-size:0.7rem;color:rgba(255,255,255,0.45);margin-bottom:10px">Dieser Beitrag erscheint im Community-Feed.</div>
+    <textarea id="merchant-post-text" placeholder="Neuigkeit, Aktion, Produkt..." style="width:100%;min-height:100px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:12px;color:#fff;font-size:0.82rem;font-family:var(--font);resize:none;outline:none;box-sizing:border-box;margin-bottom:12px"></textarea>
+    <div style="display:flex;gap:8px">
+      <button onclick="document.getElementById('merchant-post-modal')?.remove()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px;color:rgba(255,255,255,0.45);font-size:0.78rem;font-weight:600;font-family:var(--font);cursor:pointer">Abbrechen</button>
+      <button onclick="_submitMerchantPost('${merchantId}')" style="flex:1;background:#FA4615;border:none;border-radius:12px;padding:11px;color:#fff;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">Veröffentlichen</button>
+    </div>
+  `);
+}
+
+function _submitMerchantPost(merchantId) {
+  const text = document.getElementById('merchant-post-text')?.value?.trim();
+  if (!text) { showToast('Bitte Text eingeben','error'); return; }
+  const KEY = 'zam_merchant_posts_' + merchantId;
+  const posts = (() => { try { return JSON.parse(localStorage.getItem(KEY)||'[]'); } catch { return []; } })();
+  posts.unshift({id:'mp_'+Date.now(), content:text, created_at:new Date().toISOString(), merchant_id:merchantId});
+  localStorage.setItem(KEY, JSON.stringify(posts.slice(0,20)));
+  // Inject into community posts
+  try {
+    const user = ZAMApi.auth.currentUser();
+    const commKey = 'zam_community_posts_extra';
+    const commExtra = JSON.parse(localStorage.getItem(commKey)||'[]');
+    commExtra.unshift({id:'comm_'+Date.now(), user_id:merchantId, author:{name:user?.display_name||'Händler',initials:'HÄ',avatar_color:'#FA4615',level:'Händler'}, content:text, tags:['ZAMHändler'], likes:0, comments:0, created_at:new Date().toISOString(), time_ago:'Gerade eben', is_liked:false});
+    localStorage.setItem(commKey, JSON.stringify(commExtra.slice(0,10)));
+  } catch {}
+  document.getElementById('merchant-post-modal')?.remove();
+  showToast('Beitrag veröffentlicht! 🎉','success');
+  renderMerchantDashboard();
+}
+
+// =============================================
+// PHASE 2: Händler Stats 2.0
+// =============================================
+function _renderMerchantStats2(stats) {
+  let wrap = document.getElementById('merchant-stats2-wrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'merchant-stats2-wrap';
+    wrap.style.borderTop = '1px solid rgba(255,255,255,0.05)';
+    const kpi = document.getElementById('merchant-kpi-grid');
+    if (kpi) kpi.parentNode.insertBefore(wrap, kpi.nextSibling);
+    else return;
+  }
+  const vouchers = _getMyVouchers ? _getMyVouchers().length + 23 : 23;
+  const items = [
+    {icon:'🎟', val: vouchers,                                     label:'Gutscheine',   sub:'gesichert'},
+    {icon:'🆕', val: Math.floor(stats.profileViews * 0.18),       label:'Neukunden',    sub:'diesen Monat'},
+    {icon:'📸', val: stats.eventJoins,                             label:'Challenges',   sub:'Teilnahmen'},
+    {icon:'⭐', val: '4.6',                                        label:'Bewertung',    sub:'Ø aus 127'},
+    {icon:'🔁', val: Math.floor(stats.dealRedemptions * 0.6),      label:'Stammkunden',  sub:'Wiederkehr'},
+    {icon:'💬', val: stats.eventViews + 5,                         label:'Feed',         sub:'Interaktionen'},
+  ];
+  wrap.innerHTML = `
+    <div style="padding:0 16px 16px">
+      <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:rgba(255,255,255,0.3);margin:0 0 10px">📈 Erweiterte Kennzahlen</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        ${items.map(s=>`<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px;text-align:center">
+          <div style="font-size:1rem;margin-bottom:4px">${s.icon}</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#fff">${typeof s.val==='number'?s.val.toLocaleString('de-DE'):s.val}</div>
+          <div style="font-size:0.58rem;font-weight:700;color:rgba(255,255,255,0.45);margin-top:2px">${s.label}</div>
+          <div style="font-size:0.52rem;color:rgba(255,255,255,0.28)">${s.sub}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
 }
