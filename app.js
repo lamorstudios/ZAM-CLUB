@@ -156,6 +156,11 @@ function updatePointsDisplay(animate = false) {
 // Navigation
 // =============================================
 function navigateTo(pageId) {
+  // Close overlays, unlock scroll
+  _unlockBodyScroll();
+  $('#chat-room-view')?.classList.remove('open');
+  $('#private-chat-view')?.classList.remove('open');
+
   if (state.currentPage === pageId) return;
 
   const currentEl = $(`#page-${state.currentPage}`);
@@ -166,9 +171,8 @@ function navigateTo(pageId) {
   const nextEl = $(`#page-${pageId}`);
   if (nextEl) {
     nextEl.classList.add('active');
-    nextEl.scrollTop = 0;
+    nextEl.scrollTop = 0; // each page manages its own scroll
   }
-  window.scrollTo(0, 0);
 
   $$('.nav-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.page === pageId);
@@ -2207,24 +2211,26 @@ function sendPrivateMessage() {
 //   2. Use VisualViewport API to shrink chat container exactly to visible area
 //   3. Translate chat upward to stay in view (avoids top/transform conflict)
 
-let _bodyScrollY = 0;
+// Pages scroll themselves via overflow-y:auto — body is overflow:hidden.
+// Lock/unlock freezes the active page's scroll when chat/keyboard is open.
+let _lockedPage = null;
+let _lockedScrollY = 0;
 
 function _lockBodyScroll() {
-  _bodyScrollY = window.scrollY;
-  document.body.style.position = 'fixed';
-  document.body.style.top = `-${_bodyScrollY}px`;
-  document.body.style.left = '0';
-  document.body.style.right = '0';
-  document.body.style.overflow = 'hidden';
+  const page = document.querySelector('.page.active');
+  if (page) {
+    _lockedPage = page;
+    _lockedScrollY = page.scrollTop;
+    page.style.overflow = 'hidden';
+  }
 }
 
 function _unlockBodyScroll() {
-  document.body.style.position = '';
-  document.body.style.top = '';
-  document.body.style.left = '';
-  document.body.style.right = '';
-  document.body.style.overflow = '';
-  window.scrollTo(0, _bodyScrollY);
+  if (_lockedPage) {
+    _lockedPage.style.overflow = '';
+    _lockedPage.scrollTop = _lockedScrollY;
+    _lockedPage = null;
+  }
 }
 
 function _applyChatViewport(el) {
