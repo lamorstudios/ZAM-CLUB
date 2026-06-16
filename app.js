@@ -174,7 +174,7 @@ function navigateTo(pageId) {
   // Sub-pages live OUTSIDE #app-shell in the DOM. When active, app-shell's
   // min-height:100dvh would create 100dvh of black space before the sub-page.
   // Collapse app-shell to height:0 when on a sub-page.
-  const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings','merchant-preview','photo-challenges','community-gallery']);
+  const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings','merchant-preview']);
   document.body.classList.toggle('subpage-active', !MAIN_PAGES.has(pageId));
 
   // Triple scroll reset — ensure top of page on all mobile browsers
@@ -230,8 +230,10 @@ function navigateTo(pageId) {
   } else if (pageId === 'admin-ai-insights') {
     renderAdminAIInsights('admin-ai-insights');
   } else if (pageId === 'photo-challenges') {
+    window.scrollTo(0, 0);
     renderPhotoChallenges();
   } else if (pageId === 'community-gallery') {
+    window.scrollTo(0, 0);
     renderCommunityGallery();
   }
 }
@@ -4976,9 +4978,12 @@ function renderPhotoChallenges() {
 
   // ── Hero ──────────────────────────────────────────
   const hero = `
-  <div style="background:linear-gradient(160deg,#1e1040 0%,#0f172a 60%,#090910 100%);padding:28px 20px 24px;position:relative;overflow:hidden">
-    <div style="position:absolute;top:-30px;right:-20px;font-size:9rem;opacity:0.06;pointer-events:none">📸</div>
-    <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.12em;font-weight:800;color:#a78bfa;margin-bottom:8px">ZAM Community</div>
+  <div style="background:linear-gradient(160deg,#1e1040 0%,#0f172a 60%,#090910 100%);padding:0 20px 24px;position:relative;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 0 16px">
+      <button onclick="navigateTo('community')" style="background:rgba(255,255,255,0.08);border:none;color:#fff;border-radius:10px;width:36px;height:36px;font-size:1.1rem;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;flex-shrink:0">←</button>
+      <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#a78bfa">ZAM Community</span>
+    </div>
+    <div style="position:absolute;top:0;right:-20px;font-size:9rem;opacity:0.06;pointer-events:none">📸</div>
     <h1 style="font-size:1.55rem;font-weight:900;line-height:1.2;margin-bottom:10px;color:#fff">📸 Foto-Challenges</h1>
     <p style="font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.65;max-width:320px">Mach Fotos im ZAM, sammle Fortschritt und sichere dir exklusive Belohnungen von teilnehmenden Händlern.</p>
   </div>`;
