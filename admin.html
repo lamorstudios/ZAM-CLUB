@@ -825,6 +825,15 @@
       <div id="b-zone-heatmap"></div>
     </div>
 
+    <!-- Händler Dashboard Vorschau -->
+    <div class="card">
+      <div class="card-title">👁 Händler-Dashboard ansehen</div>
+      <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:12px">Wähle einen freigegebenen Händler aus und öffne dessen Dashboard im Vorschau-Modus.</p>
+      <div id="admin-betreiber-preview-wrap">
+        <p style="font-size:0.74rem;color:rgba(255,255,255,0.3)">Lädt…</p>
+      </div>
+    </div>
+
     <!-- 6. Händler Rankings -->
     <div class="card">
       <div class="card-title">🏪 Händler Rankings</div>
@@ -1798,7 +1807,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     if (btn.dataset.tab === 'moderation')     renderModeration();
     if (btn.dataset.tab === 'notifications')  { renderNotifications(); markAllNotifsRead(); }
     if (btn.dataset.tab === 'analytics')      renderAdminAnalyticsTab();
-    if (btn.dataset.tab === 'betreiber')      renderBetreiberDashboard();
+    if (btn.dataset.tab === 'betreiber')      { renderBetreiberDashboard(); renderAdminMerchantPreviewSelect(); }
   });
 });
 
@@ -1869,6 +1878,46 @@ function adminFeatureSubmission(id) {
   const list = getMerchantSubmissions();
   const s = list.find(x => x.id === id);
   if (s) { s.status = 'live'; s.featured = true; saveMerchantSubmissions(list); renderAdminMerchantSubmissions(); showToast('⭐ Als Featured markiert!'); }
+}
+
+// Admin merchant preview select
+function renderAdminMerchantPreviewSelect() {
+  const wrap = document.getElementById('admin-betreiber-preview-wrap');
+  if (!wrap) return;
+  const invites = JSON.parse(localStorage.getItem('zam_merchant_invites') || '[]').filter(i => i.status === 'approved');
+  if (!invites.length) {
+    wrap.innerHTML = '<p style="font-size:0.74rem;color:rgba(255,255,255,0.3)">Noch keine freigegebenen Händler.</p>';
+    return;
+  }
+  wrap.innerHTML = `
+    <select id="admin-preview-betreiber-select" style="width:100%;background:var(--surface-2,#18181f);border:1px solid rgba(139,92,246,0.3);color:#e2e8f0;border-radius:8px;padding:8px 12px;font-size:0.8rem;font-family:inherit;margin-bottom:10px">
+      <option value="">— Händler auswählen —</option>
+      ${invites.map(i => `<option value='${JSON.stringify(i).replace(/'/g,"&apos;")}'>${i.shopname}</option>`).join('')}
+    </select>
+    <button onclick="adminOpenMerchantPreviewFromSelect()" style="width:100%;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:8px;padding:10px;font-size:0.8rem;font-weight:700;font-family:inherit;cursor:pointer">
+      👁 Dashboard ansehen
+    </button>`;
+}
+function adminOpenMerchantPreviewFromSelect() {
+  const sel = document.getElementById('admin-preview-betreiber-select');
+  if (!sel?.value) { showToast('Bitte zuerst einen Händler auswählen.'); return; }
+  adminOpenMerchantPreview(sel.value);
+}
+
+// Seed demo merchant "Café Freiham"
+(function seedCafeFreiham() {
+  const invites = JSON.parse(localStorage.getItem('zam_merchant_invites') || '[]');
+  if (!invites.some(i => i.id === 'demo_cafe_freiham')) {
+    invites.unshift({ id:'demo_cafe_freiham', shopname:'Café Freiham', email:'cafe@freiham.de', contact:'Maria Huber', category:'Gastronomie', zone:'mk2_1', status:'approved', approvedTs:new Date().toISOString(), ts:new Date().toISOString(), isDemo:true });
+    localStorage.setItem('zam_merchant_invites', JSON.stringify(invites));
+  }
+})();
+
+// Admin merchant preview — opens index.html with preview merchant data
+function adminOpenMerchantPreview(invJson) {
+  var inv = typeof invJson === 'string' ? JSON.parse(invJson) : invJson;
+  sessionStorage.setItem('zam_admin_preview_merchant', JSON.stringify(inv));
+  window.location.href = 'index.html#merchant-dashboard-preview';
 }
 </script>
 </body>

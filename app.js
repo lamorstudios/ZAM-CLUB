@@ -3049,21 +3049,22 @@ function seedDemoNotifications() {
 // Phase 12 — Merchant Dashboard
 // =============================================
 function renderMerchantDashboard() {
-  const user = ZAMApi.auth.currentUser();
-  if (user && user.merchant_status === 'pending') {
-    const grid = document.getElementById('merchant-kpi-grid');
-    if (grid) grid.innerHTML = `
-      <div style="grid-column:1/-1;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:14px;padding:20px;text-align:center">
-        <div style="font-size:2rem;margin-bottom:10px">⏳</div>
-        <div style="font-size:0.92rem;font-weight:700;color:#fbbf24;margin-bottom:8px">Zugang wird geprüft</div>
-        <div style="font-size:0.74rem;color:rgba(255,255,255,0.5);line-height:1.6">Dein Händlerzugang wurde beantragt und wird<br>vom ZAM Center Management geprüft.<br>Du erhältst eine Benachrichtigung sobald dein Zugang freigeschaltet ist.</div>
-      </div>`;
+  // Support admin preview mode
+  const previewMerchant = typeof getAdminPreviewMerchant === 'function' ? getAdminPreviewMerchant() : null;
+  let me = ZAMApi.auth.currentUser();
+  if (previewMerchant) {
+    // Use synthetic merchant object for preview
+    me = { id: previewMerchant.id, role: 'merchant', name: previewMerchant.shopname, email: previewMerchant.email, merchant_status: 'approved' };
+    // Ensure banner is visible
+    const banner = document.getElementById('admin-preview-banner');
+    const nameEl = document.getElementById('preview-merchant-name');
+    if (banner && !banner.classList.contains('visible')) banner.classList.add('visible');
+    if (nameEl) nameEl.textContent = previewMerchant.shopname || 'Händler';
+  } else if (!me || me.role !== 'merchant') {
     return;
   }
-  const me = ZAMApi.auth.currentUser();
-  if (!me || me.role !== 'merchant') return;
 
-  if (me.merchant_status === 'pending') {
+  if (!previewMerchant && me.merchant_status === 'pending') {
     const kpiGrid = document.getElementById('merchant-kpi-grid');
     if (kpiGrid) kpiGrid.innerHTML = `
       <div style="grid-column:1/-1;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:14px;padding:28px 20px;text-align:center">
@@ -3416,17 +3417,32 @@ function renderAdminMerchants(containerId) {
       <h3 style="font-size:0.9rem;font-weight:700;color:#e2e8f0;margin-bottom:10px">📋 Eingeladene Händler (${invites.length})</h3>
       ${invites.length === 0 ? `<div style="font-size:0.74rem;color:rgba(255,255,255,0.3);text-align:center;padding:16px 0">Noch keine Einladungen</div>` :
         invites.map(inv => `
-          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(139,92,246,0.15);border-radius:12px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px">
-            <div style="flex:1">
-              <div style="font-size:0.82rem;font-weight:700;color:#e2e8f0">${escHtml(inv.shopname)}</div>
-              <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);margin-top:2px">${escHtml(inv.email)} · ${escHtml(inv.category||'')} · ${escHtml(inv.zone||'')}</div>
-              <div style="font-size:0.65rem;color:rgba(255,255,255,0.25);margin-top:2px">Eingeladen: ${new Date(inv.ts).toLocaleDateString('de-DE')}</div>
+          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(139,92,246,0.15);border-radius:12px;padding:12px 14px;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="flex:1">
+                <div style="font-size:0.82rem;font-weight:700;color:#e2e8f0">${escHtml(inv.shopname)}</div>
+                <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);margin-top:2px">${escHtml(inv.email)} · ${escHtml(inv.category||'')} · ${escHtml(inv.zone||'')}</div>
+                <div style="font-size:0.65rem;color:rgba(255,255,255,0.25);margin-top:2px">Eingeladen: ${new Date(inv.ts).toLocaleDateString('de-DE')}</div>
+              </div>
+              <div style="font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:6px;flex-shrink:0;${inv.status==='approved'?'background:rgba(5,150,105,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3)':inv.status==='rejected'?'background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)':'background:rgba(245,158,11,0.1);color:#fbbf24;border:1px solid rgba(245,158,11,0.25)'}">
+                ${inv.status==='approved'?'Aktiv':inv.status==='rejected'?'Abgelehnt':'Ausstehend'}
+              </div>
             </div>
-            <div style="font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:6px;${inv.status==='approved'?'background:rgba(5,150,105,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3)':inv.status==='rejected'?'background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)':'background:rgba(245,158,11,0.1);color:#fbbf24;border:1px solid rgba(245,158,11,0.25)'}">
-              ${inv.status==='approved'?'Aktiv':inv.status==='rejected'?'Abgelehnt':'Ausstehend'}
-            </div>
+            ${inv.status === 'approved' ? `
+            <div style="margin-top:8px">
+              <button onclick="adminOpenMerchantPreview(${JSON.stringify(JSON.stringify(inv))})" style="width:100%;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);border-radius:8px;padding:7px;color:#c4b5fd;font-size:0.74rem;font-weight:700;font-family:var(--font);cursor:pointer">
+                👁 Als Händler anzeigen
+              </button>
+            </div>` : ''}
           </div>`).join('')}
     </div>`;
+}
+
+
+function adminOpenMerchantPreview(invJson) {
+  var inv = typeof invJson === 'string' ? JSON.parse(invJson) : invJson;
+  sessionStorage.setItem('zam_admin_preview_merchant', JSON.stringify(inv));
+  window.location.href = 'index.html#merchant-dashboard-preview';
 }
 
 function adminSendMerchantInvite() {
@@ -3524,6 +3540,38 @@ function renderAdminDashboard() {
 
   renderAdminPushStats();
   renderAdminMerchants('admin-merchants-container');
+
+  // Quick merchant preview button
+  let previewBtnWrap = document.getElementById('admin-merchant-preview-quick');
+  if (!previewBtnWrap) {
+    previewBtnWrap = document.createElement('div');
+    previewBtnWrap.id = 'admin-merchant-preview-quick';
+    previewBtnWrap.style.cssText = 'padding:0 16px 20px';
+    const merchantsContainer = document.getElementById('admin-merchants-container');
+    if (merchantsContainer) merchantsContainer.parentNode?.insertBefore(previewBtnWrap, merchantsContainer);
+  }
+  const invites = _getMerchantInvites().filter(i => i.status === 'approved');
+  previewBtnWrap.innerHTML = `
+    <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.25);border-radius:14px;padding:14px 16px;margin-bottom:12px">
+      <div style="font-size:0.82rem;font-weight:700;color:#c4b5fd;margin-bottom:10px">👁 Händler-Dashboard ansehen</div>
+      ${invites.length === 0 ? '<div style="font-size:0.74rem;color:var(--dim)">Noch keine freigegebenen Händler.</div>' :
+        `<select id="admin-preview-select" style="width:100%;background:var(--surface-2);border:1px solid rgba(139,92,246,0.3);color:#e2e8f0;border-radius:8px;padding:8px 12px;font-size:0.8rem;font-family:var(--font);margin-bottom:8px">
+          <option value="">— Händler auswählen —</option>
+          ${invites.map(i => `<option value="${escHtml(i.id)}">${escHtml(i.shopname)}</option>`).join('')}
+        </select>
+        <button onclick="adminQuickPreviewSelected()" style="width:100%;background:linear-gradient(135deg,#6d28d9,#8b5cf6);color:#fff;border:none;border-radius:8px;padding:10px;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer">
+          👁 Dashboard ansehen
+        </button>`
+      }
+    </div>`;
+}
+
+function adminQuickPreviewSelected() {
+  const sel = document.getElementById('admin-preview-select');
+  if (!sel?.value) { showToast('Bitte zuerst einen Händler auswählen.'); return; }
+  const invites = _getMerchantInvites();
+  const inv = invites.find(i => i.id === sel.value);
+  if (inv) adminOpenMerchantPreview(inv);
 }
 
 function renderAdminTopList(elId, list, icon, singular, metric) {
@@ -4647,6 +4695,7 @@ function seedZAMContent() {
 // =============================================
 function init() {
   seedZAMContent();
+  seedDemoMerchantCafeFreiham();
   updateOnlineStatus();
   initNavigation();
   initModals();
@@ -4663,6 +4712,17 @@ function init() {
   initUserReport();
   initChatKeyboardFix();
   initAuth();
+  // Handle admin merchant preview deep-link
+  if (window.location.hash === '#merchant-dashboard-preview') {
+    history.replaceState(null, '', window.location.pathname);
+    const stored = sessionStorage.getItem('zam_admin_preview_merchant');
+    if (stored) {
+      sessionStorage.removeItem('zam_admin_preview_merchant');
+      const merchant = JSON.parse(stored);
+      _adminPreviewMerchant = merchant;
+      setTimeout(() => adminPreviewMerchant(merchant), 100);
+    }
+  }
 }
 
 // Register Service Worker (Phase 11)
@@ -4773,6 +4833,65 @@ function submitMerchantDeal() {
   showToast('✅ Deal eingereicht! Das Team prüft deinen Vorschlag.');
   renderMerchantDashboard();
 }
+// =============================================
+// Admin Merchant Preview Mode
+// =============================================
+let _adminPreviewMerchant = null;
+
+function adminPreviewMerchant(merchant) {
+  _adminPreviewMerchant = merchant;
+  // Show banner
+  const banner = document.getElementById('admin-preview-banner');
+  const nameEl = document.getElementById('preview-merchant-name');
+  if (banner) banner.classList.add('visible');
+  if (nameEl) nameEl.textContent = merchant.shopname || merchant.name || 'Händler';
+  // Update back button to return to admin
+  const backBtn = document.getElementById('merchant-dash-back-btn');
+  if (backBtn) backBtn.setAttribute('onclick', 'exitMerchantPreview()');
+  // Update title
+  const title = document.getElementById('merchant-dash-title');
+  if (title) title.textContent = (merchant.shopname || merchant.name) + ' – Dashboard';
+  // Navigate to dashboard
+  navigateTo('merchant-dashboard');
+}
+
+function exitMerchantPreview() {
+  _adminPreviewMerchant = null;
+  const banner = document.getElementById('admin-preview-banner');
+  if (banner) banner.classList.remove('visible');
+  const backBtn = document.getElementById('merchant-dash-back-btn');
+  if (backBtn) backBtn.setAttribute('onclick', "navigateTo('profile')");
+  const title = document.getElementById('merchant-dash-title');
+  if (title) title.textContent = 'Mein Dashboard';
+  // Go back to admin
+  window.location.href = 'admin.html';
+}
+
+function getAdminPreviewMerchant() {
+  return _adminPreviewMerchant;
+}
+
+function seedDemoMerchantCafeFreiham() {
+  const invites = _getMerchantInvites ? _getMerchantInvites() : JSON.parse(localStorage.getItem('zam_merchant_invites') || '[]');
+  const exists = invites.some(i => i.id === 'demo_cafe_freiham');
+  if (!exists) {
+    invites.unshift({
+      id: 'demo_cafe_freiham',
+      shopname: 'Café Freiham',
+      email: 'cafe@freiham.de',
+      contact: 'Maria Huber',
+      category: 'Gastronomie',
+      zone: 'mk2_1',
+      status: 'approved',
+      approvedTs: new Date().toISOString(),
+      ts: new Date().toISOString(),
+      isDemo: true
+    });
+    localStorage.setItem('zam_merchant_invites', JSON.stringify(invites));
+  }
+  return { id: 'demo_cafe_freiham', shopname: 'Café Freiham', email: 'cafe@freiham.de', contact: 'Maria Huber', category: 'Gastronomie', zone: 'mk2_1', status: 'approved', isDemo: true };
+}
+
 function renderMerchantSubmissionsSection(merchantId) {
   const all = getMerchantSubmissions();
   const mine = all.filter(s => s.merchantId === merchantId);

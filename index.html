@@ -862,9 +862,14 @@
      MERCHANT DASHBOARD PAGE
 ========================== -->
 <div id="page-merchant-dashboard" class="page">
+  <div id="admin-preview-banner">
+    <span class="preview-badge">Admin-Vorschau</span>
+    <span class="preview-merchant-name" id="preview-merchant-name"></span>
+    <button class="preview-back-btn" onclick="exitMerchantPreview()">← Zurück zum Admin</button>
+  </div>
   <div class="page-header">
-    <button class="back-btn" onclick="navigateTo('profile')">←</button>
-    <h1 class="page-title">Mein Dashboard</h1>
+    <button class="back-btn" id="merchant-dash-back-btn" onclick="navigateTo('profile')">←</button>
+    <h1 class="page-title" id="merchant-dash-title">Mein Dashboard</h1>
     <div class="dash-period-select">
       <select id="dash-period" onchange="renderMerchantDashboard()" style="background:var(--surface);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-family:var(--font)">
         <option value="7">7 Tage</option>
