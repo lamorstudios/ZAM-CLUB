@@ -232,6 +232,8 @@ function navigateTo(pageId) {
 
   if (state.currentPage === pageId) return;
 
+  if (pageId !== 'home') document.body.classList.remove('perf-mode');
+
   const currentEl = $(`#page-${state.currentPage}`);
   if (currentEl) currentEl.classList.remove('active');
 
@@ -324,6 +326,7 @@ function initNavigation() {
 // =============================================
 function renderHome() {
   const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  document.body.classList.toggle('perf-mode', user.role === 'merchant' || user.role === 'admin');
   const hour = new Date().getHours();
   let greeting = 'Guten Tag';
   if (hour < 12) greeting = 'Guten Morgen';

@@ -2604,3 +2604,15 @@ a.nav-tab-map { text-decoration: none; }
   transition: color 0.2s;
 }
 .zam-footer a:hover { color: rgba(250,70,21,0.9); }
+
+/* =============================================
+   Perf Mode — reduce animations for merchant/admin
+   ============================================= */
+body.perf-mode .demo-pulse-dot,
+body.perf-mode .ai-dot,
+body.perf-mode .btn-pulse { animation: none !important; }
+
+body.perf-mode .referral-icon,
+body.perf-mode .skeleton { animation: none !important; }
+
+body.perf-mode [style*="animation"] { animation-duration: 0s !important; }
