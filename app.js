@@ -170,6 +170,13 @@ function navigateTo(pageId) {
 
   const nextEl = $(`#page-${pageId}`);
   if (nextEl) nextEl.classList.add('active');
+
+  // Sub-pages live OUTSIDE #app-shell in the DOM. When active, app-shell's
+  // min-height:100dvh would create 100dvh of black space before the sub-page.
+  // Collapse app-shell to height:0 when on a sub-page.
+  const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings']);
+  document.body.classList.toggle('subpage-active', !MAIN_PAGES.has(pageId));
+
   // Triple scroll reset — ensure top of page on all mobile browsers
   window.scrollTo(0, 0);
   document.documentElement.scrollTop = 0;

@@ -86,6 +86,13 @@ ul, ol { list-style: none; }
   background: var(--bg);
   overflow: visible;
 }
+/* When a sub-page (outside app-shell) is active, collapse app-shell so it
+   doesn't create 100dvh of empty space before the sub-page content */
+body.subpage-active #app-shell {
+  min-height: 0;
+  height: 0;
+  overflow: hidden;
+}
 
 @media (min-width: 500px) {
   body { background: #05050c; }
