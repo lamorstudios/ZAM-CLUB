@@ -305,6 +305,7 @@ async function renderHomeDeals() {
       <button class="bookmark-btn ${saved ? 'saved' : ''}" data-id="${deal.id}" data-type="deal" style="margin-top:8px" aria-label="Merken">
         ${saved ? '🔖 Gespeichert' : '🏷️ Merken'}
       </button>
+      <button class="btn btn-primary" style="margin-top:10px;padding:6px 12px;font-size:0.72rem;width:100%" onclick="openVoucherQR('${deal.id}','${esc(deal.title)}','${deal.merchant_id||''}');event.stopPropagation()">🎟 Einlösen</button>
     `;
     card.querySelector('.bookmark-btn').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -883,6 +884,7 @@ function renderDealCard(deal, idx) {
       <div class="deal-expiry">🗓 ${deal.expiry_formatted}</div>
       <div style="display:flex;gap:8px;align-items:center">
         <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" style="background:rgba(5,150,105,0.12);border:1px solid rgba(5,150,105,0.25);border-radius:8px;padding:5px 10px;font-size:0.66rem;font-weight:600;color:#34d399;font-family:var(--font);cursor:pointer;flex-shrink:0">👥 Gemeinsam</button>
+        <button onclick="openVoucherQR('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}','${deal.merchant_id||''}');event.stopPropagation()" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:8px;padding:5px 10px;font-size:0.66rem;font-weight:600;color:#c4b5fd;font-family:var(--font);cursor:pointer;flex-shrink:0">🎟 Einlösen</button>
         <button class="${deal.is_claimed ? 'btn btn-sm claimed' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
           ${deal.is_claimed ? '✓ Eingelöst' : 'Gutschein sichern'}
         </button>
@@ -1394,6 +1396,11 @@ function _updateChatUnreadBadge() {
 // =============================================
 // Modals
 // =============================================
+function openModal(modalId) {
+  const overlay = $(`#${modalId}`);
+  if (overlay) overlay.classList.add('open');
+}
+
 function closeModal(modalId) {
   const overlay = $(`#${modalId}`);
   if (overlay) overlay.classList.remove('open');
@@ -1621,6 +1628,267 @@ function authNavigate(page) {
   $$('.auth-page').forEach(p => p.classList.remove('active'));
   const target = $(`#page-${page}`);
   if (target) target.classList.add('active');
+}
+
+// =============================================
+// Voucher & QR System
+// =============================================
+
+// Generate random token ID
+function _genToken(len) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length: len}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+// Get active voucher tokens
+function _getQRTokens() {
+  return JSON.parse(localStorage.getItem('zam_qr_tokens') || '{}');
+}
+function _saveQRTokens(t) { localStorage.setItem('zam_qr_tokens', JSON.stringify(t)); }
+
+// Get checkins
+function _getCheckins() { return JSON.parse(localStorage.getItem('zam_checkins') || '[]'); }
+function _saveCheckins(c) { localStorage.setItem('zam_checkins', JSON.stringify(c)); }
+
+// Open voucher QR for a deal
+let _voucherQRTimer = null;
+function openVoucherQR(dealId, dealTitle, merchantId) {
+  const user = ZAMApi.auth.currentUser();
+  if (!user) { showToast('Bitte zuerst anmelden', 'error'); return; }
+
+  // Create token
+  const rid = _genToken(12);
+  const code6 = _genToken(6);
+  const expires = Date.now() + 15 * 60 * 1000; // 15 min
+
+  const tokenData = {
+    rid, code6, dealId, dealTitle, merchantId,
+    userId: user.id, userName: user.display_name,
+    expires, redeemed: false, createdAt: Date.now()
+  };
+
+  const tokens = _getQRTokens();
+  tokens[rid] = tokenData;
+  tokens[code6] = rid; // code6 → rid lookup
+  _saveQRTokens(tokens);
+
+  // Show modal
+  openModal('modal-voucher-qr');
+
+  // Generate QR
+  const qrPayload = JSON.stringify({ type: 'zam_voucher', rid, code6, merchantId });
+  const canvas = $('#voucher-qr-canvas');
+  canvas.innerHTML = '';
+  if (window.QRCode) {
+    new QRCode(canvas, {
+      text: qrPayload,
+      width: 200, height: 200,
+      colorDark: '#090910', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } else {
+    canvas.innerHTML = '<div style="width:200px;height:200px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#333;text-align:center;padding:10px">QR wird geladen…</div>';
+  }
+
+  $('#voucher-qr-code').textContent = code6;
+  $('#voucher-qr-status').textContent = '✅ Gültig — beim Händler vorzeigen';
+  $('#voucher-qr-status').style.color = 'var(--green)';
+
+  // Timer countdown
+  if (_voucherQRTimer) clearInterval(_voucherQRTimer);
+  function updateTimer() {
+    const remaining = expires - Date.now();
+    const timerEl = $('#voucher-qr-timer');
+    const statusEl = $('#voucher-qr-status');
+    if (!timerEl) { clearInterval(_voucherQRTimer); return; }
+    if (remaining <= 0) {
+      timerEl.textContent = '⏰ QR-Code abgelaufen';
+      timerEl.style.color = 'var(--red)';
+      if (statusEl) { statusEl.textContent = '❌ Abgelaufen — neuen Code anfordern'; statusEl.style.color = 'var(--red)'; }
+      if (canvas) canvas.style.opacity = '0.3';
+      clearInterval(_voucherQRTimer);
+      return;
+    }
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    timerEl.textContent = `⏱ Gültig noch ${mins}:${secs.toString().padStart(2,'0')} Minuten`;
+    timerEl.style.color = remaining < 120000 ? 'var(--yellow)' : 'var(--muted)';
+  }
+  updateTimer();
+  _voucherQRTimer = setInterval(updateTimer, 1000);
+}
+
+// Validate a voucher token (called by merchant scanner)
+function validateVoucherToken(rid, merchantId) {
+  const tokens = _getQRTokens();
+  const token = tokens[rid];
+  if (!token) return { ok: false, msg: '❌ Ungültiger QR-Code', color: 'var(--red)' };
+  if (token.redeemed) return { ok: false, msg: '❌ Bereits eingelöst', color: 'var(--red)' };
+  if (Date.now() > token.expires) return { ok: false, msg: '⏰ QR-Code abgelaufen', color: 'var(--yellow)' };
+  if (merchantId && token.merchantId !== merchantId) return { ok: false, msg: '❌ Falscher Händler', color: 'var(--red)' };
+  return { ok: true, msg: `✅ Gültig — ${token.dealTitle || 'Gutschein'} für ${token.userName || 'Nutzer'}`, color: 'var(--green)', token };
+}
+
+// Redeem a voucher token
+function redeemVoucherToken(rid) {
+  const tokens = _getQRTokens();
+  if (tokens[rid]) {
+    tokens[rid].redeemed = true;
+    tokens[rid].redeemedAt = Date.now();
+    _saveQRTokens(tokens);
+    return true;
+  }
+  return false;
+}
+
+// Manual code redemption (merchant types 6-char code)
+function redeemManualCode() {
+  const input = $('#qr-manual-input');
+  if (!input) return;
+  const code = input.value.trim().toUpperCase();
+  if (code.length !== 6) { showToast('Bitte 6-stelligen Code eingeben', 'error'); return; }
+  const tokens = _getQRTokens();
+  const rid = tokens[code];
+  if (!rid) { _showScanResult('❌ Code nicht gefunden', 'var(--red)'); return; }
+  const result = validateVoucherToken(rid, null);
+  if (result.ok) {
+    redeemVoucherToken(rid);
+    _showScanResult('✅ Eingelöst! ' + (result.token?.dealTitle || 'Gutschein'), 'var(--green)');
+    input.value = '';
+  } else {
+    _showScanResult(result.msg, result.color);
+  }
+}
+
+function _showScanResult(msg, color) {
+  const el = $('#qr-scan-result');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color;
+  el.style.background = 'var(--surface-2)';
+}
+
+// ── QR Scanner (Merchant) ──
+let _qrScanInterval = null;
+let _qrStream = null;
+
+function openQRScanner() {
+  openModal('modal-qr-scanner');
+  _showScanResult('Kamera wird gestartet…', 'var(--muted)');
+  navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream => {
+      _qrStream = stream;
+      const video = $('#qr-video');
+      if (video) { video.srcObject = stream; video.play(); }
+      _startQRScanning();
+    })
+    .catch(() => {
+      _showScanResult('❌ Kamerazugriff verweigert — bitte Code manuell eingeben', 'var(--yellow)');
+    });
+}
+
+function _startQRScanning() {
+  const video = $('#qr-video');
+  const canvas = $('#qr-canvas');
+  if (!video || !canvas || !window.jsQR) return;
+  const ctx = canvas.getContext('2d');
+
+  _qrScanInterval = setInterval(() => {
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+    if (!code) return;
+
+    clearInterval(_qrScanInterval);
+    try {
+      const data = JSON.parse(code.data);
+      if (data.type === 'zam_voucher') {
+        const user = ZAMApi.auth.currentUser();
+        const merchantId = user?.merchant_id || null;
+        const result = validateVoucherToken(data.rid, merchantId);
+        if (result.ok) {
+          redeemVoucherToken(data.rid);
+          _showScanResult('✅ Eingelöst! ' + (result.token?.dealTitle || 'Gutschein'), 'var(--green)');
+        } else {
+          _showScanResult(result.msg, result.color);
+        }
+      } else if (data.type === 'zam_checkin') {
+        handleCheckinQR(data);
+      } else {
+        _showScanResult('❌ Unbekannter QR-Code', 'var(--red)');
+      }
+    } catch(e) {
+      _showScanResult('❌ QR-Code konnte nicht gelesen werden', 'var(--red)');
+    }
+    // Restart scanning after 3s
+    setTimeout(() => { if ($('#modal-qr-scanner.open')) _startQRScanning(); }, 3000);
+  }, 200);
+}
+
+function closeQRScanner() {
+  clearInterval(_qrScanInterval);
+  if (_qrStream) { _qrStream.getTracks().forEach(t => t.stop()); _qrStream = null; }
+  closeModal('modal-qr-scanner');
+}
+
+// ── Event & Merchant Check-in ──
+function handleCheckinQR(data) {
+  const user = ZAMApi.auth.currentUser();
+  if (!user) { _showScanResult('❌ Nicht angemeldet', 'var(--red)'); return; }
+
+  const checkins = _getCheckins();
+  const today = new Date().toDateString();
+
+  if (data.subtype === 'merchant') {
+    // 1x per day per merchant
+    const alreadyCheckedIn = checkins.some(c =>
+      c.userId === user.id && c.merchantId === data.merchantId &&
+      new Date(c.ts).toDateString() === today
+    );
+    if (alreadyCheckedIn) {
+      _showScanResult('ℹ️ Bereits eingecheckt heute — nächster Check-in ab morgen', 'var(--yellow)');
+      return;
+    }
+    checkins.push({ userId: user.id, merchantId: data.merchantId, ts: Date.now(), type: 'merchant', points: 10 });
+    _saveCheckins(checkins);
+    ZAMApi.points.add(10, 'merchant_checkin', 'Händler Check-in: ' + (data.merchantName || ''));
+    _showScanResult(`✅ Check-in erfolgreich! +10 Punkte für ${data.merchantName || 'Besuch'}`, 'var(--green)');
+    updatePointsDisplay();
+  } else if (data.subtype === 'event') {
+    const alreadyCheckedIn = checkins.some(c => c.userId === user.id && c.eventId === data.eventId);
+    if (alreadyCheckedIn) { _showScanResult('ℹ️ Bereits eingecheckt für dieses Event', 'var(--yellow)'); return; }
+    // Check time validity
+    const now = Date.now();
+    if (data.startTs && now < data.startTs) { _showScanResult('⏰ Event hat noch nicht begonnen', 'var(--yellow)'); return; }
+    if (data.endTs && now > data.endTs) { _showScanResult('⏰ Event ist bereits vorbei', 'var(--yellow)'); return; }
+    checkins.push({ userId: user.id, eventId: data.eventId, ts: Date.now(), type: 'event', points: 25 });
+    _saveCheckins(checkins);
+    ZAMApi.points.add(25, 'event_checkin', 'Event Check-in: ' + (data.eventName || ''));
+    _showScanResult(`✅ Check-in erfolgreich! +25 Punkte für ${data.eventName || 'Event'}`, 'var(--green)');
+    updatePointsDisplay();
+  }
+}
+
+// Generate static merchant check-in QR data
+function getMerchantCheckinQRData(merchant) {
+  return JSON.stringify({
+    type: 'zam_checkin', subtype: 'merchant',
+    merchantId: merchant.id, merchantName: merchant.name,
+    location: 'ZAM Freiham'
+  });
+}
+
+// Generate static event check-in QR data
+function getEventCheckinQRData(event) {
+  return JSON.stringify({
+    type: 'zam_checkin', subtype: 'event',
+    eventId: event.id, eventName: event.title,
+    startTs: event.startTs || null, endTs: event.endTs || null,
+    location: 'ZAM Freiham'
+  });
 }
 
 function renderAll() {
@@ -2792,6 +3060,24 @@ function renderMerchantDashboard() {
   }
 
   ZAMApi.analytics.seedDemo();
+
+  // QR Scanner button at top of dashboard
+  const kpiGridEl = document.getElementById('merchant-kpi-grid');
+  if (kpiGridEl) {
+    let scannerBtnWrap = document.getElementById('merchant-qr-scanner-wrap');
+    if (!scannerBtnWrap) {
+      scannerBtnWrap = document.createElement('div');
+      scannerBtnWrap.id = 'merchant-qr-scanner-wrap';
+      scannerBtnWrap.style.cssText = 'margin:0 16px 20px';
+      scannerBtnWrap.innerHTML = `
+        <button class="btn btn-primary btn-full" style="gap:8px" onclick="openQRScanner()">
+          📷 QR-Code scannen
+        </button>
+        <div style="font-size:0.72rem;color:var(--muted);text-align:center;margin-top:6px">Gutscheine & Check-ins scannen</div>
+      `;
+      kpiGridEl.parentNode.insertBefore(scannerBtnWrap, kpiGridEl);
+    }
+  }
 
   const days = parseInt(document.getElementById('dash-period')?.value || '30');
   const stats = ZAMApi.analytics.getMerchantStats(me.id, days);
