@@ -170,7 +170,15 @@ function navigateTo(pageId) {
 
   const nextEl = $(`#page-${pageId}`);
   if (nextEl) nextEl.classList.add('active');
+  // Triple scroll reset — ensure top of page on all mobile browsers
   window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  requestAnimationFrame(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  });
 
   $$('.nav-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.page === pageId);

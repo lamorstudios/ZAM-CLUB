@@ -106,20 +106,18 @@ ul, ol { list-style: none; }
   overflow: visible;
   padding-bottom: calc(var(--nav-h) + 40px);
   /* No transform on page — causes "doorstop" on first scroll touch */
-  opacity: 0;
-  transition: opacity var(--tn) var(--ease);
+  /* No opacity:0 start — causes black flash when JS renders content after page is shown */
 }
 .page.active {
   display: flex;
-  opacity: 1;
+  animation: fadeIn 0.18s var(--ease) both;
 }
 
-/* Stagger entry — only opacity, no translateY on page children (blocks scroll) */
-.page.active > *:nth-child(1) { animation: fadeIn .28s var(--ease) .03s both; }
-.page.active > *:nth-child(2) { animation: fadeIn .28s var(--ease) .07s both; }
-.page.active > *:nth-child(3) { animation: fadeIn .28s var(--ease) .11s both; }
-.page.active > *:nth-child(4) { animation: fadeIn .28s var(--ease) .15s both; }
-.page.active > *:nth-child(5) { animation: fadeIn .28s var(--ease) .19s both; }
+/* Stagger entry — no delay on first child so header is always visible immediately */
+.page.active > *:nth-child(2) { animation: fadeIn .2s var(--ease) .04s both; }
+.page.active > *:nth-child(3) { animation: fadeIn .2s var(--ease) .08s both; }
+.page.active > *:nth-child(4) { animation: fadeIn .2s var(--ease) .12s both; }
+.page.active > *:nth-child(5) { animation: fadeIn .2s var(--ease) .16s both; }
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -2272,7 +2270,9 @@ a.nav-tab-map { text-decoration: none; }
 .ai-home-banner-arrow{font-size:1.1rem;color:#8b5cf6;font-weight:700}
 
 /* AI Chat Page */
-#page-ai{height:100dvh;max-height:100dvh;overflow:hidden;padding-bottom:0;min-height:unset;touch-action:none}
+/* page-ai: only apply full-height / overflow lock when ACTIVE (not display:none) */
+#page-ai { padding-bottom: 0; min-height: unset; }
+#page-ai.active { height: 100dvh; max-height: 100dvh; overflow: hidden; touch-action: none; flex-direction: column; }
 .ai-chat-window{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;justify-content:flex-start;gap:12px;min-height:0}
 .ai-bubble{display:flex;align-items:flex-start;gap:10px}
 .ai-bubble-bot{flex-direction:row}
