@@ -169,10 +169,8 @@ function navigateTo(pageId) {
   state.currentPage = pageId;
 
   const nextEl = $(`#page-${pageId}`);
-  if (nextEl) {
-    nextEl.classList.add('active');
-    nextEl.scrollTop = 0; // each page manages its own scroll
-  }
+  if (nextEl) nextEl.classList.add('active');
+  window.scrollTo(0, 0);
 
   $$('.nav-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.page === pageId);
@@ -2211,26 +2209,26 @@ function sendPrivateMessage() {
 //   2. Use VisualViewport API to shrink chat container exactly to visible area
 //   3. Translate chat upward to stay in view (avoids top/transform conflict)
 
-// Pages scroll themselves via overflow-y:auto — body is overflow:hidden.
-// Lock/unlock freezes the active page's scroll when chat/keyboard is open.
-let _lockedPage = null;
-let _lockedScrollY = 0;
+// Lock body scroll when chat/keyboard open (prevents iOS background scroll)
+let _bodyScrollY = 0;
 
 function _lockBodyScroll() {
-  const page = document.querySelector('.page.active');
-  if (page) {
-    _lockedPage = page;
-    _lockedScrollY = page.scrollTop;
-    page.style.overflow = 'hidden';
-  }
+  _bodyScrollY = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${_bodyScrollY}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.overflow = 'hidden';
 }
 
 function _unlockBodyScroll() {
-  if (_lockedPage) {
-    _lockedPage.style.overflow = '';
-    _lockedPage.scrollTop = _lockedScrollY;
-    _lockedPage = null;
-  }
+  const wasFixed = document.body.style.position === 'fixed';
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.overflow = '';
+  if (wasFixed) window.scrollTo(0, _bodyScrollY);
 }
 
 function _applyChatViewport(el) {
