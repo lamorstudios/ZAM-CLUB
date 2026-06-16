@@ -74,7 +74,8 @@ ul, ol { list-style: none; }
   min-height: 100dvh;
   position: relative;
   background: var(--bg);
-  overflow: hidden;
+  /* overflow:hidden removed — iOS Safari treats it as scroll boundary,
+     blocking touch propagation to body. html/body overflow-x:hidden suffices. */
   overscroll-behavior: none;
 }
 
