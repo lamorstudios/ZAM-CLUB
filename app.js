@@ -5231,9 +5231,13 @@ function openCameraForChallenge(challengeId) {
   const modal = document.getElementById('modal-camera');
   if (!modal) return;
   document.getElementById('camera-challenge-title').textContent = ch ? ch.title : 'Foto aufnehmen';
-  document.getElementById('camera-photo-preview').style.display = 'none';
-  document.getElementById('camera-hint').style.display = 'block';
+  // Reset to viewfinder state
+  const preview = document.getElementById('camera-photo-preview');
+  const shutterUi = document.getElementById('camera-shutter-ui');
+  if (preview) preview.style.display = 'none';
+  if (shutterUi) shutterUi.style.display = 'block';
   modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
   _startCamera();
   _checkLocation();
 }
@@ -5242,56 +5246,78 @@ function closeCameraModal() {
   _stopCamera();
   const m = document.getElementById('modal-camera');
   if (m) m.style.display = 'none';
+  document.body.style.overflow = '';
+  // Remove demo placeholder for clean reopen
+  document.querySelectorAll('.camera-demo-placeholder').forEach(el => el.remove());
+  const video = document.getElementById('camera-video');
+  if (video) video.style.display = '';
+  const shutterBtn = document.getElementById('camera-shutter-btn');
+  if (shutterBtn) shutterBtn.onclick = capturePhoto;
 }
 
 function _startCamera() {
   const video = document.getElementById('camera-video');
   if (!video || !navigator.mediaDevices?.getUserMedia) { _showCameraDemo(); return; }
-  navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment', width:{ideal:1280}, height:{ideal:720} }, audio:false })
+  navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment', width:{ideal:1920}, height:{ideal:1080} }, audio:false })
     .then(stream => { _cameraStream = stream; video.srcObject = stream; })
     .catch(() => _showCameraDemo());
 }
 
 function _showCameraDemo() {
   const video = document.getElementById('camera-video');
-  const hint  = document.getElementById('camera-hint');
   if (video) {
     video.style.display = 'none';
-    const placeholder = video.parentElement.querySelector('.camera-demo-placeholder');
-    if (!placeholder) {
+    const vf = document.getElementById('camera-viewfinder');
+    if (vf && !vf.querySelector('.camera-demo-placeholder')) {
       const div = document.createElement('div');
       div.className = 'camera-demo-placeholder';
-      div.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:linear-gradient(135deg,#1a1a2e,#0f0f1a)';
-      div.innerHTML = `<div style="font-size:3.5rem">📷</div>
-        <div style="font-size:0.9rem;font-weight:700;color:#fff">Kamera wird geöffnet</div>
-        <div style="font-size:0.75rem;color:rgba(255,255,255,0.5);text-align:center;padding:0 20px">Demo-Modus: Kamera-Zugriff nicht verfügbar.<br>Klicke „📷 Demo-Foto" um fortzufahren.</div>`;
-      video.parentElement.appendChild(div);
+      div.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:linear-gradient(160deg,#1a1040,#0a0a1a)';
+      div.innerHTML = `
+        <div style="font-size:5rem;filter:drop-shadow(0 4px 20px rgba(139,92,246,0.5))">📷</div>
+        <div style="font-size:1.1rem;font-weight:800;color:#fff">Kamera wird geöffnet</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.45);text-align:center;padding:0 40px;line-height:1.6">Demo-Modus aktiv.<br>Tippe auf den Auslöser für ein Demo-Foto.</div>`;
+      vf.appendChild(div);
     }
   }
-  if (hint) hint.style.display = 'none';
-  const captureBtn = document.querySelector('#modal-camera [onclick="capturePhoto()"]');
-  if (captureBtn) { captureBtn.title = 'Demo-Foto'; captureBtn.onclick = () => _captureDemoPhoto(); }
+  const shutterBtn = document.getElementById('camera-shutter-btn');
+  if (shutterBtn) shutterBtn.onclick = _captureDemoPhoto;
 }
 
 function _captureDemoPhoto() {
-  const colors = ['#6d28d9','#0891b2','#059669','#d97706','#dc2626'];
-  const c = colors[Math.floor(Math.random()*colors.length)];
+  const ch = _getChallenges().find(c => c.id === _activeChallengeId);
+  const colors = { ch_001:'#7c3aed', ch_002:'#0891b2', ch_003:'#b45309', ch_004:'#059669' };
+  const color = (ch && colors[ch.id]) || '#6d28d9';
+  const emoji = ch?.merchant_icon || '📸';
+  const label = ch?.merchant_name || 'ZAM';
   const canvas = document.createElement('canvas');
-  canvas.width = 640; canvas.height = 480;
+  canvas.width = 1080; canvas.height = 1920;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = c; ctx.fillRect(0,0,640,480);
-  ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fillRect(0,0,640,240);
-  ctx.font = 'bold 80px sans-serif'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('📸', 320, 200);
-  ctx.font = 'bold 28px sans-serif'; ctx.fillText('ZAM Demo-Foto', 320, 290);
-  ctx.font = '18px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillText(new Date().toLocaleTimeString('de-DE'), 320, 330);
+  // Background gradient
+  const grad = ctx.createLinearGradient(0, 0, 1080, 1920);
+  grad.addColorStop(0, color); grad.addColorStop(1, color + '66');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, 1080, 1920);
+  // Light overlay
+  ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(0, 0, 1080, 900);
+  // Big emoji
+  ctx.font = '300px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(emoji, 540, 820);
+  // Text
+  ctx.font = 'bold 72px sans-serif'; ctx.fillStyle = '#fff';
+  ctx.fillText(label, 540, 1100);
+  ctx.font = '48px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText('ZAM Foto-Challenge', 540, 1190);
+  ctx.fillText(new Date().toLocaleString('de-DE'), 540, 1270);
   _capturedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-  const img = document.getElementById('camera-preview-img');
+  _showPhotoPreview(_capturedDataUrl);
+}
+
+function _showPhotoPreview(dataUrl) {
+  const img     = document.getElementById('camera-preview-img');
   const preview = document.getElementById('camera-photo-preview');
-  const hint = document.getElementById('camera-hint');
-  if (img) img.src = _capturedDataUrl;
-  if (preview) preview.style.display = 'block';
-  if (hint) hint.style.display = 'none';
+  const shutterUi = document.getElementById('camera-shutter-ui');
+  if (img) img.src = dataUrl;
+  if (preview) preview.style.display = 'flex';
+  if (shutterUi) shutterUi.style.display = 'none';
 }
 
 function _stopCamera() {
@@ -5301,46 +5327,46 @@ function _stopCamera() {
 function _checkLocation() {
   const el = document.getElementById('camera-location-status');
   if (!el) return;
-  el.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;font-size:0.74rem;font-weight:600;width:100%;max-width:400px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);color:#fbbf24';
+  el.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border-radius:20px;font-size:0.74rem;font-weight:700;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#fbbf24;width:fit-content;margin:0 auto 20px';
   el.innerHTML = '<span>📍</span><span>Standort wird geprüft…</span>';
   if (!navigator.geolocation) { _locationFallback(el); return; }
   navigator.geolocation.getCurrentPosition(pos => {
     _userLocation = { lat:pos.coords.latitude, lng:pos.coords.longitude };
     const dist = Math.round(_geoDistance(_userLocation.lat, _userLocation.lng, ZAM_LAT, ZAM_LNG));
     if (dist <= ZAM_RADIUS_M) {
-      el.style.background = 'rgba(16,185,129,0.1)'; el.style.border = '1px solid rgba(52,211,153,0.25)'; el.style.color = '#34d399';
+      el.style.background = 'rgba(16,185,129,0.15)'; el.style.border = '1px solid rgba(52,211,153,0.3)'; el.style.color = '#34d399';
       el.innerHTML = `<span>✅</span><span>Im ZAM-Bereich (${dist}m)</span>`;
     } else {
       _userLocation = null;
-      el.style.background = 'rgba(239,68,68,0.08)'; el.style.border = '1px solid rgba(239,68,68,0.2)'; el.style.color = '#f87171';
-      el.innerHTML = `<span>❌</span><span>Außerhalb des ZAM (${dist}m – max. ${ZAM_RADIUS_M}m)</span>`;
+      el.style.background = 'rgba(239,68,68,0.12)'; el.style.border = '1px solid rgba(239,68,68,0.3)'; el.style.color = '#f87171';
+      el.innerHTML = `<span>❌</span><span>Außerhalb ZAM (${dist}m / max ${ZAM_RADIUS_M}m)</span>`;
     }
   }, () => _locationFallback(el), { timeout:8000, maximumAge:60000 });
 }
 
 function _locationFallback(el) {
   _userLocation = { lat:ZAM_LAT, lng:ZAM_LNG, isDemo:true };
-  el.style.background = 'rgba(16,185,129,0.1)'; el.style.border = '1px solid rgba(52,211,153,0.25)'; el.style.color = '#34d399';
-  el.innerHTML = '<span>✅</span><span>Demo-Modus: Standort simuliert</span>';
+  el.style.background = 'rgba(16,185,129,0.15)'; el.style.border = '1px solid rgba(52,211,153,0.3)'; el.style.color = '#34d399';
+  el.innerHTML = '<span>✅</span><span>Demo: Standort im ZAM simuliert</span>';
 }
 
 function capturePhoto() {
-  const video = document.getElementById('camera-video');
+  const video  = document.getElementById('camera-video');
   const canvas = document.getElementById('camera-canvas');
   if (!video || !canvas) return;
-  canvas.width = video.videoWidth || 640;
-  canvas.height = video.videoHeight || 480;
+  canvas.width  = video.videoWidth  || 1080;
+  canvas.height = video.videoHeight || 1920;
   canvas.getContext('2d').drawImage(video, 0, 0);
-  _capturedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
-  document.getElementById('camera-preview-img').src = _capturedDataUrl;
-  document.getElementById('camera-photo-preview').style.display = 'block';
-  document.getElementById('camera-hint').style.display = 'none';
+  _capturedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  _showPhotoPreview(_capturedDataUrl);
 }
 
 function retakePhoto() {
   _capturedDataUrl = null;
-  document.getElementById('camera-photo-preview').style.display = 'none';
-  document.getElementById('camera-hint').style.display = 'block';
+  const preview   = document.getElementById('camera-photo-preview');
+  const shutterUi = document.getElementById('camera-shutter-ui');
+  if (preview) preview.style.display = 'none';
+  if (shutterUi) shutterUi.style.display = 'block';
 }
 
 function submitChallengePhoto() {
