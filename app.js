@@ -168,7 +168,6 @@ function navigateTo(pageId) {
     nextEl.classList.add('active');
     nextEl.scrollTop = 0;
   }
-  window.scrollTo(0, 0);
 
   $$('.nav-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.page === pageId);
