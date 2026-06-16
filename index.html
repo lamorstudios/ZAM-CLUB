@@ -526,6 +526,12 @@
         📊 Punkte-Historie
       </button>
     </div>
+    <div style="padding: 0 16px 4px">
+      <button class="btn btn-ghost btn-full" onclick="navigateTo('nearby-settings')" style="display:flex;align-items:center;gap:10px;justify-content:flex-start">
+        📍 <span>Nearby Alerts</span>
+        <span id="nearby-profile-badge" style="margin-left:auto;font-size:0.7rem;color:rgba(255,255,255,0.35)">Deaktiviert</span>
+      </button>
+    </div>
 
     <!-- Demo Rollen Umschalter -->
     <div style="margin:12px 16px 4px;background:rgba(247,171,0,0.06);border:1px solid rgba(247,171,0,0.2);border-radius:14px;padding:14px 16px">
@@ -570,6 +576,19 @@
     </div>
 
   </section>
+
+  <!-- =====================
+       NEARBY ALERTS SETTINGS PAGE
+  ========================== -->
+  <div id="page-nearby-settings" class="page">
+    <div class="page-header">
+      <button class="back-btn" onclick="navigateTo('profile')">←</button>
+      <h1 class="page-title">Nearby Alerts</h1>
+    </div>
+    <div style="padding:16px" id="nearby-settings-content">
+      <!-- rendered by renderNearbySettings() -->
+    </div>
+  </div>
 
   <!-- =====================
        NOTIFICATIONS PAGE

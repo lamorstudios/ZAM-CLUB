@@ -228,7 +228,7 @@ function navigateTo(pageId) {
   // Sub-pages live OUTSIDE #app-shell in the DOM. When active, app-shell's
   // min-height:100dvh would create 100dvh of black space before the sub-page.
   // Collapse app-shell to height:0 when on a sub-page.
-  const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings','merchant-preview']);
+  const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings','merchant-preview','nearby-settings']);
   document.body.classList.toggle('subpage-active', !MAIN_PAGES.has(pageId));
 
   // Triple scroll reset — ensure top of page on all mobile browsers
@@ -292,6 +292,9 @@ function navigateTo(pageId) {
   } else if (pageId === 'community-gallery') {
     window.scrollTo(0, 0);
     renderCommunityGallery();
+  } else if (pageId === 'nearby-settings') {
+    window.scrollTo(0, 0);
+    renderNearbySettings();
   }
 }
 
@@ -1349,6 +1352,14 @@ async function renderProfile() {
   renderRoleActions();
   await renderSavedSummary();
   renderChallenges();
+
+  // Update Nearby badge in profile
+  const nearbyBadge = document.getElementById('nearby-profile-badge');
+  if (nearbyBadge) {
+    const ns = NEARBY.getSettings();
+    nearbyBadge.textContent = ns.enabled ? '✅ Aktiv' : 'Deaktiviert';
+    nearbyBadge.style.color = ns.enabled ? '#34d399' : 'rgba(255,255,255,0.35)';
+  }
 }
 
 async function renderSavedSummary() {
@@ -1942,11 +1953,16 @@ function showApp() {
   scheduleEventReminders();
   seedDemoNotifications();
   updateNotifBadge();
+
+  // Show Nearby Alerts opt-in prompt once, 3.5s after login
   setTimeout(() => {
-    if (typeof Notification !== 'undefined' && Notification.permission === 'default' && !localStorage.getItem('push_banner_dismissed')) {
-      // Banner is shown when user navigates to notifications page
+    const ns = NEARBY.getSettings();
+    if (!ns.enabled && !ns.askedAt) {
+      const updated = { ...ns, askedAt: new Date().toISOString() };
+      NEARBY.saveSettings(updated);
+      openNearbyOptIn();
     }
-  }, 2000);
+  }, 3500);
 }
 
 function authNavigate(page) {
@@ -5012,6 +5028,7 @@ function init() {
   initModals();
   initDailySpin();
   _startCountdownTicker();
+  initNearbyAlerts();
   initQRCheckin();
   initEventFilters();
   initButtonAnimations();
@@ -6697,4 +6714,265 @@ function adminFeatureSubmission(id) {
   const list = getMerchantSubmissions();
   const s = list.find(x => x.id === id);
   if (s) { s.status = 'live'; s.featured = true; saveMerchantSubmissions(list); renderAdminMerchantSubmissions(); showToast('⭐ Als Featured markiert!'); }
+}
+
+// =============================================
+// ZAM Nearby Alerts
+// =============================================
+const NEARBY = {
+  // ZAM Freiham coords (Mahatma-Gandhi-Platz, Munich)
+  LAT: 48.14814,
+  LNG: 11.45387,
+  RADIUS_M: 300,
+
+  KEY: 'zam_nearby_settings',
+
+  getSettings() {
+    try { return JSON.parse(localStorage.getItem(this.KEY) || 'null') || { enabled: false, deals: true, events: true, spin: true, askedAt: null }; }
+    catch { return { enabled: false, deals: true, events: true, spin: true, askedAt: null }; }
+  },
+  saveSettings(s) { localStorage.setItem(this.KEY, JSON.stringify(s)); },
+
+  isEnabled() { return this.getSettings().enabled; },
+
+  haversineM(lat1, lng1, lat2, lng2) {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  },
+};
+
+let _nearbyWatchId = null;
+let _nearbyBannerShownAt = 0;
+
+function _nearbyAlertMessages() {
+  const s = NEARBY.getSettings();
+  const msgs = [];
+  const deals = ZAMData?.deals?.filter(d => d.is_hot) || [];
+  const events = ZAMData?.events || [];
+  const spinAvail = !localStorage.getItem('zam_spin_' + Storage.todayKey());
+
+  if (s.deals && deals.length) {
+    msgs.push({ icon:'🏷️', text:`${deals.length} aktive Deal${deals.length > 1 ? 's' : ''} warten auf dich – z.B. ${deals[0]?.merchant || 'im ZAM'}.`, action:'deals' });
+  }
+  if (s.events && events.length) {
+    msgs.push({ icon:'🎉', text:`Heute aktiv: ${events[0]?.title || 'Event im ZAM'}.`, action:'events' });
+  }
+  if (s.spin && spinAvail) {
+    msgs.push({ icon:'🎰', text:'Lucky Spin verfügbar – drehe jetzt und gewinne!', action:'home' });
+  }
+  if (!msgs.length) {
+    msgs.push({ icon:'📍', text:'Du bist in der Nähe vom ZAM – entdecke aktuelle Angebote.', action:'home' });
+  }
+  return msgs;
+}
+
+function _showNearbyBanner(msgs) {
+  const now = Date.now();
+  if (now - _nearbyBannerShownAt < 5 * 60 * 1000) return; // max once per 5 min
+  _nearbyBannerShownAt = now;
+
+  const existing = document.getElementById('nearby-alert-banner');
+  if (existing) existing.remove();
+
+  const msg = msgs[Math.floor(Math.random() * msgs.length)];
+  const banner = document.createElement('div');
+  banner.id = 'nearby-alert-banner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:8000;background:linear-gradient(135deg,#1a1a1a,#1e1616);border-bottom:2px solid rgba(250,70,21,0.5);padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top,12px));font-family:var(--font);animation:nearbySlideIn 0.35s ease-out';
+  banner.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;max-width:480px;margin:0 auto">
+      <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#c43510,#FA4615);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">${msg.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.72rem;font-weight:800;color:#FA4615;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:1px">📍 Du bist in der Nähe</div>
+        <div style="font-size:0.8rem;color:rgba(255,255,255,0.85);line-height:1.3">${escHtml(msg.text)}</div>
+      </div>
+      <button onclick="navigateTo('${msg.action}');document.getElementById('nearby-alert-banner')?.remove()" style="padding:7px 12px;border-radius:8px;background:rgba(250,70,21,0.2);border:1px solid rgba(250,70,21,0.4);color:#ffb399;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">Ansehen</button>
+      <button onclick="document.getElementById('nearby-alert-banner')?.remove()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.3rem;cursor:pointer;padding:2px 4px;flex-shrink:0">×</button>
+    </div>`;
+  document.body.prepend(banner);
+
+  // Also push browser notification if permitted
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const s = NEARBY.getSettings();
+    if (s.deals) {
+      new Notification('📍 ZAM Nearby Alert', { body: msg.text, icon: 'assets/icon.svg', tag: 'zam-nearby' });
+    }
+  }
+
+  // Auto-dismiss after 8 seconds
+  setTimeout(() => { document.getElementById('nearby-alert-banner')?.remove(); }, 8000);
+}
+
+function _onPositionSuccess(pos) {
+  const dist = NEARBY.haversineM(pos.coords.latitude, pos.coords.longitude, NEARBY.LAT, NEARBY.LNG);
+  const nearby = dist <= NEARBY.RADIUS_M;
+  _updateNearbyStatusUI(nearby, dist);
+  if (nearby) {
+    _showNearbyBanner(_nearbyAlertMessages());
+  }
+}
+
+function _onPositionError(err) {
+  console.warn('Nearby: Geolocation error', err.code);
+  _updateNearbyStatusUI(null, null);
+}
+
+function _updateNearbyStatusUI(nearby, distM) {
+  const el = document.getElementById('nearby-status-info');
+  if (!el) return;
+  if (nearby === null) {
+    el.textContent = '⚠️ Standort nicht verfügbar';
+    el.style.color = 'rgba(255,255,255,0.35)';
+    return;
+  }
+  if (nearby) {
+    el.innerHTML = '✅ Du bist in der Nähe des ZAM';
+    el.style.color = '#34d399';
+  } else {
+    el.innerHTML = `📍 ${Math.round(distM)}m vom ZAM entfernt`;
+    el.style.color = 'rgba(255,255,255,0.45)';
+  }
+}
+
+function startNearbyAlerts() {
+  if (!('geolocation' in navigator)) {
+    showToast('Standort wird von deinem Browser nicht unterstützt.');
+    return;
+  }
+  const s = NEARBY.getSettings();
+  s.enabled = true;
+  NEARBY.saveSettings(s);
+  renderNearbySettings();
+
+  // One-time check immediately
+  navigator.geolocation.getCurrentPosition(_onPositionSuccess, _onPositionError, { maximumAge: 60000, timeout: 10000 });
+
+  // Lightweight watch (browser throttles this automatically)
+  if (_nearbyWatchId !== null) navigator.geolocation.clearWatch(_nearbyWatchId);
+  _nearbyWatchId = navigator.geolocation.watchPosition(_onPositionSuccess, _onPositionError, { maximumAge: 120000, timeout: 15000, enableHighAccuracy: false });
+
+  showToast('📍 ZAM Nearby Alerts aktiviert!');
+}
+
+function stopNearbyAlerts() {
+  if (_nearbyWatchId !== null) { navigator.geolocation.clearWatch(_nearbyWatchId); _nearbyWatchId = null; }
+  const s = NEARBY.getSettings();
+  s.enabled = false;
+  NEARBY.saveSettings(s);
+  renderNearbySettings();
+  document.getElementById('nearby-alert-banner')?.remove();
+  showToast('Nearby Alerts deaktiviert.');
+}
+
+function triggerNearbyDemo() {
+  _nearbyBannerShownAt = 0; // reset cooldown
+  const msgs = _nearbyAlertMessages();
+  _showNearbyBanner(msgs);
+  // Also show a deal-specific notification
+  _updateNearbyStatusUI(true, 0);
+  showToast('📍 Demo: Nearby Alert ausgelöst!');
+}
+
+function openNearbyOptIn() {
+  const s = NEARBY.getSettings();
+  if (s.enabled) { navigateTo('nearby-settings'); return; }
+
+  const modal = _buildMerchantModal('nearby-optin-modal', '📍 ZAM Nearby Alerts', `
+    <div style="text-align:center;padding:8px 0 20px">
+      <div style="font-size:3rem;margin-bottom:12px">📍</div>
+      <div style="font-size:1rem;font-weight:800;color:#e2e8f0;margin-bottom:10px">Möchtest du ZAM Nearby Alerts aktivieren?</div>
+      <div style="font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:24px">Erhalte Hinweise auf aktuelle Deals, Events und Spin-Gewinne, wenn du in der Nähe des ZAM bist.<br><br><span style="font-size:0.74rem;color:rgba(255,255,255,0.35)">🔒 Dein Standort wird nur geprüft, ob du in der Nähe des ZAM bist. Keine dauerhafte Aufzeichnung.</span></div>
+      <button onclick="_nearbyModalActivate()" style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#c43510,#FA4615);border:none;color:#fff;font-size:0.92rem;font-weight:800;font-family:var(--font);cursor:pointer;margin-bottom:10px">📍 Aktivieren</button>
+      <button onclick="_merchantModalClose('nearby-optin-modal')" style="width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:0.85rem;font-weight:600;font-family:var(--font);cursor:pointer">Später</button>
+    </div>
+  `);
+  document.body.appendChild(modal);
+  modal.style.display = 'flex';
+}
+
+function _nearbyModalActivate() {
+  _merchantModalClose('nearby-optin-modal');
+  startNearbyAlerts();
+  navigateTo('nearby-settings');
+}
+
+function renderNearbySettings() {
+  const container = document.getElementById('nearby-settings-content');
+  if (!container) return;
+  const s = NEARBY.getSettings();
+  const supported = 'geolocation' in navigator;
+
+  container.innerHTML = `
+    <!-- Status Card -->
+    <div style="background:linear-gradient(135deg,rgba(250,70,21,0.12),rgba(196,53,16,0.06));border:1px solid rgba(250,70,21,0.25);border-radius:16px;padding:18px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:44px;height:44px;border-radius:12px;background:${s.enabled ? 'linear-gradient(135deg,#c43510,#FA4615)' : 'rgba(255,255,255,0.08)'};display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">${s.enabled ? '📍' : '🔕'}</div>
+        <div style="flex:1">
+          <div style="font-size:0.92rem;font-weight:800;color:#e2e8f0">ZAM Nearby Alerts</div>
+          <div id="nearby-status-info" style="font-size:0.75rem;color:${s.enabled ? '#FA4615' : 'rgba(255,255,255,0.35)'};">${s.enabled ? '⏳ Standort wird geprüft…' : '⭕ Deaktiviert'}</div>
+        </div>
+        <label style="position:relative;width:48px;height:26px;flex-shrink:0">
+          <input type="checkbox" ${s.enabled ? 'checked' : ''} onchange="s.enabled=this.checked;NEARBY.saveSettings(s);s.enabled?startNearbyAlerts():stopNearbyAlerts()" style="opacity:0;width:0;height:0;position:absolute">
+          <span style="position:absolute;inset:0;border-radius:13px;background:${s.enabled ? '#FA4615' : 'rgba(255,255,255,0.12)'};transition:background 0.2s;cursor:pointer"></span>
+          <span style="position:absolute;top:3px;left:${s.enabled ? '25px' : '3px'};width:20px;height:20px;border-radius:50%;background:#fff;transition:left 0.2s;pointer-events:none"></span>
+        </label>
+      </div>
+      <div style="font-size:0.76rem;color:rgba(255,255,255,0.4);line-height:1.5;border-top:1px solid rgba(255,255,255,0.06);padding-top:12px">
+        🔒 Dein Standort wird nur grob geprüft (±300 m Radius), um festzustellen, ob du in der Nähe des ZAM bist. Es findet keine dauerhafte Überwachung oder Speicherung statt.
+      </div>
+    </div>
+
+    <!-- Alert Categories -->
+    <div style="background:#1e1e1e;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:4px 0;margin-bottom:20px">
+      <div style="padding:14px 16px 8px;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:rgba(255,255,255,0.3)">Alert-Kategorien</div>
+      ${[
+        { key:'deals', label:'🏷️ Deals', sub:'Aktuelle Rabatte und Angebote' },
+        { key:'events', label:'🎉 Events', sub:'Veranstaltungen im ZAM' },
+        { key:'spin', label:'🎰 Lucky Spin', sub:'Täglicher Spin verfügbar' },
+      ].map(c => `
+      <label style="display:flex;align-items:center;gap:14px;padding:13px 16px;border-top:1px solid rgba(255,255,255,0.05);cursor:pointer">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.84rem;font-weight:700;color:#e2e8f0">${c.label}</div>
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.38);margin-top:1px">${c.sub}</div>
+        </div>
+        <label style="position:relative;width:42px;height:23px;flex-shrink:0">
+          <input type="checkbox" ${s[c.key] !== false ? 'checked' : ''} onchange="const ns=NEARBY.getSettings();ns['${c.key}']=this.checked;NEARBY.saveSettings(ns)" style="opacity:0;width:0;height:0;position:absolute">
+          <span style="position:absolute;inset:0;border-radius:12px;background:${s[c.key] !== false ? '#FA4615' : 'rgba(255,255,255,0.12)'};transition:background 0.2s;cursor:pointer"></span>
+          <span style="position:absolute;top:2.5px;left:${s[c.key] !== false ? '21px' : '2.5px'};width:18px;height:18px;border-radius:50%;background:#fff;transition:left 0.2s;pointer-events:none"></span>
+        </label>
+      </label>`).join('')}
+    </div>
+
+    <!-- Demo Button -->
+    <div style="background:rgba(247,171,0,0.06);border:1px solid rgba(247,171,0,0.2);border-radius:16px;padding:16px;margin-bottom:20px">
+      <div style="font-size:0.75rem;font-weight:700;color:#F7AB00;margin-bottom:4px">🎯 Demo-Modus</div>
+      <div style="font-size:0.76rem;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:14px">Standort-Prüfung lokal nicht verfügbar? Simuliere einen Nearby Alert für die Präsentation.</div>
+      <button onclick="triggerNearbyDemo()" style="width:100%;padding:12px;border-radius:12px;background:rgba(247,171,0,0.15);border:1px solid rgba(247,171,0,0.35);color:#F7AB00;font-size:0.84rem;font-weight:800;font-family:var(--font);cursor:pointer">📍 Demo: Ich bin in der Nähe</button>
+    </div>
+
+    <!-- Example Notifications -->
+    <div style="margin-bottom:12px">
+      <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:12px">Beispiel-Benachrichtigungen</div>
+      ${[
+        '🏷️ „Du bist in der Nähe vom ZAM – heute gibt\'s neue Deals."',
+        '🎰 „Lucky Spin verfügbar: Gewinne gratis Eis oder Punkte."',
+        '🍔 „Heute aktiv: 2 für 1 Deal bei Pitsburger."',
+        '🎉 „Event startet bald am Mahatma-Gandhi-Platz."',
+      ].map(t => `<div style="background:#1a1a1a;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:11px 14px;margin-bottom:8px;font-size:0.79rem;color:rgba(255,255,255,0.55);line-height:1.4">${t}</div>`).join('')}
+    </div>
+  `;
+}
+
+function initNearbyAlerts() {
+  const s = NEARBY.getSettings();
+  if (!s.enabled) return;
+  // Resume watching if was enabled before
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(_onPositionSuccess, _onPositionError, { maximumAge: 120000, timeout: 10000, enableHighAccuracy: false });
+    if (_nearbyWatchId === null) {
+      _nearbyWatchId = navigator.geolocation.watchPosition(_onPositionSuccess, _onPositionError, { maximumAge: 120000, timeout: 15000, enableHighAccuracy: false });
+    }
+  }
 }

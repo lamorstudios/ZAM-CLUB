@@ -680,6 +680,10 @@ a.nav-tab-map { text-decoration: none; }
   0%,100% { opacity: 1; }
   50%      { opacity: 0.65; }
 }
+@keyframes nearbySlideIn {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
 .deal-actions {
   width: 100%;
   display: grid;
