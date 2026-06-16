@@ -26,6 +26,12 @@
       --radius-sm:  10px;
     }
 
+    html,
+    body {
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
     body {
       font-family: 'Poppins', system-ui, sans-serif;
       background: var(--bg);
@@ -42,6 +48,9 @@
       position: sticky;
       top: 0;
       z-index: 100;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
     }
     .admin-header-inner {
       max-width: 900px;
@@ -111,8 +120,10 @@
     /* ── Main container ── */
     .container {
       max-width: 900px;
+      width: 100%;
       margin: 0 auto;
       padding: 28px 20px 0;
+      overflow-x: hidden;
     }
 
     /* ── Tab Navigation ── */
@@ -124,10 +135,15 @@
       border-radius: var(--radius);
       padding: 6px;
       margin-bottom: 24px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
     }
+    .tab-nav::-webkit-scrollbar { display: none; }
     .tab-btn {
-      flex: 1;
-      padding: 10px 8px;
+      flex: 0 0 auto;
+      padding: 10px 14px;
       border: none;
       border-radius: var(--radius-sm);
       background: transparent;
@@ -158,7 +174,7 @@
     }
 
     /* ── Tab Panels ── */
-    .tab-panel { display: none; }
+    .tab-panel { display: none; width: 100%; max-width: 100%; overflow-x: hidden; }
     .tab-panel.active { display: block; }
 
     /* ── Card ── */
@@ -168,6 +184,8 @@
       border-radius: var(--radius);
       padding: 24px;
       margin-bottom: 20px;
+      max-width: 100%;
+      overflow-x: hidden;
     }
     .card-title {
       font-size: 15px;
@@ -206,6 +224,8 @@
       outline: none;
       transition: border-color 0.2s;
       width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
     }
     .form-group input:focus,
     .form-group select:focus,
