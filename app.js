@@ -1243,6 +1243,7 @@ async function renderEvents(filter = 'all') {
 
 function renderEventCard(evt, idx) {
   const div = el('div', 'event-card-full card-dark');
+  div.style.cssText = `border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.3);--accent-color:${evt.category_color}`;
   div.style.setProperty('--accent-color', evt.category_color);
   const spotsLow = evt.spots_left <= 10;
   const attendees = (evt.spots_total || 500) - (evt.spots_left || 0);
@@ -1345,11 +1346,12 @@ async function renderDeals() {
 
 function renderDealCard(deal, idx) {
   const div = el('div', 'deal-card-full card-dark');
+  div.style.cssText = 'border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.3);padding:16px';
 
   div.innerHTML = `
     <!-- Merchant Logo Banner -->
     <div style="margin:-16px -16px 14px;height:72px;border-radius:14px 14px 0 0;background:linear-gradient(135deg,${deal.category_color}33,${deal.category_color}11);display:flex;align-items:center;padding:0 16px;gap:14px;position:relative;overflow:hidden">
-      <div style="width:52px;height:52px;border-radius:14px;background:rgba(0,0,0,0.35);border:1.5px solid ${deal.category_color}44;display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0">${deal.store_icon}</div>
+      <div style="width:52px;height:52px;border-radius:14px;background:${deal.category_color}22;border:1px solid ${deal.category_color}33;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0">${deal.store_icon}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:0.72rem;font-weight:800;color:${deal.category_color};text-transform:uppercase;letter-spacing:0.06em">${deal.store_name}</div>
         <div style="font-size:1.2rem;font-weight:900;color:#fff;line-height:1.1">${deal.discount}</div>
