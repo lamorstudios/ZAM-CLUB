@@ -1661,6 +1661,7 @@ a.nav-tab-map { text-decoration: none; }
 /* ── Chat Room View (full-screen overlay) ── */
 .chat-room-view {
   position: fixed;
+  pointer-events: none;
   top: 0; left: 50%; width: min(100vw, var(--app-w));
   transform: translateX(-50%) translateX(100vw) translateY(var(--chat-vv-offset, 0px));
   height: 100dvh;
@@ -1670,7 +1671,7 @@ a.nav-tab-map { text-decoration: none; }
   overflow: hidden;
   transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.chat-room-view.open { transform: translateX(-50%) translateX(0) translateY(var(--chat-vv-offset, 0px)); }
+.chat-room-view.open { transform: translateX(-50%) translateX(0) translateY(var(--chat-vv-offset, 0px)); pointer-events: auto; }
 
 .chat-room-header {
   display: flex; align-items: center; gap: 10px;
@@ -1870,6 +1871,7 @@ a.nav-tab-map { text-decoration: none; }
 /* ── Private Chat View (full-screen overlay) ── */
 .private-chat-view {
   position: fixed;
+  pointer-events: none;
   top: 0; left: 50%; width: min(100vw, var(--app-w));
   transform: translateX(-50%) translateX(100vw) translateY(var(--chat-vv-offset, 0px));
   height: 100dvh;
@@ -1879,7 +1881,7 @@ a.nav-tab-map { text-decoration: none; }
   overflow: hidden;
   transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.private-chat-view.open { transform: translateX(-50%) translateX(0) translateY(var(--chat-vv-offset, 0px)); }
+.private-chat-view.open { transform: translateX(-50%) translateX(0) translateY(var(--chat-vv-offset, 0px)); pointer-events: auto; }
 
 .private-chat-header {
   display: flex; align-items: center; gap: 10px;
@@ -1929,6 +1931,7 @@ a.nav-tab-map { text-decoration: none; }
 /* ── User Profile Popup / Sheet ── */
 .user-profile-sheet {
   position: fixed; bottom: 0; left: 50%; width: min(100vw, var(--app-w));
+  pointer-events: none;
   transform: translateX(-50%) translateY(100%);
   background: var(--surface);
   border-radius: 24px 24px 0 0;
@@ -1938,7 +1941,7 @@ a.nav-tab-map { text-decoration: none; }
   padding: 0 0 max(20px, env(safe-area-inset-bottom, 20px));
   max-height: 80dvh; overflow-y: auto;
 }
-.user-profile-sheet.open { transform: translateX(-50%) translateY(0); }
+.user-profile-sheet.open { transform: translateX(-50%) translateY(0); pointer-events: auto; }
 .user-profile-sheet-handle {
   width: 40px; height: 4px; border-radius: 2px;
   background: rgba(255,255,255,0.12); margin: 12px auto 0;
