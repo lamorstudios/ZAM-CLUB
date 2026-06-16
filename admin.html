@@ -805,6 +805,12 @@
       <button onclick="renderBetreiberDashboard()" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:#c4b5fd;border-radius:10px;padding:8px 16px;font-size:0.75rem;font-weight:600;font-family:inherit;cursor:pointer">↻ Aktualisieren</button>
     </div>
 
+    <!-- Rewards Stats -->
+    <div class="card">
+      <div class="card-title">🎁 Belohnungs-Übersicht</div>
+      <div id="admin-rewards-stats" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"></div>
+    </div>
+
     <!-- 1. Betreiber Dashboard -->
     <div class="card">
       <div class="card-title">📊 Plattform-Übersicht</div>
@@ -1824,11 +1830,35 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     if (btn.dataset.tab === 'moderation')     { renderModeration(); renderAdminMerchantSubmissions(); renderPhotoModeration(); }
     if (btn.dataset.tab === 'notifications')  { renderNotifications(); markAllNotifsRead(); }
     if (btn.dataset.tab === 'analytics')      renderAdminAnalyticsTab();
-    if (btn.dataset.tab === 'betreiber')      { renderBetreiberDashboard(); renderAdminMerchantPreviewSelect(); }
+    if (btn.dataset.tab === 'betreiber')      { renderBetreiberDashboard(); renderAdminMerchantPreviewSelect(); renderAdminRewardStats(); }
   });
 });
 
 // ═══════════════════════════════════════════════
+function renderAdminRewardStats() {
+  const el = document.getElementById('admin-rewards-stats');
+  if (!el) return;
+  const rewards  = JSON.parse(localStorage.getItem('zam_rewards')||'[]');
+  const subs     = JSON.parse(localStorage.getItem('zam_photo_submissions')||'[]');
+  const chs      = JSON.parse(localStorage.getItem('zam_photo_challenges')||'[]');
+  const g        = JSON.parse(localStorage.getItem('zamclub_global')||'{}');
+  const accounts = g.accounts || [];
+  let completed  = 0;
+  chs.forEach(ch => { const c = subs.filter(s=>s.challenge_id===ch.id).length; if (c >= ch.required_photos_count) completed++; });
+  const refCodes = accounts.filter(a => localStorage.getItem('zam_refcode_'+a.id)).length;
+  [
+    { label:'Aktive Gutscheine',   value: rewards.filter(r=>r.status==='available').length, color:'#fbbf24' },
+    { label:'Eingelöst',           value: rewards.filter(r=>r.status==='redeemed').length,  color:'#34d399' },
+    { label:'Challenges abgesch.', value: completed,                                         color:'#a78bfa' },
+    { label:'Referral-Codes',      value: refCodes,                                          color:'#60a5fa' },
+  ].forEach(s => {
+    const d = document.createElement('div');
+    d.style.cssText = 'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;text-align:center';
+    d.innerHTML = `<div style="font-size:1.6rem;font-weight:900;color:${s.color}">${s.value}</div><div style="font-size:0.7rem;color:#888;margin-top:3px">${s.label}</div>`;
+    el.appendChild(d);
+  });
+}
+
 // INIT
 // ═══════════════════════════════════════════════
 renderEventsList();
@@ -1837,6 +1867,7 @@ renderPromosList();
 renderModeration();
 renderAdminMerchantSubmissions();
 renderPhotoModeration();
+renderAdminRewardStats();
 updateCounts();
 updateNotifCount();
 
