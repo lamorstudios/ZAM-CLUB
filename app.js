@@ -3823,6 +3823,7 @@ function renderMerchantDashboard() {
           <button class="merchant-quick-btn" onclick="openQRScanner()"><span>📷</span><span>QR scannen</span></button>
           <button class="merchant-quick-btn" onclick="openMerchantEventModal()"><span>📅</span><span>Event einreichen</span></button>
           <button class="merchant-quick-btn" onclick="openMerchantDealModal()"><span>🏷️</span><span>Deal einreichen</span></button>
+          <button class="merchant-quick-btn" onclick="openVideoDrehModal()" style="background:linear-gradient(135deg,rgba(250,70,21,0.25),rgba(250,70,21,0.1));border:1px solid rgba(250,70,21,0.4)"><span>🎥</span><span style="color:#FA4615">Videodreh</span></button>
         </div>
       `;
       kpiGridEl.parentNode.insertBefore(scannerBtnWrap, kpiGridEl);
@@ -3932,7 +3933,196 @@ function renderMerchantDashboard() {
   }
   _renderMerchantStats2(stats);
   _renderPartnerDeals(me);
+  _renderMerchantVideoDrehSection(me);
   _renderMerchantNewsfeed(me);
+}
+
+// =============================================
+// VIDEODREH ANFRAGEN – LAMOR AGENCY
+// =============================================
+const _VD_KEY = 'zam_videodreh_requests';
+
+function _getVideoDrehRequests() {
+  try { return JSON.parse(localStorage.getItem(_VD_KEY) || '[]'); } catch { return []; }
+}
+function _saveVideoDrehRequests(list) {
+  localStorage.setItem(_VD_KEY, JSON.stringify(list));
+}
+
+const _VD_PACKAGES = [
+  {
+    id: 'deal_reel',
+    icon: '🎥',
+    name: 'Deal Reel',
+    price: 250,
+    regular: 500,
+    tag: '50% Händler-Rabatt',
+    features: ['1 Reel · 30–60 Sekunden', 'Hochformat 9:16', 'Produkt- / Angebotsvideo', 'Aktions- oder Ladenvideo', 'Schnitt inklusive'],
+    ideal: 'Angebote · Produkte · Speisen · Aktionen · Saisonkampagnen'
+  },
+  {
+    id: 'premium_reel',
+    icon: '🎬',
+    name: 'Premium Reel mit Creator',
+    price: 450,
+    regular: 900,
+    tag: '50% Händler-Rabatt',
+    features: ['1 Reel · 30–60 Sekunden', 'Hochformat 9:16', 'Creator / Darsteller vor Kamera', 'Konzeption & Skriptunterstützung', 'Dreh + Schnitt', 'Optimiert für Instagram, TikTok & ZAM Club'],
+    ideal: 'Gewinnspiele · Events · Neueröffnungen · Produktvorstellungen · Kampagnen'
+  }
+];
+
+let _vdSelectedPackage = null;
+
+function openVideoDrehModal() {
+  _vdSelectedPackage = null;
+  const pkgHtml = _VD_PACKAGES.map(p => `
+    <div id="vd_pkg_${p.id}" onclick="_selectVDPackage('${p.id}')" style="border:2px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px;cursor:pointer;transition:all 0.2s;margin-bottom:10px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:10px;right:10px;background:rgba(250,70,21,0.15);border:1px solid rgba(250,70,21,0.35);border-radius:8px;padding:3px 8px;font-size:0.6rem;font-weight:800;color:#FA4615">${p.tag}</div>
+      <div style="font-size:1.3rem;margin-bottom:6px">${p.icon}</div>
+      <div style="font-size:0.9rem;font-weight:800;color:#fff;margin-bottom:6px">${p.name}</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px">
+        <span style="font-size:1.5rem;font-weight:900;color:#FA4615">${p.price} € <span style="font-size:0.7rem;font-weight:600">netto</span></span>
+        <span style="font-size:0.72rem;color:rgba(255,255,255,0.3);text-decoration:line-through">ab ${p.regular} €</span>
+      </div>
+      <ul style="list-style:none;padding:0;margin:0 0 10px;display:flex;flex-direction:column;gap:4px">
+        ${p.features.map(f => '<li style="font-size:0.72rem;color:rgba(255,255,255,0.7);display:flex;align-items:center;gap:6px"><span style="color:#FA4615;font-size:0.65rem">✔</span>' + f + '</li>').join('')}
+      </ul>
+      <div style="font-size:0.65rem;color:rgba(255,255,255,0.4)">Ideal für: ${p.ideal}</div>
+    </div>
+  `).join('');
+
+  _buildMerchantModal('_vd_modal', '🎥 Videodreh anfragen',
+    '<div style="background:linear-gradient(135deg,rgba(250,70,21,0.12),rgba(250,70,21,0.04));border:1px solid rgba(250,70,21,0.25);border-radius:14px;padding:14px;margin-bottom:18px">' +
+      '<div style="font-size:0.82rem;font-weight:800;color:#FA4615;margin-bottom:4px">Exklusive Sonderpreise für aktive ZAM Club Händler</div>' +
+      '<div style="font-size:0.72rem;color:rgba(255,255,255,0.55);line-height:1.5">Professionelle Social-Media-Reels für Deals, Aktionen, Produkte und Events – produziert durch <strong style="color:#fff">LAMOR AGENCY</strong>.</div>' +
+    '</div>' +
+    '<div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em">Paket wählen</div>' +
+    pkgHtml +
+    '<div id="_vd_form_wrap" style="display:none">' +
+      '<div style="height:1px;background:rgba(255,255,255,0.08);margin:18px 0"></div>' +
+      '<div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em">Anfrage-Details</div>' +
+      _inp('Deal / Event / Kampagne (Bezug)', '_vd_ref', 'text', 'z.B. Sommer-Deal, Neueröffnung …', true) +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+        _inp('Gewünschter Zeitraum', '_vd_period', 'text', 'z.B. Juli 2026') +
+        _inp('Wunschdatum', '_vd_date', 'date') +
+      '</div>' +
+      _inp('Ansprechpartner', '_vd_contact', 'text', 'Vor- und Nachname', true) +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+        _inp('Telefon', '_vd_phone', 'tel', '+49 …', true) +
+        _inp('E-Mail', '_vd_email', 'email', 'name@shop.de', true) +
+      '</div>' +
+      _ta('Kurze Beschreibung', '_vd_desc', 'Was soll gezeigt werden? Welches Ziel hat der Dreh?') +
+      _ta('Bemerkungen', '_vd_notes', 'Besondere Wünsche, Termine, Einschränkungen …') +
+      '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;margin-bottom:14px">' +
+        '<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.6">Diese Preise gelten ausschließlich für aktive ZAM Club Händler und sind nicht öffentlich buchbar.<br>Exklusiver Händler-Vorteil durch die Zusammenarbeit mit LAMOR AGENCY.</div>' +
+      '</div>' +
+      _submitBtn('🎥 Videodreh anfragen', 'submitVideoDrehRequest()') +
+    '</div>'
+  );
+}
+
+function _selectVDPackage(pkgId) {
+  _vdSelectedPackage = pkgId;
+  _VD_PACKAGES.forEach(p => {
+    const el = document.getElementById('vd_pkg_' + p.id);
+    if (!el) return;
+    const active = p.id === pkgId;
+    el.style.border = active ? '2px solid #FA4615' : '2px solid rgba(255,255,255,0.1)';
+    el.style.background = active ? 'rgba(250,70,21,0.1)' : '';
+  });
+  const fw = document.getElementById('_vd_form_wrap');
+  if (fw) fw.style.display = 'block';
+}
+
+function submitVideoDrehRequest() {
+  if (!_vdSelectedPackage) { showToast('⚠️ Bitte erst ein Paket auswählen.'); return; }
+  const ref     = document.getElementById('_vd_ref')?.value?.trim();
+  const contact = document.getElementById('_vd_contact')?.value?.trim();
+  const phone   = document.getElementById('_vd_phone')?.value?.trim();
+  const email   = document.getElementById('_vd_email')?.value?.trim();
+  if (!ref || !contact || !phone || !email) { showToast('⚠️ Bitte alle Pflichtfelder ausfüllen.'); return; }
+
+  const me = ZAMApi.auth.currentUser();
+  const pkg = _VD_PACKAGES.find(p => p.id === _vdSelectedPackage);
+  const req = {
+    id: 'vd_' + Date.now(),
+    package_id: _vdSelectedPackage,
+    package_name: pkg?.name || _vdSelectedPackage,
+    package_price: pkg?.price || 0,
+    merchant_id: me?.id || '',
+    merchant_name: me?.display_name || me?.name || 'Händler',
+    ref,
+    period: document.getElementById('_vd_period')?.value?.trim() || '',
+    date: document.getElementById('_vd_date')?.value || '',
+    contact,
+    phone,
+    email,
+    description: document.getElementById('_vd_desc')?.value?.trim() || '',
+    notes: document.getElementById('_vd_notes')?.value?.trim() || '',
+    status: 'angefragt',
+    created_at: new Date().toISOString()
+  };
+
+  const list = _getVideoDrehRequests();
+  list.unshift(req);
+  _saveVideoDrehRequests(list);
+
+  // Admin notification
+  const notifs = JSON.parse(localStorage.getItem('zam_admin_notifications') || '[]');
+  notifs.unshift({ id:'vdn_'+Date.now(), type:'videodreh', title:'🎥 Neue Videodreh-Anfrage', body: req.merchant_name + ' – ' + pkg?.name + ' (' + pkg?.price + ' € netto)', read: false, created_at: new Date().toISOString() });
+  localStorage.setItem('zam_admin_notifications', JSON.stringify(notifs.slice(0, 50)));
+
+  _merchantModalClose('_vd_modal');
+  showToast('🎥 Anfrage gesendet! LAMOR AGENCY meldet sich bei dir.', 'success');
+  _renderMerchantVideoDrehSection(me);
+}
+
+function _renderMerchantVideoDrehSection(me) {
+  const kpiGridEl = document.getElementById('merchant-kpi-grid');
+  if (!kpiGridEl) return;
+  const view = kpiGridEl.closest('.view') || kpiGridEl.parentNode;
+  if (!view) return;
+
+  const myReqs = _getVideoDrehRequests().filter(r => r.merchant_id === me?.id);
+
+  let wrap = document.getElementById('merchant-videodreh-wrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'merchant-videodreh-wrap';
+    view.appendChild(wrap);
+  }
+
+  const statusLabel = { angefragt:'⏳ Angefragt', 'in_pruefung':'🔍 In Prüfung', bestaetigt:'✅ Bestätigt', erledigt:'🎉 Erledigt', abgelehnt:'❌ Abgelehnt' };
+  const statusColor = { angefragt:'rgba(247,171,0,0.8)', 'in_pruefung':'rgba(96,165,250,0.8)', bestaetigt:'rgba(52,211,153,0.8)', erledigt:'rgba(52,211,153,1)', abgelehnt:'rgba(239,68,68,0.8)' };
+
+  wrap.innerHTML = `
+    <div style="padding:0 16px 16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h3 style="font-size:0.9rem;font-weight:700">🎥 Meine Videodreh-Anfragen</h3>
+        <button onclick="openVideoDrehModal()" style="background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border:none;border-radius:10px;padding:7px 14px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:var(--font)">+ Anfrage</button>
+      </div>
+      ${!myReqs.length ? `
+        <div onclick="openVideoDrehModal()" style="border:1.5px dashed rgba(250,70,21,0.35);border-radius:16px;padding:20px 16px;text-align:center;cursor:pointer">
+          <div style="font-size:1.6rem;margin-bottom:8px">🎥</div>
+          <div style="font-size:0.82rem;font-weight:700;color:#fff;margin-bottom:4px">Professionelle Reels für deine Deals</div>
+          <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-bottom:12px">Produziert durch LAMOR AGENCY – exklusiv für ZAM Club Händler</div>
+          <div style="display:inline-block;background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border-radius:10px;padding:8px 18px;font-size:0.78rem;font-weight:700">🎥 Jetzt anfragen · ab 250 € netto</div>
+        </div>
+      ` : myReqs.map(r => `
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:0.78rem;font-weight:700;color:#fff">${r.package_id === 'premium_reel' ? '🎬' : '🎥'} ${escHtml(r.package_name)}</span>
+            <span style="font-size:0.65rem;font-weight:700;color:${statusColor[r.status]||'rgba(255,255,255,0.5)'}">${statusLabel[r.status]||r.status}</span>
+          </div>
+          <div style="font-size:0.7rem;color:rgba(255,255,255,0.45);margin-bottom:4px">📅 ${new Date(r.created_at).toLocaleDateString('de-DE')} · ${r.package_price} € netto</div>
+          <div style="font-size:0.7rem;color:rgba(255,255,255,0.55)">Bezug: ${escHtml(r.ref)}</div>
+          ${r.notes ? '<div style="font-size:0.65rem;color:rgba(255,255,255,0.3);margin-top:4px">Notiz: ' + escHtml(r.notes) + '</div>' : ''}
+          <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-top:4px">Ansprechpartner: ${escHtml(r.contact)} · ${escHtml(r.phone)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
 function openVoucherRedeemer() {
@@ -4276,6 +4466,7 @@ function renderAdminDashboard() {
   renderAdminTopList('admin-top-events',    stats.topEvents,    '🎉', 'Event',   'Aufrufe');
 
   renderAdminPushStats();
+  renderAdminVideoDrehRequests('admin-videodreh-container');
   renderAdminMerchants('admin-merchants-container');
 
   // Quick merchant preview button
@@ -7464,6 +7655,46 @@ function renderMerchantSubmissionsSection(merchantId) {
     </div>
   `).join('');
 }
+function renderAdminVideoDrehRequests(containerId) {
+  const ct = document.getElementById(containerId);
+  if (!ct) return;
+  const all = _getVideoDrehRequests();
+  const statusLabel = { angefragt:'⏳ Angefragt', 'in_pruefung':'🔍 In Prüfung', bestaetigt:'✅ Bestätigt', erledigt:'🎉 Erledigt', abgelehnt:'❌ Abgelehnt' };
+  const statusOpts = Object.entries(statusLabel).map(([v,l]) => '<option value="' + v + '">' + l + '</option>').join('');
+  if (!all.length) { ct.innerHTML = '<p style="color:var(--dim);text-align:center;padding:20px">Noch keine Anfragen vorhanden.</p>'; return; }
+  ct.innerHTML = all.map(r => `
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
+        <div>
+          <div style="font-size:0.82rem;font-weight:800;color:#fff;margin-bottom:2px">${r.package_id === 'premium_reel' ? '🎬' : '🎥'} ${escHtml(r.package_name)}</div>
+          <div style="font-size:0.7rem;font-weight:700;color:#FA4615">${r.package_price} € netto</div>
+        </div>
+        <select onchange="adminUpdateVDStatus('${r.id}', this.value)" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-family:var(--font);font-size:0.7rem;padding:5px 8px;outline:none">
+          ${statusOpts.replace('value="' + r.status + '"', 'value="' + r.status + '" selected')}
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.45)">🏪 <strong style="color:rgba(255,255,255,0.7)">${escHtml(r.merchant_name)}</strong></div>
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.45)">👤 ${escHtml(r.contact)}</div>
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.45)">📞 ${escHtml(r.phone)}</div>
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.45)">✉️ ${escHtml(r.email)}</div>
+        ${r.period ? '<div style="font-size:0.68rem;color:rgba(255,255,255,0.45)">📆 ' + escHtml(r.period) + '</div>' : ''}
+        ${r.date ? '<div style="font-size:0.68rem;color:rgba(255,255,255,0.45)">🗓 ' + r.date + '</div>' : ''}
+      </div>
+      ${r.ref ? '<div style="font-size:0.7rem;color:rgba(255,255,255,0.55);margin-bottom:4px">Bezug: <em>' + escHtml(r.ref) + '</em></div>' : ''}
+      ${r.description ? '<div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-bottom:4px">' + escHtml(r.description) + '</div>' : ''}
+      ${r.notes ? '<div style="font-size:0.65rem;color:rgba(255,255,255,0.3)">Notiz: ' + escHtml(r.notes) + '</div>' : ''}
+      <div style="font-size:0.6rem;color:rgba(255,255,255,0.25);margin-top:8px">Eingegangen: ${new Date(r.created_at).toLocaleString('de-DE')}</div>
+    </div>
+  `).join('');
+}
+
+function adminUpdateVDStatus(id, status) {
+  const list = _getVideoDrehRequests();
+  const r = list.find(x => x.id === id);
+  if (r) { r.status = status; _saveVideoDrehRequests(list); showToast('Status aktualisiert.'); }
+}
+
 function renderAdminMerchantSubmissions() {
   const all = getMerchantSubmissions();
   const container = document.getElementById('admin-merchant-submissions');
