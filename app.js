@@ -59,14 +59,6 @@ function applyLanguage() {
   updateNavLabels();
 }
 
-// Sprachfunktionen entfernt — App ist einsprachig (Deutsch)
-function setLang() {}
-function openLangSheet() {}
-function closeLangSheet() {}
-function dismissFirstRunLang() {}
-function showLangPickerIfNeeded() {}
-function _updateLangPickerUI() {}
-
 function updateNavLabels() {
   document.querySelectorAll('.nav-tab[data-page]').forEach(btn => {
     const page = btn.dataset.page;
@@ -6278,7 +6270,6 @@ function initI18nStaticElements() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   updateNavLabels();
-  _updateLangPickerUI();
 }
 
 function init() {
@@ -6288,7 +6279,6 @@ function init() {
   localStorage.removeItem('language');
   localStorage.removeItem('selectedLanguage');
   localStorage.removeItem('locale');
-  showLangPickerIfNeeded();
   initI18nStaticElements();
   seedZAMContent();
   seedDemoMerchantCafeFreiham();
