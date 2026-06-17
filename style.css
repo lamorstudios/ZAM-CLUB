@@ -103,6 +103,10 @@ body.subpage-active #app-shell {
   }
 }
 
+/* ── Profil-Footer: nur wenn body.profile-active ── */
+body:not(.profile-active) .profile-logout-section,
+body:not(.profile-active) .profile-legal-section { display: none !important; }
+
 /* ── Page transitions ── */
 .page {
   display: none;

@@ -251,6 +251,7 @@ function navigateTo(pageId) {
   // Collapse app-shell to height:0 when on a sub-page.
   const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings','merchant-preview','nearby-settings','my-events','my-vouchers']);
   document.body.classList.toggle('subpage-active', !MAIN_PAGES.has(pageId));
+  document.body.classList.toggle('profile-active', pageId === 'profile');
 
   // Triple scroll reset — ensure top of page on all mobile browsers
   window.scrollTo(0, 0);
