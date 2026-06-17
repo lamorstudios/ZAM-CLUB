@@ -365,18 +365,13 @@ function renderHome() {
   renderHomeEvents();
   renderHomeDeals();
 
-  const _idle = typeof requestIdleCallback === 'function' ? requestIdleCallback : (fn) => setTimeout(fn, 120);
-  if (!isPerfMode) {
-    _idle(() => { _renderHomeRankingCard(); renderHomeRecs(); });
-  } else {
-    // skip full ranking card and recs in perf-mode — just show rank stats
-    const rankCard = document.getElementById('home-ranking-card');
-    if (rankCard) rankCard.style.display = 'none';
-    const recsLabel = document.getElementById('home-rec-label');
-    if (recsLabel) recsLabel.style.display = 'none';
-    const recsScroll = document.getElementById('home-recs-scroll');
-    if (recsScroll) recsScroll.style.display = 'none';
-  }
+  // Ranking always visible — core motivation element
+  _renderHomeRankingCard();
+  // Recs DOM nodes kept hidden (removed from home UI)
+  const recsLabel = document.getElementById('home-rec-label');
+  const recsScroll = document.getElementById('home-recs-scroll');
+  if (recsLabel) recsLabel.style.display = 'none';
+  if (recsScroll) recsScroll.style.display = 'none';
 
   if (!isPerfMode) {
     // Referral CTA widget
@@ -524,10 +519,6 @@ async function renderHomeDeals() {
       <div style="margin-top:6px">${_countdownBadge(deal.expiry_date)}</div>
       <button class="btn btn-primary" style="margin-top:10px;padding:6px 12px;font-size:0.72rem;width:100%" onclick="openVoucherQR('${deal.id}','${esc(deal.title)}','${deal.merchant_id||''}');event.stopPropagation()">🎟 Einlösen</button>
     `;
-    card.querySelector('.bookmark-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleSave('deal', deal.id, e.currentTarget);
-    });
     card.addEventListener('click', () => navigateTo('deals'));
     container.appendChild(card);
   });
@@ -583,27 +574,29 @@ function _renderHomeRankingCard() {
   const me = _RANKING_DEMO.find(r => r.isMe);
 
   el.innerHTML = `
-    <div style="margin:0 16px 4px;background:linear-gradient(135deg,rgba(247,171,0,0.1),rgba(250,70,21,0.07));border:1px solid rgba(247,171,0,0.22);border-radius:18px;padding:16px;cursor:pointer" onclick="openRankingModal()">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div style="margin:0 16px 4px;background:linear-gradient(135deg,rgba(247,171,0,0.13),rgba(250,70,21,0.09));border:1.5px solid rgba(247,171,0,0.3);border-radius:18px;padding:16px;cursor:pointer;position:relative;overflow:hidden" onclick="openRankingModal()">
+      <div style="position:absolute;top:-18px;right:-18px;font-size:5rem;opacity:0.06;pointer-events:none">🏆</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
         <div>
-          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#F7AB00">🏆 Monats-Champions</div>
-          <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px">⏳ Noch ${daysLeft} Tage</div>
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:900;color:#F7AB00">🏆 Monats-Champions</div>
+          <div style="font-size:0.78rem;font-weight:700;color:#fff;margin-top:3px">Top 3 gewinnen geheime Preise!</div>
+          <div style="font-size:0.68rem;color:rgba(255,255,255,0.45);margin-top:2px">⏳ Noch <strong style="color:#F7AB00">${daysLeft} Tage</strong> bis Monatsende</div>
         </div>
-        <span style="font-size:0.7rem;color:rgba(247,171,0,0.6);font-weight:700">Ranking →</span>
+        <span style="font-size:0.68rem;color:rgba(247,171,0,0.7);font-weight:700;white-space:nowrap;padding-top:2px">Ansehen →</span>
       </div>
       ${top3.map((u, i) => `
-      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;${i < 2 ? 'border-bottom:1px solid rgba(255,255,255,0.05)' : ''}">
-        <div style="width:24px;text-align:center;font-size:1rem">${medals[i]}</div>
-        <div style="width:32px;height:32px;border-radius:50%;background:${u.bg};border:2px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,0.04);${i < 2 ? 'margin-bottom:6px' : ''}">
+        <div style="width:26px;text-align:center;font-size:1.1rem">${medals[i]}</div>
+        <div style="width:34px;height:34px;border-radius:50%;background:${u.bg};border:2px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.78rem;font-weight:700;color:#e2e8f0">${u.name}</div>
-          <div style="font-size:0.62rem;color:rgba(255,255,255,0.35)">${prizeTitles[i]}</div>
+          <div style="font-size:0.8rem;font-weight:700;color:#e2e8f0">${u.name}</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.35)">${prizeTitles[i]}</div>
         </div>
-        <div style="font-size:0.74rem;font-weight:800;color:#F7AB00">${u.pts.toLocaleString('de-DE')}</div>
+        <div style="font-size:0.8rem;font-weight:900;color:#F7AB00">${u.pts.toLocaleString('de-DE')}</div>
       </div>`).join('')}
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:0.72rem;color:rgba(255,255,255,0.5)">Dein Rang: <strong style="color:#F7AB00">#${me?.rank || 17}</strong> · ${(me?.pts || 2460).toLocaleString('de-DE')} Pkt.</div>
-        <button onclick="event.stopPropagation();openRankingModal()" style="font-size:0.68rem;font-weight:700;color:#F7AB00;background:none;border:none;cursor:pointer;font-family:var(--font)">Ranking ansehen →</button>
+      <div style="margin-top:10px;padding:9px 10px;border-radius:10px;background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.15);display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.6)">Dein Rang: <strong style="color:#F7AB00">#${me?.rank || 17}</strong> · ${(me?.pts || 2460).toLocaleString('de-DE')} Pkt.</div>
+        <button onclick="event.stopPropagation();openRankingModal()" style="font-size:0.7rem;font-weight:800;color:#F7AB00;background:none;border:none;cursor:pointer;font-family:var(--font)">Verbessern →</button>
       </div>
     </div>`;
 }

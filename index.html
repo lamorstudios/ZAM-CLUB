@@ -232,6 +232,9 @@
     <!-- Händler Tools Card — rendered dynamically by renderHome() -->
     <div id="home-merchant-tools" style="display:none;margin:0 16px 8px"></div>
 
+    <!-- Monats-Champions Ranking Card (rendered by JS) -->
+    <div id="home-ranking-card" style="margin-top:8px"></div>
+
     <!-- Referral CTA — compact -->
     <div id="home-referral-cta" style="margin:6px 16px 0;cursor:pointer" onclick="openShareDialog()">
       <div class="referral-cta-card" style="padding:12px 14px">
@@ -259,7 +262,7 @@
       <h2>Aktuelle Deals</h2>
       <a href="#" onclick="navigateTo('deals');return false;">Alle →</a>
     </div>
-    <div class="scroll-row" id="home-deals-scroll">
+    <div class="scroll-row" id="home-deals-scroll" style="min-height:180px">
       <!-- Rendered by app.js -->
     </div>
 
@@ -268,19 +271,13 @@
       <h2>Aktuelle Events</h2>
       <a href="#" onclick="navigateTo('events');return false;">Alle →</a>
     </div>
-    <div class="scroll-row" id="home-events-scroll">
+    <div class="scroll-row" id="home-events-scroll" style="min-height:160px">
       <!-- Rendered by app.js -->
     </div>
 
-    <!-- Personalized Recommendations — compact -->
-    <div class="section-label" id="home-rec-label" style="display:none">
-      <h2>Für dich ✨</h2>
-      <a href="#" onclick="navigateTo('recommendations');return false;">Alle →</a>
-    </div>
-    <div class="scroll-row" id="home-recs-scroll"></div>
-
-    <!-- Ranking Card (rendered by JS) — below fold -->
-    <div id="home-ranking-card" style="margin-top:4px"></div>
+    <!-- "Für dich" Recs — hidden but DOM kept for JS compatibility -->
+    <div id="home-rec-label" style="display:none"></div>
+    <div id="home-recs-scroll" style="display:none"></div>
 
   </section>
 
