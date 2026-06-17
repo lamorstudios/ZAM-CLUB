@@ -975,7 +975,6 @@ a.nav-tab-map { text-decoration: none; }
   display: flex; align-items: flex-end; justify-content: center;
   opacity: 0; pointer-events: none;
   transition: opacity var(--tn);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
 }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
 .modal-sheet {

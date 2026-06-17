@@ -794,7 +794,7 @@ function initDailySpin() {
 function _spinKey() { return 'zamclub_spin_' + (ZAMApi.auth.currentUser()?.id || 'guest'); }
 function _todayStr() { return new Date().toISOString().slice(0, 10); }
 
-const _SPIN_COLORS = ['#F7AB00', '#FA4615', '#10b981', '#3b82f6', '#ec4899', '#ef4444'];
+const _SPIN_COLORS = ['#F7AB00', '#7c3aed', '#10b981', '#3b82f6', '#ec4899', '#ef4444'];
 
 function _buildSpinCards(disabled = false) {
   const grid = $('#spin-cards-grid');
