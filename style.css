@@ -2643,3 +2643,317 @@ body.perf-mode .countdown-badge {
   transition: none !important;
   animation: none !important;
 }
+
+/* =============================================
+   GAMIFICATION — Tier Rings, Animations, Level-Up
+   ============================================= */
+
+/* ── Tier Ring Base ── */
+.tier-ring {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+}
+.tier-ring::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Starter — blue */
+.tier-ring--starter::after {
+  border: 2.5px solid #3b82f6;
+  box-shadow: 0 0 8px rgba(59,130,246,0.45);
+}
+/* Silver — silver/white */
+.tier-ring--silver::after {
+  border: 2.5px solid #9ca3af;
+  box-shadow: 0 0 10px rgba(156,163,175,0.5);
+}
+/* Gold — gold */
+.tier-ring--gold::after {
+  border: 2.5px solid #F7AB00;
+  box-shadow: 0 0 12px rgba(247,171,0,0.55);
+}
+/* Platin — animated glow */
+.tier-ring--platin::after {
+  border: 2.5px solid #e2e8f0;
+  box-shadow: 0 0 14px rgba(226,232,240,0.7);
+  animation: tier-platin-glow 2s ease-in-out infinite;
+}
+@keyframes tier-platin-glow {
+  0%,100% { box-shadow: 0 0 10px rgba(226,232,240,0.5); }
+  50%      { box-shadow: 0 0 22px rgba(226,232,240,0.9), 0 0 40px rgba(226,232,240,0.3); }
+}
+/* Diamond — blue sparkle */
+.tier-ring--diamond::after {
+  border: 2.5px solid #60a5fa;
+  box-shadow: 0 0 16px rgba(96,165,250,0.7);
+  animation: tier-diamond-pulse 1.8s ease-in-out infinite;
+}
+@keyframes tier-diamond-pulse {
+  0%,100% { box-shadow: 0 0 10px rgba(96,165,250,0.5); border-color: #60a5fa; }
+  50%      { box-shadow: 0 0 28px rgba(96,165,250,0.9), 0 0 50px rgba(147,197,253,0.4); border-color: #93c5fd; }
+}
+/* Legend — golden crown glow */
+.tier-ring--legend::after {
+  border: 3px solid #F7AB00;
+  box-shadow: 0 0 20px rgba(247,171,0,0.8), 0 0 40px rgba(247,171,0,0.3);
+  animation: tier-legend-glow 1.5s ease-in-out infinite;
+}
+@keyframes tier-legend-glow {
+  0%,100% { box-shadow: 0 0 14px rgba(247,171,0,0.7), 0 0 30px rgba(247,171,0,0.25); }
+  50%      { box-shadow: 0 0 28px rgba(247,171,0,1.0), 0 0 60px rgba(247,171,0,0.5); }
+}
+
+/* ── Tier Badge Chip ── */
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 2px 6px;
+  border-radius: 20px;
+  line-height: 1.3;
+}
+.tier-badge--starter { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+.tier-badge--silver  { background: rgba(156,163,175,0.15); color: #d1d5db; border: 1px solid rgba(156,163,175,0.3); }
+.tier-badge--gold    { background: rgba(247,171,0,0.15); color: #F7AB00; border: 1px solid rgba(247,171,0,0.35); }
+.tier-badge--platin  { background: rgba(226,232,240,0.12); color: #e2e8f0; border: 1px solid rgba(226,232,240,0.35); }
+.tier-badge--diamond { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.35); }
+.tier-badge--legend  { background: rgba(247,171,0,0.2); color: #F7AB00; border: 1px solid rgba(247,171,0,0.5); animation: tier-legend-glow-badge 1.5s ease-in-out infinite; }
+@keyframes tier-legend-glow-badge {
+  0%,100% { box-shadow: 0 0 0 0 rgba(247,171,0,0); }
+  50%      { box-shadow: 0 0 8px 2px rgba(247,171,0,0.4); }
+}
+
+/* ── Points Float Animation ── */
+#zam-pts-anim {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.zam-pts-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(250,70,21,0.95), rgba(247,171,0,0.95));
+  color: #fff;
+  font-family: var(--font);
+  font-size: 2.2rem;
+  font-weight: 900;
+  padding: 14px 28px;
+  border-radius: 50px;
+  box-shadow: 0 8px 40px rgba(250,70,21,0.6), 0 2px 0 rgba(255,255,255,0.15) inset;
+  letter-spacing: -0.01em;
+  animation: pts-pop 0.9s var(--spring) forwards;
+  will-change: transform, opacity;
+}
+.zam-pts-label {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.7);
+  font-weight: 600;
+  margin-top: 8px;
+  animation: pts-label-fade 0.9s ease forwards;
+  animation-delay: 0.1s;
+  opacity: 0;
+}
+.zam-pts-goal {
+  margin-top: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #F7AB00;
+  background: rgba(247,171,0,0.12);
+  border: 1px solid rgba(247,171,0,0.3);
+  border-radius: 20px;
+  padding: 4px 12px;
+  animation: pts-label-fade 0.9s ease forwards;
+  animation-delay: 0.25s;
+  opacity: 0;
+}
+@keyframes pts-pop {
+  0%   { transform: scale(0.3) translateY(60px); opacity: 0; }
+  60%  { transform: scale(1.08) translateY(-8px); opacity: 1; }
+  80%  { transform: scale(0.95) translateY(0); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes pts-label-fade {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes pts-fly-out {
+  0%   { transform: scale(1) translateY(0); opacity: 1; }
+  100% { transform: scale(0.3) translateY(-80px); opacity: 0; }
+}
+
+/* ── Confetti ── */
+.confetti-piece {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 9001;
+  will-change: transform, opacity;
+  animation: confetti-fall var(--dur, 1.2s) ease-out forwards;
+}
+@keyframes confetti-fall {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateY(var(--fy, 200px)) translateX(var(--fx, 0px)) rotate(var(--rot, 360deg)) scale(0.5); opacity: 0; }
+}
+
+/* ── Level-Up Overlay ── */
+#zam-levelup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9100;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  animation: lvlup-bg-in 0.3s ease forwards;
+}
+@keyframes lvlup-bg-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.zam-levelup-card {
+  background: linear-gradient(145deg, #1a1a2e, #16213e, #0f3460);
+  border: 1.5px solid rgba(247,171,0,0.4);
+  border-radius: 28px;
+  padding: 36px 32px;
+  text-align: center;
+  max-width: 320px;
+  width: 88%;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.8), 0 0 60px rgba(247,171,0,0.2);
+  animation: lvlup-card-in 0.5s var(--spring) forwards;
+  will-change: transform;
+}
+@keyframes lvlup-card-in {
+  from { transform: scale(0.6) translateY(40px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+.zam-levelup-emoji {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 12px;
+  animation: lvlup-bounce 0.8s var(--spring) 0.3s both;
+}
+@keyframes lvlup-bounce {
+  0%   { transform: scale(0); }
+  70%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.zam-levelup-title {
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: #F7AB00;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.zam-levelup-name {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.zam-levelup-sub {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 20px;
+}
+.zam-levelup-perks {
+  background: rgba(247,171,0,0.08);
+  border: 1px solid rgba(247,171,0,0.2);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.7);
+  text-align: left;
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+.zam-levelup-close {
+  background: linear-gradient(135deg, #c43510, #FA4615);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 11px 28px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  font-family: var(--font);
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(250,70,21,0.4);
+}
+
+/* ── Streak Banner ── */
+.streak-banner {
+  background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(250,70,21,0.12));
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.streak-fire { font-size: 1.6rem; animation: streak-fire-flicker 0.8s ease-in-out infinite alternate; }
+@keyframes streak-fire-flicker {
+  from { transform: scale(1) rotate(-3deg); }
+  to   { transform: scale(1.1) rotate(3deg); }
+}
+.streak-info strong { font-size: 1rem; color: #ef4444; }
+.streak-info small  { font-size: 0.65rem; color: rgba(255,255,255,0.45); display: block; }
+
+/* ── Animated counter ── */
+.pts-counter-animating { transition: none; }
+
+/* ── Achievement gallery ── */
+.achievements-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.achievement-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 5px 10px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  cursor: default;
+}
+.achievement-chip.earned {
+  background: rgba(247,171,0,0.1);
+  border-color: rgba(247,171,0,0.3);
+  color: #F7AB00;
+}
+.achievement-chip.earned .ach-icon { filter: none; }
+.achievement-chip .ach-icon { filter: grayscale(1) opacity(0.4); }
+
+/* perf-mode overrides for gamification */
+body.perf-mode .tier-ring--platin::after,
+body.perf-mode .tier-ring--diamond::after,
+body.perf-mode .tier-ring--legend::after,
+body.perf-mode .streak-fire { animation: none !important; }

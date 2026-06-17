@@ -176,9 +176,28 @@ function showToast(message, type = '') {
 // Points System
 // =============================================
 async function addPoints(amount, reason = '') {
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const ptsBefore = user?.points || 0;
+  const tierBefore = _getTier(ptsBefore);
+
   const newPts = await ZAMApi.points.add(amount, reason, reason);
-  updatePointsDisplay(true);
-  if (reason) showToast(`+${amount} Punkte · ${reason}`, 'success');
+
+  const tierAfter = _getTier(newPts || ptsBefore + amount);
+  const leveledUp = tierAfter.key !== tierBefore.key;
+
+  // Animated counter on home card
+  const homeEl = document.getElementById('home-points-value');
+  if (homeEl) _animateCounter(homeEl, ptsBefore, newPts || ptsBefore + amount, 900);
+
+  updatePointsDisplay(false);
+  showPointsAnimation(amount, reason);
+
+  if (leveledUp) {
+    setTimeout(() => showLevelUpAnimation(tierAfter), 1600);
+    // Unlock legend achievement
+    if (tierAfter.key === 'legend') _unlockAchievement('zam_legend');
+  }
+
   return newPts;
 }
 
@@ -199,34 +218,282 @@ function updatePointsDisplay(animate = false) {
   }
   if (profileEl) profileEl.textContent = pts.toLocaleString('de-DE');
 
-  // Level
-  const levelKey = pts >= 3000 ? 'platinum' : pts >= 1500 ? 'gold' : pts >= 500 ? 'silver' : 'bronze';
-  const levelMap = { bronze: 'BRONZE', silver: 'SILBER', gold: 'GOLD', platinum: 'PLATIN' };
-  const levelDisplay = { bronze: 'Bronze Member', silver: 'Silber Member', gold: 'Gold Member', platinum: 'Platin Member' };
-  if (levelBadge) levelBadge.textContent = levelMap[levelKey];
+  // Tier (new 6-level system)
+  const tier = _getTier(pts);
+  const nextTier = _getNextTier(pts);
+  if (levelBadge) levelBadge.textContent = tier.label.toUpperCase();
   const levelEl = $('.points-level');
-  if (levelEl) levelEl.innerHTML = `<span class="points-level-dot"></span>${levelDisplay[levelKey]}`;
+  if (levelEl) levelEl.innerHTML = `<span class="points-level-dot"></span>${tier.emoji} ${tier.label} Member`;
 
   // Progress bar
-  const thresholds = { bronze: [0, 500], silver: [500, 1500], gold: [1500, 3000], platinum: [3000, 3000] };
-  const [min, max] = thresholds[levelKey];
   const progressFill = $('.points-progress-fill');
   if (progressFill) {
-    const pct = levelKey === 'platinum' ? 100 : Math.min(((pts - min) / (max - min)) * 100, 100);
+    const pct = nextTier
+      ? Math.min(((pts - tier.min) / (nextTier.min - tier.min)) * 100, 100)
+      : 100;
     progressFill.style.width = pct + '%';
   }
   if (progressLabel) {
-    if (levelKey === 'platinum') {
-      progressLabel.textContent = '🎉 Platin erreicht!';
+    if (!nextTier) {
+      progressLabel.textContent = `👑 Legend – Maximales Level!`;
     } else {
-      const nextLevelName = { bronze: 'Silber', silver: 'Gold', gold: 'Platin' }[levelKey];
-      progressLabel.textContent = `${pts.toLocaleString('de-DE')} / ${max.toLocaleString('de-DE')} Pkt. bis ${nextLevelName}`;
+      const remaining = (nextTier.min - pts).toLocaleString('de-DE');
+      progressLabel.textContent = `${nextTier.emoji} Noch ${remaining} Punkte bis ${nextTier.label}`;
     }
+  }
+
+  // Apply tier ring to profile avatar
+  const avatarEl = document.getElementById('profile-avatar');
+  if (avatarEl && avatarEl.parentElement) {
+    avatarEl.parentElement.classList.forEach(c => { if (c.startsWith('tier-ring')) avatarEl.parentElement.classList.remove(c); });
+    avatarEl.parentElement.classList.add('tier-ring', `tier-ring--${tier.key}`);
   }
 }
 
 // =============================================
-// Navigation
+// GAMIFICATION — Tiers, Animations, Streaks
+// =============================================
+
+const _TIERS = [
+  { key: 'starter', label: 'Starter',  emoji: '🔵', min: 0,     max: 999,      color: '#3b82f6', perks: '✅ Zugang zu Community\n✅ Tägliche Spin-Chancen' },
+  { key: 'silver',  label: 'Silber',   emoji: '⚪', min: 1000,  max: 2999,     color: '#9ca3af', perks: '✅ Silber-Profilrahmen\n✅ Exklusive Silver-Deals' },
+  { key: 'gold',    label: 'Gold',     emoji: '🟡', min: 3000,  max: 7499,     color: '#F7AB00', perks: '✅ Goldener Profilrahmen\n✅ Bonus-Punkte bei Events\n✅ Gold-Exklusive Angebote' },
+  { key: 'platin',  label: 'Platin',   emoji: '✨', min: 7500,  max: 14999,    color: '#e2e8f0', perks: '✅ Animierter Platin-Rahmen\n✅ Frühzeitiger Deal-Zugang\n✅ VIP-Event-Einladungen' },
+  { key: 'diamond', label: 'Diamond',  emoji: '💎', min: 15000, max: 24999,    color: '#60a5fa', perks: '✅ Diamant-Rahmen + Partikel\n✅ Diamond-Lounge Zugang\n✅ Persönlicher Vorteil-Code' },
+  { key: 'legend',  label: 'Legend',   emoji: '👑', min: 25000, max: Infinity,  color: '#F7AB00', perks: '✅ Goldener Legend-Rahmen\n✅ Krone + Gold-Partikel\n✅ Hall of Fame Eintrag\n✅ Alle Vorteile inklusive' },
+];
+
+function _getTier(pts) {
+  for (let i = _TIERS.length - 1; i >= 0; i--) {
+    if (pts >= _TIERS[i].min) return _TIERS[i];
+  }
+  return _TIERS[0];
+}
+
+function _getNextTier(pts) {
+  const cur = _getTier(pts);
+  const idx = _TIERS.indexOf(cur);
+  return idx < _TIERS.length - 1 ? _TIERS[idx + 1] : null;
+}
+
+function _tierRingHTML(pts, size = 40, initials = '?', color = '#FA4615') {
+  const tier = _getTier(pts);
+  return `<div class="tier-ring tier-ring--${tier.key}" style="width:${size}px;height:${size}px;background:${color};font-size:${Math.round(size*0.32)}px;font-weight:800;color:#fff">${initials}</div>`;
+}
+
+function _tierBadgeHTML(pts) {
+  const tier = _getTier(pts);
+  return `<span class="tier-badge tier-badge--${tier.key}">${tier.emoji} ${tier.label}</span>`;
+}
+
+// Animated counter — ticks from `from` to `to` over `ms` ms
+function _animateCounter(el, from, to, ms = 900) {
+  if (!el) return;
+  const start = performance.now();
+  const diff = to - from;
+  function frame(now) {
+    const elapsed = Math.min(now - start, ms);
+    const progress = 1 - Math.pow(1 - elapsed / ms, 3); // ease-out cubic
+    el.textContent = Math.round(from + diff * progress).toLocaleString('de-DE');
+    if (elapsed < ms) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// Points float animation — big badge appears in center, then fades out
+function showPointsAnimation(amount, reason = '') {
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const pts = user?.points || 0;
+  const nextTier = _getNextTier(pts);
+  const goalText = nextTier
+    ? `⭐ Noch ${(nextTier.min - pts).toLocaleString('de-DE')} Punkte bis ${nextTier.emoji} ${nextTier.label}`
+    : '👑 Maximales Level erreicht!';
+
+  let overlay = document.getElementById('zam-pts-anim');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'zam-pts-anim';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `
+    <div class="zam-pts-badge">⭐ +${amount}</div>
+    ${reason ? `<div class="zam-pts-label">${reason}</div>` : ''}
+    <div class="zam-pts-goal">${goalText}</div>`;
+
+  // Spawn confetti
+  _spawnConfetti(16);
+
+  // Auto-dismiss after 1.4s with fly-out
+  setTimeout(() => {
+    const badge = overlay.querySelector('.zam-pts-badge');
+    if (badge) badge.style.animation = 'pts-fly-out 0.4s ease forwards';
+    setTimeout(() => { overlay.innerHTML = ''; }, 450);
+  }, 1200);
+}
+
+function _spawnConfetti(count = 20) {
+  const colors = ['#FA4615','#F7AB00','#34d399','#60a5fa','#f472b6','#a78bfa'];
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const x = (Math.random() - 0.5) * 260;
+    const y = -(80 + Math.random() * 160);
+    const rot = (Math.random() > 0.5 ? 1 : -1) * (180 + Math.random() * 360);
+    const dur = 0.8 + Math.random() * 0.6;
+    piece.style.cssText = `left:${40 + Math.random()*20}%;top:35%;background:${colors[i % colors.length]};--fx:${x}px;--fy:${y}px;--rot:${rot}deg;--dur:${dur}s;border-radius:${Math.random() > 0.5 ? '50%' : '2px'};width:${6+Math.random()*6}px;height:${6+Math.random()*6}px`;
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), dur * 1000 + 100);
+  }
+}
+
+// Level-up celebration overlay
+function showLevelUpAnimation(tier) {
+  let overlay = document.getElementById('zam-levelup-overlay');
+  if (overlay) overlay.remove();
+  overlay = document.createElement('div');
+  overlay.id = 'zam-levelup-overlay';
+  overlay.innerHTML = `
+    <div class="zam-levelup-card">
+      <span class="zam-levelup-emoji">${tier.emoji}</span>
+      <div class="zam-levelup-title">🎉 Level aufgestiegen!</div>
+      <div class="zam-levelup-name">${tier.label}</div>
+      <div class="zam-levelup-sub">Neues Level erreicht</div>
+      <div class="zam-levelup-perks">${tier.perks.replace(/\n/g,'<br>')}</div>
+      <button class="zam-levelup-close" onclick="document.getElementById('zam-levelup-overlay').remove()">🎉 Weiter!</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  _spawnConfetti(35);
+  // Auto-close after 4s
+  setTimeout(() => overlay?.remove(), 4000);
+}
+
+// ── Daily Streak ──
+const _STREAK_KEY = 'zam_streak_v1';
+const _STREAK_MILESTONES = [
+  { days: 3,   pts: 25,  label: '3 Tage Streak' },
+  { days: 7,   pts: 75,  label: '7 Tage Streak' },
+  { days: 14,  pts: 150, label: '2 Wochen Streak' },
+  { days: 30,  pts: 300, label: '30 Tage Streak' },
+  { days: 100, pts: 1000,label: '100 Tage Streak' },
+];
+
+function _getStreak() {
+  try { return JSON.parse(localStorage.getItem(_STREAK_KEY) || '{"days":0,"last":"","bonus_claimed":[]}'); }
+  catch { return { days: 0, last: '', bonus_claimed: [] }; }
+}
+function _saveStreak(s) { localStorage.setItem(_STREAK_KEY, JSON.stringify(s)); }
+
+function checkDailyStreak() {
+  const today = Storage.todayKey();
+  const s = _getStreak();
+  if (s.last === today) return s; // already counted today
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (s.last === yesterday) {
+    s.days += 1;
+  } else if (s.last !== today) {
+    s.days = 1; // reset
+    s.bonus_claimed = [];
+  }
+  s.last = today;
+  _saveStreak(s);
+
+  // Check milestone bonuses
+  const claimed = s.bonus_claimed || [];
+  for (const m of _STREAK_MILESTONES) {
+    if (s.days >= m.days && !claimed.includes(m.days)) {
+      claimed.push(m.days);
+      s.bonus_claimed = claimed;
+      _saveStreak(s);
+      setTimeout(() => {
+        addPoints(m.pts, `🔥 ${m.label}! Bonus`);
+      }, 1500);
+      break;
+    }
+  }
+  return s;
+}
+
+function _renderStreakBanner(containerId) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const s = _getStreak();
+  if (s.days < 2) { c.innerHTML = ''; return; }
+  const next = _STREAK_MILESTONES.find(m => m.days > s.days);
+  const sub = next ? `Noch ${next.days - s.days} Tage bis +${next.pts} Bonus-Punkte` : '🏆 Streak-Meister!';
+  c.innerHTML = `
+    <div class="streak-banner">
+      <span class="streak-fire">🔥</span>
+      <div class="streak-info">
+        <strong>${s.days} Tage Streak!</strong>
+        <small>${sub}</small>
+      </div>
+    </div>`;
+}
+
+// ── Achievements ──
+const _ACHIEVEMENTS = [
+  { key: 'foto_profi',      icon: '📸', name: 'Foto-Profi',      desc: '5 Fotos in der Community geteilt' },
+  { key: 'food_explorer',   icon: '🍔', name: 'Food Explorer',    desc: '3 verschiedene Food-Händler besucht' },
+  { key: 'shopping_king',   icon: '🛍️', name: 'Shopping King',   desc: '10 Deals eingelöst' },
+  { key: 'glueckspilz',     icon: '🎰', name: 'Glückspilz',       desc: '3× beim Daily Spin gewonnen' },
+  { key: 'event_hunter',    icon: '🏃', name: 'Event Hunter',     desc: '5 Events besucht' },
+  { key: 'challenge_master',icon: '🎯', name: 'Challenge Master', desc: '10 Challenges abgeschlossen' },
+  { key: 'zam_legend',      icon: '👑', name: 'ZAM Legend',       desc: 'Legend-Status erreicht' },
+];
+
+function _getAchievements() {
+  try { return JSON.parse(localStorage.getItem('zam_achievements_v1') || '[]'); } catch { return []; }
+}
+function _unlockAchievement(key) {
+  const list = _getAchievements();
+  if (list.includes(key)) return false;
+  list.push(key);
+  localStorage.setItem('zam_achievements_v1', JSON.stringify(list));
+  const a = _ACHIEVEMENTS.find(x => x.key === key);
+  if (a) showBadgeUnlockToast({ icon: a.icon, name: a.name });
+  return true;
+}
+
+function renderAchievements(containerId) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const earned = _getAchievements();
+  c.innerHTML = `<div class="achievements-row">${_ACHIEVEMENTS.map(a => `
+    <div class="achievement-chip ${earned.includes(a.key) ? 'earned' : ''}" title="${a.desc}">
+      <span class="ach-icon">${a.icon}</span>${a.name}
+    </div>`).join('')}</div>`;
+}
+
+// ── Challenge completion animation ──
+function showChallengeComplete(pts, rewardLabel = '') {
+  showPointsAnimation(pts, rewardLabel || 'Challenge abgeschlossen! 🎯');
+  _unlockAchievement('challenge_master'); // tracked separately; just attempt
+}
+
+// ── Ranking motivational hint ──
+function _rankingHint(pts) {
+  const me = _RANKING_DEMO.find(r => r.isMe);
+  const myRank = me?.rank || 17;
+  const lines = [];
+  // Next tier
+  const nextTier = _getNextTier(pts);
+  if (nextTier) {
+    lines.push(`${nextTier.emoji} Noch ${(nextTier.min - pts).toLocaleString('de-DE')} Punkte bis ${nextTier.label}`);
+  }
+  // Rank targets
+  const rankTargets = [{rank:10,pts:2750},{rank:3,pts:3950},{rank:1,pts:4820}];
+  for (const t of rankTargets) {
+    if (myRank > t.rank && pts < t.pts) {
+      const diff = t.pts - pts;
+      lines.push(`🏆 Noch ${diff.toLocaleString('de-DE')} Punkte bis Platz ${t.rank}`);
+      break;
+    }
+  }
+  return lines[0] || '';
+}
+
+// =============================================
+// Navigation (continued)
 // =============================================
 function navigateTo(pageId) {
   // Close overlays, unlock scroll
@@ -543,8 +810,8 @@ function _renderHomeRankStats(user) {
   if (!el) return;
   const pts = user?.points || 2460;
   const rank = 17;
-  const ptsToPlatin = 3000 - pts;
   const todayPts = parseInt(localStorage.getItem('zam_today_pts_' + Storage.todayKey()) || '25');
+  const hint = _rankingHint(pts);
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)">
       <div style="text-align:center">
@@ -556,10 +823,11 @@ function _renderHomeRankStats(user) {
         <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">Heute</div>
       </div>
       <div style="text-align:center">
-        <div style="font-size:1.1rem;font-weight:900;color:#ffb399">${ptsToPlatin}</div>
-        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">bis Platin</div>
+        <div style="font-size:0.88rem;font-weight:900;color:#ffb399">${_getTier(pts).emoji} ${_getTier(pts).label}</div>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">Level</div>
       </div>
-    </div>`;
+    </div>
+    ${hint ? `<div style="margin-top:8px;padding:6px 10px;background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.18);border-radius:8px;font-size:0.65rem;font-weight:700;color:#F7AB00;text-align:center">${hint}</div>` : ''}`;
 }
 
 function _renderHomeRankingCard() {
@@ -776,8 +1044,8 @@ async function renderChallenges() {
 async function claimChallenge(challengeId) {
   const result = await ZAMApi.challenges.claim(challengeId);
   if (!result) return;
-  showToast(`🎉 +${result.points} Punkte! Challenge abgeschlossen!`, 'success');
-  updatePointsDisplay(true);
+  showChallengeComplete(result.points, `📸 Challenge abgeschlossen`);
+  updatePointsDisplay(false);
   renderChallenges();
   await checkBadgesAfterAction();
 }
@@ -1191,12 +1459,14 @@ function renderPostCard(post, idx) {
   const deleteBtn = isOwn ? `<button class="post-delete-btn" title="Löschen" aria-label="Beitrag löschen">🗑</button>` : '';
   const statusBadge = post.status === 'pending' ? `<span style="font-size:0.68rem;color:#F7AB00;margin-left:6px">⏳ ausstehend</span>` : '';
 
+  const authorPts = post.author?.points || 0;
+  const authorTier = _getTier(authorPts);
   div.innerHTML = `
     <div class="post-header">
-      <div class="post-avatar" style="background:${post.author?.avatar_color || '#FA4615'}">${post.author?.initials || '?'}</div>
+      <div class="tier-ring tier-ring--${authorTier.key}" style="width:38px;height:38px;background:${post.author?.avatar_color || '#FA4615'};font-size:13px;font-weight:800;color:#fff;flex-shrink:0">${post.author?.initials || '?'}</div>
       <div class="post-author-info">
         <div class="post-author-name">${post.author?.name || 'Unbekannt'}${statusBadge}</div>
-        <div class="post-author-level">${post.author?.level || 'Member'}</div>
+        <div class="post-author-level" style="display:flex;align-items:center;gap:4px"><span class="tier-badge tier-badge--${authorTier.key}">${authorTier.emoji} ${authorTier.label}</span></div>
       </div>
       <div class="post-time">${post.time_ago || ''}</div>
       ${deleteBtn}
@@ -1752,6 +2022,9 @@ async function renderProfile() {
   renderRoleActions();
   await renderSavedSummary();
   renderChallenges();
+  checkDailyStreak();
+  _renderStreakBanner('profile-streak-banner');
+  renderAchievements('profile-achievements-container');
 
   // Update Nearby badge in profile
   const nearbyBadge = document.getElementById('nearby-profile-badge');
@@ -6247,6 +6520,7 @@ function init() {
   }
 
   initAuth();
+  checkDailyStreak();
 }
 
 // Register Service Worker (Phase 11)
