@@ -1541,6 +1541,7 @@ function renderDealCard(deal, idx) {
       </div>
       <div class="deal-actions">
         <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn deal-action-social">👥 Gemeinsam</button>
+        <button id="di_btn_${deal.id}" onclick="_toggleDealInterestUI('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn" style="background:${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.2)' : 'rgba(255,255,255,0.07)'};border:1px solid ${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.4)' : 'rgba(255,255,255,0.12)'};color:${_isInterestedInDeal(deal.id) ? '#F7AB00' : 'rgba(255,255,255,0.55)'};border-radius:10px;padding:0 10px;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">${_isInterestedInDeal(deal.id) ? '⭐ Interessiert' : '⭐ Interessiert?'}</button>
         <button onclick="openVoucherQR('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}','${deal.merchant_id||''}');event.stopPropagation()" class="deal-action-btn deal-action-redeem">🎟 Einlösen</button>
         <button class="${deal.is_claimed ? 'btn btn-sm claimed save-voucher-button' : 'btn btn-primary btn-sm save-voucher-button'}" data-idx="${idx}">
           ${deal.is_claimed ? '✓ Eingelöst' : 'Gutschein sichern'}
@@ -5521,6 +5522,47 @@ function openPCFromActiveUsers(userId, userName, initials) {
 let _currentDealMatchId = '';
 let _currentDealMatchTitle = '';
 
+// =============================================
+// DEAL-INTERESSE (Interessierte Nutzer)
+// =============================================
+const _DI_KEY = 'zam_deal_interested_v1';
+
+function _getDealInterested(dealId) {
+  try { return JSON.parse(localStorage.getItem(_DI_KEY) || '{}'); } catch { return {}; }
+}
+function _isInterestedInDeal(dealId) {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) return false;
+  const all = _getDealInterested();
+  return !!(all[dealId] || []).find(e => e.user_id === me.id);
+}
+function _toggleDealInterest(dealId, dealTitle) {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) return false;
+  const all = _getDealInterested();
+  const list = all[dealId] || [];
+  const idx  = list.findIndex(e => e.user_id === me.id);
+  if (idx >= 0) {
+    list.splice(idx, 1);
+    all[dealId] = list;
+    localStorage.setItem(_DI_KEY, JSON.stringify(all));
+    return false; // removed
+  } else {
+    list.push({ user_id: me.id, user_name: me.display_name || me.username || 'Ich', user_initials: (me.display_name || me.username || '?').slice(0, 2).toUpperCase(), deal_title: dealTitle, added_at: Date.now() });
+    all[dealId] = list;
+    localStorage.setItem(_DI_KEY, JSON.stringify(all));
+    return true; // added
+  }
+}
+
+// Demo interested users shown in the bottom sheet (per deal)
+const _DI_DEMO = [
+  { id: 'demo_tom',   name: 'Tom W.',   initials: 'TW', color: '#d97706', last_seen: Date.now(),               last_seen_label: 'gerade online' },
+  { id: 'demo_sarah', name: 'Sarah L.', initials: 'SL', color: '#6b7280', last_seen: Date.now() - 12 * 60000,  last_seen_label: 'vor 12 Min.' },
+  { id: 'demo_felix', name: 'Felix B.', initials: 'FB', color: '#059669', last_seen: Date.now() - 60 * 60000,  last_seen_label: 'vor 1 Std.' },
+  { id: 'demo_emma',  name: 'Emma R.',  initials: 'ER', color: '#b45309', last_seen: Date.now() - 24 * 3600000, last_seen_label: 'gestern' },
+];
+
 function openDealMatch(dealId, dealTitle) {
   _currentDealMatchId = dealId;
   _currentDealMatchTitle = dealTitle;
@@ -5528,35 +5570,112 @@ function openDealMatch(dealId, dealTitle) {
   const inner = $('#active-users-sheet-inner');
   if (!sheet || !inner) return;
 
-  // Hide my-status section, show deal context
   const myStatusRow = $('#my-status-row');
   if (myStatusRow) myStatusRow.style.display = 'none';
 
-  const users = getActiveUsers().filter(u => AU_DEAL_STATUSES.includes(u.status));
   const countEl = $('#active-users-count');
-  if (countEl) countEl.textContent = `${users.length} Nutzer suchen einen Deal-Partner`;
+  if (countEl) countEl.textContent = 'Deal gemeinsam einlösen';
 
   const list = $('#active-users-list');
   if (list) {
-    const header = `<div style="background:rgba(5,150,105,0.1);border:1px solid rgba(5,150,105,0.2);border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:0.78rem;color:#34d399;font-weight:600">🏷️ ${esc(dealTitle)}</div>`;
-    if (!users.length) {
-      list.innerHTML = header + `<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.35);font-size:0.75rem;line-height:1.5">Niemand sucht gerade einen Deal-Partner.<br><br>Setze deinen Status auf<br>„🤝 Suche 2-für-1" um sichtbar zu werden!</div>
-        <button class="btn btn-ghost btn-full" onclick="setMyAppStatus('🤝 Suche 2-für-1')" style="margin-top:8px">Status setzen</button>`;
-    } else {
-      list.innerHTML = header + users.map(u => `<div class="deal-match-row">
+    const me = ZAMApi.auth.currentUser();
+    const activeUsers = getActiveUsers().filter(u => AU_DEAL_STATUSES.includes(u.status));
+
+    // Interested users: demo + any real users who toggled interest
+    const allInterested = _getDealInterested();
+    const realInterested = (allInterested[dealId] || []).filter(e => e.user_id !== me?.id);
+    const interestedUsers = [
+      ..._DI_DEMO,
+      ...realInterested.map(e => ({
+        id: e.user_id, name: e.user_name, initials: e.user_initials,
+        color: '#FA4615', last_seen: e.added_at, last_seen_label: timeAgo(e.added_at)
+      }))
+    ];
+
+    const sentReqIds = new Set(_getDealRequests().filter(r => r.from_id === me?.id && r.status === 'offen').map(r => r.to_id));
+
+    const dealBanner = `<div style="background:rgba(5,150,105,0.1);border:1px solid rgba(5,150,105,0.2);border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:0.78rem;color:#34d399;font-weight:600">🏷️ ${esc(dealTitle)}</div>`;
+
+    // Active users section
+    const activeHtml = activeUsers.length ? activeUsers.map(u => {
+      const sent = sentReqIds.has(u.id);
+      return `<div class="deal-match-row">
         <div style="width:38px;height:38px;border-radius:50%;background:${u.color};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0">${u.initials}</div>
         <div style="flex:1;min-width:0;margin-left:10px">
           <div style="font-size:0.82rem;font-weight:600;color:#e2e8f0">${esc(u.name)}</div>
           <div style="font-size:0.68rem;color:rgba(255,255,255,0.4)">${esc(u.status)}</div>
         </div>
-        <button class="deal-match-btn" onclick="requestDealPartner('${u.id}','${esc(u.name)}',\`${esc(dealTitle)}\`,\`${esc(dealId)}\`)">Anfragen</button>
-      </div>`).join('');
-    }
+        <button class="deal-match-btn _dmb_active" data-uid="${u.id}" data-name="${esc(u.name)}" data-deal="${esc(dealTitle)}" data-dealid="${esc(dealId)}" ${sent ? 'disabled style="opacity:0.5"' : ''}>${sent ? '✓ Angefragt' : 'Anfragen'}</button>
+      </div>`;
+    }).join('') : `<div style="font-size:0.74rem;color:rgba(255,255,255,0.35);padding:12px 0 4px;text-align:center">Niemand gerade online für diesen Deal.</div>`;
+
+    // Interested (offline) users section
+    const intHtml = interestedUsers.length ? interestedUsers.map(u => {
+      const sent = sentReqIds.has(u.id);
+      return `<div class="deal-match-row">
+        <div style="position:relative;width:38px;height:38px;flex-shrink:0">
+          <div style="width:38px;height:38px;border-radius:50%;background:${u.color};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff">${u.initials}</div>
+          <div style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:#4b5563;border:2px solid #1a1a1a"></div>
+        </div>
+        <div style="flex:1;min-width:0;margin-left:10px">
+          <div style="font-size:0.82rem;font-weight:600;color:#e2e8f0">${esc(u.name)}</div>
+          <div style="font-size:0.65rem;color:rgba(255,255,255,0.35)">🕐 zuletzt online ${esc(u.last_seen_label)}</div>
+        </div>
+        <button class="deal-match-btn _dmb_interested" data-uid="${u.id}" data-name="${esc(u.name)}" data-deal="${esc(dealTitle)}" data-dealid="${esc(dealId)}" ${sent ? 'disabled style="opacity:0.5"' : ''}>${sent ? '✓ Angefragt' : 'Anfragen'}</button>
+      </div>`;
+    }).join('') : `<div style="font-size:0.74rem;color:rgba(255,255,255,0.35);padding:12px 0 4px;text-align:center">Noch keine Nutzer als interessiert markiert.</div>`;
+
+    // "Ich suche jemanden" toggle
+    const alreadyInterested = _isInterestedInDeal(dealId);
+    const selfToggle = `<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07)">
+      <button id="_di_self_btn" onclick="_toggleDealInterestUI('${esc(dealId)}','${esc(dealTitle)}')" style="width:100%;background:${alreadyInterested ? 'rgba(239,68,68,0.1)' : 'rgba(250,70,21,0.1)'};border:1.5px solid ${alreadyInterested ? 'rgba(239,68,68,0.3)' : 'rgba(250,70,21,0.3)'};border-radius:12px;padding:11px;color:${alreadyInterested ? '#ef4444' : '#FA4615'};font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">
+        ${alreadyInterested ? '👁 Nicht mehr als interessiert anzeigen' : '⭐ Ich suche jemanden für diesen Deal'}
+      </button>
+      ${alreadyInterested ? '<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);text-align:center;margin-top:6px">Du bist sichtbar. Andere können dich anfragen.</div>' : ''}
+    </div>`;
+
+    list.innerHTML = dealBanner +
+      `<div style="font-size:0.65rem;font-weight:800;color:rgba(52,211,153,0.8);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">👥 Aktive Nutzer <span style="font-weight:400;color:rgba(255,255,255,0.3)">· Gerade online</span></div>` + activeHtml +
+      `<div style="font-size:0.65rem;font-weight:800;color:rgba(247,171,0,0.8);text-transform:uppercase;letter-spacing:0.06em;margin:14px 0 8px">⭐ Interessierte Nutzer <span style="font-weight:400;color:rgba(255,255,255,0.3)">· Nicht online</span></div>` + intHtml +
+      selfToggle;
+
+    // Delegate button clicks
+    list.querySelectorAll('._dmb_active,._dmb_interested').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const b = e.currentTarget;
+        requestDealPartner(b.dataset.uid, b.dataset.name, b.dataset.deal, b.dataset.dealid);
+        b.textContent = '✓ Angefragt';
+        b.disabled = true;
+        b.style.opacity = '0.5';
+      });
+    });
   }
 
   sheet.style.display = 'flex';
   requestAnimationFrame(() => { inner.style.transform = 'translateX(-50%) translateY(0)'; });
 }
+
+function _toggleDealInterestUI(dealId, dealTitle) {
+  const added = _toggleDealInterest(dealId, dealTitle);
+  if (added) {
+    showToast('⭐ Du bist jetzt als interessiert sichtbar. Andere können dich anfragen.', 'success');
+  } else {
+    showToast('Nicht mehr als interessiert angezeigt.');
+  }
+  // Update deal card button if visible
+  const cardBtn = document.getElementById('di_btn_' + dealId);
+  if (cardBtn) {
+    cardBtn.textContent = added ? '⭐ Interessiert' : '⭐ Interessiert?';
+    cardBtn.style.background = added ? 'rgba(247,171,0,0.2)' : 'rgba(255,255,255,0.07)';
+    cardBtn.style.borderColor = added ? 'rgba(247,171,0,0.4)' : 'rgba(255,255,255,0.12)';
+    cardBtn.style.color = added ? '#F7AB00' : 'rgba(255,255,255,0.55)';
+  }
+  // If bottom sheet is open for this deal, refresh it
+  const sheet = document.getElementById('active-users-sheet');
+  if (sheet && sheet.style.display !== 'none') openDealMatch(dealId, dealTitle);
+}
+
 
 // =============================================
 // DEAL-ANFRAGEN (Deal Match Request System)
