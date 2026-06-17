@@ -4015,7 +4015,7 @@ function openVideoDrehModal() {
       _ta('Kurze Beschreibung', '_vd_desc', 'Was soll gezeigt werden? Welches Ziel hat der Dreh?') +
       _ta('Bemerkungen', '_vd_notes', 'Besondere Wünsche, Termine, Einschränkungen …') +
       '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;margin-bottom:14px">' +
-        '<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.6">Diese Preise gelten ausschließlich für aktive ZAM Club Händler und sind nicht öffentlich buchbar.<br>Exklusiver Händler-Vorteil durch die Zusammenarbeit mit LAMOR AGENCY.</div>' +
+        '<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.6">Diese Preise gelten ausschließlich für aktive ZAM Club Händler und sind nicht öffentlich buchbar. Exklusiver Händler-Vorteil durch die Zusammenarbeit mit LAMOR AGENCY.<br><span style="color:rgba(255,255,255,0.2)">Anfragen werden an info@lamoragency.de weitergeleitet.</span></div>' +
       '</div>' +
       _submitBtn('🎥 Videodreh anfragen', 'submitVideoDrehRequest()') +
     '</div>'
@@ -4068,9 +4068,9 @@ function submitVideoDrehRequest() {
   list.unshift(req);
   _saveVideoDrehRequests(list);
 
-  // Admin notification
+  // Admin notification — forwarded to info@lamoragency.de
   const notifs = JSON.parse(localStorage.getItem('zam_admin_notifications') || '[]');
-  notifs.unshift({ id:'vdn_'+Date.now(), type:'videodreh', title:'🎥 Neue Videodreh-Anfrage', body: req.merchant_name + ' – ' + pkg?.name + ' (' + pkg?.price + ' € netto)', read: false, created_at: new Date().toISOString() });
+  notifs.unshift({ id:'vdn_'+Date.now(), type:'videodreh', title:'🎥 Neue Videodreh-Anfrage', body: req.merchant_name + ' – ' + pkg?.name + ' (' + pkg?.price + ' € netto) → info@lamoragency.de', read: false, created_at: new Date().toISOString() });
   localStorage.setItem('zam_admin_notifications', JSON.stringify(notifs.slice(0, 50)));
 
   _merchantModalClose('_vd_modal');
@@ -4079,37 +4079,19 @@ function submitVideoDrehRequest() {
 }
 
 function _renderMerchantVideoDrehSection(me) {
-  const kpiGridEl = document.getElementById('merchant-kpi-grid');
-  if (!kpiGridEl) return;
-  const view = kpiGridEl.closest('.view') || kpiGridEl.parentNode;
-  if (!view) return;
+  const wrap = document.getElementById('merchant-videodreh-wrap');
+  if (!wrap) return;
 
   const myReqs = _getVideoDrehRequests().filter(r => r.merchant_id === me?.id);
-
-  let wrap = document.getElementById('merchant-videodreh-wrap');
-  if (!wrap) {
-    wrap = document.createElement('div');
-    wrap.id = 'merchant-videodreh-wrap';
-    view.appendChild(wrap);
-  }
+  if (!myReqs.length) { wrap.innerHTML = ''; return; }
 
   const statusLabel = { angefragt:'⏳ Angefragt', 'in_pruefung':'🔍 In Prüfung', bestaetigt:'✅ Bestätigt', erledigt:'🎉 Erledigt', abgelehnt:'❌ Abgelehnt' };
   const statusColor = { angefragt:'rgba(247,171,0,0.8)', 'in_pruefung':'rgba(96,165,250,0.8)', bestaetigt:'rgba(52,211,153,0.8)', erledigt:'rgba(52,211,153,1)', abgelehnt:'rgba(239,68,68,0.8)' };
 
   wrap.innerHTML = `
-    <div style="padding:0 16px 16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <h3 style="font-size:0.9rem;font-weight:700">🎥 Meine Videodreh-Anfragen</h3>
-        <button onclick="openVideoDrehModal()" style="background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border:none;border-radius:10px;padding:7px 14px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:var(--font)">+ Anfrage</button>
-      </div>
-      ${!myReqs.length ? `
-        <div onclick="openVideoDrehModal()" style="border:1.5px dashed rgba(250,70,21,0.35);border-radius:16px;padding:20px 16px;text-align:center;cursor:pointer">
-          <div style="font-size:1.6rem;margin-bottom:8px">🎥</div>
-          <div style="font-size:0.82rem;font-weight:700;color:#fff;margin-bottom:4px">Professionelle Reels für deine Deals</div>
-          <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-bottom:12px">Produziert durch LAMOR AGENCY – exklusiv für ZAM Club Händler</div>
-          <div style="display:inline-block;background:linear-gradient(135deg,#c43510,#FA4615);color:#fff;border-radius:10px;padding:8px 18px;font-size:0.78rem;font-weight:700">🎥 Jetzt anfragen · ab 250 € netto</div>
-        </div>
-      ` : myReqs.map(r => `
+    <div style="padding:0 16px 20px">
+      <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">📋 Meine Videodreh-Anfragen</div>
+      ${myReqs.map(r => `
         <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;margin-bottom:10px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
             <span style="font-size:0.78rem;font-weight:700;color:#fff">${r.package_id === 'premium_reel' ? '🎬' : '🎥'} ${escHtml(r.package_name)}</span>
@@ -7210,7 +7192,8 @@ function openMerchantEventModal() {
     _sel('Kategorie', '_ev_cat',
       '<option value="food">🍴 Food & Drink</option><option value="shopping">🛍️ Shopping</option><option value="entertainment">🎭 Entertainment</option><option value="kids">🧒 Kinder</option><option value="other">📌 Sonstiges</option>') +
     `<div style="margin-bottom:14px"><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Bild (optional)</label><input type="file" id="_ev_img" accept="image/*" onchange="_prvMerchImg('_ev_img','_ev_imgprev')" style="color:rgba(255,255,255,0.5);font-family:inherit;font-size:0.78rem"><img id="_ev_imgprev" style="display:none;width:100%;border-radius:10px;margin-top:8px;max-height:160px;object-fit:cover"></div>` +
-    _submitBtn('📤 Event einreichen', 'submitNewEvent()')
+    _submitBtn('📤 Event einreichen', 'submitNewEvent()') +
+    '<button type="button" onclick="_merchantModalClose(\'_dyn_event_modal\');openVideoDrehModal()" style="width:100%;box-sizing:border-box;background:rgba(250,70,21,0.08);border:1.5px solid rgba(250,70,21,0.35);border-radius:12px;padding:12px;color:#FA4615;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:8px">🎥 Passendes Reel produzieren lassen</button>'
   );
 }
 
@@ -7262,7 +7245,8 @@ function openMerchantDealModal() {
         '<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);padding:8px;background:rgba(247,171,0,0.08);border-radius:8px;border:1px solid rgba(247,171,0,0.15)">💡 Der Partner erhält eine Anfrage und ergänzt seinen eigenen Vorteil bevor der Deal aktiviert wird.</div>' +
       '</div>' +
     '</div>' +
-    _submitBtn('📤 Deal einreichen', 'submitNewDeal()')
+    _submitBtn('📤 Deal einreichen', 'submitNewDeal()') +
+    '<button type="button" onclick="_merchantModalClose(\'_dyn_deal_modal\');openVideoDrehModal()" style="width:100%;box-sizing:border-box;background:rgba(250,70,21,0.08);border:1.5px solid rgba(250,70,21,0.35);border-radius:12px;padding:12px;color:#FA4615;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:8px">🎥 Passendes Reel produzieren lassen</button>'
   );
 }
 
