@@ -952,8 +952,8 @@ a.nav-tab-map { text-decoration: none; }
 }
 
 @keyframes pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(250,70,21,0.65); }
-  70%  { box-shadow: 0 0 0 14px rgba(250,70,21,0); }
+  0%   { box-shadow: 0 0 0 0 rgba(250,70,21,0.35); }
+  70%  { box-shadow: 0 0 0 8px rgba(250,70,21,0); }
   100% { box-shadow: 0 0 0 0 rgba(250,70,21,0); }
 }
 .btn-pulse { animation: pulse 1.6s ease-out 2; }
@@ -1040,7 +1040,7 @@ a.nav-tab-map { text-decoration: none; }
   background: conic-gradient(#a02d0a 0deg 60deg,#FA4615 60deg 120deg,#a02d0a 120deg 180deg,#ff6b3d 180deg 240deg,#a02d0a 240deg 300deg,#FA4615 300deg 360deg);
   position: relative;
   transition: transform 2.5s cubic-bezier(0.17,0.67,0.12,0.99);
-  box-shadow: 0 0 0 4px rgba(160,45,10,0.4), 0 0 60px rgba(250,70,21,0.5);
+  box-shadow: 0 0 0 4px rgba(160,45,10,0.4);
   display: flex; align-items: center; justify-content: center; margin-bottom: 16px;
 }
 .spin-wheel::before {
