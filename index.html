@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" /></noscript>
 
-  <link rel="stylesheet" href="style.css?v=20260618b" />
+  <link rel="stylesheet" href="style.css?v=20260618c" />
   <link rel="manifest" href="manifest.json"/>
   <link rel="apple-touch-icon" href="assets/icon.svg"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -419,16 +419,23 @@
   ========================== -->
   <section id="page-profile" class="page" role="main" style="padding-bottom:calc(120px + env(safe-area-inset-bottom, 0px))">
 
-    <!-- Hero Banner -->
+    <!-- Profile Banner -->
+    <div class="profile-banner" id="profile-banner">
+      <button class="profile-banner-edit" onclick="openBannerPicker()">🖼️ Banner</button>
+    </div>
+
+    <!-- Hero -->
     <div class="profile-hero">
       <div class="profile-avatar-wrapper">
         <div class="profile-avatar-ring"></div>
         <div class="profile-avatar" id="profile-avatar">JM</div>
-        <div class="profile-level-badge">GOLD</div>
+        <div class="profile-level-badge" id="profile-level-badge">GOLD</div>
       </div>
       <div class="profile-name" id="profile-name">Julia Maier</div>
       <div class="profile-username" id="profile-username">@juliamaier</div>
+      <div id="profile-title-display"></div>
       <div class="profile-member-since" id="profile-member">Mitglied seit März 2024</div>
+      <div class="profile-top-badges" id="profile-top-badges-display"></div>
     </div>
 
     <!-- Profile Body Card -->
@@ -490,6 +497,11 @@
         </div>
       </div>
 
+      <!-- Erfolgs-Vitrine -->
+      <div class="vitrine-section" id="profile-vitrine">
+        <!-- Rendered by app.js -->
+      </div>
+
     </div>
 
     <!-- Role-based actions -->
@@ -511,6 +523,21 @@
     <div style="padding: 0 16px 4px">
       <button class="btn btn-ghost btn-full" onclick="openProfileEdit()">
         ✏️ Profil bearbeiten
+      </button>
+    </div>
+    <div style="padding: 0 16px 4px">
+      <button class="btn btn-ghost btn-full" onclick="openBannerPicker()" style="display:flex;align-items:center;gap:10px;justify-content:flex-start">
+        🖼️ <span>Banner auswählen</span>
+      </button>
+    </div>
+    <div style="padding: 0 16px 4px">
+      <button class="btn btn-ghost btn-full" onclick="openTopBadgePicker()" style="display:flex;align-items:center;gap:10px;justify-content:flex-start">
+        🏅 <span>Top 3 Badges auswählen</span>
+      </button>
+    </div>
+    <div style="padding: 0 16px 4px">
+      <button class="btn btn-ghost btn-full" onclick="openTitlePicker()" style="display:flex;align-items:center;gap:10px;justify-content:flex-start">
+        🏷️ <span>Profiltitel auswählen</span>
       </button>
     </div>
     <div style="padding: 0 16px 4px">
@@ -737,19 +764,61 @@
     </div>
   </div>
 
-  <!-- User Profile Sheet -->
+  <!-- User Profile Sheet (enhanced) -->
   <div class="sheet-backdrop" id="profile-sheet-backdrop" onclick="closeUserProfileSheet()"></div>
-  <div class="user-profile-sheet" id="user-profile-sheet" role="dialog" aria-label="Nutzerprofil">
-    <div class="user-profile-sheet-handle"></div>
-    <div class="user-profile-sheet-header">
-      <div class="user-profile-sheet-avatar" id="ups-avatar">?</div>
-      <div class="user-profile-sheet-info">
-        <div class="user-profile-sheet-name" id="ups-name">Nutzer</div>
-        <div class="user-profile-sheet-username" id="ups-username"></div>
+  <div class="user-profile-sheet" id="user-profile-sheet" role="dialog" aria-label="Nutzerprofil" style="padding:0">
+    <div class="ups-banner" id="ups-banner"></div>
+    <div class="user-profile-sheet-handle" style="margin-top:12px"></div>
+    <div class="ups-avatar-area" style="padding:0 16px">
+      <div id="ups-avatar" class="user-profile-sheet-avatar">?</div>
+      <div id="ups-name" class="user-profile-sheet-name" style="margin-top:6px;text-align:center"></div>
+      <div id="ups-username" class="user-profile-sheet-username" style="text-align:center"></div>
+      <div id="ups-title-display" style="margin-top:4px;text-align:center"></div>
+      <div id="ups-tier-row" class="ups-tier-badge"></div>
+    </div>
+    <div class="ups-rank-row" id="ups-rank-row"></div>
+    <div class="ups-top-badges-row" id="ups-top-badges-row"></div>
+    <div style="padding:0 16px 8px">
+      <div class="user-profile-sheet-actions" id="ups-actions"></div>
+    </div>
+    <div style="padding:0 16px 12px">
+      <div class="user-profile-sheet-danger" id="ups-danger"></div>
+    </div>
+  </div>
+
+  <!-- Banner Picker Modal -->
+  <div class="modal-overlay" id="modal-banner-picker" role="dialog" aria-modal="true" style="display:none;align-items:flex-end;justify-content:center">
+    <div class="modal-sheet" style="max-height:80vh;overflow-y:auto">
+      <div class="modal-handle"></div>
+      <div class="modal-header"><div class="modal-title">🖼️ Banner auswählen</div><button class="modal-close" onclick="closeBannerPicker()">✕</button></div>
+      <div style="padding:0 16px 20px">
+        <div class="banner-picker-grid" id="banner-picker-grid"></div>
       </div>
     </div>
-    <div class="user-profile-sheet-actions" id="ups-actions"></div>
-    <div class="user-profile-sheet-danger" id="ups-danger"></div>
+  </div>
+
+  <!-- Top Badge Picker Modal -->
+  <div class="modal-overlay" id="modal-badge-picker" role="dialog" aria-modal="true" style="display:none;align-items:flex-end;justify-content:center">
+    <div class="modal-sheet" style="max-height:80vh;overflow-y:auto">
+      <div class="modal-handle"></div>
+      <div class="modal-header"><div class="modal-title">🏅 Top 3 Badges auswählen</div><button class="modal-close" onclick="closeTopBadgePicker()">✕</button></div>
+      <div style="padding:0 16px 4px;font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:10px">Wähle bis zu 3 Badges die in deinem Profil hervorgehoben werden.</div>
+      <div style="padding:0 16px 20px">
+        <div class="badge-picker-grid" id="badge-picker-grid"></div>
+        <button class="btn btn-primary btn-full" style="margin-top:14px" onclick="saveTopBadges()">✅ Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Title Picker Modal -->
+  <div class="modal-overlay" id="modal-title-picker" role="dialog" aria-modal="true" style="display:none;align-items:flex-end;justify-content:center">
+    <div class="modal-sheet" style="max-height:80vh;overflow-y:auto">
+      <div class="modal-handle"></div>
+      <div class="modal-header"><div class="modal-title">🏷️ Profiltitel</div><button class="modal-close" onclick="closeTitlePicker()">✕</button></div>
+      <div style="padding:0 16px 20px">
+        <div class="title-picker-list" id="title-picker-list"></div>
+      </div>
+    </div>
   </div>
 
 </div><!-- /#app-shell -->
@@ -1628,9 +1697,9 @@
 </div>
 
 <!-- Scripts (load data first, then app logic) -->
-<script src="data.js?v=20260618b"></script>
-<script src="api.js?v=20260618b"></script>
-<script src="app.js?v=20260618b"></script>
+<script src="data.js?v=20260618c"></script>
+<script src="api.js?v=20260618c"></script>
+<script src="app.js?v=20260618c"></script>
 
 <!-- QR Code Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>

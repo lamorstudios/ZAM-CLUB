@@ -2957,3 +2957,279 @@ body.perf-mode .tier-ring--platin::after,
 body.perf-mode .tier-ring--diamond::after,
 body.perf-mode .tier-ring--legend::after,
 body.perf-mode .streak-fire { animation: none !important; }
+
+/* =============================================
+   PROFILE UPGRADE — Banner, Top Badges, Title, Vitrine, UPS
+   ============================================= */
+
+/* ── Profile Banner Strip ── */
+.profile-banner {
+  width: 100%;
+  height: 96px;
+  border-radius: 0;
+  background: linear-gradient(135deg, #c43510 0%, #FA4615 50%, #ff6b3d 100%);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.profile-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(26,26,26,0.6) 100%);
+  pointer-events: none;
+}
+.profile-banner-edit {
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 4px 9px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.8);
+  cursor: pointer;
+  z-index: 2;
+  font-family: var(--font);
+  backdrop-filter: blur(4px);
+}
+
+/* ── Profile Title chip ── */
+.profile-title-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(250,70,21,0.15);
+  border: 1px solid rgba(250,70,21,0.35);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #ffb399;
+  margin-top: 4px;
+  cursor: pointer;
+}
+
+/* ── Top Badges row in profile hero ── */
+.profile-top-badges {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.profile-top-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: transform 0.15s var(--spring);
+}
+.profile-top-badge:active { transform: scale(0.9); }
+.profile-top-badge.empty { opacity: 0.35; font-size: 0.8rem; }
+
+/* ── Vitrine (Erfolgs-Vitrine) ── */
+.vitrine-section {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+.vitrine-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vitrine-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.vitrine-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 12px 8px 10px;
+  text-align: center;
+  transition: transform 0.15s var(--spring), background 0.15s;
+  cursor: default;
+}
+.vitrine-card.earned {
+  background: rgba(247,171,0,0.07);
+  border-color: rgba(247,171,0,0.2);
+}
+.vitrine-card.rare {
+  background: rgba(96,165,250,0.08);
+  border-color: rgba(96,165,250,0.25);
+}
+.vitrine-card-icon { font-size: 1.6rem; margin-bottom: 4px; }
+.vitrine-card-name { font-size: 0.58rem; font-weight: 700; color: rgba(255,255,255,0.65); line-height: 1.3; }
+.vitrine-card.earned .vitrine-card-name { color: #F7AB00; }
+.vitrine-card.rare .vitrine-card-name { color: #60a5fa; }
+.vitrine-card-rarity { font-size: 0.52rem; color: rgba(255,255,255,0.3); margin-top: 2px; }
+.vitrine-card.earned .vitrine-card-rarity { color: rgba(247,171,0,0.5); }
+
+/* ── Banner Picker Modal ── */
+.banner-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 4px 0;
+}
+.banner-picker-item {
+  height: 60px;
+  border-radius: 12px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.banner-picker-item.active { border-color: #FA4615; }
+.banner-picker-item:active { transform: scale(0.97); }
+.banner-picker-item .bp-check {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: #fff;
+  background: #FA4615;
+  border-radius: 20px;
+  padding: 1px 6px;
+  display: none;
+}
+.banner-picker-item.active .bp-check { display: block; }
+.banner-picker-label {
+  position: absolute;
+  bottom: 4px;
+  left: 8px;
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.8);
+  font-weight: 700;
+}
+.banner-locked {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.5);
+  font-weight: 700;
+}
+
+/* ── Badge Picker ── */
+.badge-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.badge-picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.badge-picker-item.selected {
+  background: rgba(250,70,21,0.12);
+  border-color: rgba(250,70,21,0.4);
+}
+.badge-picker-item.locked { opacity: 0.35; cursor: default; }
+.badge-picker-item .bpi-icon { font-size: 1.4rem; }
+.badge-picker-item .bpi-name { font-size: 0.55rem; font-weight: 700; color: rgba(255,255,255,0.6); text-align: center; line-height: 1.2; }
+.badge-picker-item.selected .bpi-name { color: #ffb399; }
+
+/* ── Title Picker ── */
+.title-picker-list { display: flex; flex-direction: column; gap: 6px; }
+.title-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.title-picker-item.active {
+  background: rgba(250,70,21,0.1);
+  border-color: rgba(250,70,21,0.35);
+}
+.title-picker-item.locked { opacity: 0.35; cursor: default; }
+.title-picker-item .tpi-label { font-size: 0.82rem; font-weight: 700; color: #e2e8f0; flex: 1; }
+.title-picker-item .tpi-req { font-size: 0.6rem; color: rgba(255,255,255,0.35); }
+.title-picker-item.active .tpi-req { color: #FA4615; }
+
+/* ── Enhanced User Profile Sheet ── */
+.ups-banner {
+  width: 100%;
+  height: 72px;
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(135deg, #c43510, #FA4615);
+  margin-bottom: -20px;
+  flex-shrink: 0;
+}
+.ups-avatar-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0;
+  margin-bottom: 10px;
+}
+.ups-tier-badge {
+  margin-top: 6px;
+}
+.ups-rank-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 8px 0;
+  padding: 8px 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  margin: 0 16px 10px;
+}
+.ups-rank-item { text-align: center; }
+.ups-rank-value { font-size: 0.95rem; font-weight: 900; color: #F7AB00; }
+.ups-rank-label { font-size: 0.55rem; color: rgba(255,255,255,0.35); margin-top: 1px; }
+.ups-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.08); }
+.ups-top-badges-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 16px 12px;
+}
+.ups-top-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}

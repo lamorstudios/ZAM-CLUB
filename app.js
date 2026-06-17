@@ -410,6 +410,215 @@ function showTierInfoPopup(name, pts, anchorEl) {
   setTimeout(() => { document.addEventListener('click', () => popup.remove(), { once: true }); }, 50);
 }
 
+// =============================================
+// PROFILE UPGRADE — Banner, Top Badges, Title, Vitrine
+// =============================================
+
+const _PROFILE_BANNERS = [
+  { key: 'default',  label: 'Standard',    gradient: 'linear-gradient(135deg,#c43510 0%,#FA4615 50%,#ff6b3d 100%)', tier: null },
+  { key: 'night',    label: 'Nacht',       gradient: 'linear-gradient(135deg,#0f0c29,#302b63,#24243e)',             tier: null },
+  { key: 'ocean',    label: 'Ozean',       gradient: 'linear-gradient(135deg,#0575e6,#021b79)',                     tier: null },
+  { key: 'gold',     label: 'Gold',        gradient: 'linear-gradient(135deg,#f7971e,#ffd200)',                     tier: 'gold' },
+  { key: 'platin',   label: 'Platin',      gradient: 'linear-gradient(135deg,#8e9eab,#eef2f3)',                     tier: 'platin' },
+  { key: 'diamond',  label: 'Diamond',     gradient: 'linear-gradient(135deg,#48c6ef,#6f86d6)',                     tier: 'diamond' },
+  { key: 'legend',   label: 'Legend',      gradient: 'linear-gradient(135deg,#f7971e,#ffd200,#FA4615)',             tier: 'legend' },
+  { key: 'forest',   label: 'Wald',        gradient: 'linear-gradient(135deg,#134e5e,#71b280)',                     tier: null },
+];
+
+const _PROFILE_TITLES = [
+  { key: 'event_hunter',    label: '🏃 Event Hunter',   req: 'event_hunter',    desc: '5 Events besucht' },
+  { key: 'foto_profi',      label: '📸 Foto-Profi',     req: 'foto_profi',      desc: '5 Fotos geteilt' },
+  { key: 'shopping_king',   label: '🛍️ Shopping King',  req: 'shopping_king',   desc: '10 Deals eingelöst' },
+  { key: 'food_explorer',   label: '🍔 Food Explorer',  req: 'food_explorer',   desc: '3 Food-Händler besucht' },
+  { key: 'glueckspilz',     label: '🎰 Glückspilz',     req: 'glueckspilz',     desc: '3× Daily Spin gewonnen' },
+  { key: 'zam_legend',      label: '👑 ZAM Legend',     req: 'zam_legend',      desc: 'Legend-Status erreicht' },
+];
+
+const _VITRINE_ITEMS = [
+  { key: 'first_checkin',     icon: '🏁', name: 'Erster Check-in',    rarity: 'common',   desc: 'Willkommen im ZAM Club!' },
+  { key: 'early_adopter',     icon: '⚡', name: 'Early Adopter',      rarity: 'rare',     desc: 'Unter den ersten 1.000 Mitgliedern' },
+  { key: 'monthly_top10',     icon: '🏆', name: 'Monats-Top 10',      rarity: 'epic',     desc: 'Unter den Top 10 im Monat-Ranking' },
+  { key: 'streak_30',         icon: '🔥', name: '30 Tage Streak',     rarity: 'epic',     desc: '30 Tage am Stück aktiv' },
+  { key: 'deal_master',       icon: '🎯', name: 'Deal Master',        rarity: 'rare',     desc: '25 Deals eingelöst' },
+  { key: 'social_butterfly',  icon: '🦋', name: 'Social Butterfly',   rarity: 'rare',     desc: '10 Freunde im ZAM Club' },
+  { key: 'spin_jackpot',      icon: '💰', name: 'Jackpot',            rarity: 'epic',     desc: 'Händler-Preis beim Spin gewonnen' },
+  { key: 'quarter_champion',  icon: '👑', name: 'Quartals-Champion',  rarity: 'legendary',desc: 'Platz 1–3 im Quartal' },
+  { key: 'zam_original',      icon: '💎', name: 'ZAM Original',       rarity: 'legendary',desc: 'Besondere Auszeichnung' },
+];
+
+const _RARITY_COLORS = { common: 'rgba(255,255,255,0.5)', rare: '#60a5fa', epic: '#a78bfa', legendary: '#F7AB00' };
+
+// ── Storage helpers ──
+function _getBanner() { return localStorage.getItem('zam_profile_banner') || 'default'; }
+function _setBanner(key) { localStorage.setItem('zam_profile_banner', key); }
+function _getTopBadges() { try { return JSON.parse(localStorage.getItem('zam_top_badges') || '[]'); } catch { return []; } }
+function _setTopBadges(arr) { localStorage.setItem('zam_top_badges', JSON.stringify(arr.slice(0, 3))); }
+function _getProfileTitle() { return localStorage.getItem('zam_profile_title') || ''; }
+function _setProfileTitle(key) { localStorage.setItem('zam_profile_title', key); }
+function _getVitrine() { try { return JSON.parse(localStorage.getItem('zam_vitrine_v1') || '["first_checkin","early_adopter"]'); } catch { return []; } }
+
+// ── Apply banner to profile hero ──
+function _applyProfileBanner(containerId = 'profile-banner') {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const key = _getBanner();
+  const banner = _PROFILE_BANNERS.find(b => b.key === key) || _PROFILE_BANNERS[0];
+  el.style.background = banner.gradient;
+}
+
+// ── Render top badges in hero ──
+function _renderTopBadgesDisplay(containerId = 'profile-top-badges-display') {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const selected = _getTopBadges();
+  const allBadges = [..._ACHIEVEMENTS, ...ZAMData?.badges || []];
+  const slots = [0, 1, 2].map(i => selected[i]);
+  c.innerHTML = slots.map(key => {
+    const badge = allBadges.find(b => b.key === key);
+    return badge
+      ? `<div class="profile-top-badge" title="${badge.name}" onclick="showToast('${badge.icon} ${badge.name}')">${badge.icon}</div>`
+      : `<div class="profile-top-badge empty" onclick="openTopBadgePicker()">+</div>`;
+  }).join('');
+}
+
+// ── Render profile title ──
+function _renderProfileTitle(containerId = 'profile-title-display') {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const key = _getProfileTitle();
+  if (!key) { c.innerHTML = `<span class="profile-title-chip" onclick="openTitlePicker()">🏷️ Titel auswählen</span>`; return; }
+  const t = _PROFILE_TITLES.find(x => x.key === key);
+  if (t) c.innerHTML = `<span class="profile-title-chip" onclick="openTitlePicker()">${t.label}</span>`;
+}
+
+// ── Render Vitrine ──
+function renderProfileVitrine(containerId = 'profile-vitrine') {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const earned = _getVitrine();
+  const achievements = _getAchievements();
+  // Merge vitrine + achievements
+  const all = _VITRINE_ITEMS.map(v => ({ ...v, unlocked: earned.includes(v.key) || achievements.includes(v.key) }));
+  const unlocked = all.filter(v => v.unlocked);
+  const locked = all.filter(v => !v.unlocked).slice(0, 9 - unlocked.length);
+  const display = [...unlocked, ...locked].slice(0, 9);
+  c.innerHTML = `
+    <div class="vitrine-title">🏆 Erfolgs-Vitrine</div>
+    <div class="vitrine-grid">
+      ${display.map(v => `
+        <div class="vitrine-card ${v.unlocked ? (v.rarity === 'legendary' || v.rarity === 'epic' ? 'rare' : 'earned') : ''}" title="${v.desc}">
+          <div class="vitrine-card-icon" style="${v.unlocked ? '' : 'filter:grayscale(1) opacity(0.3)'}">${v.icon}</div>
+          <div class="vitrine-card-name">${v.name}</div>
+          <div class="vitrine-card-rarity" style="color:${v.unlocked ? _RARITY_COLORS[v.rarity] : 'rgba(255,255,255,0.2)'}">${v.rarity}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ── Banner Picker ──
+function openBannerPicker() {
+  const grid = document.getElementById('banner-picker-grid');
+  const modal = document.getElementById('modal-banner-picker');
+  if (!grid || !modal) return;
+  const current = _getBanner();
+  const userTier = _getTier(ZAMApi.auth.currentUser()?.points || 0);
+  const tierOrder = ['starter','silver','gold','platin','diamond','legend'];
+  const userTierIdx = tierOrder.indexOf(userTier.key);
+
+  grid.innerHTML = _PROFILE_BANNERS.map(b => {
+    const reqIdx = b.tier ? tierOrder.indexOf(b.tier) : -1;
+    const locked = b.tier && userTierIdx < reqIdx;
+    const isActive = current === b.key;
+    return `
+      <div class="banner-picker-item ${isActive ? 'active' : ''}" style="background:${b.gradient}" onclick="${locked ? '' : `selectBanner('${b.key}')`}">
+        <span class="banner-picker-label">${b.label}</span>
+        <span class="bp-check">✓ Aktiv</span>
+        ${locked ? `<div class="banner-locked">🔒 ${b.tier} erforderlich</div>` : ''}
+      </div>`;
+  }).join('');
+  modal.style.display = 'flex';
+}
+function selectBanner(key) {
+  _setBanner(key);
+  _applyProfileBanner();
+  openBannerPicker(); // re-render to update active state
+}
+function closeBannerPicker() { document.getElementById('modal-banner-picker').style.display = 'none'; }
+
+// ── Top Badge Picker ──
+let _tmpTopBadges = [];
+function openTopBadgePicker() {
+  const grid = document.getElementById('badge-picker-grid');
+  const modal = document.getElementById('modal-badge-picker');
+  if (!grid || !modal) return;
+  const earned = _getAchievements();
+  _tmpTopBadges = [..._getTopBadges()];
+
+  grid.innerHTML = _ACHIEVEMENTS.map(a => {
+    const isEarned = earned.includes(a.key);
+    const isSelected = _tmpTopBadges.includes(a.key);
+    return `
+      <div class="badge-picker-item ${isSelected ? 'selected' : ''} ${!isEarned ? 'locked' : ''}"
+           onclick="${isEarned ? `toggleTopBadge('${a.key}',this)` : ''}">
+        <span class="bpi-icon">${a.icon}</span>
+        <span class="bpi-name">${a.name}</span>
+      </div>`;
+  }).join('');
+  modal.style.display = 'flex';
+}
+function toggleTopBadge(key, el) {
+  const idx = _tmpTopBadges.indexOf(key);
+  if (idx >= 0) {
+    _tmpTopBadges.splice(idx, 1);
+    el.classList.remove('selected');
+  } else if (_tmpTopBadges.length < 3) {
+    _tmpTopBadges.push(key);
+    el.classList.add('selected');
+  } else {
+    showToast('Maximal 3 Badges auswählbar', 'error');
+  }
+}
+function saveTopBadges() {
+  _setTopBadges(_tmpTopBadges);
+  _renderTopBadgesDisplay();
+  closeTopBadgePicker();
+  showToast('Top Badges gespeichert ✅', 'success');
+}
+function closeTopBadgePicker() { document.getElementById('modal-badge-picker').style.display = 'none'; }
+
+// ── Title Picker ──
+function openTitlePicker() {
+  const list = document.getElementById('title-picker-list');
+  const modal = document.getElementById('modal-title-picker');
+  if (!list || !modal) return;
+  const earned = _getAchievements();
+  const current = _getProfileTitle();
+  list.innerHTML = _PROFILE_TITLES.map(t => {
+    const isEarned = earned.includes(t.req);
+    const isActive = current === t.key;
+    return `
+      <div class="title-picker-item ${isActive ? 'active' : ''} ${!isEarned ? 'locked' : ''}"
+           onclick="${isEarned ? `selectTitle('${t.key}')` : ''}">
+        <span class="tpi-label">${t.label}</span>
+        <span class="tpi-req">${isEarned ? (isActive ? '✅ Aktiv' : 'Freigeschaltet') : '🔒 ' + t.desc}</span>
+      </div>`;
+  }).join('');
+  modal.style.display = 'flex';
+}
+function selectTitle(key) {
+  const current = _getProfileTitle();
+  if (current === key) {
+    _setProfileTitle('');
+    showToast('Titel entfernt');
+  } else {
+    _setProfileTitle(key);
+    const t = _PROFILE_TITLES.find(x => x.key === key);
+    showToast(`Titel gesetzt: ${t?.label}`, 'success');
+  }
+  _renderProfileTitle();
+  openTitlePicker(); // re-render
+}
+function closeTitlePicker() { document.getElementById('modal-title-picker').style.display = 'none'; }
+
 // ── Daily Streak ──
 const _STREAK_KEY = 'zam_streak_v1';
 const _STREAK_MILESTONES = [
@@ -897,8 +1106,10 @@ function _renderHomeRankingCard() {
       </div>
       ${top3.map((u, i) => {
         const uTier = _getTier(u.pts);
+        const safeUName = u.name.replace(/'/g,"\\'");
+        const uid = 'rank_' + u.initials.toLowerCase();
         return `
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,0.04);${i < 2 ? 'margin-bottom:6px' : ''}">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,0.04);${i < 2 ? 'margin-bottom:6px' : ''};cursor:pointer" onclick="event.stopPropagation();openUserProfileSheet('${uid}','${safeUName}','${u.initials}',null,${u.pts})">
         <div style="width:26px;text-align:center;font-size:1.1rem">${medals[i]}</div>
         <div class="tier-ring tier-ring--${uTier.key}" style="width:34px;height:34px;background:${u.bg};font-size:0.62rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
         <div style="flex:1;min-width:0">
@@ -937,13 +1148,14 @@ function openRankingModal() {
       ${_RANKING_DEMO.map((u, i) => {
         const uTier = _getTier(u.pts);
         const safeUName = u.name.replace(/'/g,"\\'");
+        const uid = 'rank_' + u.initials.toLowerCase();
         return `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${u.isMe ? 'rgba(247,171,0,0.08)' : 'rgba(255,255,255,0.03)'};border:1px solid ${u.isMe ? 'rgba(247,171,0,0.25)' : 'rgba(255,255,255,0.06)'};border-radius:12px;margin-bottom:7px">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${u.isMe ? 'rgba(247,171,0,0.08)' : 'rgba(255,255,255,0.03)'};border:1px solid ${u.isMe ? 'rgba(247,171,0,0.25)' : 'rgba(255,255,255,0.06)'};border-radius:12px;margin-bottom:7px;cursor:${u.isMe?'default':'pointer'}" ${!u.isMe ? `onclick="_merchantModalClose('ranking-modal');openUserProfileSheet('${uid}','${safeUName}','${u.initials}',null,${u.pts})"` : ''}>
         <div style="width:28px;text-align:center;font-size:${i < 3 ? '1.1rem' : '0.8rem'};font-weight:800;color:${i===0?'#d97706':i===1?'#9ca3af':i===2?'#b45309':'rgba(255,255,255,0.3)'}">${i < 3 ? medals[i] : '#'+u.rank}</div>
         <div class="tier-ring tier-ring--${uTier.key}" style="width:36px;height:36px;background:${u.bg};font-size:0.65rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:0.82rem;font-weight:${u.isMe?'900':'700'};color:${u.isMe?'#F7AB00':'#e2e8f0'}">${u.name}${u.isMe?' (Du)':''}</div>
-          <div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span class="tier-badge tier-badge--${uTier.key}" style="cursor:pointer" onclick="showTierInfoPopup('${safeUName}',${u.pts},this)">${uTier.emoji} ${uTier.label}</span>${i < 3 ? `<span style="font-size:0.6rem;color:rgba(255,255,255,0.35)">${prizes[i]}</span>` : ''}</div>
+          <div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span class="tier-badge tier-badge--${uTier.key}">${uTier.emoji} ${uTier.label}</span>${i < 3 ? `<span style="font-size:0.6rem;color:rgba(255,255,255,0.35)">${prizes[i]}</span>` : ''}</div>
         </div>
         <div style="font-size:0.8rem;font-weight:800;color:${u.isMe?'#F7AB00':'rgba(255,255,255,0.6)'}">${u.pts.toLocaleString('de-DE')} Pkt.</div>
       </div>`;}).join('')}
@@ -1507,14 +1719,22 @@ function renderPostCard(post, idx) {
   const deleteBtn = isOwn ? `<button class="post-delete-btn" title="Löschen" aria-label="Beitrag löschen">🗑</button>` : '';
   const statusBadge = post.status === 'pending' ? `<span style="font-size:0.68rem;color:#F7AB00;margin-left:6px">⏳ ausstehend</span>` : '';
 
-  const authorPts = post.author?.points || 0;
+  const authorPts = post.author?.points || _demoUserPts(post.author?.id || post.author?.name || '');
   const authorTier = _getTier(authorPts);
+  // For the current user's own posts, show their real top badges + title
+  const isCurrentUser = currentUser && post.user_id === currentUser.id;
+  const authorTopBadges = isCurrentUser ? _getTopBadges() : (post.author?.top_badges || []);
+  const authorTitle = isCurrentUser ? _getProfileTitle() : (post.author?.title || '');
+  const authorTitleObj = _PROFILE_TITLES.find(t => t.key === authorTitle);
+  const topBadgesHtml = authorTopBadges.length
+    ? authorTopBadges.map(key => { const b = _ACHIEVEMENTS.find(a => a.key === key); return b ? `<span title="${b.name}" style="font-size:0.8rem">${b.icon}</span>` : ''; }).join('')
+    : '';
   div.innerHTML = `
     <div class="post-header">
       <div class="tier-ring tier-ring--${authorTier.key}" style="width:38px;height:38px;background:${post.author?.avatar_color || '#FA4615'};font-size:13px;font-weight:800;color:#fff;flex-shrink:0">${post.author?.initials || '?'}</div>
       <div class="post-author-info">
-        <div class="post-author-name">${post.author?.name || 'Unbekannt'}${statusBadge}</div>
-        <div class="post-author-level" style="display:flex;align-items:center;gap:4px"><span class="tier-badge tier-badge--${authorTier.key}">${authorTier.emoji} ${authorTier.label}</span></div>
+        <div class="post-author-name" style="display:flex;align-items:center;gap:5px">${post.author?.name || 'Unbekannt'}${statusBadge}${topBadgesHtml ? `<span style="display:flex;gap:2px;margin-left:2px">${topBadgesHtml}</span>` : ''}</div>
+        <div class="post-author-level" style="display:flex;align-items:center;gap:4px">${authorTitleObj ? `<span style="font-size:0.6rem;color:#ffb399;font-weight:700">${authorTitleObj.label}</span>` : ''}<span class="tier-badge tier-badge--${authorTier.key}">${authorTier.emoji} ${authorTier.label}</span></div>
       </div>
       <div class="post-time">${post.time_ago || ''}</div>
       ${deleteBtn}
@@ -2073,6 +2293,10 @@ async function renderProfile() {
   checkDailyStreak();
   _renderStreakBanner('profile-streak-banner');
   renderAchievements('profile-achievements-container');
+  _applyProfileBanner();
+  _renderTopBadgesDisplay();
+  _renderProfileTitle();
+  renderProfileVitrine();
 
   // Update Nearby badge in profile
   const nearbyBadge = document.getElementById('nearby-profile-badge');
@@ -3728,13 +3952,28 @@ function initPrivateChat() {
 // =============================================
 let _upsTargetUser = null;
 
-function openUserProfileSheet(userId, userName, initials, avatarUrl) {
+function openUserProfileSheet(userId, userName, initials, avatarUrl, userPts = null) {
   _upsTargetUser = { userId, userName, initials, avatarUrl };
 
-  const avatarEl   = $('#ups-avatar');
-  const nameEl     = $('#ups-name');
-  const usernameEl = $('#ups-username');
+  const pts  = userPts !== null ? userPts : _demoUserPts(userId);
+  const tier = _getTier(pts);
+  const rank = _RANKING_DEMO.find(u => u.isMe && userId === 'me')?.rank || null;
+  const userRankEntry = _RANKING_DEMO.find(u => u.name && userName && u.name.startsWith(userName.split(' ')[0]));
+  const displayRank = userRankEntry?.rank || null;
+
+  // Banner
+  const bannerEl = document.getElementById('ups-banner');
+  if (bannerEl) {
+    // Use the user's stored banner if own profile, else derive from tier
+    const bannerKey = userId === (ZAMApi.auth.currentUser()?.id) ? _getBanner() : tier.key;
+    const b = _PROFILE_BANNERS.find(x => x.key === bannerKey) || _PROFILE_BANNERS[0];
+    bannerEl.style.background = b.gradient;
+  }
+
+  // Avatar with tier ring
+  const avatarEl = document.getElementById('ups-avatar');
   if (avatarEl) {
+    avatarEl.className = `user-profile-sheet-avatar tier-ring tier-ring--${tier.key}`;
     if (avatarUrl) {
       avatarEl.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" />`;
       avatarEl.style.background = 'none';
@@ -3743,7 +3982,45 @@ function openUserProfileSheet(userId, userName, initials, avatarUrl) {
       avatarEl.style.background = _avatarColor(userId);
     }
   }
+
+  const nameEl = document.getElementById('ups-name');
   if (nameEl) nameEl.textContent = userName;
+
+  // Title
+  const titleEl = document.getElementById('ups-title-display');
+  if (titleEl) {
+    const titleKey = userId === (ZAMApi.auth.currentUser()?.id) ? _getProfileTitle() : '';
+    const t = _PROFILE_TITLES.find(x => x.key === titleKey);
+    titleEl.innerHTML = t ? `<span class="profile-title-chip">${t.label}</span>` : '';
+  }
+
+  // Tier badge
+  const tierRowEl = document.getElementById('ups-tier-row');
+  if (tierRowEl) tierRowEl.innerHTML = `<span class="tier-badge tier-badge--${tier.key}" style="font-size:0.72rem;padding:4px 10px">${tier.emoji} ${tier.label} Mitglied</span>`;
+
+  // Rank + Pts row
+  const rankRowEl = document.getElementById('ups-rank-row');
+  if (rankRowEl) {
+    rankRowEl.innerHTML = `
+      <div class="ups-rank-item"><div class="ups-rank-value">${pts.toLocaleString('de-DE')}</div><div class="ups-rank-label">Punkte</div></div>
+      ${displayRank ? `<div class="ups-divider"></div><div class="ups-rank-item"><div class="ups-rank-value">#${displayRank}</div><div class="ups-rank-label">Rang</div></div>` : ''}
+      <div class="ups-divider"></div>
+      <div class="ups-rank-item"><div class="ups-rank-value">${tier.emoji}</div><div class="ups-rank-label">${tier.label}</div></div>`;
+  }
+
+  // Top badges
+  const topBadgesEl = document.getElementById('ups-top-badges-row');
+  if (topBadgesEl) {
+    const topB = userId === (ZAMApi.auth.currentUser()?.id) ? _getTopBadges() : [];
+    if (topB.length > 0) {
+      topBadgesEl.innerHTML = topB.map(key => {
+        const badge = _ACHIEVEMENTS.find(a => a.key === key);
+        return badge ? `<div class="ups-top-badge" title="${badge.name}">${badge.icon}</div>` : '';
+      }).join('');
+    } else {
+      topBadgesEl.innerHTML = '';
+    }
+  }
 
   // Build action buttons
   const actionsEl = $('#ups-actions');
