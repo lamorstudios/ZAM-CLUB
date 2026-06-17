@@ -184,6 +184,13 @@ function _getContentTitle(type, id, field) {
   return window.ZAM_CONTENT_I18N[type]?.[id]?.[lang]?.[field] || null;
 }
 
+function _l(obj, field) {
+  const lang = localStorage.getItem('zam_lang') || 'de';
+  const val = obj?.[field];
+  if (val && typeof val === 'object') return val[lang] || val.de || '';
+  return val || '';
+}
+
 function setLang(code) {
   localStorage.setItem('zam_lang', code);
   localStorage.setItem('zam_lang_chosen', '1');
@@ -730,14 +737,14 @@ async function renderHomeEvents() {
           ${saved ? '🔖' : '🏷️'}
         </button>
       </div>
-      <h3>${evt.title}</h3>
+      <h3>${_l(evt, 'title')}</h3>
       <div class="event-meta">
         <span>📅 ${evt.date_formatted}</span>
         <span>⏰ ${evt.time}</span>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
-        <div class="event-points-badge">+${evt.points_reward} Punkte</div>
-        <span style="font-size:0.62rem;color:rgba(255,255,255,0.4)">👥 ${(evt.spots_total||500)-(evt.spots_left||0)} dabei</span>
+        <div class="event-points-badge">+${evt.points_reward} ${t('home.pts')}</div>
+        <span style="font-size:0.62rem;color:rgba(255,255,255,0.4)">${t('events.attendees').replace('{n}', (evt.spots_total||500)-(evt.spots_left||0))}</span>
       </div>
     `;
     card.querySelector('.bookmark-btn').addEventListener('click', (e) => {
@@ -768,7 +775,7 @@ async function renderHomeDeals() {
         </div>
         ${deal.is_hot ? '<div class="hot-badge" style="position:absolute;top:6px;right:6px;font-size:0.55rem">🔥 Hot</div>' : ''}
       </div>
-      <div class="deal-title">${deal.title}</div>
+      <div class="deal-title">${_l(deal, 'title')}</div>
       <div style="margin-top:6px">${_countdownBadge(deal.expiry_date)}</div>
       <button class="btn btn-primary" style="margin-top:10px;padding:6px 12px;font-size:0.72rem;width:100%" onclick="openVoucherQR('${deal.id}','${esc(deal.title)}','${deal.merchant_id||''}');event.stopPropagation()">${t('deals.redeem')}</button>
     `;
@@ -1005,8 +1012,8 @@ async function renderChallenges() {
       <div class="challenge-header">
         <div class="challenge-icon">${c.icon}</div>
         <div class="challenge-info">
-          <div class="challenge-title">${c.title}</div>
-          <div class="challenge-desc">${c.description}</div>
+          <div class="challenge-title">${_l(c, 'title')}</div>
+          <div class="challenge-desc">${_l(c, 'description')}</div>
         </div>
         <div class="challenge-reward">${t('challenges.reward_pts').replace('{n}',c.reward_pts)}</div>
       </div>
@@ -1555,24 +1562,24 @@ function renderEventCard(evt, idx) {
     <div class="event-card-top" style="margin-bottom:8px">
       <div class="category-tag tag" style="background:${evt.category_color}22;color:${evt.category_color}">${evt.category}</div>
       <div style="display:flex;align-items:center;gap:5px;font-size:0.65rem;color:rgba(255,255,255,0.45)">
-        <span>👥</span><span>${attendees.toLocaleString('de-DE')} Teilnehmer</span>
+        <span>👥</span><span>${t('events.attendees').replace('{n}', attendees.toLocaleString('de-DE'))}</span>
       </div>
     </div>
-    <h3>${_getContentTitle('events', evt.id, 'title') || evt.title}</h3>
+    <h3>${_l(evt, 'title')}</h3>
     <div class="event-details">
       <div class="event-detail-row"><span>📅</span><span>${evt.date_formatted}</span></div>
       <div class="event-detail-row"><span>⏰</span><span>${evt.time}</span></div>
       <div class="event-detail-row"><span>📍</span><span>${evt.location}</span></div>
     </div>
-    <p class="event-description">${_getContentTitle('events', evt.id, 'description') || evt.description}</p>
+    <p class="event-description">${_l(evt, 'description')}</p>
     <div class="event-card-footer">
       <div class="spots-info">
         ${spotsLow
-          ? `<strong>Nur noch ${evt.spots_left} Plätze!</strong>`
-          : `${evt.spots_left} Plätze frei`}
+          ? `<strong>${t('events.spots_low').replace('{n}', evt.spots_left)}</strong>`
+          : `${evt.spots_left} ${t('events.spots_free')}`}
       </div>
       <button class="${evt.is_joined ? 'btn btn-sm joined' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
-        ${evt.is_joined ? '✓ ' + t('events.attending') : t('events.join')}
+        ${evt.is_joined ? '✓ ' + t('events.joined') : t('events.join')}
       </button>
     </div>
     ${evt.is_joined ? _eventCheckinBtn(evt) : ''}
@@ -1610,7 +1617,7 @@ async function joinEvent(idx, cardEl) {
   }
 
   const btn = cardEl.querySelector('.btn');
-  if (btn) { btn.className = 'btn btn-sm joined'; btn.textContent = '✓ ' + t('events.attending'); }
+  if (btn) { btn.className = 'btn btn-sm joined'; btn.textContent = '✓ ' + t('events.joined'); }
 
   const eventsEl = $('#profile-stat-events');
   if (eventsEl) eventsEl.textContent = ZAMData.currentUser.stats?.events_attended || 0;
@@ -1784,8 +1791,8 @@ function renderDealCard(deal, idx) {
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <div class="category-tag tag" style="background:${deal.category_color}22;color:${deal.category_color}">${deal.category}</div>
     </div>
-    <div class="deal-title">${_getContentTitle('deals', deal.id, 'title') || deal.title}</div>
-    <p class="deal-description">${_getContentTitle('deals', deal.id, 'description') || deal.description}</p>
+    <div class="deal-title">${_l(deal, 'title')}</div>
+    <p class="deal-description">${_l(deal, 'description')}</p>
     <div class="deal-footer">
       <div class="deal-validity" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <span style="font-size:0.72rem;color:rgba(255,255,255,0.4)">📅 ${deal.expiry_formatted}</span>
@@ -6341,7 +6348,7 @@ function _seedDemoDealRequest() {
 }
 
 function seedZAMContent() {
-  const seeded = localStorage.getItem('zam_seeded_v3');
+  const seeded = localStorage.getItem('zam_seeded_v4');
   if (seeded) return;
 
   const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
@@ -6364,11 +6371,11 @@ function seedZAMContent() {
 
   // ── Events (real ZAM event types) ──
   const zamEvents = [
-    { id: 'ev_001', title: 'Morgen-Yoga im Atrium', category: 'Sport & Wellness', date: new Date(now + 3*864e5).toISOString(), location: 'Atrium, Erdgeschoss', zone: 'mk2_2', merchant_id: 'mer_004', description: 'Starte deinen Tag mit Energie – Yoga für alle Levels unter dem Glasdach des ZAM.', points: 60, max_participants: 40, registrations: [] },
-    { id: 'ev_002', title: 'Freiham Sommer-Markt', category: 'Food & Lifestyle', date: new Date(now + 7*864e5).toISOString(), location: 'Vorplatz ZAM / Gandhi-Platz', zone: 'plaza', merchant_id: null, description: 'Regionale Erzeuger, Foodtrucks und Live-Musik. 40+ Aussteller, Eintritt frei!', points: 80, max_participants: 500, registrations: [] },
-    { id: 'ev_003', title: 'Kids Kreativ-Werkstatt', category: 'Familie', date: new Date(now + 10*864e5).toISOString(), location: 'Kinderbereich, OG 1', zone: 'mk2_2', merchant_id: null, description: 'Basteln, malen, stempeln für Kinder von 4–10 Jahren. Alle Materialien inklusive.', points: 35, max_participants: 18, registrations: [] },
-    { id: 'ev_004', title: 'Live-Konzert: Sommernacht-Beats', category: 'Kultur & Musik', date: new Date(now + 14*864e5).toISOString(), location: 'Hauptbühne, EG', zone: 'plaza', merchant_id: null, description: 'Soul, Jazz & Singer-Songwriter aus München – drei Acts live auf der ZAM-Bühne. Eintritt frei!', points: 45, max_participants: 300, registrations: [] },
-    { id: 'ev_005', title: 'Nachhaltigkeits-Workshop', category: 'Community', date: new Date(now + 19*864e5).toISOString(), location: 'Eventfläche, OG 2', zone: 'mk2_2', merchant_id: null, description: 'Repair Café, Zero-Waste-Tipps und offene Nachbarschaftsrunde. Kostenlos, ohne Anmeldung.', points: 50, max_participants: 60, registrations: [] },
+    { id: 'ev_001', title: { de: 'Morgen-Yoga im Atrium', en: 'Morning Yoga in the Atrium', tr: 'Atriumda Sabah Yogası' }, category: 'Sport & Wellness', date: new Date(now + 3*864e5).toISOString(), location: 'Atrium, Erdgeschoss', zone: 'mk2_2', merchant_id: 'mer_004', description: { de: 'Starte deinen Tag mit Energie – Yoga für alle Levels unter dem Glasdach des ZAM.', en: 'Start your day with energy – yoga for all levels under the glass roof of ZAM.', tr: 'Gününüze enerjili başlayın – ZAM\'ın cam tavanı altında tüm seviyelere uygun yoga.' }, points: 60, max_participants: 40, registrations: [] },
+    { id: 'ev_002', title: { de: 'Freiham Sommer-Markt', en: 'Freiham Summer Market', tr: 'Freiham Yaz Pazarı' }, category: 'Food & Lifestyle', date: new Date(now + 7*864e5).toISOString(), location: 'Vorplatz ZAM / Gandhi-Platz', zone: 'plaza', merchant_id: null, description: { de: 'Regionale Erzeuger, Foodtrucks und Live-Musik. 40+ Aussteller, Eintritt frei!', en: 'Local producers, food trucks and live music. 40+ exhibitors, free entry!', tr: 'Yerel üreticiler, yemek kamyonları ve canlı müzik. 40+ katılımcı, ücretsiz giriş!' }, points: 80, max_participants: 500, registrations: [] },
+    { id: 'ev_003', title: { de: 'Kids Kreativ-Werkstatt', en: 'Kids Creative Workshop', tr: 'Çocuk Yaratıcı Atölyesi' }, category: 'Familie', date: new Date(now + 10*864e5).toISOString(), location: 'Kinderbereich, OG 1', zone: 'mk2_2', merchant_id: null, description: { de: 'Basteln, malen, stempeln für Kinder von 4–10 Jahren. Alle Materialien inklusive.', en: 'Crafting, painting, stamping for children aged 4–10. All materials included.', tr: '4–10 yaş arası çocuklar için el sanatları, boyama, damgalama. Tüm malzemeler dahil.' }, points: 35, max_participants: 18, registrations: [] },
+    { id: 'ev_004', title: { de: 'Live-Konzert: Sommernacht-Beats', en: 'Live Concert: Summer Night Beats', tr: 'Canlı Konser: Yaz Gecesi Ritmi' }, category: 'Kultur & Musik', date: new Date(now + 14*864e5).toISOString(), location: 'Hauptbühne, EG', zone: 'plaza', merchant_id: null, description: { de: 'Soul, Jazz & Singer-Songwriter aus München – drei Acts live auf der ZAM-Bühne. Eintritt frei!', en: 'Soul, jazz & singer-songwriters from Munich – three acts live on the ZAM stage. Free entry!', tr: 'Münih\'ten soul, caz & söz yazarları – ZAM sahnesinde üç canlı performans. Ücretsiz giriş!' }, points: 45, max_participants: 300, registrations: [] },
+    { id: 'ev_005', title: { de: 'Nachhaltigkeits-Workshop', en: 'Sustainability Workshop', tr: 'Sürdürülebilirlik Atölyesi' }, category: 'Community', date: new Date(now + 19*864e5).toISOString(), location: 'Eventfläche, OG 2', zone: 'mk2_2', merchant_id: null, description: { de: 'Repair Café, Zero-Waste-Tipps und offene Nachbarschaftsrunde. Kostenlos, ohne Anmeldung.', en: 'Repair café, zero-waste tips and open neighbourhood round. Free, no registration.', tr: 'Tamir kafesi, sıfır atık ipuçları ve açık mahalle toplantısı. Ücretsiz, kayıt gerekmez.' }, points: 50, max_participants: 60, registrations: [] },
   ];
   const events = g.events || [];
   zamEvents.forEach(ev => { if (!events.find(x => x.id === ev.id)) events.push({ ...ev, status: 'active', created_at: new Date().toISOString() }); });
@@ -6376,12 +6383,12 @@ function seedZAMContent() {
 
   // ── Deals (real ZAM deals) ──
   const zamDeals = [
-    { id: 'deal_001', title: '2. Heißgetränk nur 1 Euro', merchant_id: 'mer_001', merchant_name: 'Café Freiham', store_icon: '☕', discount: '2. für 1€', category: 'Food & Drinks', description: 'Kauf ein Heißgetränk, bezahl fürs zweite nur 1€. Gilt auf alle Kaffee- und Tee-Spezialitäten.', expires_at: new Date(now + 15*864e5).toISOString(), points_reward: 20, is_hot: true },
-    { id: 'deal_002', title: '20% auf nachhaltige Labels', merchant_id: 'mer_002', merchant_name: 'Odeya Fashion', store_icon: '👗', discount: '20%', category: 'Mode', description: 'Exklusiv für ZAM-Club-Mitglieder: 20% Rabatt auf alle Nachhaltigkeits-Labels.', expires_at: new Date(now + 35*864e5).toISOString(), points_reward: 30, is_hot: false },
-    { id: 'deal_003', title: 'Gratis Hummus zu jedem Hauptgericht', merchant_id: 'mer_003', merchant_name: 'Levante Kitchen', store_icon: '🥙', discount: 'Gratis', category: 'Restaurant', description: 'Als ZAM-Club-Mitglied: Hummus mit Pita gratis zum Hauptgericht. Mo–Fr 11–15 Uhr.', expires_at: new Date(now + 14*864e5).toISOString(), points_reward: 25, is_hot: true },
-    { id: 'deal_004', title: '7 Tage kostenlos trainieren', merchant_id: 'mer_004', merchant_name: 'Westside Gym', store_icon: '💪', discount: '7 Tage', category: 'Sport', description: 'Teste den Westside Gym eine Woche gratis – alle Geräte, alle Kurse, Sauna inklusive.', expires_at: new Date(now + 46*864e5).toISOString(), points_reward: 100, is_hot: true },
-    { id: 'deal_005', title: '10% auf alle Neuerscheinungen', merchant_id: 'mer_005', merchant_name: 'Welt der Bücher', store_icon: '📚', discount: '10%', category: 'Bücher', description: 'Alle Neuerscheinungen des Monats mit 10% Mitgliederrabatt – inklusive Vorbestellungen.', expires_at: new Date(now + 15*864e5).toISOString(), points_reward: 15, is_hot: false },
-    { id: 'deal_006', title: 'Sonnenschutz-Set: 3 für 2', merchant_id: 'mer_006', merchant_name: 'Freiham Apotheke', store_icon: '💊', discount: '3 für 2', category: 'Gesundheit', description: 'Sommer-Special: 3 Sonnenschutz-Produkte kaufen, günstigstes ist gratis.', expires_at: new Date(now + 30*864e5).toISOString(), points_reward: 20, is_hot: false },
+    { id: 'deal_001', title: { de: '2. Heißgetränk nur 1 Euro', en: '2nd hot drink for 1€', tr: '2. sıcak içecek 1€' }, merchant_id: 'mer_001', merchant_name: 'Café Freiham', store_icon: '☕', discount: '2. für 1€', category: 'Food & Drinks', description: { de: 'Kauf ein Heißgetränk, bezahl fürs zweite nur 1€. Gilt auf alle Kaffee- und Tee-Spezialitäten.', en: 'Buy one hot drink, pay just 1€ for the second. Valid on all coffee & tea specialities.', tr: 'Bir sıcak içecek al, ikincisi sadece 1€. Tüm kahve ve çay çeşitlerinde geçerli.' }, expires_at: new Date(now + 15*864e5).toISOString(), points_reward: 20, is_hot: true },
+    { id: 'deal_002', title: { de: '20% auf nachhaltige Labels', en: '20% off sustainable labels', tr: 'Sürdürülebilir markalarda %20 indirim' }, merchant_id: 'mer_002', merchant_name: 'Odeya Fashion', store_icon: '👗', discount: '20%', category: 'Mode', description: { de: 'Exklusiv für ZAM-Club-Mitglieder: 20% Rabatt auf alle Nachhaltigkeits-Labels.', en: 'Exclusively for ZAM Club members: 20% discount on all sustainable labels.', tr: 'ZAM Üyeleri için özel: tüm sürdürülebilir markalarda %20 indirim.' }, expires_at: new Date(now + 35*864e5).toISOString(), points_reward: 30, is_hot: false },
+    { id: 'deal_003', title: { de: 'Gratis Hummus zu jedem Hauptgericht', en: 'Free hummus with every main course', tr: 'Her ana yemekle ücretsiz humus' }, merchant_id: 'mer_003', merchant_name: 'Levante Kitchen', store_icon: '🥙', discount: 'Gratis', category: 'Restaurant', description: { de: 'Als ZAM-Club-Mitglied: Hummus mit Pita gratis zum Hauptgericht. Mo–Fr 11–15 Uhr.', en: 'ZAM Club members get free hummus with pita with every main course. Mon–Fri 11am–3pm.', tr: 'ZAM Kulübü üyeleri her ana yemekle pita ekmekli humus ücretsiz alır. Pzt–Cum 11:00–15:00.' }, expires_at: new Date(now + 14*864e5).toISOString(), points_reward: 25, is_hot: true },
+    { id: 'deal_004', title: { de: '7 Tage kostenlos trainieren', en: 'Train free for 7 days', tr: '7 gün ücretsiz antrenman yap' }, merchant_id: 'mer_004', merchant_name: 'Westside Gym', store_icon: '💪', discount: '7 Tage', category: 'Sport', description: { de: 'Teste den Westside Gym eine Woche gratis – alle Geräte, alle Kurse, Sauna inklusive.', en: 'Try Westside Gym for a full week – all equipment, all classes, sauna included.', tr: 'Westside Gym\'i bir hafta ücretsiz dene – tüm ekipmanlar, tüm dersler, sauna dahil.' }, expires_at: new Date(now + 46*864e5).toISOString(), points_reward: 100, is_hot: true },
+    { id: 'deal_005', title: { de: '10% auf alle Neuerscheinungen', en: '10% off all new releases', tr: 'Tüm yeni çıkışlarda %10 indirim' }, merchant_id: 'mer_005', merchant_name: 'Welt der Bücher', store_icon: '📚', discount: '10%', category: 'Bücher', description: { de: 'Alle Neuerscheinungen des Monats mit 10% Mitgliederrabatt – inklusive Vorbestellungen.', en: 'All new releases this month with a 10% member discount – including pre-orders.', tr: 'Bu ayki tüm yeni çıkışlarda %10 üye indirimi – ön siparişler dahil.' }, expires_at: new Date(now + 15*864e5).toISOString(), points_reward: 15, is_hot: false },
+    { id: 'deal_006', title: { de: 'Sonnenschutz-Set: 3 für 2', en: 'Sunscreen set: 3 for 2', tr: 'Güneş kremi seti: 3 al 2 öde' }, merchant_id: 'mer_006', merchant_name: 'Freiham Apotheke', store_icon: '💊', discount: '3 für 2', category: 'Gesundheit', description: { de: 'Sommer-Special: 3 Sonnenschutz-Produkte kaufen, günstigstes ist gratis.', en: 'Summer special: buy 3 sunscreen products, the cheapest is free.', tr: 'Yaz özel: 3 güneş kremi al, en ucuzu bedava.' }, expires_at: new Date(now + 30*864e5).toISOString(), points_reward: 20, is_hot: false },
   ];
   const deals = g.deals || [];
   zamDeals.forEach(d => { if (!deals.find(x => x.id === d.id)) deals.push({ ...d, status: 'active', created_at: new Date().toISOString() }); });
@@ -6413,11 +6420,34 @@ function seedZAMContent() {
   ZAMApi.analytics.seedDemo();
 
   localStorage.setItem('zamclub_global', JSON.stringify(g));
-  localStorage.setItem('zam_seeded_v3', '1');
+  localStorage.setItem('zam_seeded_v4', '1');
   // Clean up old seed flags
+  localStorage.removeItem('zam_seeded_v3');
   localStorage.removeItem('zam_seeded_v2');
   localStorage.removeItem('zam_content_seeded');
 }
+
+window.zamI18nDebug = function() {
+  const lang = localStorage.getItem('zam_lang') || 'de';
+  const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
+  const deals = g.deals || [];
+  const events = g.events || [];
+  const challenges = JSON.parse(localStorage.getItem('zam_photo_challenges') || '[]');
+  let translated = 0, untranslated = [];
+  [...deals, ...events, ...challenges].forEach(item => {
+    const title = item.title;
+    if (title && typeof title === 'object' && title[lang] !== undefined) translated++;
+    else untranslated.push((item.id || '?') + ': ' + (typeof title === 'string' ? title.substring(0, 50) : JSON.stringify(title)));
+  });
+  const total = deals.length + events.length + challenges.length;
+  console.group('ZAM i18n Debug');
+  console.log('Aktuelle Sprache:', lang);
+  console.log('Übersetzte Inhalte:', translated + ' / ' + total);
+  console.log('Nicht übersetzt:', untranslated.length);
+  if (untranslated.length) console.table(untranslated);
+  console.groupEnd();
+  return { lang, translated, untranslated: untranslated.length, details: untranslated };
+};
 
 // =============================================
 // Init
@@ -6594,7 +6624,7 @@ function _saveModQueue(l) { localStorage.setItem('zam_moderation_queue', JSON.st
 
 function _seedChallenges() {
   const existing = _getChallenges();
-  if (existing.length >= 4 && existing[0]?.id === 'zam_ch_001' && existing[0]?.rules) return;
+  if (existing.length >= 4 && existing[0]?.id === 'zam_ch_001' && existing[0]?.rules && typeof existing[0]?.title === 'object') return;
   // Clear old submissions when re-seeding challenges
   localStorage.removeItem('zam_photo_submissions');
   localStorage.removeItem('zam_photo_gallery');
@@ -6602,33 +6632,33 @@ function _seedChallenges() {
   localStorage.setItem('zam_photo_challenges', JSON.stringify([
     { id:'zam_ch_001', merchant_id:'mer_008', merchant_name:'Dunkin Donuts', merchant_icon:'🍩',
       banner_color:'#ea580c', demo_count:5,
-      title:'Dunkin Donuts Challenge',
-      description:'Zeig deine süßesten Momente bei Dunkin Donuts! 3 Besuche fotografieren – und beim 3. Besuch gibt es einen Gratis-Donut für dich.',
-      reward_description:'Gratis Donut + 200 Punkte',
+      title:{ de:'Dunkin Donuts Challenge', en:'Dunkin Donuts Challenge', tr:'Dunkin Donuts Challenge' },
+      description:{ de:'Zeig deine süßesten Momente bei Dunkin Donuts! 3 Besuche fotografieren – und beim 3. Besuch gibt es einen Gratis-Donut für dich.', en:'Show your sweetest moments at Dunkin Donuts! Photograph 3 visits – on your 3rd visit you get a free donut.', tr:'Dunkin Donuts\'taki en tatlı anlarını paylaş! 3 ziyaret fotoğrafla – 3. ziyarette ücretsiz donut kazanırsın.' },
+      reward_description:{ de:'Gratis Donut + 200 Punkte', en:'Free Donut + 200 Points', tr:'Bedava Donut + 200 Puan' },
       rules:['1 Foto pro Tag zählt','Donut oder Kaffee muss im Bild sichtbar sein','Nur bei Dunkin Donuts im ZAM','Kein Upload aus der Galerie'],
       required_photos_count:3, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
     { id:'zam_ch_002', merchant_id:'mer_002', merchant_name:'KFC', merchant_icon:'🍗',
       banner_color:'#b91c1c', demo_count:2,
-      title:'KFC Fan Challenge',
-      description:'Bist du ein echter KFC-Fan? Fotografiere deinen Chicken-Moment an 3 verschiedenen Tagen und zeig, dass du der größte KFC-Fan im ZAM bist!',
-      reward_description:'Gratis Hot Wings + 150 Punkte',
+      title:{ de:'KFC Fan Challenge', en:'KFC Fan Challenge', tr:'KFC Fan Challenge' },
+      description:{ de:'Bist du ein echter KFC-Fan? Fotografiere deinen Chicken-Moment an 3 verschiedenen Tagen und zeig, dass du der größte KFC-Fan im ZAM bist!', en:'Are you a real KFC fan? Photograph your chicken moment on 3 different days and show you\'re the biggest KFC fan in ZAM!', tr:'Gerçek bir KFC hayranı mısın? 3 farklı günde tavuk anını fotoğrafla ve ZAM\'ın en büyük KFC hayranı olduğunu kanıtla!' },
+      reward_description:{ de:'Gratis Hot Wings + 150 Punkte', en:'Free Hot Wings + 150 Points', tr:'Bedava Hot Wings + 150 Puan' },
       rules:['1 Foto pro Tag zählt','Essen muss im Bild erkennbar sein','Nur bei KFC im ZAM Food Court','Kein Upload aus der Galerie'],
       required_photos_count:3, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
     { id:'zam_ch_003', merchant_id:'mer_023', merchant_name:'Fit Star', merchant_icon:'💪',
       banner_color:'#065f46', demo_count:1,
-      title:'Fit Star Challenge',
-      description:'Dokumentiere deine Trainings-Fortschritte bei Fit Star! 5 Check-ins sammeln – zeig dein Workout, die Sauna oder deinen Motivationsmoment.',
-      reward_description:'1 Monat gratis + 300 Punkte',
+      title:{ de:'Fit Star Challenge', en:'Fit Star Challenge', tr:'Fit Star Challenge' },
+      description:{ de:'Dokumentiere deine Trainings-Fortschritte bei Fit Star! 5 Check-ins sammeln – zeig dein Workout, die Sauna oder deinen Motivationsmoment.', en:'Document your training progress at Fit Star! Collect 5 check-ins – show your workout, sauna or motivational moment.', tr:'Fit Star\'daki antrenman ilerlemenizi belgeleyin! 5 giriş toplayın – egzersizinizi, saunayı veya motivasyon anınızı gösterin.' },
+      reward_description:{ de:'1 Monat gratis + 300 Punkte', en:'1 Month Free + 300 Points', tr:'1 Ay Bedava + 300 Puan' },
       rules:['1 Foto pro Tag zählt','Foto muss im Fit Star aufgenommen werden','Training oder Wellness-Bereich erkennbar','Kein Upload aus der Galerie'],
       required_photos_count:5, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
     { id:'zam_ch_004', merchant_id:'mer_019', merchant_name:"L'Osteria", merchant_icon:'🍕',
       banner_color:'#b91c1c', demo_count:3,
-      title:"L'Osteria Pizza Challenge",
-      description:"Fotografiere deinen Pizzamoment bei L'Osteria! 2 Pizza-Fotos einreichen und den ZAM-Genießer-Bonus sichern – inklusive Rabatt auf deinen nächsten Besuch.",
-      reward_description:"15 % Rabatt + 180 Punkte",
+      title:{ de:"L'Osteria Pizza Challenge", en:"L'Osteria Pizza Challenge", tr:"L'Osteria Pizza Challenge" },
+      description:{ de:"Fotografiere deinen Pizzamoment bei L'Osteria! 2 Pizza-Fotos einreichen und den ZAM-Genießer-Bonus sichern – inklusive Rabatt auf deinen nächsten Besuch.", en:"Photograph your pizza moment at L'Osteria! Submit 2 pizza photos and secure the ZAM gourmet bonus – including a discount on your next visit.", tr:"L'Osteria'daki pizza anını fotoğrafla! 2 pizza fotoğrafı gönder ve ZAM gurme bonusunu kap – bir sonraki ziyaretinde indirim dahil." },
+      reward_description:{ de:'15 % Rabatt + 180 Punkte', en:'15% Discount + 180 Points', tr:'%15 İndirim + 180 Puan' },
       rules:['1 Foto pro Tag zählt','Pizza muss deutlich sichtbar sein',"Nur bei L'Osteria im ZAM OG 1",'Kein Upload aus der Galerie'],
       required_photos_count:2, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
@@ -6756,21 +6786,21 @@ function renderPhotoChallenges() {
       <div style="background:linear-gradient(135deg,${c},${c}99);padding:16px;display:flex;align-items:center;gap:14px">
         <div style="font-size:2.6rem;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))">${ch.merchant_icon}</div>
         <div style="flex:1">
-          <div style="font-size:1rem;font-weight:800;color:#fff;line-height:1.25">${escHtml(ch.title)}</div>
+          <div style="font-size:1rem;font-weight:800;color:#fff;line-height:1.25">${escHtml(_l(ch, 'title'))}</div>
           <div style="font-size:0.72rem;color:rgba(255,255,255,0.65);margin-top:3px">${escHtml(ch.merchant_name)}</div>
         </div>
         <span style="font-size:0.6rem;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;${done ? 'background:rgba(247,171,0,0.2);color:#F7AB00;border:1px solid rgba(247,171,0,0.3)' : 'background:rgba(255,255,255,0.15);color:#fff'}">${done ? '✅ '+t('challenges.completed') : '🔥 '+t('challenges.join')}</span>
       </div>
       <!-- Body -->
       <div style="padding:14px 16px">
-        <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px">${escHtml(_getContentTitle('challenges', ch.id, 'description') || ch.description)}</p>
+        <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px">${escHtml(_l(ch, 'description'))}</p>
 
         <!-- Reward -->
         <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:11px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
           <span style="font-size:1.3rem">🎁</span>
           <div>
             <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;font-weight:800;color:rgba(52,211,153,0.7);margin-bottom:2px">${t('challenges.reward')}</div>
-            <div style="font-size:0.85rem;font-weight:700;color:#34d399">${escHtml(_getContentTitle('challenges', ch.id, 'reward') || ch.reward_description)}</div>
+            <div style="font-size:0.85rem;font-weight:700;color:#34d399">${escHtml(_l(ch, 'reward_description'))}</div>
           </div>
         </div>
 
@@ -6800,8 +6830,8 @@ function renderPhotoChallenges() {
         ${done
           ? `<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:14px;text-align:center">
                <div style="font-size:1.3rem;margin-bottom:6px">🎉</div>
-               <div style="font-size:0.9rem;font-weight:800;color:#34d399;margin-bottom:2px">Challenge abgeschlossen!</div>
-               <div style="font-size:0.75rem;color:rgba(52,211,153,0.7)">${escHtml(ch.reward_description)}</div>
+               <div style="font-size:0.9rem;font-weight:800;color:#34d399;margin-bottom:2px">${t('challenges.completed')}</div>
+               <div style="font-size:0.75rem;color:rgba(52,211,153,0.7)">${escHtml(_l(ch, 'reward_description'))}</div>
              </div>`
           : `<div style="display:flex;gap:8px">
                <button onclick="openChallengeDetail('${ch.id}')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;border-radius:12px;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer">Details</button>
@@ -6888,7 +6918,7 @@ function openChallengeDetail(challengeId) {
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
       <div style="width:56px;height:56px;border-radius:14px;background:${c}33;border:2px solid ${c}66;display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0">${ch.merchant_icon}</div>
       <div>
-        <div style="font-size:1.05rem;font-weight:800;color:#fff;line-height:1.2">${escHtml(ch.title)}</div>
+        <div style="font-size:1.05rem;font-weight:800;color:#fff;line-height:1.2">${escHtml(_l(ch, 'title'))}</div>
         <div style="font-size:0.74rem;color:rgba(255,255,255,0.45);margin-top:3px">${escHtml(ch.merchant_name)}</div>
       </div>
     </div>
@@ -6896,8 +6926,8 @@ function openChallengeDetail(challengeId) {
     <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
       <span style="font-size:1.4rem">🎁</span>
       <div>
-        <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;font-weight:800;color:rgba(52,211,153,0.7);margin-bottom:3px">Deine Belohnung</div>
-        <div style="font-size:0.9rem;font-weight:800;color:#34d399">${escHtml(ch.reward_description)}</div>
+        <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;font-weight:800;color:rgba(52,211,153,0.7);margin-bottom:3px">${t('challenges.reward')}</div>
+        <div style="font-size:0.9rem;font-weight:800;color:#34d399">${escHtml(_l(ch, 'reward_description'))}</div>
       </div>
     </div>
 
@@ -6954,7 +6984,7 @@ function openCameraForChallenge(challengeId) {
   const ch = _getChallenges().find(c => c.id === challengeId);
   const modal = document.getElementById('modal-camera');
   if (!modal) return;
-  document.getElementById('camera-challenge-title').textContent = ch ? ch.title : t('challenges.take_photo');
+  document.getElementById('camera-challenge-title').textContent = ch ? _l(ch, 'title') : t('challenges.take_photo');
   // Reset to viewfinder state
   const preview = document.getElementById('camera-photo-preview');
   const shutterUi = document.getElementById('camera-shutter-ui');
@@ -7573,9 +7603,9 @@ function _awardChallengeReward(challengeId) {
   if (!ch) return;
   const rewards = _getRewards();
   if (rewards.some(r => r.challenge_id === challengeId && r.status !== 'expired')) return;
-  rewards.unshift({ id:'rew_'+Date.now(), type:'challenge', merchant_name:ch.merchant_name, merchant_icon:ch.merchant_icon, title:ch.reward_description, description:`Belohnung für: ${ch.title}`, voucher_id:_generateVoucherId(), status:'available', challenge_id:challengeId, expires_at:new Date(Date.now()+30*86400000).toISOString(), earned_at:new Date().toISOString() });
+  rewards.unshift({ id:'rew_'+Date.now(), type:'challenge', merchant_name:ch.merchant_name, merchant_icon:ch.merchant_icon, title:_l(ch, 'reward_description'), description:t('toast.reward_unlocked').replace('{title}', _l(ch, 'title')), voucher_id:_generateVoucherId(), status:'available', challenge_id:challengeId, expires_at:new Date(Date.now()+30*86400000).toISOString(), earned_at:new Date().toISOString() });
   _saveRewards(rewards);
-  showToast(`🎁 Belohnung freigeschaltet: ${ch.reward_description}`);
+  showToast(t('toast.reward_unlocked').replace('{title}', _l(ch, 'reward_description')));
 }
 
 // ═══════════════════════════════════════════════
