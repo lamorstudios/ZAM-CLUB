@@ -545,15 +545,8 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
 
 <script>
 function mapT(key) {
-  const lang = localStorage.getItem('zam_lang') || 'de';
-  const map_i18n = {
-    de: { title:'ZAM Live Map', online:'online', users:'Nutzer aktiv', close:'Schließen' },
-    en: { title:'ZAM Live Map', online:'online', users:'users active', close:'Close' },
-    tr: { title:'ZAM Live Map', online:'çevrimiçi', users:'kullanıcı aktif', close:'Kapat' },
-    es: { title:'ZAM Live Map', online:'en línea', users:'usuarios activos', close:'Cerrar' },
-    it: { title:'ZAM Live Map', online:'online', users:'utenti attivi', close:'Chiudi' },
-  };
-  return (map_i18n[lang] || map_i18n['de'])[key] || key;
+  const map_i18n = { title:'ZAM Live Map', online:'online', users:'Nutzer aktiv', close:'Schließen' };
+  return map_i18n[key] || key;
 }
 // Clear cached shop data if version mismatch
 (function(){try{const c=JSON.parse(localStorage.getItem('zam_shop_map_data')||'null');if(c&&c[0]&&(c[0].name==='REWE City'||c[0].id==='s_rewe'&&c[0].name!=='REWE')){localStorage.removeItem('zam_shop_map_data');}}catch(e){}}());

@@ -187,51 +187,18 @@ function _l(obj, field) {
 function setLang(code) { /* multilingual deactivated */ }
 
 function applyLanguage() {
-  // 1. Immediately update all static [data-i18n] elements across the whole page
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   updateNavLabels();
-  _updateLangPickerUI();
-  // Update deals tab buttons (not covered by data-i18n as they have IDs)
-  const dealsTabAll = document.getElementById('deals-tab-all');
-  if (dealsTabAll) dealsTabAll.textContent = t('deals.all');
-  const dealsTabDeals = document.getElementById('deals-tab-deals');
-  if (dealsTabDeals) dealsTabDeals.textContent = t('deals.regular');
-  const dealsTabPartner = document.getElementById('deals-tab-partner');
-  if (dealsTabPartner) dealsTabPartner.textContent = t('deals.partner');
-  // 2. Re-render the currently visible tab (dynamic content inside it)
-  const activeTab = document.querySelector('.nav-tab.active');
-  const tab = activeTab?.dataset?.page;
-  if (tab === 'home' && typeof renderHome === 'function') renderHome();
-  else if (tab === 'deals' && typeof renderDeals === 'function') renderDeals();
-  else if (tab === 'events' && typeof renderEvents === 'function') renderEvents();
-  else if (tab === 'community' && typeof renderCommunity === 'function') renderCommunity();
-  else if (tab === 'photo-challenges' && typeof renderChallenges === 'function') renderChallenges();
-  else if (tab === 'notifications' && typeof renderNotifications === 'function') renderNotifications();
-  else if (tab === 'profile' && typeof renderProfile === 'function') renderProfile();
 }
 
-function _updateLangPickerUI() {
-  const btn = document.getElementById('lang-current-label');
-  if (!btn) return;
-  const lang = localStorage.getItem('zam_lang') || 'de';
-  const labels = { de:'🇩🇪 Deutsch', en:'🇬🇧 English', tr:'🇹🇷 Türkçe', es:'🇪🇸 Español', it:'🇮🇹 Italiano' };
-  btn.textContent = labels[lang] || '🇩🇪 Deutsch';
-}
+function _updateLangPickerUI() { /* no-op */ }
+function openLangSheet() { /* no-op */ }
+function closeLangSheet() { /* no-op */ }
+function dismissFirstRunLang() { /* no-op */ }
+function showLangPickerIfNeeded() { /* no-op */ }
 
-function openLangSheet() {
-  const sheet = document.getElementById('lang-sheet-overlay');
-  if (sheet) { sheet.style.opacity = '1'; sheet.style.pointerEvents = 'all'; }
-}
 
-function closeLangSheet() {
-  const sheet = document.getElementById('lang-sheet-overlay');
-  if (sheet) { sheet.style.opacity = '0'; sheet.style.pointerEvents = 'none'; }
-}
-
-function dismissFirstRunLang(code) {
-  if (code) setLang(code);
-  else { localStorage.setItem('zam_lang_chosen', '1'); applyLanguage(); }
   const overlay = document.getElementById('first-run-lang-overlay');
   if (overlay) overlay.style.display = 'none';
 }
@@ -250,7 +217,6 @@ function updateNavLabels() {
   });
 }
 
-function showLangPickerIfNeeded() { /* multilingual deactivated */ }
 
 // =============================================
 // localStorage Abstraction (Supabase-ready)
@@ -6452,7 +6418,12 @@ function initI18nStaticElements() {
 }
 
 function init() {
-  localStorage.setItem('zam_lang', 'de'); // v1: Deutsch fest
+  // v1: immer Deutsch, alte Spracheinstellungen löschen
+  localStorage.removeItem('zam_lang');
+  localStorage.removeItem('zam_lang_chosen');
+  localStorage.removeItem('language');
+  localStorage.removeItem('selectedLanguage');
+  localStorage.removeItem('locale');
   showLangPickerIfNeeded();
   initI18nStaticElements();
   seedZAMContent();
