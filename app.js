@@ -11,79 +11,89 @@
 // =============================================
 window.ZAM_I18N = {
   de: {
-    nav: { home:'Home', deals:'Deals', events:'Events', community:'Community', map:'Map', challenges:'Challenges', alerts:'Alerts', profile:'Profil' },
-    login: { title:'Willkommen bei ZAM', subtitle:'Dein Shopping-Center Erlebnis', button:'Anmelden', demo:'Demo starten' },
-    home: { greeting:'Guten Tag', greetingMorning:'Guten Morgen', greetingEvening:'Guten Abend', points:'Punkte', level:'Level', spin:'Drehen', streak:'Streak', bonus:'Bonus', rank:'Rang' },
-    deals: { title:'Deals', all:'Alle', nearby:'In der Nähe', food:'Essen', fashion:'Mode', filters:'Filter', voucher:'Gutschein sichern', noDeals:'Keine Deals verfügbar', saved:'Gespeichert' },
-    events: { title:'Events', join:'Teilnehmen', attending:'Angemeldet', full:'Ausgebucht', free:'Kostenlos', paid:'Kostenpflichtig', noEvents:'Keine Events verfügbar' },
-    community: { title:'Community', nudge:'Stupsen', chat:'Chat', online:'Online', friends:'Freunde', noFriends:'Noch keine Freunde', addFriend:'Freund hinzufügen' },
-    challenges: { title:'Challenges', join:'Mitmachen', progress:'Fortschritt', completed:'Abgeschlossen', reward:'Belohnung', noChallenges:'Keine Challenges verfügbar' },
-    alerts: { title:'Benachrichtigungen', empty:'Keine Benachrichtigungen', markRead:'Alle gelesen' },
-    profile: { title:'Profil', settings:'Einstellungen', language:'Sprache', logout:'Abmelden', editProfile:'Profil bearbeiten', notifications:'Benachrichtigungen', privacy:'Datenschutz', help:'Hilfe' },
-    buttons: { save:'Speichern', cancel:'Abbrechen', close:'Schließen', back:'Zurück', confirm:'Bestätigen', share:'Teilen', ok:'OK' },
-    errors: { generic:'Ein Fehler ist aufgetreten', network:'Netzwerkfehler' },
-    success: { voucherSaved:'Gutschein gespeichert!', friendRequest:'Freundschaftsanfrage gesendet', nudgeSent:'Stupser gesendet!' },
-    map: { title:'ZAM Live Map', online:'online', users:'Nutzer aktiv', close:'Schließen' },
+    nav:{ home:'Home', deals:'Deals', events:'Events', community:'Community', map:'Map', challenges:'Challenges', alerts:'Alerts', profile:'Profil' },
+    login:{ title:'Willkommen zurück', email:'E-Mail', password:'Passwort', btn:'Anmelden', or:'oder', google:'Mit Google anmelden', demo:'🎯 Demo einloggen', no_account:'Noch kein Konto?', register:'Registrieren', forgot:'Passwort vergessen?' },
+    register:{ title:'Konto erstellen', name:'Dein Name', username:'Benutzername', email:'E-Mail', password:'Passwort', password2:'Passwort wiederholen', btn:'Konto erstellen', google:'Mit Google registrieren', has_account:'Bereits Mitglied?', login:'Anmelden' },
+    forgot:{ title:'Passwort zurücksetzen', btn:'Link senden', hint:'Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link zum Zurücksetzen.' },
+    home:{ points:'Deine Punkte', spin:'Täglich drehen', deals:'Top Deals', events:'Kommende Events', view_all:'Alle →' },
+    deals:{ title:'Deals 🏷️', all:'Alle', regular:'Deals', partner:'🤝 Partner', voucher:'Gutschein sichern', claimed:'✓ Eingelöst', loading:'Lädt…', no_deals:'Keine Deals verfügbar', no_partner:'Noch keine Partner-Deals aktiv' },
+    events:{ title:'Events 📅', join:'Teilnehmen', joined:'✓ Angemeldet', loading:'Lädt…', spots_free:'Plätze frei', spots_low:'Nur noch {n} Plätze!', attendees:'{n} Teilnehmer', all:'Alle', week:'Diese Woche', month:'Diesen Monat' },
+    community:{ title:'Community 👥', nudge:'Anstupsen', chat:'Chat öffnen', online:'online', add_friend:'➕ Freund', req_sent:'Anfrage gesendet', accept:'✅ Annehmen', contacts:'Kontakte', friends:'👫 Meine Freunde', open_requests:'📩 Offene Anfragen', sent_requests:'📤 Gesendete Anfragen', my_contacts:'🤝 Meine Kontakte' },
+    challenges:{ title:'Challenges 📸', join:'Mitmachen', progress:'Fortschritt', completed:'Abgeschlossen', points:'Punkte' },
+    alerts:{ title:'Benachrichtigungen', all:'Alle', messages:'💬 Nachrichten', nudges:'👋 Anstupsien', events:'🎉 Events', deals:'🏷️ Deals', community:'👥 Community', empty:'Keine Benachrichtigungen' },
+    profile:{ title:'Profil', edit_short:'Profil bearbeiten', points_history_short:'Punkte-Historie', vouchers:'Meine Gutscheine', my_events:'Meine Events', nearby:'Nearby Alerts', invite:'Freunde einladen', logout:'Abmelden', language:'🌍 Sprache', disabled:'Deaktiviert', invite_bonus:'+100 Punkte' },
+    buttons:{ save:'Speichern', cancel:'Abbrechen', close:'Schließen', back:'Zurück', confirm:'Bestätigen', share:'Teilen', loading:'Laden…' },
+    errors:{ generic:'Etwas ist schiefgelaufen.', network:'Netzwerkfehler. Bitte versuche es erneut.' },
+    success:{ voucher_saved:'Gutschein gespeichert! 🎟', friend_sent:'Freundschaftsanfrage gesendet! 👋', event_joined:'Du nimmst teil! 🎉' },
+    map:{ title:'ZAM Live Map', online:'online', users:'Nutzer aktiv', close:'Schließen' },
   },
   en: {
-    nav: { home:'Home', deals:'Deals', events:'Events', community:'Community', map:'Map', challenges:'Challenges', alerts:'Alerts', profile:'Profile' },
-    login: { title:'Welcome to ZAM', subtitle:'Your Shopping Center Experience', button:'Sign In', demo:'Start Demo' },
-    home: { greeting:'Good Afternoon', greetingMorning:'Good Morning', greetingEvening:'Good Evening', points:'Points', level:'Level', spin:'Spin', streak:'Streak', bonus:'Bonus', rank:'Rank' },
-    deals: { title:'Deals', all:'All', nearby:'Nearby', food:'Food', fashion:'Fashion', filters:'Filters', voucher:'Save Voucher', noDeals:'No deals available', saved:'Saved' },
-    events: { title:'Events', join:'Join', attending:'Attending', full:'Sold Out', free:'Free', paid:'Paid', noEvents:'No events available' },
-    community: { title:'Community', nudge:'Nudge', chat:'Chat', online:'Online', friends:'Friends', noFriends:'No friends yet', addFriend:'Add Friend' },
-    challenges: { title:'Challenges', join:'Join', progress:'Progress', completed:'Completed', reward:'Reward', noChallenges:'No challenges available' },
-    alerts: { title:'Notifications', empty:'No notifications', markRead:'Mark all read' },
-    profile: { title:'Profile', settings:'Settings', language:'Language', logout:'Sign Out', editProfile:'Edit Profile', notifications:'Notifications', privacy:'Privacy', help:'Help' },
-    buttons: { save:'Save', cancel:'Cancel', close:'Close', back:'Back', confirm:'Confirm', share:'Share', ok:'OK' },
-    errors: { generic:'An error occurred', network:'Network error' },
-    success: { voucherSaved:'Voucher saved!', friendRequest:'Friend request sent', nudgeSent:'Nudge sent!' },
-    map: { title:'ZAM Live Map', online:'online', users:'users active', close:'Close' },
+    nav:{ home:'Home', deals:'Deals', events:'Events', community:'Community', map:'Map', challenges:'Challenges', alerts:'Alerts', profile:'Profile' },
+    login:{ title:'Welcome back', email:'E-Mail', password:'Password', btn:'Sign in', or:'or', google:'Sign in with Google', demo:'🎯 Demo login', no_account:"Don't have an account?", register:'Register', forgot:'Forgot password?' },
+    register:{ title:'Create account', name:'Your name', username:'Username', email:'E-Mail', password:'Password', password2:'Repeat password', btn:'Create account', google:'Sign up with Google', has_account:'Already a member?', login:'Sign in' },
+    forgot:{ title:'Reset password', btn:'Send link', hint:'Enter your e-mail address. We will send you a reset link.' },
+    home:{ points:'Your Points', spin:'Daily spin', deals:'Top Deals', events:'Upcoming Events', view_all:'View all →' },
+    deals:{ title:'Deals 🏷️', all:'All', regular:'Deals', partner:'🤝 Partner', voucher:'Get voucher', claimed:'✓ Redeemed', loading:'Loading…', no_deals:'No deals available', no_partner:'No partner deals yet' },
+    events:{ title:'Events 📅', join:'Join', joined:'✓ Registered', loading:'Loading…', spots_free:'spots left', spots_low:'Only {n} spots left!', attendees:'{n} attendees', all:'All', week:'This week', month:'This month' },
+    community:{ title:'Community 👥', nudge:'Nudge', chat:'Open chat', online:'online', add_friend:'➕ Add friend', req_sent:'Request sent', accept:'✅ Accept', contacts:'Contacts', friends:'👫 My Friends', open_requests:'📩 Pending Requests', sent_requests:'📤 Sent Requests', my_contacts:'🤝 My Contacts' },
+    challenges:{ title:'Challenges 📸', join:'Join', progress:'Progress', completed:'Completed', points:'Points' },
+    alerts:{ title:'Notifications', all:'All', messages:'💬 Messages', nudges:'👋 Nudges', events:'🎉 Events', deals:'🏷️ Deals', community:'👥 Community', empty:'No notifications' },
+    profile:{ title:'Profile', edit_short:'Edit profile', points_history_short:'Points history', vouchers:'My vouchers', my_events:'My events', nearby:'Nearby Alerts', invite:'Invite friends', logout:'Sign out', language:'🌍 Language', disabled:'Disabled', invite_bonus:'+100 points' },
+    buttons:{ save:'Save', cancel:'Cancel', close:'Close', back:'Back', confirm:'Confirm', share:'Share', loading:'Loading…' },
+    errors:{ generic:'Something went wrong.', network:'Network error. Please try again.' },
+    success:{ voucher_saved:'Voucher saved! 🎟', friend_sent:'Friend request sent! 👋', event_joined:"You're in! 🎉" },
+    map:{ title:'ZAM Live Map', online:'online', users:'users active', close:'Close' },
   },
   tr: {
-    nav: { home:'Ana Sayfa', deals:'Fırsatlar', events:'Etkinlikler', community:'Topluluk', map:'Harita', challenges:'Meydan Okumalar', alerts:'Uyarılar', profile:'Profil' },
-    login: { title:"ZAM'a Hoş Geldiniz", subtitle:'Alışveriş Merkezi Deneyiminiz', button:'Giriş Yap', demo:'Demo Başlat' },
-    home: { greeting:'İyi Günler', greetingMorning:'Günaydın', greetingEvening:'İyi Akşamlar', points:'Puan', level:'Seviye', spin:'Çevir', streak:'Seri', bonus:'Bonus', rank:'Sıralama' },
-    deals: { title:'Fırsatlar', all:'Tümü', nearby:'Yakınımda', food:'Yemek', fashion:'Moda', filters:'Filtreler', voucher:'Kuponu Kaydet', noDeals:'Fırsat bulunamadı', saved:'Kaydedildi' },
-    events: { title:'Etkinlikler', join:'Katıl', attending:'Katılıyorum', full:'Dolu', free:'Ücretsiz', paid:'Ücretli', noEvents:'Etkinlik bulunamadı' },
-    community: { title:'Topluluk', nudge:'Dürt', chat:'Sohbet', online:'Çevrimiçi', friends:'Arkadaşlar', noFriends:'Henüz arkadaş yok', addFriend:'Arkadaş Ekle' },
-    challenges: { title:'Meydan Okumalar', join:'Katıl', progress:'İlerleme', completed:'Tamamlandı', reward:'Ödül', noChallenges:'Meydan okuma bulunamadı' },
-    alerts: { title:'Bildirimler', empty:'Bildirim yok', markRead:'Tümünü okundu işaretle' },
-    profile: { title:'Profil', settings:'Ayarlar', language:'Dil', logout:'Çıkış Yap', editProfile:'Profili Düzenle', notifications:'Bildirimler', privacy:'Gizlilik', help:'Yardım' },
-    buttons: { save:'Kaydet', cancel:'İptal', close:'Kapat', back:'Geri', confirm:'Onayla', share:'Paylaş', ok:'Tamam' },
-    errors: { generic:'Bir hata oluştu', network:'Ağ hatası' },
-    success: { voucherSaved:'Kupon kaydedildi!', friendRequest:'Arkadaşlık isteği gönderildi', nudgeSent:'Dürtme gönderildi!' },
-    map: { title:'ZAM Canlı Harita', online:'çevrimiçi', users:'kullanıcı aktif', close:'Kapat' },
+    nav:{ home:'Ana Sayfa', deals:'Fırsatlar', events:'Etkinlikler', community:'Topluluk', map:'Harita', challenges:'Görevler', alerts:'Bildirimler', profile:'Profil' },
+    login:{ title:'Tekrar hoş geldiniz', email:'E-Posta', password:'Şifre', btn:'Giriş yap', or:'veya', google:'Google ile giriş yap', demo:'🎯 Demo girişi', no_account:'Hesabın yok mu?', register:'Kayıt ol', forgot:'Şifremi unuttum?' },
+    register:{ title:'Hesap oluştur', name:'Adın', username:'Kullanıcı adı', email:'E-Posta', password:'Şifre', password2:'Şifreyi tekrarla', btn:'Hesap oluştur', google:'Google ile kayıt ol', has_account:'Zaten üye misin?', login:'Giriş yap' },
+    forgot:{ title:'Şifre sıfırlama', btn:'Link gönder', hint:'E-posta adresini gir. Sıfırlama bağlantısı göndereceğiz.' },
+    home:{ points:'Puanların', spin:'Günlük çevir', deals:'En İyi Fırsatlar', events:'Yaklaşan Etkinlikler', view_all:'Tümünü gör →' },
+    deals:{ title:'Fırsatlar 🏷️', all:'Tümü', regular:'Fırsatlar', partner:'🤝 Ortak', voucher:'Kuponu al', claimed:'✓ Kullanıldı', loading:'Yükleniyor…', no_deals:'Fırsat bulunamadı', no_partner:'Henüz ortak fırsatı yok' },
+    events:{ title:'Etkinlikler 📅', join:'Katıl', joined:'✓ Kayıt olundu', loading:'Yükleniyor…', spots_free:'yer mevcut', spots_low:'Yalnızca {n} yer kaldı!', attendees:'{n} katılımcı', all:'Tümü', week:'Bu hafta', month:'Bu ay' },
+    community:{ title:'Topluluk 👥', nudge:'Dürt', chat:'Sohbet aç', online:'çevrimiçi', add_friend:'➕ Arkadaş ekle', req_sent:'İstek gönderildi', accept:'✅ Kabul et', contacts:'Kişiler', friends:'👫 Arkadaşlarım', open_requests:'📩 Bekleyen İstekler', sent_requests:'📤 Gönderilen İstekler', my_contacts:'🤝 Kişilerim' },
+    challenges:{ title:'Görevler 📸', join:'Katıl', progress:'İlerleme', completed:'Tamamlandı', points:'Puan' },
+    alerts:{ title:'Bildirimler', all:'Tümü', messages:'💬 Mesajlar', nudges:'👋 Dürtmeler', events:'🎉 Etkinlikler', deals:'🏷️ Fırsatlar', community:'👥 Topluluk', empty:'Bildirim yok' },
+    profile:{ title:'Profil', edit_short:'Profili düzenle', points_history_short:'Puan geçmişi', vouchers:'Kuponlarım', my_events:'Etkinliklerim', nearby:'Yakın Uyarılar', invite:'Arkadaş davet et', logout:'Çıkış yap', language:'🌍 Dil', disabled:'Devre dışı', invite_bonus:'+100 puan' },
+    buttons:{ save:'Kaydet', cancel:'İptal', close:'Kapat', back:'Geri', confirm:'Onayla', share:'Paylaş', loading:'Yükleniyor…' },
+    errors:{ generic:'Bir şeyler ters gitti.', network:'Ağ hatası. Lütfen tekrar dene.' },
+    success:{ voucher_saved:'Kupon kaydedildi! 🎟', friend_sent:'Arkadaşlık isteği gönderildi! 👋', event_joined:'Katıldın! 🎉' },
+    map:{ title:'ZAM Canlı Harita', online:'çevrimiçi', users:'kullanıcı aktif', close:'Kapat' },
   },
   es: {
-    nav: { home:'Inicio', deals:'Ofertas', events:'Eventos', community:'Comunidad', map:'Mapa', challenges:'Retos', alerts:'Alertas', profile:'Perfil' },
-    login: { title:'Bienvenido a ZAM', subtitle:'Tu Experiencia en el Centro Comercial', button:'Iniciar sesión', demo:'Iniciar Demo' },
-    home: { greeting:'Buenas tardes', greetingMorning:'Buenos días', greetingEvening:'Buenas noches', points:'Puntos', level:'Nivel', spin:'Girar', streak:'Racha', bonus:'Bonus', rank:'Rango' },
-    deals: { title:'Ofertas', all:'Todas', nearby:'Cerca de mí', food:'Comida', fashion:'Moda', filters:'Filtros', voucher:'Guardar Cupón', noDeals:'No hay ofertas disponibles', saved:'Guardado' },
-    events: { title:'Eventos', join:'Unirse', attending:'Inscrito', full:'Agotado', free:'Gratis', paid:'De pago', noEvents:'No hay eventos disponibles' },
-    community: { title:'Comunidad', nudge:'Dar un toque', chat:'Chat', online:'En línea', friends:'Amigos', noFriends:'Aún sin amigos', addFriend:'Añadir amigo' },
-    challenges: { title:'Retos', join:'Participar', progress:'Progreso', completed:'Completado', reward:'Recompensa', noChallenges:'No hay retos disponibles' },
-    alerts: { title:'Notificaciones', empty:'Sin notificaciones', markRead:'Marcar todo como leído' },
-    profile: { title:'Perfil', settings:'Ajustes', language:'Idioma', logout:'Cerrar sesión', editProfile:'Editar Perfil', notifications:'Notificaciones', privacy:'Privacidad', help:'Ayuda' },
-    buttons: { save:'Guardar', cancel:'Cancelar', close:'Cerrar', back:'Atrás', confirm:'Confirmar', share:'Compartir', ok:'OK' },
-    errors: { generic:'Se ha producido un error', network:'Error de red' },
-    success: { voucherSaved:'¡Cupón guardado!', friendRequest:'Solicitud de amistad enviada', nudgeSent:'¡Toque enviado!' },
-    map: { title:'ZAM Mapa en Vivo', online:'en línea', users:'usuarios activos', close:'Cerrar' },
+    nav:{ home:'Inicio', deals:'Ofertas', events:'Eventos', community:'Comunidad', map:'Mapa', challenges:'Retos', alerts:'Alertas', profile:'Perfil' },
+    login:{ title:'Bienvenido de nuevo', email:'Correo electrónico', password:'Contraseña', btn:'Iniciar sesión', or:'o', google:'Iniciar sesión con Google', demo:'🎯 Demo (Presentación)', no_account:'¿No tienes cuenta?', register:'Registrarse', forgot:'¿Olvidaste tu contraseña?' },
+    register:{ title:'Crear cuenta', name:'Tu nombre', username:'Nombre de usuario', email:'Correo electrónico', password:'Contraseña', password2:'Repetir contraseña', btn:'Crear cuenta', google:'Registrarse con Google', has_account:'¿Ya eres miembro?', login:'Iniciar sesión' },
+    forgot:{ title:'Restablecer contraseña', btn:'Enviar enlace', hint:'Ingresa tu correo electrónico. Te enviaremos un enlace de restablecimiento.' },
+    home:{ points:'Tus Puntos', spin:'Giro diario', deals:'Mejores Ofertas', events:'Próximos Eventos', view_all:'Ver todo →' },
+    deals:{ title:'Ofertas 🏷️', all:'Todas', regular:'Ofertas', partner:'🤝 Socio', voucher:'Obtener cupón', claimed:'✓ Canjeado', loading:'Cargando…', no_deals:'Sin ofertas disponibles', no_partner:'Sin ofertas de socios aún' },
+    events:{ title:'Eventos 📅', join:'Unirse', joined:'✓ Registrado', loading:'Cargando…', spots_free:'lugares libres', spots_low:'¡Solo quedan {n} lugares!', attendees:'{n} asistentes', all:'Todos', week:'Esta semana', month:'Este mes' },
+    community:{ title:'Comunidad 👥', nudge:'Dar un toque', chat:'Abrir chat', online:'en línea', add_friend:'➕ Añadir amigo', req_sent:'Solicitud enviada', accept:'✅ Aceptar', contacts:'Contactos', friends:'👫 Mis Amigos', open_requests:'📩 Solicitudes pendientes', sent_requests:'📤 Solicitudes enviadas', my_contacts:'🤝 Mis Contactos' },
+    challenges:{ title:'Retos 📸', join:'Unirse', progress:'Progreso', completed:'Completado', points:'Puntos' },
+    alerts:{ title:'Notificaciones', all:'Todas', messages:'💬 Mensajes', nudges:'👋 Toques', events:'🎉 Eventos', deals:'🏷️ Ofertas', community:'👥 Comunidad', empty:'Sin notificaciones' },
+    profile:{ title:'Perfil', edit_short:'Editar perfil', points_history_short:'Historial de puntos', vouchers:'Mis cupones', my_events:'Mis eventos', nearby:'Alertas cercanas', invite:'Invitar amigos', logout:'Cerrar sesión', language:'🌍 Idioma', disabled:'Desactivado', invite_bonus:'+100 puntos' },
+    buttons:{ save:'Guardar', cancel:'Cancelar', close:'Cerrar', back:'Atrás', confirm:'Confirmar', share:'Compartir', loading:'Cargando…' },
+    errors:{ generic:'Algo salió mal.', network:'Error de red. Por favor inténtalo de nuevo.' },
+    success:{ voucher_saved:'¡Cupón guardado! 🎟', friend_sent:'¡Solicitud enviada! 👋', event_joined:'¡Te has unido! 🎉' },
+    map:{ title:'ZAM Mapa en Vivo', online:'en línea', users:'usuarios activos', close:'Cerrar' },
   },
   it: {
-    nav: { home:'Home', deals:'Offerte', events:'Eventi', community:'Comunità', map:'Mappa', challenges:'Sfide', alerts:'Avvisi', profile:'Profilo' },
-    login: { title:'Benvenuto su ZAM', subtitle:'La Tua Esperienza nel Centro Commerciale', button:'Accedi', demo:'Inizia Demo' },
-    home: { greeting:'Buon pomeriggio', greetingMorning:'Buongiorno', greetingEvening:'Buonasera', points:'Punti', level:'Livello', spin:'Gira', streak:'Serie', bonus:'Bonus', rank:'Classifica' },
-    deals: { title:'Offerte', all:'Tutte', nearby:'Vicino a me', food:'Cibo', fashion:'Moda', filters:'Filtri', voucher:'Salva Voucher', noDeals:'Nessuna offerta disponibile', saved:'Salvato' },
-    events: { title:'Eventi', join:'Partecipa', attending:'Iscritto', full:'Esaurito', free:'Gratuito', paid:'A pagamento', noEvents:'Nessun evento disponibile' },
-    community: { title:'Comunità', nudge:'Spingi', chat:'Chat', online:'Online', friends:'Amici', noFriends:'Ancora nessun amico', addFriend:'Aggiungi amico' },
-    challenges: { title:'Sfide', join:'Partecipa', progress:'Progresso', completed:'Completato', reward:'Premio', noChallenges:'Nessuna sfida disponibile' },
-    alerts: { title:'Notifiche', empty:'Nessuna notifica', markRead:'Segna tutto come letto' },
-    profile: { title:'Profilo', settings:'Impostazioni', language:'Lingua', logout:'Esci', editProfile:'Modifica Profilo', notifications:'Notifiche', privacy:'Privacy', help:'Aiuto' },
-    buttons: { save:'Salva', cancel:'Annulla', close:'Chiudi', back:'Indietro', confirm:'Conferma', share:'Condividi', ok:'OK' },
-    errors: { generic:'Si è verificato un errore', network:'Errore di rete' },
-    success: { voucherSaved:'Voucher salvato!', friendRequest:'Richiesta di amicizia inviata', nudgeSent:'Spinta inviata!' },
-    map: { title:'ZAM Mappa Live', online:'online', users:'utenti attivi', close:'Chiudi' },
+    nav:{ home:'Home', deals:'Offerte', events:'Eventi', community:'Community', map:'Mappa', challenges:'Sfide', alerts:'Avvisi', profile:'Profilo' },
+    login:{ title:'Bentornato', email:'E-mail', password:'Password', btn:'Accedi', or:'o', google:'Accedi con Google', demo:'🎯 Demo login', no_account:'Non hai un account?', register:'Registrati', forgot:'Password dimenticata?' },
+    register:{ title:'Crea account', name:'Il tuo nome', username:'Nome utente', email:'E-mail', password:'Password', password2:'Ripeti password', btn:'Crea account', google:'Registrati con Google', has_account:'Già membro?', login:'Accedi' },
+    forgot:{ title:'Reimposta password', btn:'Invia link', hint:"Inserisci il tuo indirizzo e-mail. Ti invieremo un link per reimpostare la password." },
+    home:{ points:'I tuoi Punti', spin:'Gira ogni giorno', deals:'Migliori Offerte', events:'Prossimi Eventi', view_all:'Vedi tutti →' },
+    deals:{ title:'Offerte 🏷️', all:'Tutte', regular:'Offerte', partner:'🤝 Partner', voucher:'Ottieni buono', claimed:'✓ Usato', loading:'Caricamento…', no_deals:'Nessuna offerta disponibile', no_partner:'Nessuna offerta partner ancora' },
+    events:{ title:'Eventi 📅', join:'Partecipa', joined:'✓ Iscritto', loading:'Caricamento…', spots_free:'posti liberi', spots_low:'Solo {n} posti rimasti!', attendees:'{n} partecipanti', all:'Tutti', week:'Questa settimana', month:'Questo mese' },
+    community:{ title:'Community 👥', nudge:'Tocca', chat:'Apri chat', online:'online', add_friend:'➕ Aggiungi amico', req_sent:'Richiesta inviata', accept:'✅ Accetta', contacts:'Contatti', friends:'👫 I miei amici', open_requests:'📩 Richieste in sospeso', sent_requests:'📤 Richieste inviate', my_contacts:'🤝 I miei contatti' },
+    challenges:{ title:'Sfide 📸', join:'Partecipa', progress:'Progresso', completed:'Completato', points:'Punti' },
+    alerts:{ title:'Notifiche', all:'Tutte', messages:'💬 Messaggi', nudges:'👋 Tocchi', events:'🎉 Eventi', deals:'🏷️ Offerte', community:'👥 Community', empty:'Nessuna notifica' },
+    profile:{ title:'Profilo', edit_short:'Modifica profilo', points_history_short:'Storico punti', vouchers:'I miei buoni', my_events:'I miei eventi', nearby:'Avvisi vicini', invite:'Invita amici', logout:'Esci', language:'🌍 Lingua', disabled:'Disabilitato', invite_bonus:'+100 punti' },
+    buttons:{ save:'Salva', cancel:'Annulla', close:'Chiudi', back:'Indietro', confirm:'Conferma', share:'Condividi', loading:'Caricamento…' },
+    errors:{ generic:'Qualcosa è andato storto.', network:'Errore di rete. Riprova.' },
+    success:{ voucher_saved:'Buono salvato! 🎟', friend_sent:'Richiesta inviata! 👋', event_joined:'Sei iscritto! 🎉' },
+    map:{ title:'ZAM Mappa Live', online:'online', users:'utenti attivi', close:'Chiudi' },
   },
 };
 
@@ -110,23 +120,21 @@ function setLang(code) {
 }
 
 function applyLanguage() {
-  // Update static data-i18n elements
+  // 1. Immediately update all static [data-i18n] elements across the whole page
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   updateNavLabels();
   _updateLangPickerUI();
-  // Re-render current active tab
+  // 2. Re-render the currently visible tab (dynamic content inside it)
   const activeTab = document.querySelector('.nav-tab.active');
-  if (activeTab) {
-    const tab = activeTab.dataset.page;
-    if (tab === 'home') typeof renderHome !== 'undefined' && renderHome();
-    else if (tab === 'deals') typeof renderDeals !== 'undefined' && renderDeals();
-    else if (tab === 'events') typeof renderEvents !== 'undefined' && renderEvents();
-    else if (tab === 'community') typeof renderCommunity !== 'undefined' && renderCommunity();
-    else if (tab === 'photo-challenges') typeof renderChallenges !== 'undefined' && renderChallenges();
-    else if (tab === 'notifications') typeof renderNotifications !== 'undefined' && renderNotifications();
-    else if (tab === 'profile') typeof renderProfile !== 'undefined' && renderProfile();
-  }
+  const tab = activeTab?.dataset?.page;
+  if (tab === 'home' && typeof renderHome === 'function') renderHome();
+  else if (tab === 'deals' && typeof renderDeals === 'function') renderDeals();
+  else if (tab === 'events' && typeof renderEvents === 'function') renderEvents();
+  else if (tab === 'community' && typeof renderCommunity === 'function') renderCommunity();
+  else if (tab === 'photo-challenges' && typeof renderChallenges === 'function') renderChallenges();
+  else if (tab === 'notifications' && typeof renderNotifications === 'function') renderNotifications();
+  else if (tab === 'profile' && typeof renderProfile === 'function') renderProfile();
 }
 
 function _updateLangPickerUI() {
@@ -1924,7 +1932,7 @@ async function renderProfile() {
   const nearbyBadge = document.getElementById('nearby-profile-badge');
   if (nearbyBadge) {
     const ns = NEARBY.getSettings();
-    nearbyBadge.textContent = ns.enabled ? '✅ Aktiv' : 'Deaktiviert';
+    nearbyBadge.textContent = ns.enabled ? '✅ Aktiv' : t('profile.disabled');
     nearbyBadge.style.color = ns.enabled ? '#34d399' : 'rgba(255,255,255,0.35)';
   }
 }
