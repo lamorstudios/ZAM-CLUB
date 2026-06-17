@@ -9,8 +9,10 @@
 // =============================================
 // i18n — Translations
 // =============================================
-window.ZAM_I18N = {
-  de: {
+// =============================================
+// Texte (Deutsch)
+// =============================================
+const _STR = {
     nav:{ home:'Home', deals:'Deals', events:'Events', community:'Community', map:'Map', challenges:'Challenges', alerts:'Alerts', profile:'Profil' },
     login:{ title:'Willkommen zurück', email:'E-Mail', password:'Passwort', btn:'Anmelden', or:'oder', google:'Mit Google anmelden', demo:'🎯 Demo einloggen', no_account:'Noch kein Konto?', register:'Registrieren', forgot:'Passwort vergessen?' },
     register:{ title:'Konto erstellen', name:'Dein Name', username:'Benutzername', email:'E-Mail', password:'Passwort', password2:'Passwort wiederholen', btn:'Konto erstellen', google:'Mit Google registrieren', has_account:'Bereits Mitglied?', login:'Anmelden' },
@@ -21,7 +23,7 @@ window.ZAM_I18N = {
     community:{ title:'Community 👥', nudge:'Anstupsen', chat:'Chat öffnen', online:'online', add_friend:'➕ Freund', req_sent:'Anfrage gesendet', accept:'✅ Annehmen', contacts:'Kontakte', friends:'👫 Meine Freunde', open_requests:'📩 Offene Anfragen', sent_requests:'📤 Gesendete Anfragen', my_contacts:'🤝 Meine Kontakte', wall:'Pinnwand', chat_tab:'Chat', contacts_tab:'Kontakte', write_post:'Beitrag schreiben…', no_posts:'Noch keine Beiträge.', together:'Gemeinsam', interested:'Interessiert', loading:'Lädt…', delete:'Löschen', delete_confirm:'Beitrag löschen?', pending:'⏳ ausstehend' },
     challenges:{ title:'Challenges 📸', join:'Mitmachen', progress:'Fortschritt', completed:'Abgeschlossen', points:'Punkte', reward:'Belohnung', claim:'Abholen 🎁', done:'Erhalten', today_submit:'📸 Heute Foto aufnehmen', today_submitted:'⏳ Heute bereits eingereicht – morgen wieder', already_submitted:'Heute bereits ein Foto eingereicht!', reward_pts:'+{n} Pkt.', take_photo:'📸 Foto aufnehmen', tomorrow_available:'Morgen wieder verfügbar', no_photo_yet:'Bitte zuerst ein Foto aufnehmen', not_in_zone:'❌ Nicht im ZAM-Bereich. Bitte näher kommen.' },
     alerts:{ title:'Benachrichtigungen', all:'Alle', messages:'💬 Nachrichten', nudges:'👋 Anstupsien', events:'🎉 Events', deals:'🏷️ Deals', community:'👥 Community', empty:'Keine Benachrichtigungen', in_category:' in dieser Kategorie', friend_request:'➕ Freundschaftsanfrage', wants_friend:' möchte dich als Freund hinzufügen.', deal_asks:' fragt an', request_declined:'Anfrage abgelehnt', chat_open:'💬 Chat öffnen', accept:'✅ Annehmen', decline:'❌ Ablehnen', someone:'Jemand' },
-    profile:{ title:'Profil', edit_short:'Profil bearbeiten', points_history_short:'Punkte-Historie', vouchers:'Meine Gutscheine', my_events:'Meine Events', nearby:'Nearby Alerts', invite:'Freunde einladen', logout:'Abmelden', language:'🌍 Sprache', disabled:'Deaktiviert', active:'✅ Aktiv', invite_bonus:'+100 Punkte', points_label:'Gesammelte Punkte', visits:'Besuche', events_stat:'Events', deals_stat:'Deals', saved_items:'Gemerkte Inhalte', badges:'Meine Abzeichen', challenges_title:'🎯 Monatliche Challenges', my_rewards:'Meine Belohnungen', badge_unlocked:'Abzeichen freigeschaltet! 🎉', nothing_saved:'Noch nichts gemerkt.', events_saved:'🔖 {n} Event{s} gemerkt', deals_saved:'🏷️ {n} Deal{s} gemerkt', saved_deals_link:'Gespeicherte Deals →' },
+    profile:{ title:'Profil', edit_short:'Profil bearbeiten', points_history_short:'Punkte-Historie', vouchers:'Meine Gutscheine', my_events:'Meine Events', nearby:'Nearby Alerts', invite:'Freunde einladen', logout:'Abmelden', disabled:'Deaktiviert', active:'✅ Aktiv', invite_bonus:'+100 Punkte', points_label:'Gesammelte Punkte', visits:'Besuche', events_stat:'Events', deals_stat:'Deals', saved_items:'Gemerkte Inhalte', badges:'Meine Abzeichen', challenges_title:'🎯 Monatliche Challenges', my_rewards:'Meine Belohnungen', badge_unlocked:'Abzeichen freigeschaltet! 🎉', nothing_saved:'Noch nichts gemerkt.', events_saved:'🔖 {n} Event{s} gemerkt', deals_saved:'🏷️ {n} Deal{s} gemerkt', saved_deals_link:'Gespeicherte Deals →' },
     qr:{ checkin_btn_do:'✅ Bei {label} einchecken (+25 Pkt.)', checkin_btn_done:'✓ Heute bei {label} eingecheckt', next_checkin:'⏰ Nächster Check-in morgen möglich', show_code:'📍 Zeige diesen Code bei {label}', valid:'✅ Gültig — beim Händler vorzeigen', checkin_success:'✅ Check-in erfolgreich! +{n} Punkte für {name}' },
     countdown:{ expired:'⌛ Abgelaufen', today:'⏳ Läuft heute ab', days:'⏳ Noch {n} Tage', time:'⏳ Noch {t}' },
     toast:{ voucher_saved:'Gutschein gespeichert! 🎟', friend_sent:'Freundschaftsanfrage gesendet! 👋', event_joined:'Du nimmst teil! 🎉', nudge_sent:'👋 {name} wurde angestupst!', nudge_fail:'Anfrage bereits gesendet', already_connected:'Anfrage bereits gesendet oder bereits verbunden.', challenge_done:'🎉 +{n} Punkte! Challenge abgeschlossen!', view:'Ansehen', saved:'🔖 Deal gespeichert! +5 Punkte', event_removed:'Event entfernt', deal_removed:'Deal entfernt', copy:'Text kopiert! 📋', friend_accepted:'✅ {name} ist jetzt dein Freund!', friend_rejected:'Anfrage abgelehnt', deal_request_sent:'✅ Anfrage an {name} gesendet!', deal_accepted:'✅ Angenommen! Chat geöffnet.', deal_rejected:'Anfrage abgelehnt.', spin_next:'⏰ Nächste Drehung ab Mitternacht', partner_voucher:'🎟 Gutschein gesichert! +10 Punkte', voucher_redeemed:'✓ Gutschein eingelöst!', reward_unlocked:'🎁 {title} freigeschaltet!' },
@@ -34,157 +36,22 @@ window.ZAM_I18N = {
     referral:{ how_it_works:'So funktioniert\'s', step1_title:'Deinen Code teilen', step1_desc:'Sende deinen persönlichen Code an Freunde', step2_title:'Freund registriert sich', step2_desc:'Mit deinem Code im ZAM Club anmelden', step3_title:'Beide erhalten Punkte', step3_desc:'+100 Punkte für dich, +100 Punkte für den Freund', points_earned:'Punkte verdient', link_copied:'✓ Link kopiert!', share_msg:'Hey! Ich nutze die ZAM Club App und lade dich ein. Meld dich mit meinem Code {code} an und wir bekommen beide Punkte! 🎉' },
     merchant:{ current_deals:'Aktuelle Aktionen' },
     ai:{ default_msg:'Ich helfe gerne! Du kannst mich fragen:<br><br>• Was gibt es heute im ZAM?<br>• Aktuelle Angebote & Deals<br>• Wo kann ich essen?<br>• Meine persönlichen Empfehlungen<br><br>Was möchtest du wissen? 🤖' },
-  },
-  en: {
-    nav:{ home:'Home', deals:'Deals', events:'Events', community:'Community', map:'Map', challenges:'Challenges', alerts:'Alerts', profile:'Profile' },
-    login:{ title:'Welcome back', email:'E-Mail', password:'Password', btn:'Sign in', or:'or', google:'Sign in with Google', demo:'🎯 Demo login', no_account:"Don't have an account?", register:'Register', forgot:'Forgot password?' },
-    register:{ title:'Create account', name:'Your name', username:'Username', email:'E-Mail', password:'Password', password2:'Repeat password', btn:'Create account', google:'Sign up with Google', has_account:'Already a member?', login:'Sign in' },
-    forgot:{ title:'Reset password', btn:'Send link', hint:'Enter your e-mail address. We will send you a reset link.' },
-    home:{ points:'Your Points', spin:'Daily spin', deals:'Top Deals', events:'Upcoming Events', view_all:'View all →', monthly_rank:'Monthly rank', today:'Today', to_platin:'to Platin', monthly_champs:'🏆 Monthly Champions', top3_win:'Top 3 win secret prizes!', view:'View →', your_rank:'Your rank:', improve:'Improve →', days_left_month:'{n} days left this month', days_left_quarter:'{n} days left this quarter', top3_prizes:'Top 3 win exclusive ZAM prizes.', quarter_prizes:'Top 3 of the quarter win exclusive main prizes.', quarterly_stand:'Your quarterly standing', secret_prize:'Secret main prize 🎁', secret_premium:'Secret premium prize 🎁', secret_bonus:'Secret bonus prize 🎁', secret_win:'Secret prize 🎁', rank_month:'🗓️ Month', rank_quarter:'👑 Quarter', pts:'pts', you:'(You)', today_spin:'🎰 Spin now!', already_spun:'✓ Already spun today', greeting:'Hello', greetingMorning:'Good morning', greetingEvening:'Good evening' },
-    deals:{ title:'Deals 🏷️', all:'All', regular:'Deals', partner:'🤝 Partner', voucher:'Get voucher', claimed:'✓ Redeemed', loading:'Loading…', no_deals:'No deals available', no_partner:'No partner deals yet', redeem:'🎟 Redeem', too_few:'Not enough', today_spin:'🎰 Today in spin', today_prize:'🎁 Also to win today', together:'👥 Together', interested:'⭐ Interested', interested_q:'⭐ Interested?', partner_tag:'🤝 Partner Deal', valid_until:'Until {date} · {n} participants', checkin_points:'📍 {name} Check-in! +25 points' },
-    events:{ title:'Events 📅', join:'Join', joined:'✓ Registered', loading:'Loading…', spots_free:'spots left', spots_low:'Only {n} spots left!', attendees:'{n} attendees', all:'All', week:'This week', month:'This month', join_success:"🎉 Registered! Check in on-site to earn points." },
-    community:{ title:'Community 👥', nudge:'Nudge', chat:'Open chat', online:'online', add_friend:'➕ Add friend', req_sent:'Request sent', accept:'✅ Accept', contacts:'Contacts', friends:'👫 My Friends', open_requests:'📩 Pending Requests', sent_requests:'📤 Sent Requests', my_contacts:'🤝 My Contacts', wall:'Wall', chat_tab:'Chat', contacts_tab:'Contacts', write_post:'Write a post…', no_posts:'No posts yet.', together:'Together', interested:'Interested', loading:'Loading…', delete:'Delete', delete_confirm:'Delete post?', pending:'⏳ pending' },
-    challenges:{ title:'Challenges 📸', join:'Join', progress:'Progress', completed:'Completed', points:'Points', reward:'Reward', claim:'Collect 🎁', done:'Collected', today_submit:'📸 Take photo today', today_submitted:'⏳ Already submitted today – come back tomorrow', already_submitted:'Already submitted a photo today!', reward_pts:'+{n} pts', take_photo:'📸 Take photo', tomorrow_available:'Available again tomorrow', no_photo_yet:'Please take a photo first', not_in_zone:'❌ Not in ZAM area. Please come closer.' },
-    alerts:{ title:'Notifications', all:'All', messages:'💬 Messages', nudges:'👋 Nudges', events:'🎉 Events', deals:'🏷️ Deals', community:'👥 Community', empty:'No notifications', in_category:' in this category', friend_request:'➕ Friend request', wants_friend:' wants to add you as a friend.', deal_asks:' is asking', request_declined:'Request declined', chat_open:'💬 Open chat', accept:'✅ Accept', decline:'❌ Decline', someone:'Someone' },
-    profile:{ title:'Profile', edit_short:'Edit profile', points_history_short:'Points history', vouchers:'My vouchers', my_events:'My events', nearby:'Nearby Alerts', invite:'Invite friends', logout:'Sign out', language:'🌍 Language', disabled:'Disabled', active:'✅ Active', invite_bonus:'+100 points', points_label:'Points collected', visits:'Visits', events_stat:'Events', deals_stat:'Deals', saved_items:'Saved items', badges:'My Badges', challenges_title:'🎯 Monthly Challenges', my_rewards:'My Rewards', badge_unlocked:'Badge unlocked! 🎉', nothing_saved:'Nothing saved yet.', events_saved:'🔖 {n} event{s} saved', deals_saved:'🏷️ {n} deal{s} saved', saved_deals_link:'Saved deals →' },
-    qr:{ checkin_btn_do:'✅ Check in at {label} (+25 pts)', checkin_btn_done:'✓ Checked in at {label} today', next_checkin:'⏰ Next check-in possible tomorrow', show_code:'📍 Show this code at {label}', valid:'✅ Valid — show to merchant', checkin_success:'✅ Check-in successful! +{n} points for {name}' },
-    countdown:{ expired:'⌛ Expired', today:'⏳ Expires today', days:'⏳ {n} days left', time:'⏳ {t} left' },
-    toast:{ voucher_saved:'Voucher saved! 🎟', friend_sent:'Friend request sent! 👋', event_joined:"You're in! 🎉", nudge_sent:'👋 {name} nudged!', nudge_fail:'Request already sent', already_connected:'Request already sent or already connected.', challenge_done:'🎉 +{n} points! Challenge completed!', view:'View', saved:'🔖 Deal saved! +5 points', event_removed:'Event removed', deal_removed:'Deal removed', copy:'Copied! 📋', friend_accepted:'✅ {name} is now your friend!', friend_rejected:'Request declined', deal_request_sent:'✅ Request sent to {name}!', deal_accepted:'✅ Accepted! Chat opened.', deal_rejected:'Request declined.', spin_next:'⏰ Next spin available at midnight', partner_voucher:'🎟 Voucher secured! +10 points', voucher_redeemed:'✓ Voucher redeemed!', reward_unlocked:'🎁 {title} unlocked!' },
-    buttons:{ save:'Save', cancel:'Cancel', close:'Close', back:'Back', confirm:'Confirm', share:'Share', loading:'Loading…' },
-    errors:{ generic:'Something went wrong.', network:'Network error. Please try again.' },
-    success:{ voucher_saved:'Voucher saved! 🎟', friend_sent:'Friend request sent! 👋', event_joined:"You're in! 🎉" },
-    map:{ title:'ZAM Live Map', online:'online', users:'users active', close:'Close' },
-    levels:{ bronze:'Bronze Member', silver:'Silver Member', gold:'Gold Member', platinum:'Platinum Member', platinum_reached:'🎉 Platinum reached!', progress:'{pts} / {max} pts to {next}', next_silver:'Silver', next_gold:'Gold', next_platinum:'Platinum' },
-    photo:{ title:'📸 Photo Challenges', how_it_works:'💡 How it works', step1_title:'Choose challenge', step1_desc:'Pick an active merchant challenge from the list', step2_title:'Take a photo', step2_desc:'Take a photo directly in the app – no uploads allowed', step3_title:'Confirm location', step3_desc:'The app automatically checks you\'re in the ZAM', step4_title:'Collect progress', step4_desc:'One photo per day – until the goal is reached', step5_title:'Redeem reward', step5_desc:'Scan your QR code at the merchant to claim your prize', active_header:'🔥 Active Challenges ({n})', gallery_title:'🖼️ ZAM Community Gallery', gallery_sub:'Photos from verified ZAM challenges', gallery_all:'All →', gallery_notice:'All public photos are automatically reviewed before publication and may be rejected by the team.', stats_photos:'📸 Community Photos', stats_redeemed:'🏆 Rewards redeemed', stats_active:'🔥 Active Challenges', stats_rewards:'🎁 Available Rewards' },
-    referral:{ how_it_works:'How it works', step1_title:'Share your code', step1_desc:'Send your personal code to friends', step2_title:'Friend registers', step2_desc:'Sign up at ZAM Club with your code', step3_title:'Both get points', step3_desc:'+100 points for you, +100 points for your friend', points_earned:'Points earned', link_copied:'✓ Link copied!', share_msg:'Hey! I\'m using the ZAM Club app and invite you. Sign up with my code {code} and we both get points! 🎉' },
-    merchant:{ current_deals:'Current offers' },
-    ai:{ default_msg:'I\'m happy to help! You can ask me:<br><br>• What\'s on at ZAM today?<br>• Current offers & deals<br>• Where can I eat?<br>• My personal recommendations<br><br>What would you like to know? 🤖' },
-  },
-  tr: {
-    nav:{ home:'Ana Sayfa', deals:'Fırsatlar', events:'Etkinlikler', community:'Topluluk', map:'Harita', challenges:'Görevler', alerts:'Bildirimler', profile:'Profil' },
-    login:{ title:'Tekrar hoş geldiniz', email:'E-Posta', password:'Şifre', btn:'Giriş yap', or:'veya', google:'Google ile giriş yap', demo:'🎯 Demo girişi', no_account:'Hesabın yok mu?', register:'Kayıt ol', forgot:'Şifremi unuttum?' },
-    register:{ title:'Hesap oluştur', name:'Adın', username:'Kullanıcı adı', email:'E-Posta', password:'Şifre', password2:'Şifreyi tekrarla', btn:'Hesap oluştur', google:'Google ile kayıt ol', has_account:'Zaten üye misin?', login:'Giriş yap' },
-    forgot:{ title:'Şifre sıfırlama', btn:'Link gönder', hint:'E-posta adresini gir. Sıfırlama bağlantısı göndereceğiz.' },
-    home:{ points:'Puanların', spin:'Günlük çevir', deals:'En İyi Fırsatlar', events:'Yaklaşan Etkinlikler', view_all:'Tümünü gör →', monthly_rank:'Aylık sıra', today:'Bugün', to_platin:'Platin\'e kadar', monthly_champs:'🏆 Aylık Şampiyonlar', top3_win:'İlk 3 gizli ödül kazanır!', view:'Görüntüle →', your_rank:'Sıran:', improve:'Geliştir →', days_left_month:'Ay sonuna {n} gün kaldı', days_left_quarter:'Çeyrek sonuna {n} gün kaldı', top3_prizes:'İlk 3 özel ZAM ödülü kazanır.', quarter_prizes:'Çeyreğin ilk 3\'ü özel ödül kazanır.', quarterly_stand:'Çeyreklik durumun', secret_prize:'Gizli ana ödül 🎁', secret_premium:'Gizli premium ödül 🎁', secret_bonus:'Gizli bonus ödül 🎁', secret_win:'Gizli ödül 🎁', rank_month:'🗓️ Ay', rank_quarter:'👑 Çeyrek', pts:'puan', you:'(Sen)', today_spin:'🎰 Şimdi çevir!', already_spun:'✓ Bugün zaten çevrildi', greeting:'Merhaba', greetingMorning:'Günaydın', greetingEvening:'İyi akşamlar' },
-    deals:{ title:'Fırsatlar 🏷️', all:'Tümü', regular:'Fırsatlar', partner:'🤝 Ortak', voucher:'Kuponu al', claimed:'✓ Kullanıldı', loading:'Yükleniyor…', no_deals:'Fırsat bulunamadı', no_partner:'Henüz ortak fırsatı yok', redeem:'🎟 Kullan', too_few:'Yetersiz', today_spin:'🎰 Bugün çevirmede', today_prize:'🎁 Bugün de kazanılabilir', together:'👥 Birlikte', interested:'⭐ İlgileniyor', interested_q:'⭐ İlgileniyor musun?', partner_tag:'🤝 Ortak Fırsatı', valid_until:'Bitiş: {date} · {n} katılımcı', checkin_points:'📍 {name} Giriş! +25 puan' },
-    events:{ title:'Etkinlikler 📅', join:'Katıl', joined:'✓ Kayıt olundu', loading:'Yükleniyor…', spots_free:'yer mevcut', spots_low:'Yalnızca {n} yer kaldı!', attendees:'{n} katılımcı', all:'Tümü', week:'Bu hafta', month:'Bu ay', join_success:'🎉 Kayıt olundu! Puan kazanmak için yerinde giriş yap.' },
-    community:{ title:'Topluluk 👥', nudge:'Dürt', chat:'Sohbet aç', online:'çevrimiçi', add_friend:'➕ Arkadaş ekle', req_sent:'İstek gönderildi', accept:'✅ Kabul et', contacts:'Kişiler', friends:'👫 Arkadaşlarım', open_requests:'📩 Bekleyen İstekler', sent_requests:'📤 Gönderilen İstekler', my_contacts:'🤝 Kişilerim', wall:'Duvar', chat_tab:'Sohbet', contacts_tab:'Kişiler', write_post:'Gönderi yaz…', no_posts:'Henüz gönderi yok.', together:'Birlikte', interested:'İlgileniyor', loading:'Yükleniyor…', delete:'Sil', delete_confirm:'Gönderi silinsin mi?', pending:'⏳ beklemede' },
-    challenges:{ title:'Görevler 📸', join:'Katıl', progress:'İlerleme', completed:'Tamamlandı', points:'Puan', reward:'Ödül', claim:'Al 🎁', done:'Alındı', today_submit:'📸 Bugün fotoğraf çek', today_submitted:'⏳ Bugün zaten gönderildi – yarın tekrar dene', already_submitted:'Bugün zaten bir fotoğraf gönderildi!', reward_pts:'+{n} puan', take_photo:'📸 Fotoğraf çek', tomorrow_available:'Yarın tekrar mevcut', no_photo_yet:'Lütfen önce bir fotoğraf çekin', not_in_zone:'❌ ZAM alanında değilsiniz. Lütfen daha yakına gelin.' },
-    alerts:{ title:'Bildirimler', all:'Tümü', messages:'💬 Mesajlar', nudges:'👋 Dürtmeler', events:'🎉 Etkinlikler', deals:'🏷️ Fırsatlar', community:'👥 Topluluk', empty:'Bildirim yok', in_category:' bu kategoride', friend_request:'➕ Arkadaşlık isteği', wants_friend:' seni arkadaş olarak eklemek istiyor.', deal_asks:' istek gönderiyor', request_declined:'İstek reddedildi', chat_open:'💬 Sohbet aç', accept:'✅ Kabul et', decline:'❌ Reddet', someone:'Biri' },
-    profile:{ title:'Profil', edit_short:'Profili düzenle', points_history_short:'Puan geçmişi', vouchers:'Kuponlarım', my_events:'Etkinliklerim', nearby:'Yakın Uyarılar', invite:'Arkadaş davet et', logout:'Çıkış yap', language:'🌍 Dil', disabled:'Devre dışı', active:'✅ Aktif', invite_bonus:'+100 puan', points_label:'Toplanan puanlar', visits:'Ziyaretler', events_stat:'Etkinlikler', deals_stat:'Fırsatlar', saved_items:'Kaydedilenler', badges:'Rozetlerim', challenges_title:'🎯 Aylık Görevler', my_rewards:'Ödüllerim', badge_unlocked:'Rozet açıldı! 🎉', nothing_saved:'Henüz kaydedilen yok.', events_saved:'🔖 {n} etkinlik kaydedildi', deals_saved:'🏷️ {n} fırsat kaydedildi', saved_deals_link:'Kaydedilen fırsatlar →' },
-    qr:{ checkin_btn_do:'✅ {label}\'da giriş yap (+25 puan)', checkin_btn_done:'✓ Bugün {label}\'da giriş yapıldı', next_checkin:'⏰ Sonraki giriş yarın mümkün', show_code:'📍 Bu kodu {label}\'da göster', valid:'✅ Geçerli — mağazada göster', checkin_success:'✅ Giriş başarılı! {name} için +{n} puan' },
-    countdown:{ expired:'⌛ Süresi doldu', today:'⏳ Bugün sona eriyor', days:'⏳ {n} gün kaldı', time:'⏳ {t} kaldı' },
-    toast:{ voucher_saved:'Kupon kaydedildi! 🎟', friend_sent:'Arkadaşlık isteği gönderildi! 👋', event_joined:'Katıldın! 🎉', nudge_sent:'👋 {name} dürtüldü!', nudge_fail:'İstek zaten gönderildi', already_connected:'İstek zaten gönderildi veya zaten bağlantısın var.', challenge_done:'🎉 +{n} puan! Görev tamamlandı!', view:'Görüntüle', saved:'🔖 Fırsat kaydedildi! +5 puan', event_removed:'Etkinlik kaldırıldı', deal_removed:'Fırsat kaldırıldı', copy:'Kopyalandı! 📋', friend_accepted:'✅ {name} artık arkadaşın!', friend_rejected:'İstek reddedildi', deal_request_sent:'✅ {name}\'e istek gönderildi!', deal_accepted:'✅ Kabul edildi! Sohbet açıldı.', deal_rejected:'İstek reddedildi.', spin_next:'⏰ Sonraki çevirme gece yarısından itibaren', partner_voucher:'🎟 Kupon alındı! +10 puan', voucher_redeemed:'✓ Kupon kullanıldı!', reward_unlocked:'🎁 {title} açıldı!' },
-    buttons:{ save:'Kaydet', cancel:'İptal', close:'Kapat', back:'Geri', confirm:'Onayla', share:'Paylaş', loading:'Yükleniyor…' },
-    errors:{ generic:'Bir şeyler ters gitti.', network:'Ağ hatası. Lütfen tekrar dene.' },
-    success:{ voucher_saved:'Kupon kaydedildi! 🎟', friend_sent:'Arkadaşlık isteği gönderildi! 👋', event_joined:'Katıldın! 🎉' },
-    map:{ title:'ZAM Canlı Harita', online:'çevrimiçi', users:'kullanıcı aktif', close:'Kapat' },
-    levels:{ bronze:'Bronz Üye', silver:'Gümüş Üye', gold:'Altın Üye', platinum:'Platin Üye', platinum_reached:'🎉 Platin\'e ulaştın!', progress:'{pts} / {max} puana {next}\'e kadar', next_silver:'Gümüş', next_gold:'Altın', next_platinum:'Platin' },
-    photo:{ title:'📸 Fotoğraf Görevleri', how_it_works:'💡 Nasıl çalışır', step1_title:'Görev seç', step1_desc:'Listeden aktif bir mağaza görevi seç', step2_title:'Fotoğraf çek', step2_desc:'Doğrudan uygulamada fotoğraf çek – yükleme yapılamaz', step3_title:'Konumu onayla', step3_desc:'Uygulama otomatik olarak ZAM\'da olduğunu kontrol eder', step4_title:'İlerleme topla', step4_desc:'Her gün bir fotoğraf – hedefe ulaşana kadar', step5_title:'Ödülü kullan', step5_desc:'Ödülü almak için mağazada QR kodunu tarat', active_header:'🔥 Aktif Görevler ({n})', gallery_title:'🖼️ ZAM Topluluk Galerisi', gallery_sub:'Onaylanan ZAM görevlerinden fotoğraflar', gallery_all:'Tümü →', gallery_notice:'Tüm genel fotoğraflar yayınlanmadan önce otomatik olarak incelenir ve ekip tarafından reddedilebilir.', stats_photos:'📸 Topluluk Fotoğrafları', stats_redeemed:'🏆 Kullanılan ödüller', stats_active:'🔥 Aktif Görevler', stats_rewards:'🎁 Mevcut ödüller' },
-    referral:{ how_it_works:'Nasıl çalışır', step1_title:'Kodunu paylaş', step1_desc:'Kişisel kodunu arkadaşlarına gönder', step2_title:'Arkadaş kayıt olur', step2_desc:'Kodunla ZAM Club\'a kaydol', step3_title:'İkisi de puan alır', step3_desc:'Sana +100 puan, arkadaşına +100 puan', points_earned:'Kazanılan puanlar', link_copied:'✓ Bağlantı kopyalandı!', share_msg:'Hey! ZAM Club uygulamasını kullanıyorum ve seni davet ediyorum. {code} kodumla kayıt ol ve ikimiz de puan kazanalım! 🎉' },
-    merchant:{ current_deals:'Mevcut teklifler' },
-    ai:{ default_msg:'Yardımcı olmaktan memnuniyet duyarım! Bana sorabilirsin:<br><br>• Bugün ZAM\'da ne var?<br>• Güncel teklifler ve fırsatlar<br>• Nerede yiyebilirim?<br>• Kişisel önerilerim<br><br>Ne öğrenmek istersin? 🤖' },
-  },
-  es: {
-    nav:{ home:'Inicio', deals:'Ofertas', events:'Eventos', community:'Comunidad', map:'Mapa', challenges:'Retos', alerts:'Alertas', profile:'Perfil' },
-    login:{ title:'Bienvenido de nuevo', email:'Correo electrónico', password:'Contraseña', btn:'Iniciar sesión', or:'o', google:'Iniciar sesión con Google', demo:'🎯 Demo (Presentación)', no_account:'¿No tienes cuenta?', register:'Registrarse', forgot:'¿Olvidaste tu contraseña?' },
-    register:{ title:'Crear cuenta', name:'Tu nombre', username:'Nombre de usuario', email:'Correo electrónico', password:'Contraseña', password2:'Repetir contraseña', btn:'Crear cuenta', google:'Registrarse con Google', has_account:'¿Ya eres miembro?', login:'Iniciar sesión' },
-    forgot:{ title:'Restablecer contraseña', btn:'Enviar enlace', hint:'Ingresa tu correo electrónico. Te enviaremos un enlace de restablecimiento.' },
-    home:{ points:'Tus Puntos', spin:'Giro diario', deals:'Mejores Ofertas', events:'Próximos Eventos', view_all:'Ver todo →' },
-    deals:{ title:'Ofertas 🏷️', all:'Todas', regular:'Ofertas', partner:'🤝 Socio', voucher:'Obtener cupón', claimed:'✓ Canjeado', loading:'Cargando…', no_deals:'Sin ofertas disponibles', no_partner:'Sin ofertas de socios aún' },
-    events:{ title:'Eventos 📅', join:'Unirse', joined:'✓ Registrado', loading:'Cargando…', spots_free:'lugares libres', spots_low:'¡Solo quedan {n} lugares!', attendees:'{n} asistentes', all:'Todos', week:'Esta semana', month:'Este mes' },
-    community:{ title:'Comunidad 👥', nudge:'Dar un toque', chat:'Abrir chat', online:'en línea', add_friend:'➕ Añadir amigo', req_sent:'Solicitud enviada', accept:'✅ Aceptar', contacts:'Contactos', friends:'👫 Mis Amigos', open_requests:'📩 Solicitudes pendientes', sent_requests:'📤 Solicitudes enviadas', my_contacts:'🤝 Mis Contactos' },
-    challenges:{ title:'Retos 📸', join:'Unirse', progress:'Progreso', completed:'Completado', points:'Puntos' },
-    alerts:{ title:'Notificaciones', all:'Todas', messages:'💬 Mensajes', nudges:'👋 Toques', events:'🎉 Eventos', deals:'🏷️ Ofertas', community:'👥 Comunidad', empty:'Sin notificaciones' },
-    profile:{ title:'Perfil', edit_short:'Editar perfil', points_history_short:'Historial de puntos', vouchers:'Mis cupones', my_events:'Mis eventos', nearby:'Alertas cercanas', invite:'Invitar amigos', logout:'Cerrar sesión', language:'🌍 Idioma', disabled:'Desactivado', invite_bonus:'+100 puntos', points_label:'Puntos acumulados', visits:'Visitas', events_stat:'Eventos', deals_stat:'Ofertas', saved_items:'Guardados', badges:'Mis insignias', challenges_title:'🎯 Retos mensuales', my_rewards:'Mis recompensas', badge_unlocked:'¡Insignia desbloqueada! 🎉' },
-    qr:{ checkin_btn_do:'✅ Registrarse en {label} (+25 pts)', checkin_btn_done:'✓ Registrado en {label} hoy', next_checkin:'⏰ Próximo registro posible mañana', show_code:'📍 Muestra este código en {label}' },
-    toast:{ voucher_saved:'¡Cupón guardado! 🎟', friend_sent:'¡Solicitud enviada! 👋', event_joined:'¡Te has unido! 🎉', nudge_sent:'👋 ¡{name} fue tocado!', nudge_fail:'Solicitud ya enviada', already_connected:'Solicitud ya enviada o ya conectado.', challenge_done:'🎉 +{n} puntos! ¡Reto completado!', view:'Ver' },
-    buttons:{ save:'Guardar', cancel:'Cancelar', close:'Cerrar', back:'Atrás', confirm:'Confirmar', share:'Compartir', loading:'Cargando…' },
-    errors:{ generic:'Algo salió mal.', network:'Error de red. Por favor inténtalo de nuevo.' },
-    success:{ voucher_saved:'¡Cupón guardado! 🎟', friend_sent:'¡Solicitud enviada! 👋', event_joined:'¡Te has unido! 🎉' },
-    map:{ title:'ZAM Mapa en Vivo', online:'en línea', users:'usuarios activos', close:'Cerrar' },
-  },
-  it: {
-    nav:{ home:'Home', deals:'Offerte', events:'Eventi', community:'Community', map:'Mappa', challenges:'Sfide', alerts:'Avvisi', profile:'Profilo' },
-    login:{ title:'Bentornato', email:'E-mail', password:'Password', btn:'Accedi', or:'o', google:'Accedi con Google', demo:'🎯 Demo login', no_account:'Non hai un account?', register:'Registrati', forgot:'Password dimenticata?' },
-    register:{ title:'Crea account', name:'Il tuo nome', username:'Nome utente', email:'E-mail', password:'Password', password2:'Ripeti password', btn:'Crea account', google:'Registrati con Google', has_account:'Già membro?', login:'Accedi' },
-    forgot:{ title:'Reimposta password', btn:'Invia link', hint:"Inserisci il tuo indirizzo e-mail. Ti invieremo un link per reimpostare la password." },
-    home:{ points:'I tuoi Punti', spin:'Gira ogni giorno', deals:'Migliori Offerte', events:'Prossimi Eventi', view_all:'Vedi tutti →' },
-    deals:{ title:'Offerte 🏷️', all:'Tutte', regular:'Offerte', partner:'🤝 Partner', voucher:'Ottieni buono', claimed:'✓ Usato', loading:'Caricamento…', no_deals:'Nessuna offerta disponibile', no_partner:'Nessuna offerta partner ancora' },
-    events:{ title:'Eventi 📅', join:'Partecipa', joined:'✓ Iscritto', loading:'Caricamento…', spots_free:'posti liberi', spots_low:'Solo {n} posti rimasti!', attendees:'{n} partecipanti', all:'Tutti', week:'Questa settimana', month:'Questo mese' },
-    community:{ title:'Community 👥', nudge:'Tocca', chat:'Apri chat', online:'online', add_friend:'➕ Aggiungi amico', req_sent:'Richiesta inviata', accept:'✅ Accetta', contacts:'Contatti', friends:'👫 I miei amici', open_requests:'📩 Richieste in sospeso', sent_requests:'📤 Richieste inviate', my_contacts:'🤝 I miei contatti' },
-    challenges:{ title:'Sfide 📸', join:'Partecipa', progress:'Progresso', completed:'Completato', points:'Punti' },
-    alerts:{ title:'Notifiche', all:'Tutte', messages:'💬 Messaggi', nudges:'👋 Tocchi', events:'🎉 Eventi', deals:'🏷️ Offerte', community:'👥 Community', empty:'Nessuna notifica' },
-    profile:{ title:'Profilo', edit_short:'Modifica profilo', points_history_short:'Storico punti', vouchers:'I miei buoni', my_events:'I miei eventi', nearby:'Avvisi vicini', invite:'Invita amici', logout:'Esci', language:'🌍 Lingua', disabled:'Disabilitato', invite_bonus:'+100 punti', points_label:'Punti accumulati', visits:'Visite', events_stat:'Eventi', deals_stat:'Offerte', saved_items:'Salvati', badges:'I miei badge', challenges_title:'🎯 Sfide mensili', my_rewards:'I miei premi', badge_unlocked:'Badge sbloccato! 🎉' },
-    qr:{ checkin_btn_do:'✅ Check-in a {label} (+25 pts)', checkin_btn_done:'✓ Check-in a {label} oggi', next_checkin:'⏰ Prossimo check-in possibile domani', show_code:'📍 Mostra questo codice a {label}' },
-    toast:{ voucher_saved:'Buono salvato! 🎟', friend_sent:'Richiesta inviata! 👋', event_joined:'Sei iscritto! 🎉', nudge_sent:'👋 {name} toccato!', nudge_fail:'Richiesta già inviata', already_connected:'Richiesta già inviata o già connesso.', challenge_done:'🎉 +{n} punti! Sfida completata!', view:'Vedi' },
-    buttons:{ save:'Salva', cancel:'Annulla', close:'Chiudi', back:'Indietro', confirm:'Conferma', share:'Condividi', loading:'Caricamento…' },
-    errors:{ generic:'Qualcosa è andato storto.', network:'Errore di rete. Riprova.' },
-    success:{ voucher_saved:'Buono salvato! 🎟', friend_sent:'Richiesta inviata! 👋', event_joined:'Sei iscritto! 🎉' },
-    map:{ title:'ZAM Mappa Live', online:'online', users:'utenti attivi', close:'Chiudi' },
-  },
 };
 
+// Rückwärtskompatibilität für t()-Aufrufe
 function t(key) {
   const parts = key.split('.');
-  let obj = window.ZAM_I18N['de'];
-  for (const p of parts) {
-    if (obj == null) break;
-    obj = obj[p];
-  }
-  return obj || key;
+  let obj = _STR;
+  for (const p of parts) { if (obj == null) break; obj = obj[p]; }
+  return (obj != null && typeof obj !== 'object') ? obj : key;
 }
 
-// Content translations for demo deals/events (titles & descriptions per language)
-window.ZAM_CONTENT_I18N = {
-  deals: {
-    deal_001: { en: { title:'2nd hot drink for 1€', description:'Buy one hot drink, pay just 1€ for the second. Valid on all coffee & tea specialities.' }, tr: { title:'2. sıcak içecek 1€', description:'Bir sıcak içecek al, ikincisi sadece 1€. Tüm kahve ve çay çeşitlerinde geçerli.' } },
-    deal_002: { en: { title:'20% off sustainable labels', description:'Exclusively for ZAM Club members: 20% discount on all sustainable labels.' }, tr: { title:'Sürdürülebilir markalarda %20 indirim', description:'ZAM Üyeleri için özel: tüm sürdürülebilir markalarda %20 indirim.' } },
-    deal_003: { en: { title:'Free hummus with every main course', description:'ZAM Club members get free hummus with pita with every main course. Mon–Fri 11am–3pm.' }, tr: { title:'Her ana yemekle ücretsiz humus', description:'ZAM Kulübü üyeleri her ana yemekle pita ekmekli humus ücretsiz alır. Pzt–Cum 11:00–15:00.' } },
-    deal_004: { en: { title:'Train free for 7 days', description:'Try Westside Gym for a full week – all equipment, all classes, sauna included.' }, tr: { title:'7 gün ücretsiz antrenman yap', description:'Westside Gym\'i bir hafta ücretsiz dene – tüm ekipmanlar, tüm dersler, sauna dahil.' } },
-    deal_005: { en: { title:'10% off all new releases', description:'All new releases this month with a 10% member discount – including pre-orders.' }, tr: { title:'Tüm yeni çıkışlarda %10 indirim', description:'Bu ayki tüm yeni çıkışlarda %10 üye indirimi – ön siparişler dahil.' } },
-    deal_006: { en: { title:'Sunscreen set: 3 for 2', description:'Summer special: buy 3 sunscreen products, the cheapest is free.' }, tr: { title:'Güneş kremi seti: 3 al 2 öde', description:'Yaz özel: 3 güneş kremi al, en ucuzu bedava.' } },
-  },
-  events: {
-    ev_001: { en: { title:'Morning Yoga in the Atrium', description:'Start your day with energy – yoga for all levels under the glass roof of ZAM.' }, tr: { title:'Atriumda Sabah Yogası', description:'Gününüze enerjili başlayın – ZAM\'ın cam tavanı altında tüm seviyelere uygun yoga.' } },
-    ev_002: { en: { title:'Freiham Summer Market', description:'Local producers, food trucks and live music. 40+ exhibitors, free entry!' }, tr: { title:'Freiham Yaz Pazarı', description:'Yerel üreticiler, yemek kamyonları ve canlı müzik. 40+ katılımcı, ücretsiz giriş!' } },
-    ev_003: { en: { title:'Kids Creative Workshop', description:'Crafting, painting, stamping for children aged 4–10. All materials included.' }, tr: { title:'Çocuk Yaratıcı Atölyesi', description:'4–10 yaş arası çocuklar için el sanatları, boyama, damgalama. Tüm malzemeler dahil.' } },
-    ev_004: { en: { title:'Live Concert: Summer Night Beats', description:'Soul, jazz & singer-songwriters from Munich – three acts live on the ZAM stage. Free entry!' }, tr: { title:'Canlı Konser: Yaz Gecesi Ritmi', description:'Münih\'ten soul, caz & söz yazarları – ZAM sahnesinde üç canlı performans. Ücretsiz giriş!' } },
-    ev_005: { en: { title:'Sustainability Workshop', description:'Repair café, zero-waste tips and open neighbourhood round. Free, no registration.' }, tr: { title:'Sürdürülebilirlik Atölyesi', description:'Tamir kafesi, sıfır atık ipuçları ve açık mahalle toplantısı. Ücretsiz, kayıt gerekmez.' } },
-  },
-  challenges: {
-    zam_ch_001: {
-      en: { title:'Dunkin Donuts Challenge', description:'Show your sweetest moments at Dunkin Donuts! Photograph 3 visits – on your 3rd visit you get a free donut.', reward:'Free Donut + 200 Points' },
-      tr: { title:'Dunkin Donuts Challenge', description:'Dunkin Donuts\'taki en tatlı anlarını paylaş! 3 ziyaret fotoğrafla – 3. ziyarette ücretsiz donut kazanırsın.', reward:'Bedava Donut + 200 Puan' }
-    },
-    zam_ch_002: {
-      en: { title:'KFC Fan Challenge', description:'Are you a real KFC fan? Photograph your chicken moment on 3 different days and show you\'re the biggest KFC fan in ZAM!', reward:'Free Hot Wings + 150 Points' },
-      tr: { title:'KFC Fan Challenge', description:'Gerçek bir KFC hayranı mısın? 3 farklı günde tavuk anını fotoğrafla ve ZAM\'ın en büyük KFC hayranı olduğunu kanıtla!', reward:'Bedava Hot Wings + 150 Puan' }
-    },
-    zam_ch_003: {
-      en: { title:'Fit Star Challenge', description:'Document your training progress at Fit Star! Collect 5 check-ins – show your workout, sauna or motivational moment.', reward:'1 Month Free + 300 Points' },
-      tr: { title:'Fit Star Challenge', description:'Fit Star\'daki antrenman ilerlemenizi belgeleyin! 5 giriş toplayın – egzersizinizi, saunayı veya motivasyon anınızı gösterin.', reward:'1 Ay Bedava + 300 Puan' }
-    },
-    zam_ch_004: {
-      en: { title:'L\'Osteria Pizza Challenge', description:'Photograph your pizza moment at L\'Osteria! Submit 2 pizza photos and secure the ZAM gourmet bonus – including a discount on your next visit.', reward:'15% Discount + 180 Points' },
-      tr: { title:'L\'Osteria Pizza Challenge', description:'L\'Osteria\'daki pizza anını fotoğrafla! 2 pizza fotoğrafı gönder ve ZAM gurme bonusunu kap – bir sonraki ziyaretinde indirim dahil.', reward:'%15 İndirim + 180 Puan' }
-    },
-  }
-};
-
-function _getContentTitle(type, id, field) {
-  const lang = localStorage.getItem('zam_lang') || 'de';
-  if (lang === 'de') return null;
-  return window.ZAM_CONTENT_I18N[type]?.[id]?.[lang]?.[field] || null;
-}
-
+// Lokalisierter Feldwert (nur Deutsch)
 function _l(obj, field) {
   const val = obj?.[field];
   if (val && typeof val === 'object') return val.de || '';
   return val || '';
 }
-
-function setLang(code) { /* multilingual deactivated */ }
 
 function applyLanguage() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -192,16 +59,13 @@ function applyLanguage() {
   updateNavLabels();
 }
 
-function _updateLangPickerUI() { /* no-op */ }
-function openLangSheet() { /* no-op */ }
-function closeLangSheet() { /* no-op */ }
-function dismissFirstRunLang() { /* no-op */ }
-function showLangPickerIfNeeded() { /* no-op */ }
-
-
-  const overlay = document.getElementById('first-run-lang-overlay');
-  if (overlay) overlay.style.display = 'none';
-}
+// Sprachfunktionen entfernt — App ist einsprachig (Deutsch)
+function setLang() {}
+function openLangSheet() {}
+function closeLangSheet() {}
+function dismissFirstRunLang() {}
+function showLangPickerIfNeeded() {}
+function _updateLangPickerUI() {}
 
 function updateNavLabels() {
   document.querySelectorAll('.nav-tab[data-page]').forEach(btn => {
