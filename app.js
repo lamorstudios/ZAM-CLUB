@@ -1599,7 +1599,7 @@ function _renderPartnerDealCard(pd) {
     <div style="font-size:0.68rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px">${escHtml(pd.description||'')}</div>
     <div style="display:flex;align-items:center;justify-content:space-between">
       <div style="font-size:0.6rem;color:rgba(255,255,255,0.3)">📅 Bis ${expiryStr} · ${pd.participants||0} Teilnehmer</div>
-      <button onclick="secureVoucherFromDeal('${pd.id}','Partner Deal','🤝','${escHtml(aBtn)}','Partner Deal')" style="background:#FA4615;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">Gutschein sichern</button>
+      <button onclick="securePartnerVoucher('${escHtml(pd.id)}')" style="background:#FA4615;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">Gutschein sichern</button>
     </div>`;
   return div;
 }
@@ -8318,6 +8318,13 @@ function secureVoucherFromDeal(dealId, dealTitle, storeIcon, storeName, discount
   _saveMyVouchers(vouchers);
   showToast('🎟 Gutschein gesichert! +10 Punkte', 'success');
   showMyVoucherQR(voucher.id);
+}
+
+function securePartnerVoucher(dealId) {
+  const pd = _getPD2ActiveDeals().find(d => d.id === dealId);
+  if (!pd) { showToast('Partner-Deal nicht gefunden', 'error'); return; }
+  const storeName = 'Partner Deal: ' + pd.a.name + ' + ' + pd.b.name;
+  secureVoucherFromDeal(dealId, pd.title, '🤝', storeName, 'Partner Deal');
 }
 
 function showMyVoucherQR(voucherId) {
