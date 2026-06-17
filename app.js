@@ -15,15 +15,16 @@ window.ZAM_I18N = {
     login:{ title:'Willkommen zurück', email:'E-Mail', password:'Passwort', btn:'Anmelden', or:'oder', google:'Mit Google anmelden', demo:'🎯 Demo einloggen', no_account:'Noch kein Konto?', register:'Registrieren', forgot:'Passwort vergessen?' },
     register:{ title:'Konto erstellen', name:'Dein Name', username:'Benutzername', email:'E-Mail', password:'Passwort', password2:'Passwort wiederholen', btn:'Konto erstellen', google:'Mit Google registrieren', has_account:'Bereits Mitglied?', login:'Anmelden' },
     forgot:{ title:'Passwort zurücksetzen', btn:'Link senden', hint:'Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link zum Zurücksetzen.' },
-    home:{ points:'Deine Punkte', spin:'Täglich drehen', deals:'Top Deals', events:'Kommende Events', view_all:'Alle →', monthly_rank:'Monatsrang', today:'Heute', to_platin:'bis Platin', monthly_champs:'🏆 Monats-Champions', top3_win:'Top 3 gewinnen geheime Preise!', view:'Ansehen →', your_rank:'Dein Rang:', improve:'Verbessern →', days_left_month:'Noch {n} Tage bis Monatsende', days_left_quarter:'Noch {n} Tage bis Quartalsende', top3_prizes:'Die Top 3 gewinnen exklusive ZAM-Preise.', quarter_prizes:'Die Top 3 des Quartals gewinnen exklusive Hauptpreise.', quarterly_stand:'Dein Quartals-Stand', secret_prize:'Geheimer Hauptgewinn 🎁', secret_premium:'Geheimer Premiumgewinn 🎁', secret_bonus:'Geheimer Bonusgewinn 🎁', secret_win:'Geheimer Gewinn 🎁', rank_month:'🗓️ Monat', rank_quarter:'👑 Quartal', pts:'Pkt.', you:'(Du)', today_spin:'🎰 Jetzt drehen!', already_spun:'✓ Heute bereits gedreht' },
-    deals:{ title:'Deals 🏷️', all:'Alle', regular:'Deals', partner:'🤝 Partner', voucher:'Gutschein sichern', claimed:'✓ Eingelöst', loading:'Lädt…', no_deals:'Keine Deals verfügbar', no_partner:'Noch keine Partner-Deals aktiv', redeem:'🎟 Einlösen', too_few:'Zu wenig', today_spin:'🎰 Heute im Spin', today_prize:'🎁 Heute auch zu gewinnen' },
-    events:{ title:'Events 📅', join:'Teilnehmen', joined:'✓ Angemeldet', loading:'Lädt…', spots_free:'Plätze frei', spots_low:'Nur noch {n} Plätze!', attendees:'{n} Teilnehmer', all:'Alle', week:'Diese Woche', month:'Diesen Monat' },
-    community:{ title:'Community 👥', nudge:'Anstupsen', chat:'Chat öffnen', online:'online', add_friend:'➕ Freund', req_sent:'Anfrage gesendet', accept:'✅ Annehmen', contacts:'Kontakte', friends:'👫 Meine Freunde', open_requests:'📩 Offene Anfragen', sent_requests:'📤 Gesendete Anfragen', my_contacts:'🤝 Meine Kontakte', wall:'Pinnwand', chat_tab:'Chat', contacts_tab:'Kontakte', write_post:'Beitrag schreiben…', no_posts:'Noch keine Beiträge', together:'Gemeinsam', interested:'Interessiert' },
-    challenges:{ title:'Challenges 📸', join:'Mitmachen', progress:'Fortschritt', completed:'Abgeschlossen', points:'Punkte', reward:'Belohnung', claim:'Abholen 🎁', done:'Erhalten', today_submit:'📸 Heute Foto aufnehmen', today_submitted:'⏳ Heute bereits eingereicht – morgen wieder', already_submitted:'Heute bereits ein Foto eingereicht!' },
-    alerts:{ title:'Benachrichtigungen', all:'Alle', messages:'💬 Nachrichten', nudges:'👋 Anstupsien', events:'🎉 Events', deals:'🏷️ Deals', community:'👥 Community', empty:'Keine Benachrichtigungen' },
-    profile:{ title:'Profil', edit_short:'Profil bearbeiten', points_history_short:'Punkte-Historie', vouchers:'Meine Gutscheine', my_events:'Meine Events', nearby:'Nearby Alerts', invite:'Freunde einladen', logout:'Abmelden', language:'🌍 Sprache', disabled:'Deaktiviert', invite_bonus:'+100 Punkte', points_label:'Gesammelte Punkte', visits:'Besuche', events_stat:'Events', deals_stat:'Deals', saved_items:'Gemerkte Inhalte', badges:'Meine Abzeichen', challenges_title:'🎯 Monatliche Challenges', my_rewards:'Meine Belohnungen', badge_unlocked:'Abzeichen freigeschaltet! 🎉' },
-    qr:{ checkin_btn_do:'✅ Bei {label} einchecken (+25 Pkt.)', checkin_btn_done:'✓ Heute bei {label} eingecheckt', next_checkin:'⏰ Nächster Check-in morgen möglich', show_code:'📍 Zeige diesen Code bei {label}' },
-    toast:{ voucher_saved:'Gutschein gespeichert! 🎟', friend_sent:'Freundschaftsanfrage gesendet! 👋', event_joined:'Du nimmst teil! 🎉', nudge_sent:'👋 {name} wurde angestupst!', nudge_fail:'Anfrage bereits gesendet', already_connected:'Anfrage bereits gesendet oder bereits verbunden.', challenge_done:'🎉 +{n} Punkte! Challenge abgeschlossen!', view:'Ansehen' },
+    home:{ points:'Deine Punkte', spin:'Täglich drehen', deals:'Top Deals', events:'Kommende Events', view_all:'Alle →', monthly_rank:'Monatsrang', today:'Heute', to_platin:'bis Platin', monthly_champs:'🏆 Monats-Champions', top3_win:'Top 3 gewinnen geheime Preise!', view:'Ansehen →', your_rank:'Dein Rang:', improve:'Verbessern →', days_left_month:'Noch {n} Tage bis Monatsende', days_left_quarter:'Noch {n} Tage bis Quartalsende', top3_prizes:'Die Top 3 gewinnen exklusive ZAM-Preise.', quarter_prizes:'Die Top 3 des Quartals gewinnen exklusive Hauptpreise.', quarterly_stand:'Dein Quartals-Stand', secret_prize:'Geheimer Hauptgewinn 🎁', secret_premium:'Geheimer Premiumgewinn 🎁', secret_bonus:'Geheimer Bonusgewinn 🎁', secret_win:'Geheimer Gewinn 🎁', rank_month:'🗓️ Monat', rank_quarter:'👑 Quartal', pts:'Pkt.', you:'(Du)', today_spin:'🎰 Jetzt drehen!', already_spun:'✓ Heute bereits gedreht', greeting:'Hallo', greetingMorning:'Guten Morgen', greetingEvening:'Guten Abend' },
+    deals:{ title:'Deals 🏷️', all:'Alle', regular:'Deals', partner:'🤝 Partner', voucher:'Gutschein sichern', claimed:'✓ Eingelöst', loading:'Lädt…', no_deals:'Keine Deals verfügbar', no_partner:'Noch keine Partner-Deals aktiv', redeem:'🎟 Einlösen', too_few:'Zu wenig', today_spin:'🎰 Heute im Spin', today_prize:'🎁 Heute auch zu gewinnen', together:'👥 Gemeinsam', interested:'⭐ Interessiert', interested_q:'⭐ Interessiert?', partner_tag:'🤝 Partner Deal', valid_until:'Bis {date} · {n} Teilnehmer', checkin_points:'📍 {name} Check-in! +25 Punkte' },
+    events:{ title:'Events 📅', join:'Teilnehmen', joined:'✓ Angemeldet', loading:'Lädt…', spots_free:'Plätze frei', spots_low:'Nur noch {n} Plätze!', attendees:'{n} Teilnehmer', all:'Alle', week:'Diese Woche', month:'Diesen Monat', join_success:'🎉 Angemeldet! Checke vor Ort ein um Punkte zu erhalten.' },
+    community:{ title:'Community 👥', nudge:'Anstupsen', chat:'Chat öffnen', online:'online', add_friend:'➕ Freund', req_sent:'Anfrage gesendet', accept:'✅ Annehmen', contacts:'Kontakte', friends:'👫 Meine Freunde', open_requests:'📩 Offene Anfragen', sent_requests:'📤 Gesendete Anfragen', my_contacts:'🤝 Meine Kontakte', wall:'Pinnwand', chat_tab:'Chat', contacts_tab:'Kontakte', write_post:'Beitrag schreiben…', no_posts:'Noch keine Beiträge.', together:'Gemeinsam', interested:'Interessiert', loading:'Lädt…', delete:'Löschen', delete_confirm:'Beitrag löschen?', pending:'⏳ ausstehend' },
+    challenges:{ title:'Challenges 📸', join:'Mitmachen', progress:'Fortschritt', completed:'Abgeschlossen', points:'Punkte', reward:'Belohnung', claim:'Abholen 🎁', done:'Erhalten', today_submit:'📸 Heute Foto aufnehmen', today_submitted:'⏳ Heute bereits eingereicht – morgen wieder', already_submitted:'Heute bereits ein Foto eingereicht!', reward_pts:'+{n} Pkt.' },
+    alerts:{ title:'Benachrichtigungen', all:'Alle', messages:'💬 Nachrichten', nudges:'👋 Anstupsien', events:'🎉 Events', deals:'🏷️ Deals', community:'👥 Community', empty:'Keine Benachrichtigungen', in_category:' in dieser Kategorie', friend_request:'➕ Freundschaftsanfrage', wants_friend:' möchte dich als Freund hinzufügen.', deal_asks:' fragt an', request_declined:'Anfrage abgelehnt', chat_open:'💬 Chat öffnen', accept:'✅ Annehmen', decline:'❌ Ablehnen', someone:'Jemand' },
+    profile:{ title:'Profil', edit_short:'Profil bearbeiten', points_history_short:'Punkte-Historie', vouchers:'Meine Gutscheine', my_events:'Meine Events', nearby:'Nearby Alerts', invite:'Freunde einladen', logout:'Abmelden', language:'🌍 Sprache', disabled:'Deaktiviert', active:'✅ Aktiv', invite_bonus:'+100 Punkte', points_label:'Gesammelte Punkte', visits:'Besuche', events_stat:'Events', deals_stat:'Deals', saved_items:'Gemerkte Inhalte', badges:'Meine Abzeichen', challenges_title:'🎯 Monatliche Challenges', my_rewards:'Meine Belohnungen', badge_unlocked:'Abzeichen freigeschaltet! 🎉', nothing_saved:'Noch nichts gemerkt.', events_saved:'🔖 {n} Event{s} gemerkt', deals_saved:'🏷️ {n} Deal{s} gemerkt', saved_deals_link:'Gespeicherte Deals →' },
+    qr:{ checkin_btn_do:'✅ Bei {label} einchecken (+25 Pkt.)', checkin_btn_done:'✓ Heute bei {label} eingecheckt', next_checkin:'⏰ Nächster Check-in morgen möglich', show_code:'📍 Zeige diesen Code bei {label}', valid:'✅ Gültig — beim Händler vorzeigen', checkin_success:'✅ Check-in erfolgreich! +{n} Punkte für {name}' },
+    countdown:{ expired:'⌛ Abgelaufen', today:'⏳ Läuft heute ab', days:'⏳ Noch {n} Tage', time:'⏳ Noch {t}' },
+    toast:{ voucher_saved:'Gutschein gespeichert! 🎟', friend_sent:'Freundschaftsanfrage gesendet! 👋', event_joined:'Du nimmst teil! 🎉', nudge_sent:'👋 {name} wurde angestupst!', nudge_fail:'Anfrage bereits gesendet', already_connected:'Anfrage bereits gesendet oder bereits verbunden.', challenge_done:'🎉 +{n} Punkte! Challenge abgeschlossen!', view:'Ansehen', saved:'🔖 Deal gespeichert! +5 Punkte', event_removed:'Event entfernt', deal_removed:'Deal entfernt', copy:'Text kopiert! 📋', friend_accepted:'✅ {name} ist jetzt dein Freund!', friend_rejected:'Anfrage abgelehnt', deal_request_sent:'✅ Anfrage an {name} gesendet!', deal_accepted:'✅ Angenommen! Chat geöffnet.', deal_rejected:'Anfrage abgelehnt.', spin_next:'⏰ Nächste Drehung ab Mitternacht', partner_voucher:'🎟 Gutschein gesichert! +10 Punkte', voucher_redeemed:'✓ Gutschein eingelöst!', reward_unlocked:'🎁 {title} freigeschaltet!' },
     buttons:{ save:'Speichern', cancel:'Abbrechen', close:'Schließen', back:'Zurück', confirm:'Bestätigen', share:'Teilen', loading:'Laden…' },
     errors:{ generic:'Etwas ist schiefgelaufen.', network:'Netzwerkfehler. Bitte versuche es erneut.' },
     success:{ voucher_saved:'Gutschein gespeichert! 🎟', friend_sent:'Freundschaftsanfrage gesendet! 👋', event_joined:'Du nimmst teil! 🎉' },
@@ -34,15 +35,16 @@ window.ZAM_I18N = {
     login:{ title:'Welcome back', email:'E-Mail', password:'Password', btn:'Sign in', or:'or', google:'Sign in with Google', demo:'🎯 Demo login', no_account:"Don't have an account?", register:'Register', forgot:'Forgot password?' },
     register:{ title:'Create account', name:'Your name', username:'Username', email:'E-Mail', password:'Password', password2:'Repeat password', btn:'Create account', google:'Sign up with Google', has_account:'Already a member?', login:'Sign in' },
     forgot:{ title:'Reset password', btn:'Send link', hint:'Enter your e-mail address. We will send you a reset link.' },
-    home:{ points:'Your Points', spin:'Daily spin', deals:'Top Deals', events:'Upcoming Events', view_all:'View all →', monthly_rank:'Monthly rank', today:'Today', to_platin:'to Platin', monthly_champs:'🏆 Monthly Champions', top3_win:'Top 3 win secret prizes!', view:'View →', your_rank:'Your rank:', improve:'Improve →', days_left_month:'{n} days left this month', days_left_quarter:'{n} days left this quarter', top3_prizes:'Top 3 win exclusive ZAM prizes.', quarter_prizes:'Top 3 of the quarter win exclusive main prizes.', quarterly_stand:'Your quarterly standing', secret_prize:'Secret main prize 🎁', secret_premium:'Secret premium prize 🎁', secret_bonus:'Secret bonus prize 🎁', secret_win:'Secret prize 🎁', rank_month:'🗓️ Month', rank_quarter:'👑 Quarter', pts:'pts', you:'(You)', today_spin:'🎰 Spin now!', already_spun:'✓ Already spun today' },
-    deals:{ title:'Deals 🏷️', all:'All', regular:'Deals', partner:'🤝 Partner', voucher:'Get voucher', claimed:'✓ Redeemed', loading:'Loading…', no_deals:'No deals available', no_partner:'No partner deals yet', redeem:'🎟 Redeem', too_few:'Not enough', today_spin:'🎰 Today in spin', today_prize:'🎁 Also to win today' },
-    events:{ title:'Events 📅', join:'Join', joined:'✓ Registered', loading:'Loading…', spots_free:'spots left', spots_low:'Only {n} spots left!', attendees:'{n} attendees', all:'All', week:'This week', month:'This month' },
-    community:{ title:'Community 👥', nudge:'Nudge', chat:'Open chat', online:'online', add_friend:'➕ Add friend', req_sent:'Request sent', accept:'✅ Accept', contacts:'Contacts', friends:'👫 My Friends', open_requests:'📩 Pending Requests', sent_requests:'📤 Sent Requests', my_contacts:'🤝 My Contacts', wall:'Wall', chat_tab:'Chat', contacts_tab:'Contacts', write_post:'Write a post…', no_posts:'No posts yet', together:'Together', interested:'Interested' },
-    challenges:{ title:'Challenges 📸', join:'Join', progress:'Progress', completed:'Completed', points:'Points', reward:'Reward', claim:'Collect 🎁', done:'Collected', today_submit:'📸 Take photo today', today_submitted:'⏳ Already submitted today – come back tomorrow', already_submitted:'Already submitted a photo today!' },
-    alerts:{ title:'Notifications', all:'All', messages:'💬 Messages', nudges:'👋 Nudges', events:'🎉 Events', deals:'🏷️ Deals', community:'👥 Community', empty:'No notifications' },
-    profile:{ title:'Profile', edit_short:'Edit profile', points_history_short:'Points history', vouchers:'My vouchers', my_events:'My events', nearby:'Nearby Alerts', invite:'Invite friends', logout:'Sign out', language:'🌍 Language', disabled:'Disabled', invite_bonus:'+100 points', points_label:'Points collected', visits:'Visits', events_stat:'Events', deals_stat:'Deals', saved_items:'Saved items', badges:'My Badges', challenges_title:'🎯 Monthly Challenges', my_rewards:'My Rewards', badge_unlocked:'Badge unlocked! 🎉' },
-    qr:{ checkin_btn_do:'✅ Check in at {label} (+25 pts)', checkin_btn_done:'✓ Checked in at {label} today', next_checkin:'⏰ Next check-in possible tomorrow', show_code:'📍 Show this code at {label}' },
-    toast:{ voucher_saved:'Voucher saved! 🎟', friend_sent:'Friend request sent! 👋', event_joined:"You're in! 🎉", nudge_sent:'👋 {name} nudged!', nudge_fail:'Request already sent', already_connected:'Request already sent or already connected.', challenge_done:'🎉 +{n} points! Challenge completed!', view:'View' },
+    home:{ points:'Your Points', spin:'Daily spin', deals:'Top Deals', events:'Upcoming Events', view_all:'View all →', monthly_rank:'Monthly rank', today:'Today', to_platin:'to Platin', monthly_champs:'🏆 Monthly Champions', top3_win:'Top 3 win secret prizes!', view:'View →', your_rank:'Your rank:', improve:'Improve →', days_left_month:'{n} days left this month', days_left_quarter:'{n} days left this quarter', top3_prizes:'Top 3 win exclusive ZAM prizes.', quarter_prizes:'Top 3 of the quarter win exclusive main prizes.', quarterly_stand:'Your quarterly standing', secret_prize:'Secret main prize 🎁', secret_premium:'Secret premium prize 🎁', secret_bonus:'Secret bonus prize 🎁', secret_win:'Secret prize 🎁', rank_month:'🗓️ Month', rank_quarter:'👑 Quarter', pts:'pts', you:'(You)', today_spin:'🎰 Spin now!', already_spun:'✓ Already spun today', greeting:'Hello', greetingMorning:'Good morning', greetingEvening:'Good evening' },
+    deals:{ title:'Deals 🏷️', all:'All', regular:'Deals', partner:'🤝 Partner', voucher:'Get voucher', claimed:'✓ Redeemed', loading:'Loading…', no_deals:'No deals available', no_partner:'No partner deals yet', redeem:'🎟 Redeem', too_few:'Not enough', today_spin:'🎰 Today in spin', today_prize:'🎁 Also to win today', together:'👥 Together', interested:'⭐ Interested', interested_q:'⭐ Interested?', partner_tag:'🤝 Partner Deal', valid_until:'Until {date} · {n} participants', checkin_points:'📍 {name} Check-in! +25 points' },
+    events:{ title:'Events 📅', join:'Join', joined:'✓ Registered', loading:'Loading…', spots_free:'spots left', spots_low:'Only {n} spots left!', attendees:'{n} attendees', all:'All', week:'This week', month:'This month', join_success:"🎉 Registered! Check in on-site to earn points." },
+    community:{ title:'Community 👥', nudge:'Nudge', chat:'Open chat', online:'online', add_friend:'➕ Add friend', req_sent:'Request sent', accept:'✅ Accept', contacts:'Contacts', friends:'👫 My Friends', open_requests:'📩 Pending Requests', sent_requests:'📤 Sent Requests', my_contacts:'🤝 My Contacts', wall:'Wall', chat_tab:'Chat', contacts_tab:'Contacts', write_post:'Write a post…', no_posts:'No posts yet.', together:'Together', interested:'Interested', loading:'Loading…', delete:'Delete', delete_confirm:'Delete post?', pending:'⏳ pending' },
+    challenges:{ title:'Challenges 📸', join:'Join', progress:'Progress', completed:'Completed', points:'Points', reward:'Reward', claim:'Collect 🎁', done:'Collected', today_submit:'📸 Take photo today', today_submitted:'⏳ Already submitted today – come back tomorrow', already_submitted:'Already submitted a photo today!', reward_pts:'+{n} pts' },
+    alerts:{ title:'Notifications', all:'All', messages:'💬 Messages', nudges:'👋 Nudges', events:'🎉 Events', deals:'🏷️ Deals', community:'👥 Community', empty:'No notifications', in_category:' in this category', friend_request:'➕ Friend request', wants_friend:' wants to add you as a friend.', deal_asks:' is asking', request_declined:'Request declined', chat_open:'💬 Open chat', accept:'✅ Accept', decline:'❌ Decline', someone:'Someone' },
+    profile:{ title:'Profile', edit_short:'Edit profile', points_history_short:'Points history', vouchers:'My vouchers', my_events:'My events', nearby:'Nearby Alerts', invite:'Invite friends', logout:'Sign out', language:'🌍 Language', disabled:'Disabled', active:'✅ Active', invite_bonus:'+100 points', points_label:'Points collected', visits:'Visits', events_stat:'Events', deals_stat:'Deals', saved_items:'Saved items', badges:'My Badges', challenges_title:'🎯 Monthly Challenges', my_rewards:'My Rewards', badge_unlocked:'Badge unlocked! 🎉', nothing_saved:'Nothing saved yet.', events_saved:'🔖 {n} event{s} saved', deals_saved:'🏷️ {n} deal{s} saved', saved_deals_link:'Saved deals →' },
+    qr:{ checkin_btn_do:'✅ Check in at {label} (+25 pts)', checkin_btn_done:'✓ Checked in at {label} today', next_checkin:'⏰ Next check-in possible tomorrow', show_code:'📍 Show this code at {label}', valid:'✅ Valid — show to merchant', checkin_success:'✅ Check-in successful! +{n} points for {name}' },
+    countdown:{ expired:'⌛ Expired', today:'⏳ Expires today', days:'⏳ {n} days left', time:'⏳ {t} left' },
+    toast:{ voucher_saved:'Voucher saved! 🎟', friend_sent:'Friend request sent! 👋', event_joined:"You're in! 🎉", nudge_sent:'👋 {name} nudged!', nudge_fail:'Request already sent', already_connected:'Request already sent or already connected.', challenge_done:'🎉 +{n} points! Challenge completed!', view:'View', saved:'🔖 Deal saved! +5 points', event_removed:'Event removed', deal_removed:'Deal removed', copy:'Copied! 📋', friend_accepted:'✅ {name} is now your friend!', friend_rejected:'Request declined', deal_request_sent:'✅ Request sent to {name}!', deal_accepted:'✅ Accepted! Chat opened.', deal_rejected:'Request declined.', spin_next:'⏰ Next spin available at midnight', partner_voucher:'🎟 Voucher secured! +10 points', voucher_redeemed:'✓ Voucher redeemed!', reward_unlocked:'🎁 {title} unlocked!' },
     buttons:{ save:'Save', cancel:'Cancel', close:'Close', back:'Back', confirm:'Confirm', share:'Share', loading:'Loading…' },
     errors:{ generic:'Something went wrong.', network:'Network error. Please try again.' },
     success:{ voucher_saved:'Voucher saved! 🎟', friend_sent:'Friend request sent! 👋', event_joined:"You're in! 🎉" },
@@ -53,15 +55,16 @@ window.ZAM_I18N = {
     login:{ title:'Tekrar hoş geldiniz', email:'E-Posta', password:'Şifre', btn:'Giriş yap', or:'veya', google:'Google ile giriş yap', demo:'🎯 Demo girişi', no_account:'Hesabın yok mu?', register:'Kayıt ol', forgot:'Şifremi unuttum?' },
     register:{ title:'Hesap oluştur', name:'Adın', username:'Kullanıcı adı', email:'E-Posta', password:'Şifre', password2:'Şifreyi tekrarla', btn:'Hesap oluştur', google:'Google ile kayıt ol', has_account:'Zaten üye misin?', login:'Giriş yap' },
     forgot:{ title:'Şifre sıfırlama', btn:'Link gönder', hint:'E-posta adresini gir. Sıfırlama bağlantısı göndereceğiz.' },
-    home:{ points:'Puanların', spin:'Günlük çevir', deals:'En İyi Fırsatlar', events:'Yaklaşan Etkinlikler', view_all:'Tümünü gör →', monthly_rank:'Aylık sıra', today:'Bugün', to_platin:'Platin\'e kadar', monthly_champs:'🏆 Aylık Şampiyonlar', top3_win:'İlk 3 gizli ödül kazanır!', view:'Görüntüle →', your_rank:'Sıran:', improve:'Geliştir →', days_left_month:'Ay sonuna {n} gün kaldı', days_left_quarter:'Çeyrek sonuna {n} gün kaldı', top3_prizes:'İlk 3 özel ZAM ödülü kazanır.', quarter_prizes:'Çeyreğin ilk 3\'ü özel ödül kazanır.', quarterly_stand:'Çeyreklik durumun', secret_prize:'Gizli ana ödül 🎁', secret_premium:'Gizli premium ödül 🎁', secret_bonus:'Gizli bonus ödül 🎁', secret_win:'Gizli ödül 🎁', rank_month:'🗓️ Ay', rank_quarter:'👑 Çeyrek', pts:'puan', you:'(Sen)', today_spin:'🎰 Şimdi çevir!', already_spun:'✓ Bugün zaten çevrildi' },
-    deals:{ title:'Fırsatlar 🏷️', all:'Tümü', regular:'Fırsatlar', partner:'🤝 Ortak', voucher:'Kuponu al', claimed:'✓ Kullanıldı', loading:'Yükleniyor…', no_deals:'Fırsat bulunamadı', no_partner:'Henüz ortak fırsatı yok', redeem:'🎟 Kullan', too_few:'Yetersiz', today_spin:'🎰 Bugün çevirmede', today_prize:'🎁 Bugün de kazanılabilir' },
-    events:{ title:'Etkinlikler 📅', join:'Katıl', joined:'✓ Kayıt olundu', loading:'Yükleniyor…', spots_free:'yer mevcut', spots_low:'Yalnızca {n} yer kaldı!', attendees:'{n} katılımcı', all:'Tümü', week:'Bu hafta', month:'Bu ay' },
-    community:{ title:'Topluluk 👥', nudge:'Dürt', chat:'Sohbet aç', online:'çevrimiçi', add_friend:'➕ Arkadaş ekle', req_sent:'İstek gönderildi', accept:'✅ Kabul et', contacts:'Kişiler', friends:'👫 Arkadaşlarım', open_requests:'📩 Bekleyen İstekler', sent_requests:'📤 Gönderilen İstekler', my_contacts:'🤝 Kişilerim', wall:'Duvar', chat_tab:'Sohbet', contacts_tab:'Kişiler', write_post:'Gönderi yaz…', no_posts:'Henüz gönderi yok', together:'Birlikte', interested:'İlgileniyor' },
-    challenges:{ title:'Görevler 📸', join:'Katıl', progress:'İlerleme', completed:'Tamamlandı', points:'Puan', reward:'Ödül', claim:'Al 🎁', done:'Alındı', today_submit:'📸 Bugün fotoğraf çek', today_submitted:'⏳ Bugün zaten gönderildi – yarın tekrar dene', already_submitted:'Bugün zaten bir fotoğraf gönderildi!' },
-    alerts:{ title:'Bildirimler', all:'Tümü', messages:'💬 Mesajlar', nudges:'👋 Dürtmeler', events:'🎉 Etkinlikler', deals:'🏷️ Fırsatlar', community:'👥 Topluluk', empty:'Bildirim yok' },
-    profile:{ title:'Profil', edit_short:'Profili düzenle', points_history_short:'Puan geçmişi', vouchers:'Kuponlarım', my_events:'Etkinliklerim', nearby:'Yakın Uyarılar', invite:'Arkadaş davet et', logout:'Çıkış yap', language:'🌍 Dil', disabled:'Devre dışı', invite_bonus:'+100 puan', points_label:'Toplanan puanlar', visits:'Ziyaretler', events_stat:'Etkinlikler', deals_stat:'Fırsatlar', saved_items:'Kaydedilenler', badges:'Rozetlerim', challenges_title:'🎯 Aylık Görevler', my_rewards:'Ödüllerim', badge_unlocked:'Rozet açıldı! 🎉' },
-    qr:{ checkin_btn_do:'✅ {label}\'da giriş yap (+25 puan)', checkin_btn_done:'✓ Bugün {label}\'da giriş yapıldı', next_checkin:'⏰ Sonraki giriş yarın mümkün', show_code:'📍 Bu kodu {label}\'da göster' },
-    toast:{ voucher_saved:'Kupon kaydedildi! 🎟', friend_sent:'Arkadaşlık isteği gönderildi! 👋', event_joined:'Katıldın! 🎉', nudge_sent:'👋 {name} dürtüldü!', nudge_fail:'İstek zaten gönderildi', already_connected:'İstek zaten gönderildi veya zaten bağlantısın var.', challenge_done:'🎉 +{n} puan! Görev tamamlandı!', view:'Görüntüle' },
+    home:{ points:'Puanların', spin:'Günlük çevir', deals:'En İyi Fırsatlar', events:'Yaklaşan Etkinlikler', view_all:'Tümünü gör →', monthly_rank:'Aylık sıra', today:'Bugün', to_platin:'Platin\'e kadar', monthly_champs:'🏆 Aylık Şampiyonlar', top3_win:'İlk 3 gizli ödül kazanır!', view:'Görüntüle →', your_rank:'Sıran:', improve:'Geliştir →', days_left_month:'Ay sonuna {n} gün kaldı', days_left_quarter:'Çeyrek sonuna {n} gün kaldı', top3_prizes:'İlk 3 özel ZAM ödülü kazanır.', quarter_prizes:'Çeyreğin ilk 3\'ü özel ödül kazanır.', quarterly_stand:'Çeyreklik durumun', secret_prize:'Gizli ana ödül 🎁', secret_premium:'Gizli premium ödül 🎁', secret_bonus:'Gizli bonus ödül 🎁', secret_win:'Gizli ödül 🎁', rank_month:'🗓️ Ay', rank_quarter:'👑 Çeyrek', pts:'puan', you:'(Sen)', today_spin:'🎰 Şimdi çevir!', already_spun:'✓ Bugün zaten çevrildi', greeting:'Merhaba', greetingMorning:'Günaydın', greetingEvening:'İyi akşamlar' },
+    deals:{ title:'Fırsatlar 🏷️', all:'Tümü', regular:'Fırsatlar', partner:'🤝 Ortak', voucher:'Kuponu al', claimed:'✓ Kullanıldı', loading:'Yükleniyor…', no_deals:'Fırsat bulunamadı', no_partner:'Henüz ortak fırsatı yok', redeem:'🎟 Kullan', too_few:'Yetersiz', today_spin:'🎰 Bugün çevirmede', today_prize:'🎁 Bugün de kazanılabilir', together:'👥 Birlikte', interested:'⭐ İlgileniyor', interested_q:'⭐ İlgileniyor musun?', partner_tag:'🤝 Ortak Fırsatı', valid_until:'Bitiş: {date} · {n} katılımcı', checkin_points:'📍 {name} Giriş! +25 puan' },
+    events:{ title:'Etkinlikler 📅', join:'Katıl', joined:'✓ Kayıt olundu', loading:'Yükleniyor…', spots_free:'yer mevcut', spots_low:'Yalnızca {n} yer kaldı!', attendees:'{n} katılımcı', all:'Tümü', week:'Bu hafta', month:'Bu ay', join_success:'🎉 Kayıt olundu! Puan kazanmak için yerinde giriş yap.' },
+    community:{ title:'Topluluk 👥', nudge:'Dürt', chat:'Sohbet aç', online:'çevrimiçi', add_friend:'➕ Arkadaş ekle', req_sent:'İstek gönderildi', accept:'✅ Kabul et', contacts:'Kişiler', friends:'👫 Arkadaşlarım', open_requests:'📩 Bekleyen İstekler', sent_requests:'📤 Gönderilen İstekler', my_contacts:'🤝 Kişilerim', wall:'Duvar', chat_tab:'Sohbet', contacts_tab:'Kişiler', write_post:'Gönderi yaz…', no_posts:'Henüz gönderi yok.', together:'Birlikte', interested:'İlgileniyor', loading:'Yükleniyor…', delete:'Sil', delete_confirm:'Gönderi silinsin mi?', pending:'⏳ beklemede' },
+    challenges:{ title:'Görevler 📸', join:'Katıl', progress:'İlerleme', completed:'Tamamlandı', points:'Puan', reward:'Ödül', claim:'Al 🎁', done:'Alındı', today_submit:'📸 Bugün fotoğraf çek', today_submitted:'⏳ Bugün zaten gönderildi – yarın tekrar dene', already_submitted:'Bugün zaten bir fotoğraf gönderildi!', reward_pts:'+{n} puan' },
+    alerts:{ title:'Bildirimler', all:'Tümü', messages:'💬 Mesajlar', nudges:'👋 Dürtmeler', events:'🎉 Etkinlikler', deals:'🏷️ Fırsatlar', community:'👥 Topluluk', empty:'Bildirim yok', in_category:' bu kategoride', friend_request:'➕ Arkadaşlık isteği', wants_friend:' seni arkadaş olarak eklemek istiyor.', deal_asks:' istek gönderiyor', request_declined:'İstek reddedildi', chat_open:'💬 Sohbet aç', accept:'✅ Kabul et', decline:'❌ Reddet', someone:'Biri' },
+    profile:{ title:'Profil', edit_short:'Profili düzenle', points_history_short:'Puan geçmişi', vouchers:'Kuponlarım', my_events:'Etkinliklerim', nearby:'Yakın Uyarılar', invite:'Arkadaş davet et', logout:'Çıkış yap', language:'🌍 Dil', disabled:'Devre dışı', active:'✅ Aktif', invite_bonus:'+100 puan', points_label:'Toplanan puanlar', visits:'Ziyaretler', events_stat:'Etkinlikler', deals_stat:'Fırsatlar', saved_items:'Kaydedilenler', badges:'Rozetlerim', challenges_title:'🎯 Aylık Görevler', my_rewards:'Ödüllerim', badge_unlocked:'Rozet açıldı! 🎉', nothing_saved:'Henüz kaydedilen yok.', events_saved:'🔖 {n} etkinlik kaydedildi', deals_saved:'🏷️ {n} fırsat kaydedildi', saved_deals_link:'Kaydedilen fırsatlar →' },
+    qr:{ checkin_btn_do:'✅ {label}\'da giriş yap (+25 puan)', checkin_btn_done:'✓ Bugün {label}\'da giriş yapıldı', next_checkin:'⏰ Sonraki giriş yarın mümkün', show_code:'📍 Bu kodu {label}\'da göster', valid:'✅ Geçerli — mağazada göster', checkin_success:'✅ Giriş başarılı! {name} için +{n} puan' },
+    countdown:{ expired:'⌛ Süresi doldu', today:'⏳ Bugün sona eriyor', days:'⏳ {n} gün kaldı', time:'⏳ {t} kaldı' },
+    toast:{ voucher_saved:'Kupon kaydedildi! 🎟', friend_sent:'Arkadaşlık isteği gönderildi! 👋', event_joined:'Katıldın! 🎉', nudge_sent:'👋 {name} dürtüldü!', nudge_fail:'İstek zaten gönderildi', already_connected:'İstek zaten gönderildi veya zaten bağlantısın var.', challenge_done:'🎉 +{n} puan! Görev tamamlandı!', view:'Görüntüle', saved:'🔖 Fırsat kaydedildi! +5 puan', event_removed:'Etkinlik kaldırıldı', deal_removed:'Fırsat kaldırıldı', copy:'Kopyalandı! 📋', friend_accepted:'✅ {name} artık arkadaşın!', friend_rejected:'İstek reddedildi', deal_request_sent:'✅ {name}\'e istek gönderildi!', deal_accepted:'✅ Kabul edildi! Sohbet açıldı.', deal_rejected:'İstek reddedildi.', spin_next:'⏰ Sonraki çevirme gece yarısından itibaren', partner_voucher:'🎟 Kupon alındı! +10 puan', voucher_redeemed:'✓ Kupon kullanıldı!', reward_unlocked:'🎁 {title} açıldı!' },
     buttons:{ save:'Kaydet', cancel:'İptal', close:'Kapat', back:'Geri', confirm:'Onayla', share:'Paylaş', loading:'Yükleniyor…' },
     errors:{ generic:'Bir şeyler ters gitti.', network:'Ağ hatası. Lütfen tekrar dene.' },
     success:{ voucher_saved:'Kupon kaydedildi! 🎟', friend_sent:'Arkadaşlık isteği gönderildi! 👋', event_joined:'Katıldın! 🎉' },
@@ -121,6 +124,31 @@ function t(key) {
     return fb || key;
   }
   return obj;
+}
+
+// Content translations for demo deals/events (titles & descriptions per language)
+window.ZAM_CONTENT_I18N = {
+  deals: {
+    deal_001: { en: { title:'2nd hot drink for 1€', description:'Buy one hot drink, pay just 1€ for the second. Valid on all coffee & tea specialities.' }, tr: { title:'2. sıcak içecek 1€', description:'Bir sıcak içecek al, ikincisi sadece 1€. Tüm kahve ve çay çeşitlerinde geçerli.' } },
+    deal_002: { en: { title:'20% off sustainable labels', description:'Exclusively for ZAM Club members: 20% discount on all sustainable labels.' }, tr: { title:'Sürdürülebilir markalarda %20 indirim', description:'ZAM Üyeleri için özel: tüm sürdürülebilir markalarda %20 indirim.' } },
+    deal_003: { en: { title:'Free hummus with every main course', description:'ZAM Club members get free hummus with pita with every main course. Mon–Fri 11am–3pm.' }, tr: { title:'Her ana yemekle ücretsiz humus', description:'ZAM Kulübü üyeleri her ana yemekle pita ekmekli humus ücretsiz alır. Pzt–Cum 11:00–15:00.' } },
+    deal_004: { en: { title:'Train free for 7 days', description:'Try Westside Gym for a full week – all equipment, all classes, sauna included.' }, tr: { title:'7 gün ücretsiz antrenman yap', description:'Westside Gym\'i bir hafta ücretsiz dene – tüm ekipmanlar, tüm dersler, sauna dahil.' } },
+    deal_005: { en: { title:'10% off all new releases', description:'All new releases this month with a 10% member discount – including pre-orders.' }, tr: { title:'Tüm yeni çıkışlarda %10 indirim', description:'Bu ayki tüm yeni çıkışlarda %10 üye indirimi – ön siparişler dahil.' } },
+    deal_006: { en: { title:'Sunscreen set: 3 for 2', description:'Summer special: buy 3 sunscreen products, the cheapest is free.' }, tr: { title:'Güneş kremi seti: 3 al 2 öde', description:'Yaz özel: 3 güneş kremi al, en ucuzu bedava.' } },
+  },
+  events: {
+    ev_001: { en: { title:'Morning Yoga in the Atrium', description:'Start your day with energy – yoga for all levels under the glass roof of ZAM.' }, tr: { title:'Atriumda Sabah Yogası', description:'Gününüze enerjili başlayın – ZAM\'ın cam tavanı altında tüm seviyelere uygun yoga.' } },
+    ev_002: { en: { title:'Freiham Summer Market', description:'Local producers, food trucks and live music. 40+ exhibitors, free entry!' }, tr: { title:'Freiham Yaz Pazarı', description:'Yerel üreticiler, yemek kamyonları ve canlı müzik. 40+ katılımcı, ücretsiz giriş!' } },
+    ev_003: { en: { title:'Kids Creative Workshop', description:'Crafting, painting, stamping for children aged 4–10. All materials included.' }, tr: { title:'Çocuk Yaratıcı Atölyesi', description:'4–10 yaş arası çocuklar için el sanatları, boyama, damgalama. Tüm malzemeler dahil.' } },
+    ev_004: { en: { title:'Live Concert: Summer Night Beats', description:'Soul, jazz & singer-songwriters from Munich – three acts live on the ZAM stage. Free entry!' }, tr: { title:'Canlı Konser: Yaz Gecesi Ritmi', description:'Münih\'ten soul, caz & söz yazarları – ZAM sahnesinde üç canlı performans. Ücretsiz giriş!' } },
+    ev_005: { en: { title:'Sustainability Workshop', description:'Repair café, zero-waste tips and open neighbourhood round. Free, no registration.' }, tr: { title:'Sürdürülebilirlik Atölyesi', description:'Tamir kafesi, sıfır atık ipuçları ve açık mahalle toplantısı. Ücretsiz, kayıt gerekmez.' } },
+  }
+};
+
+function _getContentTitle(type, id, field) {
+  const lang = localStorage.getItem('zam_lang') || 'de';
+  if (lang === 'de') return null;
+  return window.ZAM_CONTENT_I18N[type]?.[id]?.[lang]?.[field] || null;
 }
 
 function setLang(code) {
@@ -282,7 +310,7 @@ function _countdownBadge(expiryStr) {
   const msLeft = expDate - Date.now();
 
   if (msLeft <= 0) {
-    return `<span class="countdown-badge countdown-expired">⌛ Abgelaufen</span>`;
+    return `<span class="countdown-badge countdown-expired">${t('countdown.expired')}</span>`;
   }
   const hoursLeft = msLeft / 3600000;
   const daysLeft  = Math.ceil(msLeft / 86400000);
@@ -291,15 +319,15 @@ function _countdownBadge(expiryStr) {
     const h = String(Math.floor(hoursLeft)).padStart(2, '0');
     const m = String(Math.floor((msLeft % 3600000) / 60000)).padStart(2, '0');
     const s = String(Math.floor((msLeft % 60000) / 1000)).padStart(2, '0');
-    return `<span class="countdown-badge countdown-urgent" data-expiry="${expiryStr}">⏳ Noch ${h}:${m}:${s}</span>`;
+    return `<span class="countdown-badge countdown-urgent" data-expiry="${expiryStr}">${t('countdown.time').replace('{t}',`${h}:${m}:${s}`)}</span>`;
   }
   if (daysLeft === 1) {
-    return `<span class="countdown-badge countdown-urgent">⏳ Läuft heute ab</span>`;
+    return `<span class="countdown-badge countdown-urgent">${t('countdown.today')}</span>`;
   }
   if (daysLeft <= 5) {
-    return `<span class="countdown-badge countdown-soon">⏳ Noch ${daysLeft} Tage</span>`;
+    return `<span class="countdown-badge countdown-soon">${t('countdown.days').replace('{n}',daysLeft)}</span>`;
   }
-  return `<span class="countdown-badge countdown-active">⏳ Noch ${daysLeft} Tage</span>`;
+  return `<span class="countdown-badge countdown-active">${t('countdown.days').replace('{n}',daysLeft)}</span>`;
 }
 
 let _countdownInterval = null;
@@ -317,7 +345,7 @@ function _startCountdownTicker() {
       const expDate = expiryStr.includes('T') ? new Date(expiryStr) : new Date(expiryStr + 'T23:59:59');
       const msLeft  = expDate - Date.now();
       if (msLeft <= 0) {
-        badge.textContent  = '⌛ Abgelaufen';
+        badge.textContent  = t('countdown.expired');
         badge.className    = 'countdown-badge countdown-expired';
         badge.removeAttribute('data-expiry');
       } else if (msLeft < 86400000) {
@@ -325,10 +353,10 @@ function _startCountdownTicker() {
         const h = String(Math.floor(msLeft / 3600000)).padStart(2, '0');
         const m = String(Math.floor((msLeft % 3600000) / 60000)).padStart(2, '0');
         const s = String(Math.floor((msLeft % 60000) / 1000)).padStart(2, '0');
-        badge.textContent = `⏳ Noch ${h}:${m}:${s}`;
+        badge.textContent = t('countdown.time').replace('{t}',`${h}:${m}:${s}`);
       } else {
         const days = Math.floor(msLeft / 86400000);
-        badge.textContent = `⏳ Noch ${days} Tag${days !== 1 ? 'e' : ''}`;
+        badge.textContent = t('countdown.days').replace('{n}', days);
       }
     });
     _tickFast = hasSeconds;
@@ -876,7 +904,7 @@ async function toggleSave(type, id, btnEl) {
       btnEl.textContent = type === 'deal' ? '🏷️ Merken' : '🏷️';
       btnEl.classList.remove('saved');
     }
-    showToast(type === 'event' ? 'Event entfernt' : 'Deal entfernt');
+    showToast(type === 'event' ? t('toast.event_removed') : t('toast.deal_removed'));
   } else {
     if (type === 'event') await ZAMApi.events.save(id);
     else await ZAMApi.deals.save(id);
@@ -886,7 +914,7 @@ async function toggleSave(type, id, btnEl) {
       btnEl.style.transform = 'scale(1.3)';
       setTimeout(() => { btnEl.style.transform = ''; }, 250);
     }
-    showToast(type === 'event' ? '🔖 Event gespeichert!' : '🔖 Deal gespeichert! +5 Punkte', 'success');
+    showToast(t('toast.saved'), 'success');
     if (type === 'deal') {
       // Award points silently (toast already shown above)
       await ZAMApi.points.add(5, 'deal_saved', 'Deal gespeichert');
@@ -948,7 +976,7 @@ async function renderChallenges() {
           <div class="challenge-title">${c.title}</div>
           <div class="challenge-desc">${c.description}</div>
         </div>
-        <div class="challenge-reward">+${c.reward_pts} Pkt.</div>
+        <div class="challenge-reward">${t('challenges.reward_pts').replace('{n}',c.reward_pts)}</div>
       </div>
       <div class="challenge-progress-track">
         <div class="challenge-progress-fill" style="width:${c.pct}%"></div>
@@ -1024,7 +1052,7 @@ function openSpinModal() {
     spinBtn.className = alreadySpun ? 'btn btn-full claimed' : 'btn btn-primary btn-full';
   }
   const nextSpin = $('#spin-next-info');
-  if (nextSpin) nextSpin.textContent = alreadySpun ? '⏰ Nächste Drehung ab Mitternacht' : '';
+  if (nextSpin) nextSpin.textContent = alreadySpun ? t('toast.spin_next') : '';
   overlay.classList.add('open');
 }
 
@@ -1360,14 +1388,14 @@ function generateQRGrid() {
 async function renderCommunity() {
   const container = $('#community-feed');
   if (!container) return;
-  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-muted)">Lädt…</div>';
+  container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--color-text-muted)">${t('community.loading')}</div>`;
 
   const posts = await ZAMApi.posts.list();
   state.posts = posts;
   container.innerHTML = '';
 
   if (posts.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-muted)">Noch keine Beiträge.</div>';
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--color-text-muted)">${t('community.no_posts')}</div>`;
     return;
   }
   posts.forEach((post, idx) => container.appendChild(renderPostCard(post, idx)));
@@ -1380,8 +1408,8 @@ function renderPostCard(post, idx) {
   const isOwn = currentUser && post.user_id === currentUser.id;
 
   const tagsHtml = (post.tags || []).map(t => `<span class="post-tag">${t}</span>`).join('');
-  const deleteBtn = isOwn ? `<button class="post-delete-btn" title="Löschen" aria-label="Beitrag löschen">🗑</button>` : '';
-  const statusBadge = post.status === 'pending' ? `<span style="font-size:0.68rem;color:#F7AB00;margin-left:6px">⏳ ausstehend</span>` : '';
+  const deleteBtn = isOwn ? `<button class="post-delete-btn" title="${t('community.delete')}" aria-label="${t('community.delete')}">🗑</button>` : '';
+  const statusBadge = post.status === 'pending' ? `<span style="font-size:0.68rem;color:#F7AB00;margin-left:6px">${t('community.pending')}</span>` : '';
 
   div.innerHTML = `
     <div class="post-header">
@@ -1422,7 +1450,7 @@ function renderPostCard(post, idx) {
 }
 
 async function deletePost(postId, cardEl) {
-  if (!confirm('Beitrag löschen?')) return;
+  if (!confirm(t('community.delete_confirm'))) return;
   try {
     await ZAMApi.posts.delete(postId);
     cardEl.style.opacity = '0';
@@ -1461,7 +1489,7 @@ async function renderEvents(filter = 'all') {
   state.eventFilter = filter;
   const container = $('#events-list');
   if (!container) return;
-  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-muted)">Lädt…</div>';
+  container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--color-text-muted)">${t('events.loading')}</div>`;
 
   $$('.filter-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.filter === filter));
 
@@ -1498,13 +1526,13 @@ function renderEventCard(evt, idx) {
         <span>👥</span><span>${attendees.toLocaleString('de-DE')} Teilnehmer</span>
       </div>
     </div>
-    <h3>${evt.title}</h3>
+    <h3>${_getContentTitle('events', evt.id, 'title') || evt.title}</h3>
     <div class="event-details">
       <div class="event-detail-row"><span>📅</span><span>${evt.date_formatted}</span></div>
       <div class="event-detail-row"><span>⏰</span><span>${evt.time}</span></div>
       <div class="event-detail-row"><span>📍</span><span>${evt.location}</span></div>
     </div>
-    <p class="event-description">${evt.description}</p>
+    <p class="event-description">${_getContentTitle('events', evt.id, 'description') || evt.description}</p>
     <div class="event-card-footer">
       <div class="spots-info">
         ${spotsLow
@@ -1554,7 +1582,7 @@ async function joinEvent(idx, cardEl) {
 
   const eventsEl = $('#profile-stat-events');
   if (eventsEl) eventsEl.textContent = ZAMData.currentUser.stats?.events_attended || 0;
-  showToast('🎉 Angemeldet! Checke vor Ort ein um Punkte zu erhalten.', 'success');
+  showToast(t('events.join_success'), 'success');
   renderEvents();
 }
 
@@ -1601,7 +1629,7 @@ function _shuffleDeals(deals) {
 async function renderDeals() {
   const container = $('#deals-list');
   if (!container) return;
-  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-muted)">Lädt…</div>';
+  container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--color-text-muted)">${t('deals.loading')}</div>`;
 
   const rawDeals = await ZAMApi.deals.list();
   state.deals = _shuffleDeals(rawDeals);
@@ -1612,7 +1640,7 @@ async function renderDeals() {
 
   if (_dealsActiveTab === 'partner') {
     if (!partnerDeals.length) {
-      container.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.35);font-size:0.82rem">Noch keine Partner-Deals aktiv</div>';
+      container.innerHTML = `<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.35);font-size:0.82rem">${t('deals.no_partner')}</div>`;
       return;
     }
     partnerDeals.forEach(pd => container.appendChild(_renderPartnerDealCard(pd)));
@@ -1724,19 +1752,19 @@ function renderDealCard(deal, idx) {
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <div class="category-tag tag" style="background:${deal.category_color}22;color:${deal.category_color}">${deal.category}</div>
     </div>
-    <div class="deal-title">${deal.title}</div>
-    <p class="deal-description">${deal.description}</p>
+    <div class="deal-title">${_getContentTitle('deals', deal.id, 'title') || deal.title}</div>
+    <p class="deal-description">${_getContentTitle('deals', deal.id, 'description') || deal.description}</p>
     <div class="deal-footer">
       <div class="deal-validity" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <span style="font-size:0.72rem;color:rgba(255,255,255,0.4)">📅 ${deal.expiry_formatted}</span>
         ${_countdownBadge(deal.expiry_date)}
       </div>
       <div class="deal-actions">
-        <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn deal-action-social">👥 Gemeinsam</button>
-        <button id="di_btn_${deal.id}" onclick="_toggleDealInterestUI('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn" style="background:${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.2)' : 'rgba(255,255,255,0.07)'};border:1px solid ${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.4)' : 'rgba(255,255,255,0.12)'};color:${_isInterestedInDeal(deal.id) ? '#F7AB00' : 'rgba(255,255,255,0.55)'};border-radius:10px;padding:0 10px;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">${_isInterestedInDeal(deal.id) ? '⭐ Interessiert' : '⭐ Interessiert?'}</button>
+        <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn deal-action-social">${t('deals.together')}</button>
+        <button id="di_btn_${deal.id}" onclick="_toggleDealInterestUI('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn" style="background:${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.2)' : 'rgba(255,255,255,0.07)'};border:1px solid ${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.4)' : 'rgba(255,255,255,0.12)'};color:${_isInterestedInDeal(deal.id) ? '#F7AB00' : 'rgba(255,255,255,0.55)'};border-radius:10px;padding:0 10px;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">${_isInterestedInDeal(deal.id) ? t('deals.interested') : t('deals.interested_q')}</button>
         <button onclick="openVoucherQR('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}','${deal.merchant_id||''}');event.stopPropagation()" class="deal-action-btn deal-action-redeem">${t('deals.redeem')}</button>
         <button class="${deal.is_claimed ? 'btn btn-sm claimed save-voucher-button' : 'btn btn-primary btn-sm save-voucher-button'}" data-idx="${idx}">
-          ${deal.is_claimed ? '✓ Eingelöst' : 'Gutschein sichern'}
+          ${deal.is_claimed ? t('deals.claimed') : t('deals.voucher')}
         </button>
       </div>
     </div>
@@ -1790,8 +1818,8 @@ function _renderPartnerDealCard(pd) {
     </div>
     <div style="font-size:0.68rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px">${escHtml(pd.description||'')}</div>
     <div style="display:flex;align-items:center;justify-content:space-between">
-      <div style="font-size:0.6rem;color:rgba(255,255,255,0.3)">📅 Bis ${expiryStr} · ${pd.participants||0} Teilnehmer</div>
-      <button onclick="securePartnerVoucher('${escHtml(pd.id)}')" style="background:#FA4615;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">Gutschein sichern</button>
+      <div style="font-size:0.6rem;color:rgba(255,255,255,0.3)">📅 ${t('deals.valid_until').replace('{date}',expiryStr).replace('{n}',pd.participants||0)}</div>
+      <button onclick="securePartnerVoucher('${escHtml(pd.id)}')" style="background:#FA4615;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('deals.voucher')}</button>
     </div>`;
   return div;
 }
@@ -1826,7 +1854,7 @@ async function claimDeal(idx, cardEl, deal) {
 
   state.deals[idx].is_claimed = true;
   const btn = cardEl.querySelector('[data-idx]') || cardEl.querySelector('.btn');
-  if (btn) { btn.className = 'btn btn-sm claimed'; btn.textContent = '✓ Eingelöst'; btn.disabled = true; }
+  if (btn) { btn.className = 'btn btn-sm claimed'; btn.textContent = t('deals.claimed'); btn.disabled = true; }
 
   await addPoints(deal.points_reward || 0, deal.store_name || 'Deal');
   const dealsEl = $('#profile-stat-deals');
@@ -1948,7 +1976,7 @@ async function renderProfile() {
   const nearbyBadge = document.getElementById('nearby-profile-badge');
   if (nearbyBadge) {
     const ns = NEARBY.getSettings();
-    nearbyBadge.textContent = ns.enabled ? '✅ Aktiv' : t('profile.disabled');
+    nearbyBadge.textContent = ns.enabled ? t('profile.active') : t('profile.disabled');
     nearbyBadge.style.color = ns.enabled ? '#34d399' : 'rgba(255,255,255,0.35)';
   }
 }
@@ -1961,14 +1989,14 @@ async function renderSavedSummary() {
   if (!container) return;
 
   if (savedDealsArr.length === 0 && savedEventsArr.length === 0) {
-    container.innerHTML = '<div style="font-size:0.8rem;color:var(--color-text-muted)">Noch nichts gemerkt.</div>';
+    container.innerHTML = `<div style="font-size:0.8rem;color:var(--color-text-muted)">${t('profile.nothing_saved')}</div>`;
     return;
   }
 
   container.innerHTML = [
-    savedEventsArr.length ? `<div class="saved-chip" onclick="navigateTo('events')">🔖 ${savedEventsArr.length} Event${savedEventsArr.length !== 1 ? 's' : ''} gemerkt</div>` : '',
-    savedDealsArr.length ? `<div class="saved-chip" onclick="navigateTo('deals')">🏷️ ${savedDealsArr.length} Deal${savedDealsArr.length !== 1 ? 's' : ''} gemerkt</div>` : '',
-    savedDealsArr.length ? `<div class="saved-chip" onclick="openSavedDeals()" style="background:var(--primary,#FA4615);color:white;border-color:var(--primary,#FA4615)">Gespeicherte Deals →</div>` : '',
+    savedEventsArr.length ? `<div class="saved-chip" onclick="navigateTo('events')">${t('profile.events_saved').replace('{n}',savedEventsArr.length).replace('{s}',savedEventsArr.length !== 1 ? 's' : '')}</div>` : '',
+    savedDealsArr.length ? `<div class="saved-chip" onclick="navigateTo('deals')">${t('profile.deals_saved').replace('{n}',savedDealsArr.length).replace('{s}',savedDealsArr.length !== 1 ? 's' : '')}</div>` : '',
+    savedDealsArr.length ? `<div class="saved-chip" onclick="openSavedDeals()" style="background:var(--primary,#FA4615);color:white;border-color:var(--primary,#FA4615)">${t('profile.saved_deals_link')}</div>` : '',
   ].join('');
 }
 
@@ -2623,7 +2651,7 @@ function openVoucherQR(dealId, dealTitle, merchantId) {
   }
 
   $('#voucher-qr-code').textContent = code6;
-  $('#voucher-qr-status').textContent = '✅ Gültig — beim Händler vorzeigen';
+  $('#voucher-qr-status').textContent = t('qr.valid');
   $('#voucher-qr-status').style.color = 'var(--green)';
 
   // Timer countdown
@@ -2787,7 +2815,7 @@ function handleCheckinQR(data) {
     checkins.push({ userId: user.id, merchantId: data.merchantId, ts: Date.now(), type: 'merchant', points: 10 });
     _saveCheckins(checkins);
     ZAMApi.points.add(10, 'merchant_checkin', 'Händler Check-in: ' + (data.merchantName || ''));
-    _showScanResult(`✅ Check-in erfolgreich! +10 Punkte für ${data.merchantName || 'Besuch'}`, 'var(--green)');
+    _showScanResult(t('qr.checkin_success').replace('{n}','10').replace('{name}',data.merchantName||''), 'var(--green)');
     updatePointsDisplay();
   } else if (data.subtype === 'event') {
     const alreadyCheckedIn = checkins.some(c => c.userId === user.id && c.eventId === data.eventId);
@@ -2799,7 +2827,7 @@ function handleCheckinQR(data) {
     checkins.push({ userId: user.id, eventId: data.eventId, ts: Date.now(), type: 'event', points: 25 });
     _saveCheckins(checkins);
     ZAMApi.points.add(25, 'event_checkin', 'Event Check-in: ' + (data.eventName || ''));
-    _showScanResult(`✅ Check-in erfolgreich! +25 Punkte für ${data.eventName || 'Event'}`, 'var(--green)');
+    _showScanResult(t('qr.checkin_success').replace('{n}','25').replace('{name}',data.eventName||'Event'), 'var(--green)');
     updatePointsDisplay();
   }
 }
@@ -3889,7 +3917,7 @@ function renderNotifications() {
   if (!list) return;
 
   if (filtered.length === 0) {
-    list.innerHTML = `<div class="notif-empty"><span class="notif-empty-icon">🔔</span>${t('alerts.empty')}${notifFilter !== 'all' ? ' in dieser Kategorie' : ''}</div>`;
+    list.innerHTML = `<div class="notif-empty"><span class="notif-empty-icon">🔔</span>${t('alerts.empty')}${notifFilter !== 'all' ? t('alerts.in_category') : ''}</div>`;
     updateNotifBadge();
     return;
   }
@@ -3906,26 +3934,26 @@ function renderNotifications() {
       const avatarColor = _avatarColor(n.from_id || n.fr_id);
       const actionHtml = frStatus === 'pending' ? `
         <div style="display:flex;gap:8px;margin-top:10px">
-          <button onclick="event.stopPropagation();acceptFriendRequest('${n.fr_id}')" style="flex:1;background:linear-gradient(135deg,#059669,#34d399);border:none;border-radius:10px;padding:9px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">✅ Annehmen</button>
-          <button onclick="event.stopPropagation();rejectFriendRequest('${n.fr_id}')" style="flex:1;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:9px;color:#ef4444;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">❌ Ablehnen</button>
+          <button onclick="event.stopPropagation();acceptFriendRequest('${n.fr_id}')" style="flex:1;background:linear-gradient(135deg,#059669,#34d399);border:none;border-radius:10px;padding:9px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('alerts.accept')}</button>
+          <button onclick="event.stopPropagation();rejectFriendRequest('${n.fr_id}')" style="flex:1;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:9px;color:#ef4444;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('alerts.decline')}</button>
         </div>` :
         frStatus === 'accepted' ? `
         <div style="margin-top:10px">
-          <button onclick="event.stopPropagation();openPrivateChat('${n.from_id}','${escHtml(n.from_name||'')}','${initials}',null)" style="width:100%;background:rgba(250,70,21,0.15);border:1.5px solid rgba(250,70,21,0.4);border-radius:10px;padding:9px;color:#FA4615;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">💬 Chat öffnen</button>
-        </div>` : `<div style="margin-top:8px;font-size:0.68rem;color:rgba(255,255,255,0.3)">Anfrage abgelehnt</div>`;
+          <button onclick="event.stopPropagation();openPrivateChat('${n.from_id}','${escHtml(n.from_name||'')}','${initials}',null)" style="width:100%;background:rgba(250,70,21,0.15);border:1.5px solid rgba(250,70,21,0.4);border-radius:10px;padding:9px;color:#FA4615;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('alerts.chat_open')}</button>
+        </div>` : `<div style="margin-top:8px;font-size:0.68rem;color:rgba(255,255,255,0.3)">${t('alerts.request_declined')}</div>`;
       return `
         <div class="notif-item ${isUnread ? 'unread' : ''}" style="padding:12px 14px">
           <div style="display:flex;align-items:flex-start;gap:10px">
             <div style="width:38px;height:38px;border-radius:50%;background:${avatarColor};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-                <div class="notif-title" style="font-size:0.82rem">➕ Freundschaftsanfrage</div>
+                <div class="notif-title" style="font-size:0.82rem">${t('alerts.friend_request')}</div>
                 <div style="display:flex;align-items:center;gap:6px">
                   ${isUnread ? '<div class="notif-unread-dot" style="position:static;margin:0"></div>' : ''}
                   <button class="notif-del-btn" onclick="event.stopPropagation();ZAMApi.notifications.deleteById('${n.id}');renderNotifications()" style="position:static">✕</button>
                 </div>
               </div>
-              <div class="notif-text" style="margin-top:2px">${escHtml(n.body || n.from_name + ' möchte dich als Freund hinzufügen.')}</div>
+              <div class="notif-text" style="margin-top:2px">${escHtml(n.body || (n.from_name||t('alerts.someone')) + t('alerts.wants_friend'))}</div>
               <div class="notif-time">${timeStr}</div>
               ${actionHtml}
             </div>
@@ -3941,13 +3969,13 @@ function renderNotifications() {
 
       const actionHtml = status === 'offen' ? `
         <div style="display:flex;gap:8px;margin-top:10px">
-          <button onclick="event.stopPropagation();acceptDealRequest('${n.deal_req_id}')" style="flex:1;background:linear-gradient(135deg,#059669,#34d399);border:none;border-radius:10px;padding:9px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">✅ Annehmen</button>
-          <button onclick="event.stopPropagation();rejectDealRequest('${n.deal_req_id}')" style="flex:1;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:9px;color:#ef4444;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">❌ Ablehnen</button>
+          <button onclick="event.stopPropagation();acceptDealRequest('${n.deal_req_id}')" style="flex:1;background:linear-gradient(135deg,#059669,#34d399);border:none;border-radius:10px;padding:9px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('alerts.accept')}</button>
+          <button onclick="event.stopPropagation();rejectDealRequest('${n.deal_req_id}')" style="flex:1;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:9px;color:#ef4444;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('alerts.decline')}</button>
         </div>` :
         status === 'angenommen' ? `
         <div style="margin-top:10px">
-          <button onclick="event.stopPropagation();openDealRequestChat('${n.deal_req_id}')" style="width:100%;background:rgba(250,70,21,0.15);border:1.5px solid rgba(250,70,21,0.4);border-radius:10px;padding:9px;color:#FA4615;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">💬 Chat öffnen</button>
-        </div>` : `<div style="margin-top:8px;font-size:0.68rem;color:rgba(255,255,255,0.3)">Anfrage abgelehnt</div>`;
+          <button onclick="event.stopPropagation();openDealRequestChat('${n.deal_req_id}')" style="width:100%;background:rgba(250,70,21,0.15);border:1.5px solid rgba(250,70,21,0.4);border-radius:10px;padding:9px;color:#FA4615;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('alerts.chat_open')}</button>
+        </div>` : `<div style="margin-top:8px;font-size:0.68rem;color:rgba(255,255,255,0.3)">${t('alerts.request_declined')}</div>`;
 
       return `
         <div class="notif-item ${isUnread ? 'unread' : ''}" style="padding:12px 14px">
@@ -3955,7 +3983,7 @@ function renderNotifications() {
             <div style="width:38px;height:38px;border-radius:50%;background:${avatarColor};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-                <div class="notif-title" style="font-size:0.82rem">${escHtml(n.from_name||'Jemand')} fragt an</div>
+                <div class="notif-title" style="font-size:0.82rem">${escHtml(n.from_name||t('alerts.someone'))}${t('alerts.deal_asks')}</div>
                 <div style="display:flex;align-items:center;gap:6px">
                   ${isUnread ? '<div class="notif-unread-dot" style="position:static;margin:0"></div>' : ''}
                   <button class="notif-del-btn" onclick="event.stopPropagation();ZAMApi.notifications.deleteById('${n.id}');renderNotifications()" style="position:static">✕</button>
@@ -5643,7 +5671,7 @@ function aiGenerateSocial() {
 
 function aiCopyText(btn, encoded) {
   const text = decodeURIComponent(encoded);
-  if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => showToast('Text kopiert! 📋')).catch(() => showToast('Kopieren fehlgeschlagen'));
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => showToast(t('toast.copy'))).catch(() => showToast(t('errors.generic')));
   else showToast('Kopieren nicht verfügbar');
 }
 
@@ -6060,7 +6088,7 @@ function requestDealPartner(userId, userName, dealTitle, dealId) {
     deal_title:  dealTitle,
   });
 
-  showToast('✅ Anfrage an ' + userName + ' gesendet!', 'success');
+  showToast(t('toast.deal_request_sent').replace('{name}', userName), 'success');
   // Update button state
   $$('.deal-match-btn').forEach(btn => {
     if (btn.getAttribute('onclick')?.includes(userId)) {
@@ -6099,7 +6127,7 @@ function acceptDealRequest(reqId) {
   const drNotif = notifs.find(n => n.deal_req_id === reqId);
   if (drNotif) ZAMApi.notifications.deleteById(drNotif.id);
 
-  showToast('✅ Angenommen! Chat geöffnet.', 'success');
+  showToast(t('toast.deal_accepted'), 'success');
   renderNotifications();
 
   // Open the chat
@@ -6121,7 +6149,7 @@ function rejectDealRequest(reqId) {
   const drNotif = notifs.find(n => n.deal_req_id === reqId);
   if (drNotif) ZAMApi.notifications.deleteById(drNotif.id);
 
-  showToast('Anfrage abgelehnt.', 'info');
+  showToast(t('toast.deal_rejected'), 'info');
   renderNotifications();
 }
 
@@ -6196,7 +6224,7 @@ function sendFriendRequest(userId, userName, initials) {
     from_id: me.id, from_name: myName, from_initials: myInitials,
     body: `${myName} möchte dich als Freund hinzufügen.`, read: false,
   });
-  showToast('➕ Freundschaftsanfrage gesendet!', 'success');
+  showToast(t('toast.friend_sent'), 'success');
   _renderActiveUsersList(getActiveUsers());
 }
 
@@ -6209,7 +6237,7 @@ function acceptFriendRequest(frId) {
   const notif = ZAMApi.notifications.getAll().find(n => n.fr_id === frId);
   if (notif) ZAMApi.notifications.markReadById(notif.id);
   const friendName = req.from_id === (ZAMApi.auth.currentUser()?.id) ? req.to_name : req.from_name;
-  showToast(`✅ ${friendName} ist jetzt dein Freund!`, 'success');
+  showToast(t('toast.friend_accepted').replace('{name}', friendName), 'success');
   renderNotifications();
   renderContacts();
   const friendId       = req.from_id === (ZAMApi.auth.currentUser()?.id) ? req.to_id       : req.from_id;
@@ -7483,7 +7511,7 @@ function markRewardRedeemed(rewardId) {
   if (!confirm('Gutschein als eingelöst markieren?')) return;
   const rewards = _getRewards();
   const r = rewards.find(x => x.id === rewardId);
-  if (r) { r.status = 'redeemed'; r.redeemed_at = new Date().toISOString(); _saveRewards(rewards); renderRewards(); showToast('✓ Gutschein eingelöst!'); }
+  if (r) { r.status = 'redeemed'; r.redeemed_at = new Date().toISOString(); _saveRewards(rewards); renderRewards(); showToast(t('toast.voucher_redeemed')); }
 }
 
 function redeemPointsReward(catalogId) {
@@ -7505,7 +7533,7 @@ function redeemPointsReward(catalogId) {
   rewards.unshift({ id:'rew_'+Date.now(), type:'points', merchant_name:item.merchant, merchant_icon:item.icon, title:item.title, description:item.description, voucher_id:_generateVoucherId(), status:'available', points_cost:item.points, expires_at:new Date(Date.now()+30*86400000).toISOString(), earned_at:new Date().toISOString() });
   _saveRewards(rewards);
   renderRewards();
-  showToast(`🎁 ${item.title} freigeschaltet!`);
+  showToast(t('toast.reward_unlocked').replace('{title}', item.title));
 }
 
 function _awardChallengeReward(challengeId) {
@@ -8786,7 +8814,7 @@ function secureVoucherFromDeal(dealId, dealTitle, storeIcon, storeName, discount
   };
   vouchers.unshift(voucher);
   _saveMyVouchers(vouchers);
-  showToast('🎟 Gutschein gesichert! +10 Punkte', 'success');
+  showToast(t('toast.partner_voucher'), 'success');
   showMyVoucherQR(voucher.id);
 }
 
