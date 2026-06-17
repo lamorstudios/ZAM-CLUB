@@ -544,6 +544,17 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
 </div>
 
 <script>
+function mapT(key) {
+  const lang = localStorage.getItem('zam_lang') || 'de';
+  const map_i18n = {
+    de: { title:'ZAM Live Map', online:'online', users:'Nutzer aktiv', close:'Schließen' },
+    en: { title:'ZAM Live Map', online:'online', users:'users active', close:'Close' },
+    tr: { title:'ZAM Live Map', online:'çevrimiçi', users:'kullanıcı aktif', close:'Kapat' },
+    es: { title:'ZAM Live Map', online:'en línea', users:'usuarios activos', close:'Cerrar' },
+    it: { title:'ZAM Live Map', online:'online', users:'utenti attivi', close:'Chiudi' },
+  };
+  return (map_i18n[lang] || map_i18n['de'])[key] || key;
+}
 // Clear cached shop data if version mismatch
 (function(){try{const c=JSON.parse(localStorage.getItem('zam_shop_map_data')||'null');if(c&&c[0]&&(c[0].name==='REWE City'||c[0].id==='s_rewe'&&c[0].name!=='REWE')){localStorage.removeItem('zam_shop_map_data');}}catch(e){}}());
 const ZONES={mk2_1:{label:'MK 2(1)',color:'#d97706'},mk2_2:{label:'MK 2(2)',color:'#7c3aed'},mk2_3:{label:'MK 2(3)',color:'#059669'},mk2_4:{label:'MK 2(4)',color:'#2563eb'},plaza:{label:'Gandhi-Platz',color:'#8b5cf6'}};
@@ -753,7 +764,7 @@ function openUserPopup(u){
     </div>
     <div style="display:flex;gap:8px">
       ${actionBtn}
-      <button onclick="closePopup()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">Schließen</button>
+      <button onclick="closePopup()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">${mapT('close')}</button>
     </div>`;
   showPopup();
 }
@@ -767,7 +778,7 @@ function openMarkerPopup(m){
     </div>
     <p style="font-size:0.76rem;color:rgba(255,255,255,0.6);line-height:1.55;margin-bottom:10px">${m.desc}</p>
     <div style="font-size:0.7rem;color:${m.color};font-weight:600;margin-bottom:14px">${m.extra}</div>
-    <button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">Schließen</button>`;
+    <button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">${mapT('close')}</button>`;
   showPopup();
 }
 
@@ -835,7 +846,7 @@ function nudgeUser(id,name){
           <strong style="color:#a78bfa">${_esc(name)}</strong> wird benachrichtigt.<br>Antwort kommt gleich…
         </div>
         <div id="nudge-waiting" style="margin-top:12px;font-size:0.7rem;color:rgba(255,255,255,0.3)">⏳ Warte auf Antwort…</div>
-        <button onclick="closePopup()" style="margin-top:16px;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.45);font-size:0.8rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">Schließen</button>
+        <button onclick="closePopup()" style="margin-top:16px;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.45);font-size:0.8rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">${mapT('close')}</button>
       </div>`;
     showPopup();
     // Simulate acceptance after 2.5s
@@ -867,7 +878,7 @@ function pcFromMap(userId,userName,initials){
 }
 
 function openNudgeInbox(){
-  document.getElementById('pop-content').innerHTML=`<div style="font-size:0.88rem;font-weight:700;color:#fff;margin-bottom:12px">👋 Anstupsien</div><div style="font-size:0.76rem;color:rgba(255,255,255,0.4);text-align:center;padding:20px 0">Noch keine Anstupsien erhalten</div><button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">Schließen</button>`;
+  document.getElementById('pop-content').innerHTML=`<div style="font-size:0.88rem;font-weight:700;color:#fff;margin-bottom:12px">👋 Anstupsien</div><div style="font-size:0.76rem;color:rgba(255,255,255,0.4);text-align:center;padding:20px 0">Noch keine Anstupsien erhalten</div><button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">${mapT('close')}</button>`;
   showPopup();
 }
 
@@ -887,9 +898,9 @@ function openPanelPopup(panel){
   const ev=MARKERS.filter(m=>m.type==='event');
   const dl=MARKERS.filter(m=>m.type==='deal');
   const contents={
-    events:`<div style="font-size:0.88rem;font-weight:700;color:#fff;margin-bottom:12px">🎉 Events</div>${ev.map(m=>`<div style="display:flex;gap:10px;align-items:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:6px;border:1px solid rgba(139,92,246,0.15)"><span style="font-size:1.3rem">${m.icon}</span><div><div style="font-size:0.78rem;font-weight:600;color:#fff">${m.title}</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">${m.extra}</div></div></div>`).join('')}<button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer;margin-top:4px">Schließen</button>`,
-    deals:`<div style="font-size:0.88rem;font-weight:700;color:#fff;margin-bottom:12px">🏷️ Aktuelle Deals</div>${dl.map(m=>`<div style="display:flex;gap:10px;align-items:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:6px;border:1px solid rgba(5,150,105,0.15)"><span style="font-size:1.3rem">${m.icon}</span><div><div style="font-size:0.78rem;font-weight:600;color:#fff">${m.title}</div><div style="font-size:0.65rem;color:rgba(5,150,105,0.7);margin-top:2px">${m.extra}</div></div></div>`).join('')}<button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer;margin-top:4px">Schließen</button>`,
-    community:`<div style="font-size:0.88rem;font-weight:700;color:#fff;margin-bottom:12px">👥 Community Online</div>${DEMO_USERS.map(u=>`<div onclick="closePopup();setTimeout(()=>openUserPopup(window._u${u.id}=>${JSON.stringify(u)}),200)" style="display:flex;gap:10px;align-items:center;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:5px;cursor:pointer"><div style="width:34px;height:34px;border-radius:50%;background:${u.bg};border:2px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0">${u.initials}</div><div><div style="font-size:0.78rem;font-weight:600;color:#fff">${u.name}</div><div style="font-size:0.62rem;color:rgba(255,255,255,0.4)">${u.status}</div></div><div style="margin-left:auto;width:7px;height:7px;border-radius:50%;background:#34d399"></div></div>`).join('')}<button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer;margin-top:6px">Schließen</button>`,
+    events:`<div style="font-size:0.88rem;font-weight:700;color:#fff;margin-bottom:12px">🎉 Events</div>${ev.map(m=>`<div style="display:flex;gap:10px;align-items:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:6px;border:1px solid rgba(139,92,246,0.15)"><span style="font-size:1.3rem">${m.icon}</span><div><div style="font-size:0.78rem;font-weight:600;color:#fff">${m.title}</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">${m.extra}</div></div></div>`).join('')}<button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer;margin-top:4px">${mapT('close')}</button>`,
+    deals:`<div style="font-size:0.88rem;font-weight:700;color:#fff;margin-bottom:12px">🏷️ Aktuelle Deals</div>${dl.map(m=>`<div style="display:flex;gap:10px;align-items:center;padding:10px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:6px;border:1px solid rgba(5,150,105,0.15)"><span style="font-size:1.3rem">${m.icon}</span><div><div style="font-size:0.78rem;font-weight:600;color:#fff">${m.title}</div><div style="font-size:0.65rem;color:rgba(5,150,105,0.7);margin-top:2px">${m.extra}</div></div></div>`).join('')}<button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer;margin-top:4px">${mapT('close')}</button>`,
+    community:`<div style="font-size:0.88rem;font-weight:700;color:#fff;margin-bottom:12px">👥 Community Online</div>${DEMO_USERS.map(u=>`<div onclick="closePopup();setTimeout(()=>openUserPopup(window._u${u.id}=>${JSON.stringify(u)}),200)" style="display:flex;gap:10px;align-items:center;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:5px;cursor:pointer"><div style="width:34px;height:34px;border-radius:50%;background:${u.bg};border:2px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0">${u.initials}</div><div><div style="font-size:0.78rem;font-weight:600;color:#fff">${u.name}</div><div style="font-size:0.62rem;color:rgba(255,255,255,0.4)">${u.status}</div></div><div style="margin-left:auto;width:7px;height:7px;border-radius:50%;background:#34d399"></div></div>`).join('')}<button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer;margin-top:6px">${mapT('close')}</button>`,
   };
   document.getElementById('pop-content').innerHTML=contents[panel]||'';showPopup();
 }
@@ -1155,7 +1166,7 @@ function sendDealRequest() {
         </div>
         <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-bottom:16px">Antwort kommt in wenigen Sekunden</div>
         <button onclick="closePopup();openMapActiveUsers();auSwitchTab('deals')" style="width:100%;background:linear-gradient(135deg,#6d28d9,#8b5cf6);border-radius:10px;padding:11px;color:#fff;font-size:0.82rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer;border:none;margin-bottom:8px">Gemeinsame Deals ansehen</button>
-        <button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:11px;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">Schließen</button>
+        <button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:11px;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">${mapT('close')}</button>
       </div>`;
     showPopup();
   }, 100);
@@ -1261,7 +1272,7 @@ function openMarkerPopupWithMatch(m){
     <p style="font-size:0.76rem;color:rgba(255,255,255,0.6);line-height:1.55;margin-bottom:8px">${m.desc}</p>
     <div style="font-size:0.7rem;color:${m.color};font-weight:600;margin-bottom:10px">${m.extra}</div>
     ${matchHtml}
-    <button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer;margin-top:12px">Schließen</button>`;
+    <button onclick="closePopup()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer;margin-top:12px">${mapT('close')}</button>`;
   showPopup();
 }
 
@@ -1325,7 +1336,7 @@ function openUserPopup(u){
       ${frBtn||'<div style="flex:1"></div>'}
     </div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
-      <button onclick="closePopup()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">Schließen</button>
+      <button onclick="closePopup()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">${mapT('close')}</button>
     </div>
     <div style="display:flex;gap:8px">
       <button onclick="reportMapUser('${uid}','${uname}')" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:7px;color:rgba(255,255,255,0.3);font-size:0.68rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">🚩 Melden</button>
@@ -1460,7 +1471,7 @@ function openShopPopup(shopId) {
     <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.5">${s.desc||''}</div>
     <div style="display:flex;gap:8px">
       <button onclick="closePopup();window.parent&&window.parent.postMessage({type:'navigate',page:'deals'},'*')" style="flex:1;background:#FA4615;border:none;border-radius:10px;padding:10px;color:#fff;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">🏷️ Deals ansehen</button>
-      <button onclick="closePopup()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">Schließen</button>
+      <button onclick="closePopup()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">${mapT('close')}</button>
     </div>`;
   showPopup();
 }
@@ -1641,9 +1652,9 @@ window.addEventListener('DOMContentLoaded',()=>{
     const el = document.getElementById('tb-online');
     const pill = document.getElementById('online-pill-count');
     const fab = document.getElementById('au-fab-count');
-    if (el) el.textContent = n + ' Freunde online';
-    if (pill) pill.textContent = n + ' online';
-    if (fab) fab.textContent = n + ' online';
+    if (el) el.textContent = n + ' ' + mapT('users');
+    if (pill) pill.textContent = n + ' ' + mapT('online');
+    if (fab) fab.textContent = n + ' ' + mapT('online');
   }
   updateOnlineCount();
   setInterval(updateOnlineCount, 12000);

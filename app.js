@@ -7,6 +7,168 @@
 'use strict';
 
 // =============================================
+// i18n — Translations
+// =============================================
+window.ZAM_I18N = {
+  de: {
+    nav: { home:'Home', deals:'Deals', events:'Events', community:'Community', map:'Map', challenges:'Challenges', alerts:'Alerts', profile:'Profil' },
+    login: { title:'Willkommen bei ZAM', subtitle:'Dein Shopping-Center Erlebnis', button:'Anmelden', demo:'Demo starten' },
+    home: { greeting:'Guten Tag', greetingMorning:'Guten Morgen', greetingEvening:'Guten Abend', points:'Punkte', level:'Level', spin:'Drehen', streak:'Streak', bonus:'Bonus', rank:'Rang' },
+    deals: { title:'Deals', all:'Alle', nearby:'In der Nähe', food:'Essen', fashion:'Mode', filters:'Filter', voucher:'Gutschein sichern', noDeals:'Keine Deals verfügbar', saved:'Gespeichert' },
+    events: { title:'Events', join:'Teilnehmen', attending:'Angemeldet', full:'Ausgebucht', free:'Kostenlos', paid:'Kostenpflichtig', noEvents:'Keine Events verfügbar' },
+    community: { title:'Community', nudge:'Stupsen', chat:'Chat', online:'Online', friends:'Freunde', noFriends:'Noch keine Freunde', addFriend:'Freund hinzufügen' },
+    challenges: { title:'Challenges', join:'Mitmachen', progress:'Fortschritt', completed:'Abgeschlossen', reward:'Belohnung', noChallenges:'Keine Challenges verfügbar' },
+    alerts: { title:'Benachrichtigungen', empty:'Keine Benachrichtigungen', markRead:'Alle gelesen' },
+    profile: { title:'Profil', settings:'Einstellungen', language:'Sprache', logout:'Abmelden', editProfile:'Profil bearbeiten', notifications:'Benachrichtigungen', privacy:'Datenschutz', help:'Hilfe' },
+    buttons: { save:'Speichern', cancel:'Abbrechen', close:'Schließen', back:'Zurück', confirm:'Bestätigen', share:'Teilen', ok:'OK' },
+    errors: { generic:'Ein Fehler ist aufgetreten', network:'Netzwerkfehler' },
+    success: { voucherSaved:'Gutschein gespeichert!', friendRequest:'Freundschaftsanfrage gesendet', nudgeSent:'Stupser gesendet!' },
+    map: { title:'ZAM Live Map', online:'online', users:'Nutzer aktiv', close:'Schließen' },
+  },
+  en: {
+    nav: { home:'Home', deals:'Deals', events:'Events', community:'Community', map:'Map', challenges:'Challenges', alerts:'Alerts', profile:'Profile' },
+    login: { title:'Welcome to ZAM', subtitle:'Your Shopping Center Experience', button:'Sign In', demo:'Start Demo' },
+    home: { greeting:'Good Afternoon', greetingMorning:'Good Morning', greetingEvening:'Good Evening', points:'Points', level:'Level', spin:'Spin', streak:'Streak', bonus:'Bonus', rank:'Rank' },
+    deals: { title:'Deals', all:'All', nearby:'Nearby', food:'Food', fashion:'Fashion', filters:'Filters', voucher:'Save Voucher', noDeals:'No deals available', saved:'Saved' },
+    events: { title:'Events', join:'Join', attending:'Attending', full:'Sold Out', free:'Free', paid:'Paid', noEvents:'No events available' },
+    community: { title:'Community', nudge:'Nudge', chat:'Chat', online:'Online', friends:'Friends', noFriends:'No friends yet', addFriend:'Add Friend' },
+    challenges: { title:'Challenges', join:'Join', progress:'Progress', completed:'Completed', reward:'Reward', noChallenges:'No challenges available' },
+    alerts: { title:'Notifications', empty:'No notifications', markRead:'Mark all read' },
+    profile: { title:'Profile', settings:'Settings', language:'Language', logout:'Sign Out', editProfile:'Edit Profile', notifications:'Notifications', privacy:'Privacy', help:'Help' },
+    buttons: { save:'Save', cancel:'Cancel', close:'Close', back:'Back', confirm:'Confirm', share:'Share', ok:'OK' },
+    errors: { generic:'An error occurred', network:'Network error' },
+    success: { voucherSaved:'Voucher saved!', friendRequest:'Friend request sent', nudgeSent:'Nudge sent!' },
+    map: { title:'ZAM Live Map', online:'online', users:'users active', close:'Close' },
+  },
+  tr: {
+    nav: { home:'Ana Sayfa', deals:'Fırsatlar', events:'Etkinlikler', community:'Topluluk', map:'Harita', challenges:'Meydan Okumalar', alerts:'Uyarılar', profile:'Profil' },
+    login: { title:"ZAM'a Hoş Geldiniz", subtitle:'Alışveriş Merkezi Deneyiminiz', button:'Giriş Yap', demo:'Demo Başlat' },
+    home: { greeting:'İyi Günler', greetingMorning:'Günaydın', greetingEvening:'İyi Akşamlar', points:'Puan', level:'Seviye', spin:'Çevir', streak:'Seri', bonus:'Bonus', rank:'Sıralama' },
+    deals: { title:'Fırsatlar', all:'Tümü', nearby:'Yakınımda', food:'Yemek', fashion:'Moda', filters:'Filtreler', voucher:'Kuponu Kaydet', noDeals:'Fırsat bulunamadı', saved:'Kaydedildi' },
+    events: { title:'Etkinlikler', join:'Katıl', attending:'Katılıyorum', full:'Dolu', free:'Ücretsiz', paid:'Ücretli', noEvents:'Etkinlik bulunamadı' },
+    community: { title:'Topluluk', nudge:'Dürt', chat:'Sohbet', online:'Çevrimiçi', friends:'Arkadaşlar', noFriends:'Henüz arkadaş yok', addFriend:'Arkadaş Ekle' },
+    challenges: { title:'Meydan Okumalar', join:'Katıl', progress:'İlerleme', completed:'Tamamlandı', reward:'Ödül', noChallenges:'Meydan okuma bulunamadı' },
+    alerts: { title:'Bildirimler', empty:'Bildirim yok', markRead:'Tümünü okundu işaretle' },
+    profile: { title:'Profil', settings:'Ayarlar', language:'Dil', logout:'Çıkış Yap', editProfile:'Profili Düzenle', notifications:'Bildirimler', privacy:'Gizlilik', help:'Yardım' },
+    buttons: { save:'Kaydet', cancel:'İptal', close:'Kapat', back:'Geri', confirm:'Onayla', share:'Paylaş', ok:'Tamam' },
+    errors: { generic:'Bir hata oluştu', network:'Ağ hatası' },
+    success: { voucherSaved:'Kupon kaydedildi!', friendRequest:'Arkadaşlık isteği gönderildi', nudgeSent:'Dürtme gönderildi!' },
+    map: { title:'ZAM Canlı Harita', online:'çevrimiçi', users:'kullanıcı aktif', close:'Kapat' },
+  },
+  es: {
+    nav: { home:'Inicio', deals:'Ofertas', events:'Eventos', community:'Comunidad', map:'Mapa', challenges:'Retos', alerts:'Alertas', profile:'Perfil' },
+    login: { title:'Bienvenido a ZAM', subtitle:'Tu Experiencia en el Centro Comercial', button:'Iniciar sesión', demo:'Iniciar Demo' },
+    home: { greeting:'Buenas tardes', greetingMorning:'Buenos días', greetingEvening:'Buenas noches', points:'Puntos', level:'Nivel', spin:'Girar', streak:'Racha', bonus:'Bonus', rank:'Rango' },
+    deals: { title:'Ofertas', all:'Todas', nearby:'Cerca de mí', food:'Comida', fashion:'Moda', filters:'Filtros', voucher:'Guardar Cupón', noDeals:'No hay ofertas disponibles', saved:'Guardado' },
+    events: { title:'Eventos', join:'Unirse', attending:'Inscrito', full:'Agotado', free:'Gratis', paid:'De pago', noEvents:'No hay eventos disponibles' },
+    community: { title:'Comunidad', nudge:'Dar un toque', chat:'Chat', online:'En línea', friends:'Amigos', noFriends:'Aún sin amigos', addFriend:'Añadir amigo' },
+    challenges: { title:'Retos', join:'Participar', progress:'Progreso', completed:'Completado', reward:'Recompensa', noChallenges:'No hay retos disponibles' },
+    alerts: { title:'Notificaciones', empty:'Sin notificaciones', markRead:'Marcar todo como leído' },
+    profile: { title:'Perfil', settings:'Ajustes', language:'Idioma', logout:'Cerrar sesión', editProfile:'Editar Perfil', notifications:'Notificaciones', privacy:'Privacidad', help:'Ayuda' },
+    buttons: { save:'Guardar', cancel:'Cancelar', close:'Cerrar', back:'Atrás', confirm:'Confirmar', share:'Compartir', ok:'OK' },
+    errors: { generic:'Se ha producido un error', network:'Error de red' },
+    success: { voucherSaved:'¡Cupón guardado!', friendRequest:'Solicitud de amistad enviada', nudgeSent:'¡Toque enviado!' },
+    map: { title:'ZAM Mapa en Vivo', online:'en línea', users:'usuarios activos', close:'Cerrar' },
+  },
+  it: {
+    nav: { home:'Home', deals:'Offerte', events:'Eventi', community:'Comunità', map:'Mappa', challenges:'Sfide', alerts:'Avvisi', profile:'Profilo' },
+    login: { title:'Benvenuto su ZAM', subtitle:'La Tua Esperienza nel Centro Commerciale', button:'Accedi', demo:'Inizia Demo' },
+    home: { greeting:'Buon pomeriggio', greetingMorning:'Buongiorno', greetingEvening:'Buonasera', points:'Punti', level:'Livello', spin:'Gira', streak:'Serie', bonus:'Bonus', rank:'Classifica' },
+    deals: { title:'Offerte', all:'Tutte', nearby:'Vicino a me', food:'Cibo', fashion:'Moda', filters:'Filtri', voucher:'Salva Voucher', noDeals:'Nessuna offerta disponibile', saved:'Salvato' },
+    events: { title:'Eventi', join:'Partecipa', attending:'Iscritto', full:'Esaurito', free:'Gratuito', paid:'A pagamento', noEvents:'Nessun evento disponibile' },
+    community: { title:'Comunità', nudge:'Spingi', chat:'Chat', online:'Online', friends:'Amici', noFriends:'Ancora nessun amico', addFriend:'Aggiungi amico' },
+    challenges: { title:'Sfide', join:'Partecipa', progress:'Progresso', completed:'Completato', reward:'Premio', noChallenges:'Nessuna sfida disponibile' },
+    alerts: { title:'Notifiche', empty:'Nessuna notifica', markRead:'Segna tutto come letto' },
+    profile: { title:'Profilo', settings:'Impostazioni', language:'Lingua', logout:'Esci', editProfile:'Modifica Profilo', notifications:'Notifiche', privacy:'Privacy', help:'Aiuto' },
+    buttons: { save:'Salva', cancel:'Annulla', close:'Chiudi', back:'Indietro', confirm:'Conferma', share:'Condividi', ok:'OK' },
+    errors: { generic:'Si è verificato un errore', network:'Errore di rete' },
+    success: { voucherSaved:'Voucher salvato!', friendRequest:'Richiesta di amicizia inviata', nudgeSent:'Spinta inviata!' },
+    map: { title:'ZAM Mappa Live', online:'online', users:'utenti attivi', close:'Chiudi' },
+  },
+};
+
+function t(key) {
+  const lang = localStorage.getItem('zam_lang') || 'de';
+  const parts = key.split('.');
+  let obj = window.ZAM_I18N[lang] || window.ZAM_I18N['de'];
+  for (const p of parts) {
+    if (obj == null) break;
+    obj = obj[p];
+  }
+  if (obj == null || obj === '') {
+    let fb = window.ZAM_I18N['de'];
+    for (const p of parts) { if (fb == null) break; fb = fb[p]; }
+    return fb || key;
+  }
+  return obj;
+}
+
+function setLang(code) {
+  localStorage.setItem('zam_lang', code);
+  applyLanguage();
+}
+
+function applyLanguage() {
+  updateNavLabels();
+  // Re-render current active tab
+  const activeTab = document.querySelector('.nav-tab.active');
+  if (activeTab) {
+    const tab = activeTab.dataset.page;
+    if (tab === 'home') typeof renderHome !== 'undefined' && renderHome();
+    else if (tab === 'deals') typeof renderDeals !== 'undefined' && renderDeals();
+    else if (tab === 'events') typeof renderEvents !== 'undefined' && renderEvents();
+    else if (tab === 'community') typeof renderCommunity !== 'undefined' && renderCommunity();
+    else if (tab === 'photo-challenges') typeof renderChallenges !== 'undefined' && renderChallenges();
+    else if (tab === 'notifications') typeof renderNotifications !== 'undefined' && renderNotifications();
+    else if (tab === 'profile') typeof renderProfile !== 'undefined' && renderProfile();
+  }
+}
+
+function updateNavLabels() {
+  document.querySelectorAll('.nav-tab[data-page]').forEach(btn => {
+    const page = btn.dataset.page;
+    const labelSpans = btn.querySelectorAll('span');
+    // Last non-badge span is the text label (first is the icon)
+    const label = labelSpans[labelSpans.length - 1];
+    if (label && page && !label.classList.contains('nav-badge') && !label.classList.contains('nav-community-badge')) {
+      const keyMap = { 'photo-challenges': 'challenges', 'notifications': 'alerts' };
+      const key = keyMap[page] || page;
+      label.textContent = t('nav.' + key);
+    }
+  });
+}
+
+function showLangPickerIfNeeded() {
+  if (localStorage.getItem('zam_lang_chosen')) return;
+  const modal = document.createElement('div');
+  modal.id = 'lang-picker-modal';
+  modal.innerHTML = `
+    <div class="lang-picker-overlay">
+      <div class="lang-picker-box">
+        <div class="lang-picker-title">🌍 Sprache / Language</div>
+        <div class="lang-picker-subtitle">Wähle deine Sprache</div>
+        <div class="lang-picker-options">
+          <button class="lang-opt" data-lang="de">🇩🇪 Deutsch</button>
+          <button class="lang-opt" data-lang="en">🇬🇧 English</button>
+          <button class="lang-opt" data-lang="tr">🇹🇷 Türkçe</button>
+          <button class="lang-opt" data-lang="es">🇪🇸 Español</button>
+          <button class="lang-opt" data-lang="it">🇮🇹 Italiano</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelectorAll('.lang-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      localStorage.setItem('zam_lang', btn.dataset.lang);
+      localStorage.setItem('zam_lang_chosen', '1');
+      modal.remove();
+      applyLanguage();
+    });
+  });
+}
+
+// =============================================
 // localStorage Abstraction (Supabase-ready)
 // =============================================
 const Storage = {
@@ -338,9 +500,9 @@ function renderHome() {
   const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
   document.body.classList.toggle('perf-mode', user.role === 'merchant' || user.role === 'admin');
   const hour = new Date().getHours();
-  let greeting = 'Guten Tag';
-  if (hour < 12) greeting = 'Guten Morgen';
-  else if (hour >= 18) greeting = 'Guten Abend';
+  let greeting = t('home.greeting');
+  if (hour < 12) greeting = t('home.greetingMorning');
+  else if (hour >= 18) greeting = t('home.greetingEvening');
 
   const greetingEl = $('#home-greeting');
   if (greetingEl) greetingEl.textContent = greeting + ',';
@@ -764,10 +926,10 @@ async function renderChallenges() {
       <div class="challenge-footer">
         <span>${c.progress} / ${c.target}</span>
         ${c.is_claimed
-          ? `<span class="challenge-done-label">✅ Belohnung erhalten</span>`
+          ? `<span class="challenge-done-label">✅ ${t('challenges.reward')} erhalten</span>`
           : c.is_complete
-            ? `<button class="challenge-claim-btn" onclick="claimChallenge('${c.id}')">Belohnung abholen 🎁</button>`
-            : `<span>${c.pct}% geschafft</span>`}
+            ? `<button class="challenge-claim-btn" onclick="claimChallenge('${c.id}')">${t('challenges.reward')} abholen 🎁</button>`
+            : `<span>${c.pct}% ${t('challenges.progress')}</span>`}
       </div>
     </div>
   `).join('');
@@ -1320,7 +1482,7 @@ function renderEventCard(evt, idx) {
           : `${evt.spots_left} Plätze frei`}
       </div>
       <button class="${evt.is_joined ? 'btn btn-sm joined' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
-        ${evt.is_joined ? '✓ Angemeldet' : 'Teilnehmen'}
+        ${evt.is_joined ? '✓ ' + t('events.attending') : t('events.join')}
       </button>
     </div>
     ${evt.is_joined ? _eventCheckinBtn(evt) : ''}
@@ -1358,7 +1520,7 @@ async function joinEvent(idx, cardEl) {
   }
 
   const btn = cardEl.querySelector('.btn');
-  if (btn) { btn.className = 'btn btn-sm joined'; btn.textContent = '✓ Angemeldet'; }
+  if (btn) { btn.className = 'btn btn-sm joined'; btn.textContent = '✓ ' + t('events.attending'); }
 
   const eventsEl = $('#profile-stat-events');
   if (eventsEl) eventsEl.textContent = ZAMData.currentUser.stats?.events_attended || 0;
@@ -3697,7 +3859,7 @@ function renderNotifications() {
   if (!list) return;
 
   if (filtered.length === 0) {
-    list.innerHTML = `<div class="notif-empty"><span class="notif-empty-icon">🔔</span>Keine Benachrichtigungen${notifFilter !== 'all' ? ' in dieser Kategorie' : ''}</div>`;
+    list.innerHTML = `<div class="notif-empty"><span class="notif-empty-icon">🔔</span>${t('alerts.empty')}${notifFilter !== 'all' ? ' in dieser Kategorie' : ''}</div>`;
     updateNotifBadge();
     return;
   }
@@ -6170,7 +6332,18 @@ function seedZAMContent() {
 // =============================================
 // Init
 // =============================================
+function initI18nStaticElements() {
+  // Apply translations to static HTML elements that can't use t() inline
+  const dealsTabAll = document.getElementById('deals-tab-all');
+  if (dealsTabAll) dealsTabAll.textContent = t('deals.all');
+  const dealsTabDeals = document.getElementById('deals-tab-deals');
+  if (dealsTabDeals) dealsTabDeals.textContent = 'Deals';
+  updateNavLabels();
+}
+
 function init() {
+  showLangPickerIfNeeded();
+  initI18nStaticElements();
   seedZAMContent();
   seedDemoMerchantCafeFreiham();
   updateOnlineStatus();
