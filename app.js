@@ -2965,44 +2965,121 @@ function initProfileEdit() {
 function renderContacts() {
   const container = $('#contacts-list');
   if (!container) return;
-  const contacts = ZAMApi.connections.all();
+  container.innerHTML = '';
 
-  if (contacts.length === 0) {
+  const friends    = _getFriends();
+  const received   = _getFriendRequests().filter(r => {
+    const me = ZAMApi.auth.currentUser();
+    return me && r.to_id === me.id && r.status === 'pending';
+  });
+  const sent = _getFriendRequests().filter(r => {
+    const me = ZAMApi.auth.currentUser();
+    return me && r.from_id === me.id && r.status === 'pending';
+  });
+  const nudgeContacts = ZAMApi.connections.all();
+
+  function _sectionLabel(txt) {
+    const d = document.createElement('div');
+    d.style.cssText = 'padding:10px 16px 6px;font-size:0.62rem;font-weight:800;text-transform:uppercase;letter-spacing:0.09em;color:rgba(255,255,255,0.35)';
+    d.textContent = txt;
+    return d;
+  }
+
+  // ── Meine Freunde ──
+  if (friends.length) {
+    container.appendChild(_sectionLabel('👫 Meine Freunde'));
+    friends.forEach(f => {
+      const item = document.createElement('div');
+      item.className = 'contact-item';
+      item.innerHTML = `
+        <div class="contact-avatar" style="background:${_avatarColor(f.user_id)}">${f.initials}<div class="contact-online-dot"></div></div>
+        <div class="contact-info">
+          <div class="contact-name">${escHtml(f.name)}</div>
+          <div class="contact-username" style="color:#34d399;font-size:0.6rem">✅ Freund</div>
+        </div>
+        <button class="contact-action-btn" aria-label="Chat öffnen">💬</button>`;
+      item.querySelector('.contact-action-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        openPrivateChat(f.user_id, f.name, f.initials, null);
+      });
+      item.addEventListener('click', () => openPrivateChat(f.user_id, f.name, f.initials, null));
+      container.appendChild(item);
+    });
+  }
+
+  // ── Offene Anfragen ──
+  if (received.length) {
+    container.appendChild(_sectionLabel('📩 Offene Anfragen'));
+    received.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'contact-item';
+      item.innerHTML = `
+        <div class="contact-avatar" style="background:${_avatarColor(r.from_id)}">${r.from_initials}<div class="contact-online-dot" style="background:transparent;border-color:transparent"></div></div>
+        <div class="contact-info">
+          <div class="contact-name">${escHtml(r.from_name)}</div>
+          <div class="contact-username" style="font-size:0.6rem;color:rgba(255,255,255,0.35)">möchte dich als Freund</div>
+        </div>
+        <div style="display:flex;gap:5px">
+          <button style="background:linear-gradient(135deg,#059669,#34d399);border:none;border-radius:8px;padding:6px 10px;color:#fff;font-size:0.7rem;font-weight:700;font-family:var(--font);cursor:pointer" data-accept="${r.id}">✅</button>
+          <button style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:6px 10px;color:#ef4444;font-size:0.7rem;font-weight:700;font-family:var(--font);cursor:pointer" data-reject="${r.id}">❌</button>
+        </div>`;
+      item.querySelector('[data-accept]').addEventListener('click', e => { e.stopPropagation(); acceptFriendRequest(r.id); });
+      item.querySelector('[data-reject]').addEventListener('click', e => { e.stopPropagation(); rejectFriendRequest(r.id); });
+      container.appendChild(item);
+    });
+  }
+
+  // ── Gesendete Anfragen ──
+  if (sent.length) {
+    container.appendChild(_sectionLabel('📤 Gesendete Anfragen'));
+    sent.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'contact-item';
+      item.innerHTML = `
+        <div class="contact-avatar" style="background:${_avatarColor(r.to_id)}">${r.to_initials}<div class="contact-online-dot" style="background:transparent;border-color:transparent"></div></div>
+        <div class="contact-info">
+          <div class="contact-name">${escHtml(r.to_name)}</div>
+          <div class="contact-username" style="font-size:0.6rem;color:rgba(255,255,255,0.35)">⏳ Anfrage ausstehend</div>
+        </div>`;
+      container.appendChild(item);
+    });
+  }
+
+  // ── Nudge-Kontakte ──
+  if (nudgeContacts.length) {
+    container.appendChild(_sectionLabel('🤝 Meine Kontakte'));
+    nudgeContacts.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'contact-item';
+      const unread = ZAMApi.privateChat.unreadCount(ZAMApi.privateChat.getOrCreate(c.user_id));
+      item.innerHTML = `
+        <div class="contact-avatar" style="background:${_avatarColor(c.user_id)}">
+          ${c.avatar_url ? `<img src="${c.avatar_url}" alt="${c.initials}" />` : c.initials}
+          <div class="contact-online-dot"></div>
+        </div>
+        <div class="contact-info">
+          <div class="contact-name">${c.display_name}</div>
+          <div class="contact-username">${c.username || ''}</div>
+        </div>
+        ${unread > 0 ? `<span class="pc-unread-badge">${unread}</span>` : ''}
+        <button class="contact-action-btn" data-uid="${c.user_id}" aria-label="Chat öffnen">💬</button>`;
+      item.querySelector('.contact-action-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        openPrivateChat(c.user_id, c.display_name, c.initials, c.avatar_url);
+      });
+      item.addEventListener('click', () => openPrivateChat(c.user_id, c.display_name, c.initials, c.avatar_url));
+      container.appendChild(item);
+    });
+  }
+
+  if (!friends.length && !received.length && !sent.length && !nudgeContacts.length) {
     container.innerHTML = `
       <div class="contacts-empty">
         <div class="contacts-empty-icon">👥</div>
         <div>Noch keine Kontakte</div>
-        <div style="margin-top:6px;font-size:0.78rem">Andere ZAM-Besucher auf der Map anstupsen!</div>
+        <div style="margin-top:6px;font-size:0.78rem">Aktive Nutzer anstupsen oder als Freund hinzufügen!</div>
       </div>`;
-    return;
   }
-
-  container.innerHTML = '';
-  contacts.forEach(c => {
-    const item = document.createElement('div');
-    item.className = 'contact-item';
-    const unread = ZAMApi.privateChat.unreadCount(ZAMApi.privateChat.getOrCreate(c.user_id));
-    item.innerHTML = `
-      <div class="contact-avatar" style="background:${_avatarColor(c.user_id)}">
-        ${c.avatar_url ? `<img src="${c.avatar_url}" alt="${c.initials}" />` : c.initials}
-        <div class="contact-online-dot"></div>
-      </div>
-      <div class="contact-info">
-        <div class="contact-name">${c.display_name}</div>
-        <div class="contact-username">${c.username || ''}</div>
-      </div>
-      ${unread > 0 ? `<span class="pc-unread-badge">${unread}</span>` : ''}
-      <button class="contact-action-btn" data-uid="${c.user_id}" data-name="${c.display_name}" aria-label="Chat öffnen">💬</button>
-    `;
-    item.querySelector('.contact-action-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      openPrivateChat(c.user_id, c.display_name, c.initials, c.avatar_url);
-    });
-    item.addEventListener('click', () => {
-      openPrivateChat(c.user_id, c.display_name, c.initials, c.avatar_url);
-    });
-    container.appendChild(item);
-  });
 }
 
 function _avatarColor(userId) {
@@ -3603,7 +3680,7 @@ function setNotifFilter(f, btn) {
 
 function renderNotifications() {
   const me = ZAMApi.auth.currentUser();
-  if (me) _seedDemoDealRequest();
+  if (me) { _seedDemoDealRequest(); _seedDemoFriendRequest(); }
 
   // Push-Permission Banner
   const banner = document.getElementById('push-permission-banner');
@@ -3629,6 +3706,40 @@ function renderNotifications() {
   list.innerHTML = filtered.map(n => {
     const timeStr = timeAgo(n.createdAt);
     const isUnread = !n.read;
+
+    if (n.type === 'friend_request' && n.fr_id) {
+      const fr = _getFriendRequests().find(r => r.id === n.fr_id);
+      const frStatus = fr?.status || 'pending';
+      const initials = (n.from_initials || (n.from_name||'?').slice(0,2)).toUpperCase();
+      const avatarColor = _avatarColor(n.from_id || n.fr_id);
+      const actionHtml = frStatus === 'pending' ? `
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="event.stopPropagation();acceptFriendRequest('${n.fr_id}')" style="flex:1;background:linear-gradient(135deg,#059669,#34d399);border:none;border-radius:10px;padding:9px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">✅ Annehmen</button>
+          <button onclick="event.stopPropagation();rejectFriendRequest('${n.fr_id}')" style="flex:1;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:9px;color:#ef4444;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">❌ Ablehnen</button>
+        </div>` :
+        frStatus === 'accepted' ? `
+        <div style="margin-top:10px">
+          <button onclick="event.stopPropagation();openPrivateChat('${n.from_id}','${escHtml(n.from_name||'')}','${initials}',null)" style="width:100%;background:rgba(250,70,21,0.15);border:1.5px solid rgba(250,70,21,0.4);border-radius:10px;padding:9px;color:#FA4615;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">💬 Chat öffnen</button>
+        </div>` : `<div style="margin-top:8px;font-size:0.68rem;color:rgba(255,255,255,0.3)">Anfrage abgelehnt</div>`;
+      return `
+        <div class="notif-item ${isUnread ? 'unread' : ''}" style="padding:12px 14px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:38px;height:38px;border-radius:50%;background:${avatarColor};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+                <div class="notif-title" style="font-size:0.82rem">➕ Freundschaftsanfrage</div>
+                <div style="display:flex;align-items:center;gap:6px">
+                  ${isUnread ? '<div class="notif-unread-dot" style="position:static;margin:0"></div>' : ''}
+                  <button class="notif-del-btn" onclick="event.stopPropagation();ZAMApi.notifications.deleteById('${n.id}');renderNotifications()" style="position:static">✕</button>
+                </div>
+              </div>
+              <div class="notif-text" style="margin-top:2px">${escHtml(n.body || n.from_name + ' möchte dich als Freund hinzufügen.')}</div>
+              <div class="notif-time">${timeStr}</div>
+              ${actionHtml}
+            </div>
+          </div>
+        </div>`;
+    }
 
     if (n.type === 'deal_request' && n.deal_req_id) {
       const req = _getDealRequests().find(r => r.id === n.deal_req_id);
@@ -5459,18 +5570,47 @@ function _renderActiveUsersList(users) {
     return;
   }
   list.innerHTML = users.map(u => {
-    const zoneColor = AU_ZONE_COLORS[u.zone] || '#FA4615';
-    const zoneLabel = AU_ZONE_LABELS[u.zone] || u.zone;
-    const connected = me ? ZAMApi.nudges.isConnected(u.id) : false;
+    const zoneColor  = AU_ZONE_COLORS[u.zone] || '#FA4615';
+    const zoneLabel  = AU_ZONE_LABELS[u.zone] || u.zone;
+    const connected  = me ? ZAMApi.nudges.isConnected(u.id) : false;
     const hasPending = me ? ZAMApi.nudges.hasPendingNudgeTo(u.id) : false;
-    let actionBtn;
-    if (connected) {
-      actionBtn = `<button class="au-action-btn" onclick="openPCFromActiveUsers('${u.id}','${esc(u.name)}','${u.initials}')">💬 Chat</button>`;
-    } else if (hasPending) {
-      actionBtn = `<button class="au-action-btn" style="opacity:0.5;cursor:default">⏳ Gesendet</button>`;
-    } else {
-      actionBtn = `<button class="au-action-btn" onclick="nudgeFromActiveUsers('${u.id}','${esc(u.name)}')">👋 Anstupsen</button>`;
+    const fStatus    = me ? _friendStatus(u.id) : 'none';
+    const frObj      = me ? _getFriendReqObj(u.id) : null;
+
+    let nudgeBtn, frBtn;
+    if (fStatus === 'friends') {
+      // Already friends — show single Chat button spanning both slots
+      return `<div class="au-user-row">
+        <div class="au-avatar" style="background:${u.color}">${u.initials}<span class="au-online-dot"></span></div>
+        <div class="au-info">
+          <div class="au-name">${esc(u.name)}</div>
+          <div class="au-status">${esc(u.status)}</div>
+          <div style="margin-top:3px;font-size:0.62rem;color:rgba(255,255,255,0.3)">
+            <span class="au-zone-dot" style="background:${zoneColor}"></span>${esc(zoneLabel)}
+          </div>
+        </div>
+        <div class="au-actions">
+          <button class="au-action-btn" style="background:rgba(250,70,21,0.18);color:#FA4615;border:1px solid rgba(250,70,21,0.35)" onclick="openPCFromActiveUsers('${u.id}','${esc(u.name)}','${u.initials}')">💬 Chat</button>
+        </div>
+      </div>`;
     }
+
+    if (connected) {
+      nudgeBtn = `<button class="au-action-btn" onclick="openPCFromActiveUsers('${u.id}','${esc(u.name)}','${u.initials}')">💬 Chat</button>`;
+    } else if (hasPending) {
+      nudgeBtn = `<button class="au-action-btn" style="opacity:0.5;cursor:default">⏳ Gesendet</button>`;
+    } else {
+      nudgeBtn = `<button class="au-action-btn" onclick="nudgeFromActiveUsers('${u.id}','${esc(u.name)}')">👋 Anstupsen</button>`;
+    }
+
+    if (fStatus === 'pending_sent') {
+      frBtn = `<button class="au-action-btn" style="opacity:0.5;cursor:default;font-size:0.6rem;padding:6px 8px">Anfrage gesendet</button>`;
+    } else if (fStatus === 'pending_received' && frObj) {
+      frBtn = `<button class="au-action-btn" style="background:rgba(5,150,105,0.18);color:#34d399;border:1px solid rgba(5,150,105,0.3)" onclick="acceptFriendRequest('${frObj.id}')">✅ Annehmen</button>`;
+    } else {
+      frBtn = `<button class="au-action-btn" title="Freund hinzufügen" onclick="sendFriendRequest('${u.id}','${esc(u.name)}','${u.initials}')">➕</button>`;
+    }
+
     return `<div class="au-user-row">
       <div class="au-avatar" style="background:${u.color}">${u.initials}<span class="au-online-dot"></span></div>
       <div class="au-info">
@@ -5480,7 +5620,7 @@ function _renderActiveUsersList(users) {
           <span class="au-zone-dot" style="background:${zoneColor}"></span>${esc(zoneLabel)}
         </div>
       </div>
-      <div class="au-actions">${actionBtn}</div>
+      <div class="au-actions" style="display:flex;flex-direction:column;gap:5px">${nudgeBtn}${frBtn}</div>
     </div>`;
   }).join('');
 }
@@ -5798,6 +5938,128 @@ function openDealRequestChat(reqId) {
   if (!req) return;
   const initials = req.from_initials || req.from_name.slice(0, 2).toUpperCase();
   openPrivateChat(req.from_id, req.from_name, initials, null);
+}
+
+// =============================================
+// FREUNDSCHAFTSANFRAGEN
+// =============================================
+const _FR_KEY = 'zam_friend_requests_v1';
+
+function _getFriendRequests() {
+  try { return JSON.parse(localStorage.getItem(_FR_KEY) || '[]'); } catch { return []; }
+}
+function _saveFriendRequests(list) { localStorage.setItem(_FR_KEY, JSON.stringify(list)); }
+
+function _getFriendReqObj(userId) {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) return null;
+  return _getFriendRequests().find(r =>
+    (r.from_id === me.id && r.to_id === userId) ||
+    (r.from_id === userId && r.to_id === me.id)
+  ) || null;
+}
+
+function _friendStatus(userId) {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) return 'none';
+  const fr = _getFriendReqObj(userId);
+  if (!fr) return 'none';
+  if (fr.status === 'accepted') return 'friends';
+  if (fr.status === 'rejected') return 'none';
+  if (fr.from_id === me.id) return 'pending_sent';
+  return 'pending_received';
+}
+
+function _getFriends() {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) return [];
+  return _getFriendRequests().filter(r =>
+    r.status === 'accepted' && (r.from_id === me.id || r.to_id === me.id)
+  ).map(r => ({
+    user_id:  r.from_id === me.id ? r.to_id   : r.from_id,
+    name:     r.from_id === me.id ? r.to_name  : r.from_name,
+    initials: r.from_id === me.id ? r.to_initials : r.from_initials,
+  }));
+}
+
+function sendFriendRequest(userId, userName, initials) {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) { showToast('Bitte zuerst anmelden'); return; }
+  const status = _friendStatus(userId);
+  if (status !== 'none') return;
+  const myName = me.display_name || me.name || me.username || 'Jemand';
+  const myInitials = (me.initials || myName).slice(0, 2).toUpperCase();
+  const req = {
+    id: 'fr_' + Date.now(),
+    from_id: me.id, from_name: myName, from_initials: myInitials,
+    to_id: userId, to_name: userName, to_initials: (initials || userName).slice(0, 2).toUpperCase(),
+    status: 'pending',
+    created_at: new Date().toISOString()
+  };
+  const reqs = _getFriendRequests();
+  reqs.unshift(req);
+  _saveFriendRequests(reqs);
+  ZAMApi.notifications.add({
+    type: 'friend_request', fr_id: req.id,
+    from_id: me.id, from_name: myName, from_initials: myInitials,
+    body: `${myName} möchte dich als Freund hinzufügen.`, read: false,
+  });
+  showToast('➕ Freundschaftsanfrage gesendet!', 'success');
+  _renderActiveUsersList(getActiveUsers());
+}
+
+function acceptFriendRequest(frId) {
+  const reqs = _getFriendRequests();
+  const req = reqs.find(r => r.id === frId);
+  if (!req) return;
+  req.status = 'accepted';
+  _saveFriendRequests(reqs);
+  const notif = ZAMApi.notifications.getAll().find(n => n.fr_id === frId);
+  if (notif) ZAMApi.notifications.markReadById(notif.id);
+  const friendName = req.from_id === (ZAMApi.auth.currentUser()?.id) ? req.to_name : req.from_name;
+  showToast(`✅ ${friendName} ist jetzt dein Freund!`, 'success');
+  renderNotifications();
+  renderContacts();
+  const friendId       = req.from_id === (ZAMApi.auth.currentUser()?.id) ? req.to_id       : req.from_id;
+  const friendInitials = req.from_id === (ZAMApi.auth.currentUser()?.id) ? req.to_initials  : req.from_initials;
+  setTimeout(() => openPrivateChat(friendId, friendName, friendInitials, null), 400);
+}
+
+function rejectFriendRequest(frId) {
+  const reqs = _getFriendRequests();
+  const req = reqs.find(r => r.id === frId);
+  if (!req) return;
+  req.status = 'rejected';
+  _saveFriendRequests(reqs);
+  const notif = ZAMApi.notifications.getAll().find(n => n.fr_id === frId);
+  if (notif) ZAMApi.notifications.deleteById(notif.id);
+  showToast('Anfrage abgelehnt');
+  renderNotifications();
+  renderContacts();
+}
+
+function _seedDemoFriendRequest() {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) return;
+  const KEY = 'zam_demo_fr_seeded';
+  if (localStorage.getItem(KEY)) return;
+  localStorage.setItem(KEY, '1');
+  const req = {
+    id: 'fr_demo_mia', from_id: 'demo_mia', from_name: 'Mia K.', from_initials: 'MK',
+    to_id: me.id, to_name: me.display_name || me.name || 'Du', to_initials: 'DU',
+    status: 'pending', created_at: new Date().toISOString()
+  };
+  const reqs = _getFriendRequests();
+  if (!reqs.find(r => r.id === 'fr_demo_mia')) {
+    reqs.unshift(req);
+    _saveFriendRequests(reqs);
+    ZAMApi.notifications.add({
+      type: 'friend_request', fr_id: req.id,
+      from_id: 'demo_mia', from_name: 'Mia K.', from_initials: 'MK',
+      body: 'Mia K. möchte dich als Freund hinzufügen.', read: false,
+    });
+    updateNotifBadge();
+  }
 }
 
 function _seedDemoDealRequest() {
