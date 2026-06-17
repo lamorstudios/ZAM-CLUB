@@ -15,13 +15,15 @@ window.ZAM_I18N = {
     login:{ title:'Willkommen zurück', email:'E-Mail', password:'Passwort', btn:'Anmelden', or:'oder', google:'Mit Google anmelden', demo:'🎯 Demo einloggen', no_account:'Noch kein Konto?', register:'Registrieren', forgot:'Passwort vergessen?' },
     register:{ title:'Konto erstellen', name:'Dein Name', username:'Benutzername', email:'E-Mail', password:'Passwort', password2:'Passwort wiederholen', btn:'Konto erstellen', google:'Mit Google registrieren', has_account:'Bereits Mitglied?', login:'Anmelden' },
     forgot:{ title:'Passwort zurücksetzen', btn:'Link senden', hint:'Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link zum Zurücksetzen.' },
-    home:{ points:'Deine Punkte', spin:'Täglich drehen', deals:'Top Deals', events:'Kommende Events', view_all:'Alle →' },
-    deals:{ title:'Deals 🏷️', all:'Alle', regular:'Deals', partner:'🤝 Partner', voucher:'Gutschein sichern', claimed:'✓ Eingelöst', loading:'Lädt…', no_deals:'Keine Deals verfügbar', no_partner:'Noch keine Partner-Deals aktiv' },
+    home:{ points:'Deine Punkte', spin:'Täglich drehen', deals:'Top Deals', events:'Kommende Events', view_all:'Alle →', monthly_rank:'Monatsrang', today:'Heute', to_platin:'bis Platin', monthly_champs:'🏆 Monats-Champions', top3_win:'Top 3 gewinnen geheime Preise!', view:'Ansehen →', your_rank:'Dein Rang:', improve:'Verbessern →', days_left_month:'Noch {n} Tage bis Monatsende', days_left_quarter:'Noch {n} Tage bis Quartalsende', top3_prizes:'Die Top 3 gewinnen exklusive ZAM-Preise.', quarter_prizes:'Die Top 3 des Quartals gewinnen exklusive Hauptpreise.', quarterly_stand:'Dein Quartals-Stand', secret_prize:'Geheimer Hauptgewinn 🎁', secret_premium:'Geheimer Premiumgewinn 🎁', secret_bonus:'Geheimer Bonusgewinn 🎁', secret_win:'Geheimer Gewinn 🎁', rank_month:'🗓️ Monat', rank_quarter:'👑 Quartal', pts:'Pkt.', you:'(Du)', today_spin:'🎰 Jetzt drehen!', already_spun:'✓ Heute bereits gedreht' },
+    deals:{ title:'Deals 🏷️', all:'Alle', regular:'Deals', partner:'🤝 Partner', voucher:'Gutschein sichern', claimed:'✓ Eingelöst', loading:'Lädt…', no_deals:'Keine Deals verfügbar', no_partner:'Noch keine Partner-Deals aktiv', redeem:'🎟 Einlösen', too_few:'Zu wenig', today_spin:'🎰 Heute im Spin', today_prize:'🎁 Heute auch zu gewinnen' },
     events:{ title:'Events 📅', join:'Teilnehmen', joined:'✓ Angemeldet', loading:'Lädt…', spots_free:'Plätze frei', spots_low:'Nur noch {n} Plätze!', attendees:'{n} Teilnehmer', all:'Alle', week:'Diese Woche', month:'Diesen Monat' },
-    community:{ title:'Community 👥', nudge:'Anstupsen', chat:'Chat öffnen', online:'online', add_friend:'➕ Freund', req_sent:'Anfrage gesendet', accept:'✅ Annehmen', contacts:'Kontakte', friends:'👫 Meine Freunde', open_requests:'📩 Offene Anfragen', sent_requests:'📤 Gesendete Anfragen', my_contacts:'🤝 Meine Kontakte' },
-    challenges:{ title:'Challenges 📸', join:'Mitmachen', progress:'Fortschritt', completed:'Abgeschlossen', points:'Punkte' },
+    community:{ title:'Community 👥', nudge:'Anstupsen', chat:'Chat öffnen', online:'online', add_friend:'➕ Freund', req_sent:'Anfrage gesendet', accept:'✅ Annehmen', contacts:'Kontakte', friends:'👫 Meine Freunde', open_requests:'📩 Offene Anfragen', sent_requests:'📤 Gesendete Anfragen', my_contacts:'🤝 Meine Kontakte', wall:'Pinnwand', chat_tab:'Chat', contacts_tab:'Kontakte', write_post:'Beitrag schreiben…', no_posts:'Noch keine Beiträge', together:'Gemeinsam', interested:'Interessiert' },
+    challenges:{ title:'Challenges 📸', join:'Mitmachen', progress:'Fortschritt', completed:'Abgeschlossen', points:'Punkte', reward:'Belohnung', claim:'Abholen 🎁', done:'Erhalten', today_submit:'📸 Heute Foto aufnehmen', today_submitted:'⏳ Heute bereits eingereicht – morgen wieder', already_submitted:'Heute bereits ein Foto eingereicht!' },
     alerts:{ title:'Benachrichtigungen', all:'Alle', messages:'💬 Nachrichten', nudges:'👋 Anstupsien', events:'🎉 Events', deals:'🏷️ Deals', community:'👥 Community', empty:'Keine Benachrichtigungen' },
-    profile:{ title:'Profil', edit_short:'Profil bearbeiten', points_history_short:'Punkte-Historie', vouchers:'Meine Gutscheine', my_events:'Meine Events', nearby:'Nearby Alerts', invite:'Freunde einladen', logout:'Abmelden', language:'🌍 Sprache', disabled:'Deaktiviert', invite_bonus:'+100 Punkte' },
+    profile:{ title:'Profil', edit_short:'Profil bearbeiten', points_history_short:'Punkte-Historie', vouchers:'Meine Gutscheine', my_events:'Meine Events', nearby:'Nearby Alerts', invite:'Freunde einladen', logout:'Abmelden', language:'🌍 Sprache', disabled:'Deaktiviert', invite_bonus:'+100 Punkte', points_label:'Gesammelte Punkte', visits:'Besuche', events_stat:'Events', deals_stat:'Deals', saved_items:'Gemerkte Inhalte', badges:'Meine Abzeichen', challenges_title:'🎯 Monatliche Challenges', my_rewards:'Meine Belohnungen', badge_unlocked:'Abzeichen freigeschaltet! 🎉' },
+    qr:{ checkin_btn_do:'✅ Bei {label} einchecken (+25 Pkt.)', checkin_btn_done:'✓ Heute bei {label} eingecheckt', next_checkin:'⏰ Nächster Check-in morgen möglich', show_code:'📍 Zeige diesen Code bei {label}' },
+    toast:{ voucher_saved:'Gutschein gespeichert! 🎟', friend_sent:'Freundschaftsanfrage gesendet! 👋', event_joined:'Du nimmst teil! 🎉', nudge_sent:'👋 {name} wurde angestupst!', nudge_fail:'Anfrage bereits gesendet', already_connected:'Anfrage bereits gesendet oder bereits verbunden.', challenge_done:'🎉 +{n} Punkte! Challenge abgeschlossen!', view:'Ansehen' },
     buttons:{ save:'Speichern', cancel:'Abbrechen', close:'Schließen', back:'Zurück', confirm:'Bestätigen', share:'Teilen', loading:'Laden…' },
     errors:{ generic:'Etwas ist schiefgelaufen.', network:'Netzwerkfehler. Bitte versuche es erneut.' },
     success:{ voucher_saved:'Gutschein gespeichert! 🎟', friend_sent:'Freundschaftsanfrage gesendet! 👋', event_joined:'Du nimmst teil! 🎉' },
@@ -32,13 +34,15 @@ window.ZAM_I18N = {
     login:{ title:'Welcome back', email:'E-Mail', password:'Password', btn:'Sign in', or:'or', google:'Sign in with Google', demo:'🎯 Demo login', no_account:"Don't have an account?", register:'Register', forgot:'Forgot password?' },
     register:{ title:'Create account', name:'Your name', username:'Username', email:'E-Mail', password:'Password', password2:'Repeat password', btn:'Create account', google:'Sign up with Google', has_account:'Already a member?', login:'Sign in' },
     forgot:{ title:'Reset password', btn:'Send link', hint:'Enter your e-mail address. We will send you a reset link.' },
-    home:{ points:'Your Points', spin:'Daily spin', deals:'Top Deals', events:'Upcoming Events', view_all:'View all →' },
-    deals:{ title:'Deals 🏷️', all:'All', regular:'Deals', partner:'🤝 Partner', voucher:'Get voucher', claimed:'✓ Redeemed', loading:'Loading…', no_deals:'No deals available', no_partner:'No partner deals yet' },
+    home:{ points:'Your Points', spin:'Daily spin', deals:'Top Deals', events:'Upcoming Events', view_all:'View all →', monthly_rank:'Monthly rank', today:'Today', to_platin:'to Platin', monthly_champs:'🏆 Monthly Champions', top3_win:'Top 3 win secret prizes!', view:'View →', your_rank:'Your rank:', improve:'Improve →', days_left_month:'{n} days left this month', days_left_quarter:'{n} days left this quarter', top3_prizes:'Top 3 win exclusive ZAM prizes.', quarter_prizes:'Top 3 of the quarter win exclusive main prizes.', quarterly_stand:'Your quarterly standing', secret_prize:'Secret main prize 🎁', secret_premium:'Secret premium prize 🎁', secret_bonus:'Secret bonus prize 🎁', secret_win:'Secret prize 🎁', rank_month:'🗓️ Month', rank_quarter:'👑 Quarter', pts:'pts', you:'(You)', today_spin:'🎰 Spin now!', already_spun:'✓ Already spun today' },
+    deals:{ title:'Deals 🏷️', all:'All', regular:'Deals', partner:'🤝 Partner', voucher:'Get voucher', claimed:'✓ Redeemed', loading:'Loading…', no_deals:'No deals available', no_partner:'No partner deals yet', redeem:'🎟 Redeem', too_few:'Not enough', today_spin:'🎰 Today in spin', today_prize:'🎁 Also to win today' },
     events:{ title:'Events 📅', join:'Join', joined:'✓ Registered', loading:'Loading…', spots_free:'spots left', spots_low:'Only {n} spots left!', attendees:'{n} attendees', all:'All', week:'This week', month:'This month' },
-    community:{ title:'Community 👥', nudge:'Nudge', chat:'Open chat', online:'online', add_friend:'➕ Add friend', req_sent:'Request sent', accept:'✅ Accept', contacts:'Contacts', friends:'👫 My Friends', open_requests:'📩 Pending Requests', sent_requests:'📤 Sent Requests', my_contacts:'🤝 My Contacts' },
-    challenges:{ title:'Challenges 📸', join:'Join', progress:'Progress', completed:'Completed', points:'Points' },
+    community:{ title:'Community 👥', nudge:'Nudge', chat:'Open chat', online:'online', add_friend:'➕ Add friend', req_sent:'Request sent', accept:'✅ Accept', contacts:'Contacts', friends:'👫 My Friends', open_requests:'📩 Pending Requests', sent_requests:'📤 Sent Requests', my_contacts:'🤝 My Contacts', wall:'Wall', chat_tab:'Chat', contacts_tab:'Contacts', write_post:'Write a post…', no_posts:'No posts yet', together:'Together', interested:'Interested' },
+    challenges:{ title:'Challenges 📸', join:'Join', progress:'Progress', completed:'Completed', points:'Points', reward:'Reward', claim:'Collect 🎁', done:'Collected', today_submit:'📸 Take photo today', today_submitted:'⏳ Already submitted today – come back tomorrow', already_submitted:'Already submitted a photo today!' },
     alerts:{ title:'Notifications', all:'All', messages:'💬 Messages', nudges:'👋 Nudges', events:'🎉 Events', deals:'🏷️ Deals', community:'👥 Community', empty:'No notifications' },
-    profile:{ title:'Profile', edit_short:'Edit profile', points_history_short:'Points history', vouchers:'My vouchers', my_events:'My events', nearby:'Nearby Alerts', invite:'Invite friends', logout:'Sign out', language:'🌍 Language', disabled:'Disabled', invite_bonus:'+100 points' },
+    profile:{ title:'Profile', edit_short:'Edit profile', points_history_short:'Points history', vouchers:'My vouchers', my_events:'My events', nearby:'Nearby Alerts', invite:'Invite friends', logout:'Sign out', language:'🌍 Language', disabled:'Disabled', invite_bonus:'+100 points', points_label:'Points collected', visits:'Visits', events_stat:'Events', deals_stat:'Deals', saved_items:'Saved items', badges:'My Badges', challenges_title:'🎯 Monthly Challenges', my_rewards:'My Rewards', badge_unlocked:'Badge unlocked! 🎉' },
+    qr:{ checkin_btn_do:'✅ Check in at {label} (+25 pts)', checkin_btn_done:'✓ Checked in at {label} today', next_checkin:'⏰ Next check-in possible tomorrow', show_code:'📍 Show this code at {label}' },
+    toast:{ voucher_saved:'Voucher saved! 🎟', friend_sent:'Friend request sent! 👋', event_joined:"You're in! 🎉", nudge_sent:'👋 {name} nudged!', nudge_fail:'Request already sent', already_connected:'Request already sent or already connected.', challenge_done:'🎉 +{n} points! Challenge completed!', view:'View' },
     buttons:{ save:'Save', cancel:'Cancel', close:'Close', back:'Back', confirm:'Confirm', share:'Share', loading:'Loading…' },
     errors:{ generic:'Something went wrong.', network:'Network error. Please try again.' },
     success:{ voucher_saved:'Voucher saved! 🎟', friend_sent:'Friend request sent! 👋', event_joined:"You're in! 🎉" },
@@ -49,13 +53,15 @@ window.ZAM_I18N = {
     login:{ title:'Tekrar hoş geldiniz', email:'E-Posta', password:'Şifre', btn:'Giriş yap', or:'veya', google:'Google ile giriş yap', demo:'🎯 Demo girişi', no_account:'Hesabın yok mu?', register:'Kayıt ol', forgot:'Şifremi unuttum?' },
     register:{ title:'Hesap oluştur', name:'Adın', username:'Kullanıcı adı', email:'E-Posta', password:'Şifre', password2:'Şifreyi tekrarla', btn:'Hesap oluştur', google:'Google ile kayıt ol', has_account:'Zaten üye misin?', login:'Giriş yap' },
     forgot:{ title:'Şifre sıfırlama', btn:'Link gönder', hint:'E-posta adresini gir. Sıfırlama bağlantısı göndereceğiz.' },
-    home:{ points:'Puanların', spin:'Günlük çevir', deals:'En İyi Fırsatlar', events:'Yaklaşan Etkinlikler', view_all:'Tümünü gör →' },
-    deals:{ title:'Fırsatlar 🏷️', all:'Tümü', regular:'Fırsatlar', partner:'🤝 Ortak', voucher:'Kuponu al', claimed:'✓ Kullanıldı', loading:'Yükleniyor…', no_deals:'Fırsat bulunamadı', no_partner:'Henüz ortak fırsatı yok' },
+    home:{ points:'Puanların', spin:'Günlük çevir', deals:'En İyi Fırsatlar', events:'Yaklaşan Etkinlikler', view_all:'Tümünü gör →', monthly_rank:'Aylık sıra', today:'Bugün', to_platin:'Platin\'e kadar', monthly_champs:'🏆 Aylık Şampiyonlar', top3_win:'İlk 3 gizli ödül kazanır!', view:'Görüntüle →', your_rank:'Sıran:', improve:'Geliştir →', days_left_month:'Ay sonuna {n} gün kaldı', days_left_quarter:'Çeyrek sonuna {n} gün kaldı', top3_prizes:'İlk 3 özel ZAM ödülü kazanır.', quarter_prizes:'Çeyreğin ilk 3\'ü özel ödül kazanır.', quarterly_stand:'Çeyreklik durumun', secret_prize:'Gizli ana ödül 🎁', secret_premium:'Gizli premium ödül 🎁', secret_bonus:'Gizli bonus ödül 🎁', secret_win:'Gizli ödül 🎁', rank_month:'🗓️ Ay', rank_quarter:'👑 Çeyrek', pts:'puan', you:'(Sen)', today_spin:'🎰 Şimdi çevir!', already_spun:'✓ Bugün zaten çevrildi' },
+    deals:{ title:'Fırsatlar 🏷️', all:'Tümü', regular:'Fırsatlar', partner:'🤝 Ortak', voucher:'Kuponu al', claimed:'✓ Kullanıldı', loading:'Yükleniyor…', no_deals:'Fırsat bulunamadı', no_partner:'Henüz ortak fırsatı yok', redeem:'🎟 Kullan', too_few:'Yetersiz', today_spin:'🎰 Bugün çevirmede', today_prize:'🎁 Bugün de kazanılabilir' },
     events:{ title:'Etkinlikler 📅', join:'Katıl', joined:'✓ Kayıt olundu', loading:'Yükleniyor…', spots_free:'yer mevcut', spots_low:'Yalnızca {n} yer kaldı!', attendees:'{n} katılımcı', all:'Tümü', week:'Bu hafta', month:'Bu ay' },
-    community:{ title:'Topluluk 👥', nudge:'Dürt', chat:'Sohbet aç', online:'çevrimiçi', add_friend:'➕ Arkadaş ekle', req_sent:'İstek gönderildi', accept:'✅ Kabul et', contacts:'Kişiler', friends:'👫 Arkadaşlarım', open_requests:'📩 Bekleyen İstekler', sent_requests:'📤 Gönderilen İstekler', my_contacts:'🤝 Kişilerim' },
-    challenges:{ title:'Görevler 📸', join:'Katıl', progress:'İlerleme', completed:'Tamamlandı', points:'Puan' },
+    community:{ title:'Topluluk 👥', nudge:'Dürt', chat:'Sohbet aç', online:'çevrimiçi', add_friend:'➕ Arkadaş ekle', req_sent:'İstek gönderildi', accept:'✅ Kabul et', contacts:'Kişiler', friends:'👫 Arkadaşlarım', open_requests:'📩 Bekleyen İstekler', sent_requests:'📤 Gönderilen İstekler', my_contacts:'🤝 Kişilerim', wall:'Duvar', chat_tab:'Sohbet', contacts_tab:'Kişiler', write_post:'Gönderi yaz…', no_posts:'Henüz gönderi yok', together:'Birlikte', interested:'İlgileniyor' },
+    challenges:{ title:'Görevler 📸', join:'Katıl', progress:'İlerleme', completed:'Tamamlandı', points:'Puan', reward:'Ödül', claim:'Al 🎁', done:'Alındı', today_submit:'📸 Bugün fotoğraf çek', today_submitted:'⏳ Bugün zaten gönderildi – yarın tekrar dene', already_submitted:'Bugün zaten bir fotoğraf gönderildi!' },
     alerts:{ title:'Bildirimler', all:'Tümü', messages:'💬 Mesajlar', nudges:'👋 Dürtmeler', events:'🎉 Etkinlikler', deals:'🏷️ Fırsatlar', community:'👥 Topluluk', empty:'Bildirim yok' },
-    profile:{ title:'Profil', edit_short:'Profili düzenle', points_history_short:'Puan geçmişi', vouchers:'Kuponlarım', my_events:'Etkinliklerim', nearby:'Yakın Uyarılar', invite:'Arkadaş davet et', logout:'Çıkış yap', language:'🌍 Dil', disabled:'Devre dışı', invite_bonus:'+100 puan' },
+    profile:{ title:'Profil', edit_short:'Profili düzenle', points_history_short:'Puan geçmişi', vouchers:'Kuponlarım', my_events:'Etkinliklerim', nearby:'Yakın Uyarılar', invite:'Arkadaş davet et', logout:'Çıkış yap', language:'🌍 Dil', disabled:'Devre dışı', invite_bonus:'+100 puan', points_label:'Toplanan puanlar', visits:'Ziyaretler', events_stat:'Etkinlikler', deals_stat:'Fırsatlar', saved_items:'Kaydedilenler', badges:'Rozetlerim', challenges_title:'🎯 Aylık Görevler', my_rewards:'Ödüllerim', badge_unlocked:'Rozet açıldı! 🎉' },
+    qr:{ checkin_btn_do:'✅ {label}\'da giriş yap (+25 puan)', checkin_btn_done:'✓ Bugün {label}\'da giriş yapıldı', next_checkin:'⏰ Sonraki giriş yarın mümkün', show_code:'📍 Bu kodu {label}\'da göster' },
+    toast:{ voucher_saved:'Kupon kaydedildi! 🎟', friend_sent:'Arkadaşlık isteği gönderildi! 👋', event_joined:'Katıldın! 🎉', nudge_sent:'👋 {name} dürtüldü!', nudge_fail:'İstek zaten gönderildi', already_connected:'İstek zaten gönderildi veya zaten bağlantısın var.', challenge_done:'🎉 +{n} puan! Görev tamamlandı!', view:'Görüntüle' },
     buttons:{ save:'Kaydet', cancel:'İptal', close:'Kapat', back:'Geri', confirm:'Onayla', share:'Paylaş', loading:'Yükleniyor…' },
     errors:{ generic:'Bir şeyler ters gitti.', network:'Ağ hatası. Lütfen tekrar dene.' },
     success:{ voucher_saved:'Kupon kaydedildi! 🎟', friend_sent:'Arkadaşlık isteği gönderildi! 👋', event_joined:'Katıldın! 🎉' },
@@ -72,7 +78,9 @@ window.ZAM_I18N = {
     community:{ title:'Comunidad 👥', nudge:'Dar un toque', chat:'Abrir chat', online:'en línea', add_friend:'➕ Añadir amigo', req_sent:'Solicitud enviada', accept:'✅ Aceptar', contacts:'Contactos', friends:'👫 Mis Amigos', open_requests:'📩 Solicitudes pendientes', sent_requests:'📤 Solicitudes enviadas', my_contacts:'🤝 Mis Contactos' },
     challenges:{ title:'Retos 📸', join:'Unirse', progress:'Progreso', completed:'Completado', points:'Puntos' },
     alerts:{ title:'Notificaciones', all:'Todas', messages:'💬 Mensajes', nudges:'👋 Toques', events:'🎉 Eventos', deals:'🏷️ Ofertas', community:'👥 Comunidad', empty:'Sin notificaciones' },
-    profile:{ title:'Perfil', edit_short:'Editar perfil', points_history_short:'Historial de puntos', vouchers:'Mis cupones', my_events:'Mis eventos', nearby:'Alertas cercanas', invite:'Invitar amigos', logout:'Cerrar sesión', language:'🌍 Idioma', disabled:'Desactivado', invite_bonus:'+100 puntos' },
+    profile:{ title:'Perfil', edit_short:'Editar perfil', points_history_short:'Historial de puntos', vouchers:'Mis cupones', my_events:'Mis eventos', nearby:'Alertas cercanas', invite:'Invitar amigos', logout:'Cerrar sesión', language:'🌍 Idioma', disabled:'Desactivado', invite_bonus:'+100 puntos', points_label:'Puntos acumulados', visits:'Visitas', events_stat:'Eventos', deals_stat:'Ofertas', saved_items:'Guardados', badges:'Mis insignias', challenges_title:'🎯 Retos mensuales', my_rewards:'Mis recompensas', badge_unlocked:'¡Insignia desbloqueada! 🎉' },
+    qr:{ checkin_btn_do:'✅ Registrarse en {label} (+25 pts)', checkin_btn_done:'✓ Registrado en {label} hoy', next_checkin:'⏰ Próximo registro posible mañana', show_code:'📍 Muestra este código en {label}' },
+    toast:{ voucher_saved:'¡Cupón guardado! 🎟', friend_sent:'¡Solicitud enviada! 👋', event_joined:'¡Te has unido! 🎉', nudge_sent:'👋 ¡{name} fue tocado!', nudge_fail:'Solicitud ya enviada', already_connected:'Solicitud ya enviada o ya conectado.', challenge_done:'🎉 +{n} puntos! ¡Reto completado!', view:'Ver' },
     buttons:{ save:'Guardar', cancel:'Cancelar', close:'Cerrar', back:'Atrás', confirm:'Confirmar', share:'Compartir', loading:'Cargando…' },
     errors:{ generic:'Algo salió mal.', network:'Error de red. Por favor inténtalo de nuevo.' },
     success:{ voucher_saved:'¡Cupón guardado! 🎟', friend_sent:'¡Solicitud enviada! 👋', event_joined:'¡Te has unido! 🎉' },
@@ -89,7 +97,9 @@ window.ZAM_I18N = {
     community:{ title:'Community 👥', nudge:'Tocca', chat:'Apri chat', online:'online', add_friend:'➕ Aggiungi amico', req_sent:'Richiesta inviata', accept:'✅ Accetta', contacts:'Contatti', friends:'👫 I miei amici', open_requests:'📩 Richieste in sospeso', sent_requests:'📤 Richieste inviate', my_contacts:'🤝 I miei contatti' },
     challenges:{ title:'Sfide 📸', join:'Partecipa', progress:'Progresso', completed:'Completato', points:'Punti' },
     alerts:{ title:'Notifiche', all:'Tutte', messages:'💬 Messaggi', nudges:'👋 Tocchi', events:'🎉 Eventi', deals:'🏷️ Offerte', community:'👥 Community', empty:'Nessuna notifica' },
-    profile:{ title:'Profilo', edit_short:'Modifica profilo', points_history_short:'Storico punti', vouchers:'I miei buoni', my_events:'I miei eventi', nearby:'Avvisi vicini', invite:'Invita amici', logout:'Esci', language:'🌍 Lingua', disabled:'Disabilitato', invite_bonus:'+100 punti' },
+    profile:{ title:'Profilo', edit_short:'Modifica profilo', points_history_short:'Storico punti', vouchers:'I miei buoni', my_events:'I miei eventi', nearby:'Avvisi vicini', invite:'Invita amici', logout:'Esci', language:'🌍 Lingua', disabled:'Disabilitato', invite_bonus:'+100 punti', points_label:'Punti accumulati', visits:'Visite', events_stat:'Eventi', deals_stat:'Offerte', saved_items:'Salvati', badges:'I miei badge', challenges_title:'🎯 Sfide mensili', my_rewards:'I miei premi', badge_unlocked:'Badge sbloccato! 🎉' },
+    qr:{ checkin_btn_do:'✅ Check-in a {label} (+25 pts)', checkin_btn_done:'✓ Check-in a {label} oggi', next_checkin:'⏰ Prossimo check-in possibile domani', show_code:'📍 Mostra questo codice a {label}' },
+    toast:{ voucher_saved:'Buono salvato! 🎟', friend_sent:'Richiesta inviata! 👋', event_joined:'Sei iscritto! 🎉', nudge_sent:'👋 {name} toccato!', nudge_fail:'Richiesta già inviata', already_connected:'Richiesta già inviata o già connesso.', challenge_done:'🎉 +{n} punti! Sfida completata!', view:'Vedi' },
     buttons:{ save:'Salva', cancel:'Annulla', close:'Chiudi', back:'Indietro', confirm:'Conferma', share:'Condividi', loading:'Caricamento…' },
     errors:{ generic:'Qualcosa è andato storto.', network:'Errore di rete. Riprova.' },
     success:{ voucher_saved:'Buono salvato! 🎟', friend_sent:'Richiesta inviata! 👋', event_joined:'Sei iscritto! 🎉' },
@@ -125,6 +135,13 @@ function applyLanguage() {
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   updateNavLabels();
   _updateLangPickerUI();
+  // Update deals tab buttons (not covered by data-i18n as they have IDs)
+  const dealsTabAll = document.getElementById('deals-tab-all');
+  if (dealsTabAll) dealsTabAll.textContent = t('deals.all');
+  const dealsTabDeals = document.getElementById('deals-tab-deals');
+  if (dealsTabDeals) dealsTabDeals.textContent = t('deals.regular');
+  const dealsTabPartner = document.getElementById('deals-tab-partner');
+  if (dealsTabPartner) dealsTabPartner.textContent = t('deals.partner');
   // 2. Re-render the currently visible tab (dynamic content inside it)
   const activeTab = document.querySelector('.nav-tab.active');
   const tab = activeTab?.dataset?.page;
@@ -693,7 +710,7 @@ async function renderHomeDeals() {
       </div>
       <div class="deal-title">${deal.title}</div>
       <div style="margin-top:6px">${_countdownBadge(deal.expiry_date)}</div>
-      <button class="btn btn-primary" style="margin-top:10px;padding:6px 12px;font-size:0.72rem;width:100%" onclick="openVoucherQR('${deal.id}','${esc(deal.title)}','${deal.merchant_id||''}');event.stopPropagation()">🎟 Einlösen</button>
+      <button class="btn btn-primary" style="margin-top:10px;padding:6px 12px;font-size:0.72rem;width:100%" onclick="openVoucherQR('${deal.id}','${esc(deal.title)}','${deal.merchant_id||''}');event.stopPropagation()">${t('deals.redeem')}</button>
     `;
     card.addEventListener('click', () => navigateTo('deals'));
     container.appendChild(card);
@@ -725,15 +742,15 @@ function _renderHomeRankStats(user) {
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)">
       <div style="text-align:center">
         <div style="font-size:1.1rem;font-weight:900;color:#F7AB00">🏆 #${rank}</div>
-        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">Monatsrang</div>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">${t('home.monthly_rank')}</div>
       </div>
       <div style="text-align:center;border-left:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06)">
         <div style="font-size:1.1rem;font-weight:900;color:#34d399">+${todayPts}</div>
-        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">Heute</div>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">${t('home.today')}</div>
       </div>
       <div style="text-align:center">
         <div style="font-size:1.1rem;font-weight:900;color:#ffb399">${ptsToPlatin}</div>
-        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">bis Platin</div>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">${t('home.to_platin')}</div>
       </div>
     </div>`;
 }
@@ -754,11 +771,11 @@ function _renderHomeRankingCard() {
       <div style="position:absolute;top:-18px;right:-18px;font-size:5rem;opacity:0.06;pointer-events:none">🏆</div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
         <div>
-          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:900;color:#F7AB00">🏆 Monats-Champions</div>
-          <div style="font-size:0.78rem;font-weight:700;color:#fff;margin-top:3px">Top 3 gewinnen geheime Preise!</div>
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:900;color:#F7AB00">${t('home.monthly_champs')}</div>
+          <div style="font-size:0.78rem;font-weight:700;color:#fff;margin-top:3px">${t('home.top3_win')}</div>
           <div style="font-size:0.68rem;color:rgba(255,255,255,0.45);margin-top:2px">⏳ Noch <strong style="color:#F7AB00">${daysLeft} Tage</strong> bis Monatsende</div>
         </div>
-        <span style="font-size:0.68rem;color:rgba(247,171,0,0.7);font-weight:700;white-space:nowrap;padding-top:2px">Ansehen →</span>
+        <span style="font-size:0.68rem;color:rgba(247,171,0,0.7);font-weight:700;white-space:nowrap;padding-top:2px">${t('home.view')}</span>
       </div>
       ${top3.map((u, i) => `
       <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,0.04);${i < 2 ? 'margin-bottom:6px' : ''}">
@@ -771,8 +788,8 @@ function _renderHomeRankingCard() {
         <div style="font-size:0.8rem;font-weight:900;color:#F7AB00">${u.pts.toLocaleString('de-DE')}</div>
       </div>`).join('')}
       <div style="margin-top:10px;padding:9px 10px;border-radius:10px;background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.15);display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:0.72rem;color:rgba(255,255,255,0.6)">Dein Rang: <strong style="color:#F7AB00">#${me?.rank || 17}</strong> · ${(me?.pts || 2460).toLocaleString('de-DE')} Pkt.</div>
-        <button onclick="event.stopPropagation();openRankingModal()" style="font-size:0.7rem;font-weight:800;color:#F7AB00;background:none;border:none;cursor:pointer;font-family:var(--font)">Verbessern →</button>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.6)">${t('home.your_rank')} <strong style="color:#F7AB00">#${me?.rank || 17}</strong> · ${(me?.pts || 2460).toLocaleString('de-DE')} ${t('home.pts')}</div>
+        <button onclick="event.stopPropagation();openRankingModal()" style="font-size:0.7rem;font-weight:800;color:#F7AB00;background:none;border:none;cursor:pointer;font-family:var(--font)">${t('home.improve')}</button>
       </div>
     </div>`;
 }
@@ -784,49 +801,48 @@ function openRankingModal() {
   const daysMonth = Math.ceil((endOfMonth - now) / 86400000);
   const daysQ = Math.ceil((endOfQ - now) / 86400000);
   const medals = ['🥇','🥈','🥉'];
-  const prizes = ['Geheimer Hauptgewinn 🎁','Geheimer Premiumgewinn 🎁','Geheimer Bonusgewinn 🎁'];
+  const prizes = [t('home.secret_prize'),t('home.secret_premium'),t('home.secret_bonus')];
   const me = _RANKING_DEMO.find(r => r.isMe);
   const modal = _buildMerchantModal('ranking-modal','🏆 Rankings', `
     <!-- Month tab -->
     <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:12px;padding:3px;margin-bottom:18px">
-      <button id="rank-tab-month" onclick="rankTab('month')" style="flex:1;border:none;border-radius:10px;padding:8px 4px;font-size:0.75rem;font-weight:800;font-family:var(--font);background:rgba(247,171,0,0.25);color:#F7AB00;cursor:pointer">🗓️ Monat</button>
-      <button id="rank-tab-quarter" onclick="rankTab('quarter')" style="flex:1;border:none;border-radius:10px;padding:8px 4px;font-size:0.75rem;font-weight:800;font-family:var(--font);background:none;color:rgba(255,255,255,0.4);cursor:pointer">👑 Quartal</button>
+      <button id="rank-tab-month" onclick="rankTab('month')" style="flex:1;border:none;border-radius:10px;padding:8px 4px;font-size:0.75rem;font-weight:800;font-family:var(--font);background:rgba(247,171,0,0.25);color:#F7AB00;cursor:pointer">${t('home.rank_month')}</button>
+      <button id="rank-tab-quarter" onclick="rankTab('quarter')" style="flex:1;border:none;border-radius:10px;padding:8px 4px;font-size:0.75rem;font-weight:800;font-family:var(--font);background:none;color:rgba(255,255,255,0.4);cursor:pointer">${t('home.rank_quarter')}</button>
     </div>
     <div id="rank-content-month">
       <div style="text-align:center;margin-bottom:16px">
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-bottom:4px">⏳ Noch ${daysMonth} Tage bis Monatsende</div>
-        <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">Die Top 3 gewinnen exklusive ZAM-Preise.</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-bottom:4px">⏳ ${t('home.days_left_month').replace('{n}',daysMonth)}</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">${t('home.top3_prizes')}</div>
       </div>
       ${_RANKING_DEMO.map((u, i) => `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${u.isMe ? 'rgba(247,171,0,0.08)' : 'rgba(255,255,255,0.03)'};border:1px solid ${u.isMe ? 'rgba(247,171,0,0.25)' : 'rgba(255,255,255,0.06)'};border-radius:12px;margin-bottom:7px">
         <div style="width:28px;text-align:center;font-size:${i < 3 ? '1.1rem' : '0.8rem'};font-weight:800;color:${i===0?'#d97706':i===1?'#9ca3af':i===2?'#b45309':'rgba(255,255,255,0.3)'}">${i < 3 ? medals[i] : '#'+u.rank}</div>
         <div style="width:36px;height:36px;border-radius:50%;background:${u.bg};border:2px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.82rem;font-weight:${u.isMe?'900':'700'};color:${u.isMe?'#F7AB00':'#e2e8f0'}">${u.name}${u.isMe?' (Du)':''}</div>
+          <div style="font-size:0.82rem;font-weight:${u.isMe?'900':'700'};color:${u.isMe?'#F7AB00':'#e2e8f0'}">${u.name}${u.isMe?' '+t('home.you'):''}</div>
           ${i < 3 ? `<div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-top:1px">${prizes[i]}</div>` : ''}
         </div>
-        <div style="font-size:0.8rem;font-weight:800;color:${u.isMe?'#F7AB00':'rgba(255,255,255,0.6)'}">${u.pts.toLocaleString('de-DE')} Pkt.</div>
+        <div style="font-size:0.8rem;font-weight:800;color:${u.isMe?'#F7AB00':'rgba(255,255,255,0.6)'}">${u.pts.toLocaleString('de-DE')} ${t('home.pts')}</div>
       </div>`).join('')}
     </div>
     <div id="rank-content-quarter" style="display:none">
       <div style="text-align:center;margin-bottom:16px">
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-bottom:4px">⏳ Noch ${daysQ} Tage bis Quartalsende</div>
-        <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">Die Top 3 des Quartals gewinnen exklusive Hauptpreise.</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-bottom:4px">⏳ ${t('home.days_left_quarter').replace('{n}',daysQ)}</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">${t('home.quarter_prizes')}</div>
       </div>
-      ${['🥇 Hauptgewinn','🥈 Premiumgewinn','🥉 Spezialgewinn'].map(p => `
+      ${[['🥇',t('home.secret_prize')],['🥈',t('home.secret_premium')],['🥉',t('home.secret_bonus')]].map(([medal,label]) => `
       <div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;margin-bottom:8px">
-        <div style="font-size:1.5rem">${p.split(' ')[0]}</div>
+        <div style="font-size:1.5rem">${medal}</div>
         <div>
-          <div style="font-size:0.84rem;font-weight:800;color:#e2e8f0">Geheimer Gewinn 🎁</div>
-          <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px">${p.slice(3)}</div>
+          <div style="font-size:0.84rem;font-weight:800;color:#e2e8f0">${label}</div>
         </div>
       </div>`).join('')}
       <div style="margin-top:16px;padding:14px;background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.2);border-radius:14px">
-        <div style="font-size:0.72rem;font-weight:700;color:#F7AB00;margin-bottom:4px">Dein Quartals-Stand</div>
-        <div style="font-size:0.78rem;color:rgba(255,255,255,0.6)">Rang <strong style="color:#F7AB00">#${me?.rank||17}</strong> · ${(me?.pts||2460).toLocaleString('de-DE')} Punkte</div>
+        <div style="font-size:0.72rem;font-weight:700;color:#F7AB00;margin-bottom:4px">${t('home.quarterly_stand')}</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.6)">#${me?.rank||17} · ${(me?.pts||2460).toLocaleString('de-DE')} ${t('home.pts')}</div>
       </div>
     </div>
-    <button onclick="_merchantModalClose('ranking-modal')" style="width:100%;margin-top:16px;padding:12px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:0.84rem;font-weight:600;font-family:var(--font);cursor:pointer">Schließen</button>
+    <button onclick="_merchantModalClose('ranking-modal')" style="width:100%;margin-top:16px;padding:12px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:0.84rem;font-weight:600;font-family:var(--font);cursor:pointer">${t('buttons.close')}</button>
   `);
   document.body.appendChild(modal);
   modal.style.display = 'flex';
@@ -895,7 +911,7 @@ function showBadgeUnlockToast(badge) {
     toast = document.createElement('div');
     toast.id = 'badge-unlock-toast';
     toast.className = 'badge-unlock-toast';
-    toast.innerHTML = `<div class="badge-toast-icon"></div><div class="badge-toast-text"><strong></strong><span>Abzeichen freigeschaltet! 🎉</span></div>`;
+    toast.innerHTML = `<div class="badge-toast-icon"></div><div class="badge-toast-text"><strong></strong><span>${t('profile.badge_unlocked')}</span></div>`;
     document.body.appendChild(toast);
   }
   toast.querySelector('.badge-toast-icon').textContent = badge.icon;
@@ -940,9 +956,9 @@ async function renderChallenges() {
       <div class="challenge-footer">
         <span>${c.progress} / ${c.target}</span>
         ${c.is_claimed
-          ? `<span class="challenge-done-label">✅ ${t('challenges.reward')} erhalten</span>`
+          ? `<span class="challenge-done-label">✅ ${t('challenges.done')}</span>`
           : c.is_complete
-            ? `<button class="challenge-claim-btn" onclick="claimChallenge('${c.id}')">${t('challenges.reward')} abholen 🎁</button>`
+            ? `<button class="challenge-claim-btn" onclick="claimChallenge('${c.id}')">${t('challenges.claim')}</button>`
             : `<span>${c.pct}% ${t('challenges.progress')}</span>`}
       </div>
     </div>
@@ -952,7 +968,7 @@ async function renderChallenges() {
 async function claimChallenge(challengeId) {
   const result = await ZAMApi.challenges.claim(challengeId);
   if (!result) return;
-  showToast(`🎉 +${result.points} Punkte! Challenge abgeschlossen!`, 'success');
+  showToast(t('toast.challenge_done').replace('{n}', result.points), 'success');
   updatePointsDisplay(true);
   renderChallenges();
   await checkBadgesAfterAction();
@@ -1004,7 +1020,7 @@ function openSpinModal() {
   _renderSpinMerchantPreview();
   if (spinBtn) {
     spinBtn.disabled = alreadySpun;
-    spinBtn.textContent = alreadySpun ? '✓ Heute bereits gedreht' : '🎰 Jetzt drehen!';
+    spinBtn.textContent = alreadySpun ? t('home.already_spun') : t('home.today_spin');
     spinBtn.className = alreadySpun ? 'btn btn-full claimed' : 'btn btn-primary btn-full';
   }
   const nextSpin = $('#spin-next-info');
@@ -1274,10 +1290,10 @@ function _updateQRDisplay() {
   generateQRGrid();
   if (checkinBtn) {
     checkinBtn.disabled  = done;
-    checkinBtn.textContent = done ? `✓ Heute bei ${label} eingecheckt` : `✅ Bei ${label} einchecken (+25 Pkt.)`;
+    checkinBtn.textContent = done ? t('qr.checkin_btn_done').replace('{label}',label) : t('qr.checkin_btn_do').replace('{label}',label);
     checkinBtn.className   = done ? 'btn btn-full claimed' : 'btn btn-primary btn-full btn-pulse';
   }
-  if (checkinStatus) checkinStatus.textContent = done ? '⏰ Nächster Check-in morgen möglich' : `📍 Zeige diesen Code bei ${label}`;
+  if (checkinStatus) checkinStatus.textContent = done ? t('qr.next_checkin') : t('qr.show_code').replace('{label}',label);
 }
 
 function openQRModal() {
@@ -1718,7 +1734,7 @@ function renderDealCard(deal, idx) {
       <div class="deal-actions">
         <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn deal-action-social">👥 Gemeinsam</button>
         <button id="di_btn_${deal.id}" onclick="_toggleDealInterestUI('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn" style="background:${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.2)' : 'rgba(255,255,255,0.07)'};border:1px solid ${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.4)' : 'rgba(255,255,255,0.12)'};color:${_isInterestedInDeal(deal.id) ? '#F7AB00' : 'rgba(255,255,255,0.55)'};border-radius:10px;padding:0 10px;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">${_isInterestedInDeal(deal.id) ? '⭐ Interessiert' : '⭐ Interessiert?'}</button>
-        <button onclick="openVoucherQR('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}','${deal.merchant_id||''}');event.stopPropagation()" class="deal-action-btn deal-action-redeem">🎟 Einlösen</button>
+        <button onclick="openVoucherQR('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}','${deal.merchant_id||''}');event.stopPropagation()" class="deal-action-btn deal-action-redeem">${t('deals.redeem')}</button>
         <button class="${deal.is_claimed ? 'btn btn-sm claimed save-voucher-button' : 'btn btn-primary btn-sm save-voucher-button'}" data-idx="${idx}">
           ${deal.is_claimed ? '✓ Eingelöst' : 'Gutschein sichern'}
         </button>
@@ -3620,7 +3636,7 @@ function openUserProfileSheet(userId, userName, initials, avatarUrl) {
         if (result) {
           showToast(`👋 Anstupsanfrage an ${userName} gesendet!`, 'nudge');
         } else {
-          showToast('Anfrage bereits gesendet oder bereits verbunden.');
+          showToast(t('toast.already_connected'));
         }
         closeUserProfileSheet();
       });
@@ -5825,7 +5841,7 @@ function setMyAppStatus(status) {
 
 function nudgeFromActiveUsers(userId, userName) {
   const result = ZAMApi.nudges.send(userId, userName);
-  showToast(result ? `👋 ${userName} wurde angestupst!` : 'Anfrage bereits gesendet');
+  showToast(result ? t('toast.nudge_sent').replace('{name}',userName) : t('toast.nudge_fail'));
   // Re-render to show pending state
   _renderActiveUsersList(getActiveUsers());
 }
@@ -6856,7 +6872,7 @@ function openChallengeDetail(challengeId) {
     </div>
 
     <button onclick="${doneToday ? '' : `closeChallengeDetail();openCameraForChallenge('${ch.id}')`}" ${doneToday ? 'disabled' : ''} style="width:100%;padding:15px;background:${doneToday ? 'rgba(255,255,255,0.04)' : `linear-gradient(135deg,${c},${c}cc)`};border:none;color:${doneToday ? 'rgba(255,255,255,0.25)' : '#fff'};border-radius:14px;font-size:0.95rem;font-weight:800;font-family:var(--font);cursor:${doneToday ? 'default' : 'pointer'};${doneToday ? '' : `box-shadow:0 6px 20px ${c}44`}">
-      ${doneToday ? '⏳ Heute bereits eingereicht – morgen wieder' : '📸 Heute Foto aufnehmen'}
+      ${doneToday ? t('challenges.today_submitted') : t('challenges.today_submit')}
     </button>`;
 
   document.getElementById('challenge-detail-sheet').style.display = 'block';
@@ -7025,7 +7041,7 @@ function submitChallengePhoto() {
   const today = new Date().toISOString().slice(0,10);
   const subs = _getPhotoSubs();
   if (subs.some(s => s.challenge_id===_activeChallengeId && s.user_id===uid && s.submission_day===today && s.status!=='rejected')) {
-    showToast('Heute bereits ein Foto eingereicht!'); return;
+    showToast(t('challenges.already_submitted')); return;
   }
   const btn = document.getElementById('btn-submit-photo');
   if (btn) { btn.textContent = 'Wird eingereicht…'; btn.disabled = true; }
@@ -7336,7 +7352,7 @@ function renderRewards() {
         <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px">${p.merchant}</div>
         <div style="font-size:0.7rem;color:#F7AB00;margin-top:3px;font-weight:700">⭐ ${p.points.toLocaleString('de-DE')} Punkte</div>
       </div>
-      <button onclick="redeemPointsReward('${p.id}')" ${canAfford ? '' : 'disabled'} style="padding:9px 14px;border-radius:10px;font-size:0.75rem;font-weight:800;font-family:var(--font);cursor:${canAfford ? 'pointer' : 'default'};border:none;background:${canAfford ? 'linear-gradient(135deg,#8a5f00,#F7AB00)' : 'rgba(255,255,255,0.05)'};color:${canAfford ? '#fff' : 'rgba(255,255,255,0.25)'};white-space:nowrap">${canAfford ? 'Einlösen' : 'Zu wenig'}</button>
+      <button onclick="redeemPointsReward('${p.id}')" ${canAfford ? '' : 'disabled'} style="padding:9px 14px;border-radius:10px;font-size:0.75rem;font-weight:800;font-family:var(--font);cursor:${canAfford ? 'pointer' : 'default'};border:none;background:${canAfford ? 'linear-gradient(135deg,#8a5f00,#F7AB00)' : 'rgba(255,255,255,0.05)'};color:${canAfford ? '#fff' : 'rgba(255,255,255,0.25)'};white-space:nowrap">${canAfford ? t('deals.redeem') : t('deals.too_few')}</button>
     </div>`;
   }).join('');
 
@@ -8555,7 +8571,7 @@ function _showNearbyBanner(msgs) {
         <div style="font-size:0.72rem;font-weight:800;color:#FA4615;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:1px">📍 Du bist in der Nähe</div>
         <div style="font-size:0.8rem;color:rgba(255,255,255,0.85);line-height:1.3">${escHtml(msg.text)}</div>
       </div>
-      <button onclick="navigateTo('${msg.action}');document.getElementById('nearby-alert-banner')?.remove()" style="padding:7px 12px;border-radius:8px;background:rgba(250,70,21,0.2);border:1px solid rgba(250,70,21,0.4);color:#ffb399;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">Ansehen</button>
+      <button onclick="navigateTo('${msg.action}');document.getElementById('nearby-alert-banner')?.remove()" style="padding:7px 12px;border-radius:8px;background:rgba(250,70,21,0.2);border:1px solid rgba(250,70,21,0.4);color:#ffb399;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">${t('toast.view')}</button>
       <button onclick="document.getElementById('nearby-alert-banner')?.remove()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.3rem;cursor:pointer;padding:2px 4px;flex-shrink:0">×</button>
     </div>`;
   document.body.prepend(banner);

@@ -187,7 +187,7 @@
     <!-- Points Card -->
     <div class="points-card">
       <div class="points-deco"></div>
-      <div class="points-label">Deine Punkte</div>
+      <div class="points-label" data-i18n="home.points">Deine Punkte</div>
       <div class="points-value">
         <span id="home-points-value">2.460</span>
         <span>Pkt.</span>
@@ -436,7 +436,7 @@
 
       <!-- Points -->
       <div class="profile-points-row">
-        <div class="profile-points-label">Gesammelte Punkte</div>
+        <div class="profile-points-label" data-i18n="profile.points_label">Gesammelte Punkte</div>
         <div class="profile-points-value" id="profile-points-value">1.840</div>
       </div>
       <div style="padding:0 20px 12px;text-align:right">
@@ -447,27 +447,27 @@
       <div class="profile-stats-row">
         <div class="profile-stat">
           <div class="profile-stat-value" id="profile-stat-visits">47</div>
-          <div class="profile-stat-label">Besuche</div>
+          <div class="profile-stat-label" data-i18n="profile.visits">Besuche</div>
         </div>
         <div class="profile-stat">
           <div class="profile-stat-value" id="profile-stat-events">12</div>
-          <div class="profile-stat-label">Events</div>
+          <div class="profile-stat-label" data-i18n="profile.events_stat">Events</div>
         </div>
         <div class="profile-stat">
           <div class="profile-stat-value" id="profile-stat-deals">29</div>
-          <div class="profile-stat-label">Deals</div>
+          <div class="profile-stat-label" data-i18n="profile.deals_stat">Deals</div>
         </div>
       </div>
 
       <!-- Saved Items Summary -->
       <div style="padding:16px 20px 0;border-top:1px solid var(--color-border)">
-        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-muted);margin-bottom:12px">Gemerkte Inhalte</div>
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-muted);margin-bottom:12px" data-i18n="profile.saved_items">Gemerkte Inhalte</div>
         <div id="profile-saved-summary" style="display:flex;gap:10px;flex-wrap:wrap"></div>
       </div>
 
       <!-- Badges -->
       <div class="badges-section">
-        <div class="badges-section-title">Meine Abzeichen</div>
+        <div class="badges-section-title" data-i18n="profile.badges">Meine Abzeichen</div>
         <div class="badges-grid" id="badges-grid">
           <!-- Rendered by app.js -->
         </div>
@@ -475,7 +475,7 @@
 
       <!-- Challenges -->
       <div class="challenges-section">
-        <div class="challenges-section-title">🎯 Monatliche Challenges</div>
+        <div class="challenges-section-title" data-i18n="profile.challenges_title">🎯 Monatliche Challenges</div>
         <div id="challenges-list">
           <!-- Rendered by app.js -->
         </div>
@@ -582,8 +582,6 @@
           <button onclick="setLang('de')" class="lang-sel-btn" data-lang="de" style="flex:1;min-width:52px;padding:8px 4px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s">🇩🇪 DE</button>
           <button onclick="setLang('en')" class="lang-sel-btn" data-lang="en" style="flex:1;min-width:52px;padding:8px 4px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s">🇬🇧 EN</button>
           <button onclick="setLang('tr')" class="lang-sel-btn" data-lang="tr" style="flex:1;min-width:52px;padding:8px 4px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s">🇹🇷 TR</button>
-          <button onclick="setLang('es')" class="lang-sel-btn" data-lang="es" style="flex:1;min-width:52px;padding:8px 4px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s">🇪🇸 ES</button>
-          <button onclick="setLang('it')" class="lang-sel-btn" data-lang="it" style="flex:1;min-width:52px;padding:8px 4px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s">🇮🇹 IT</button>
         </div>
       </div>
     </div>
@@ -1814,8 +1812,6 @@
       <button onclick="setLang('de');closeLangSheet()" class="lang-opt-btn" data-lang="de">🇩🇪 Deutsch</button>
       <button onclick="setLang('en');closeLangSheet()" class="lang-opt-btn" data-lang="en">🇬🇧 English</button>
       <button onclick="setLang('tr');closeLangSheet()" class="lang-opt-btn" data-lang="tr">🇹🇷 Türkçe</button>
-      <button onclick="setLang('es');closeLangSheet()" class="lang-opt-btn" data-lang="es">🇪🇸 Español</button>
-      <button onclick="setLang('it');closeLangSheet()" class="lang-opt-btn" data-lang="it">🇮🇹 Italiano</button>
     </div>
   </div>
 </div>
@@ -1831,8 +1827,6 @@
     <button onclick="dismissFirstRunLang('de')" class="lang-opt-btn" style="font-size:0.95rem;padding:14px">🇩🇪 Deutsch</button>
     <button onclick="dismissFirstRunLang('en')" class="lang-opt-btn" style="font-size:0.95rem;padding:14px">🇬🇧 English</button>
     <button onclick="dismissFirstRunLang('tr')" class="lang-opt-btn" style="font-size:0.95rem;padding:14px">🇹🇷 Türkçe</button>
-    <button onclick="dismissFirstRunLang('es')" class="lang-opt-btn" style="font-size:0.95rem;padding:14px">🇪🇸 Español</button>
-    <button onclick="dismissFirstRunLang('it')" class="lang-opt-btn" style="font-size:0.95rem;padding:14px">🇮🇹 Italiano</button>
   </div>
   <button onclick="dismissFirstRunLang(null)" style="margin-top:20px;background:none;border:none;color:rgba(255,255,255,0.3);font-size:0.75rem;cursor:pointer;font-family:inherit">Überspringen / Skip</button>
 </div>
