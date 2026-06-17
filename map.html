@@ -49,7 +49,7 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
 #map-wrap:active{cursor:grabbing}
 #map-stage{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
 #map-svg{display:block;width:520px;height:800px}
-#user-layer,#marker-layer{position:absolute;top:0;left:0;width:520px;height:800px;pointer-events:none;contain:layout style}
+#user-layer,#marker-layer{position:absolute;top:0;left:0;width:520px;height:800px;pointer-events:none;contain:layout style paint}
 .user-bubble,.map-marker{pointer-events:all}
 /* USER BUBBLES — compact (overridden below) */
 /* panning state: freeze all expensive effects */
@@ -57,6 +57,9 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
 .panning .mk-lbl{opacity:0}
 .panning .mk-pulse{animation-play-state:paused}
 .panning .av-ring{animation:none}
+.panning #au-fab span:first-child{animation:none}
+.panning .mk-pulse{animation-play-state:paused;opacity:0}
+@keyframes svgFade{0%,100%{opacity:0.5}50%{opacity:0}}
 /* USER BUBBLES — compact */
 .user-bubble{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);cursor:pointer;z-index:20;transition:transform .12s}
 .user-bubble:active{transform:translate(-50%,-100%) scale(0.88)}
@@ -217,7 +220,7 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
           <text x="256" y="220" text-anchor="middle" font-size="6" fill="rgba(255,255,255,0.2)" font-family="Poppins,system-ui" font-weight="600" letter-spacing="0.06em" transform="rotate(-4,256,220)">AMALJE-NACKEN-STR.</text>
 
           <!-- ══ MK 2(1) ORANGE ══ -->
-          <polygon points="38,50 248,50 218,370 38,370" fill="#92400e" filter="url(#shadow)"/>
+          <polygon points="38,50 248,50 218,370 38,370" fill="#92400e"/>
           <polygon points="38,50 248,50 218,370 38,370" fill="#d97706" opacity="0.75"/>
           <polygon points="38,50 248,50 218,370 38,370" fill="url(#grid)" opacity="0.5"/>
           <!-- Gastro-Bereich unten -->
@@ -249,7 +252,7 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
           <text x="193" y="292" text-anchor="middle" font-size="7.5" fill="rgba(253,186,116,0.5)" font-family="Poppins,system-ui" font-weight="600">🥙 Levante Kitchen</text>
 
           <!-- ══ MK 2(2) LILA ══ -->
-          <polygon points="270,50 400,50 400,440 248,440" fill="#4c1d95" filter="url(#shadow)"/>
+          <polygon points="270,50 400,50 400,440 248,440" fill="#4c1d95"/>
           <polygon points="270,50 400,50 400,440 248,440" fill="#7c3aed" opacity="0.75"/>
           <polygon points="270,50 400,50 400,440 248,440" fill="url(#grid)" opacity="0.5"/>
           <!-- Gastro unten -->
@@ -289,9 +292,9 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
           <polygon points="260,450 432,450 490,750 252,750" fill="#0d0d22" stroke="rgba(139,92,246,0.1)" stroke-width="1"/>
           <!-- Brunnen -->
           <circle cx="370" cy="600" r="40" fill="rgba(139,92,246,0.06)" stroke="rgba(139,92,246,0.15)" stroke-width="1.5"/>
-          <circle cx="370" cy="600" r="26" fill="rgba(139,92,246,0.06)" stroke="rgba(167,139,250,0.2)" stroke-width="1"><animate attributeName="r" values="24;28;24" dur="3s" repeatCount="indefinite"/></circle>
+          <circle cx="370" cy="600" r="26" fill="rgba(139,92,246,0.06)" stroke="rgba(167,139,250,0.2)" stroke-width="1"/>
           <circle cx="370" cy="600" r="11" fill="rgba(139,92,246,0.15)" stroke="rgba(167,139,250,0.4)" stroke-width="1.5"/>
-          <circle cx="370" cy="600" r="4"  fill="#a78bfa" filter="url(#glow)"/>
+          <circle cx="370" cy="600" r="4"  fill="#a78bfa"/>
           <circle cx="370" cy="600" r="40" fill="url(#hm-pu)" opacity="0.5"><animate attributeName="opacity" values="0.25;0.55;0.25" dur="2.5s" repeatCount="indefinite"/></circle>
           <!-- Bänke -->
           <rect x="342" y="555" width="48" height="9" rx="4.5" fill="#1a1a38" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
@@ -306,12 +309,12 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
           <!-- Label -->
           <text x="370" y="478" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.28)" font-family="Poppins,system-ui" font-weight="700" letter-spacing="0.05em">MAHATMA-GANDHI-PLATZ</text>
           <!-- S-Bahn -->
-          <circle cx="370" cy="750" r="16" fill="#1a1a38" stroke="rgba(59,130,246,0.55)" stroke-width="2" filter="url(#glow-sm)"/>
+          <circle cx="370" cy="750" r="16" fill="#1a1a38" stroke="rgba(59,130,246,0.55)" stroke-width="2"/>
           <text x="370" y="756" text-anchor="middle" font-size="13" font-weight="700" fill="rgba(59,130,246,0.9)" font-family="Poppins,system-ui">S</text>
-          <circle cx="370" cy="750" r="16" fill="none" stroke="rgba(59,130,246,0.3)" stroke-width="7"><animate attributeName="r" values="16;26;16" dur="3s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0.3;0;0.3" dur="3s" repeatCount="indefinite"/></circle>
+          <circle cx="370" cy="750" r="24" fill="none" stroke="rgba(59,130,246,0.15)" stroke-width="7" style="animation:svgFade 3s ease-in-out infinite"/>
 
           <!-- ══ MK 2(3) GRÜN ══ -->
-          <polygon points="38,408 228,408 252,750 38,750" fill="#064e3b" filter="url(#shadow)"/>
+          <polygon points="38,408 228,408 252,750 38,750" fill="#064e3b"/>
           <polygon points="38,408 228,408 252,750 38,750" fill="#059669" opacity="0.75"/>
           <polygon points="38,408 228,408 252,750 38,750" fill="url(#grid)" opacity="0.5"/>
           <!-- Heatmap -->
@@ -343,7 +346,7 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
           <text x="202" y="705" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.4)" font-family="Poppins,system-ui" font-weight="600">🧸 Smyths Toys</text>
 
           <!-- ══ MK 2(4) BLAU ══ -->
-          <rect x="434" y="450" width="52" height="300" rx="3" fill="#1e3a8a" filter="url(#shadow)"/>
+          <rect x="434" y="450" width="52" height="300" rx="3" fill="#1e3a8a"/>
           <rect x="434" y="450" width="52" height="300" rx="3" fill="#2563eb" opacity="0.75"/>
           <rect x="434" y="450" width="52" height="300" rx="3" fill="url(#grid)" opacity="0.5"/>
           <!-- Heatmap -->
@@ -362,9 +365,9 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
           <text x="460" y="679" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.4)" font-family="Poppins,system-ui" font-weight="600" transform="rotate(90,460,679)">🍞 Bäckerei Reinhardt</text>
 
           <!-- (H) HALTESTELLE -->
-          <circle cx="240" cy="390" r="16" fill="#1a1a38" stroke="rgba(52,211,153,0.55)" stroke-width="2" filter="url(#glow-sm)"/>
+          <circle cx="240" cy="390" r="16" fill="#1a1a38" stroke="rgba(52,211,153,0.55)" stroke-width="2"/>
           <text x="240" y="396" text-anchor="middle" font-size="13" font-weight="700" fill="rgba(52,211,153,0.9)" font-family="Poppins,system-ui">H</text>
-          <circle cx="240" cy="390" r="16" fill="none" stroke="rgba(52,211,153,0.3)" stroke-width="7"><animate attributeName="r" values="16;26;16" dur="2.5s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0.3;0;0.3" dur="2.5s" repeatCount="indefinite"/></circle>
+          <circle cx="240" cy="390" r="24" fill="none" stroke="rgba(52,211,153,0.15)" stroke-width="7" style="animation:svgFade 2.5s ease-in-out infinite"/>
         </svg>
 
         <div id="user-layer"></div>
@@ -377,7 +380,7 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
       <button class="z-btn" onclick="mapZoom(0.8)">−</button>
       <button id="locate-btn" onclick="locateMe()">◎</button>
       <!-- Aktive Nutzer FAB — always clickable, outside topbar -->
-      <button id="au-fab" onclick="openMapActiveUsers()" title="Aktive Nutzer" style="width:auto;min-width:36px;height:36px;border-radius:18px;background:rgba(13,13,24,0.92);border:1.5px solid rgba(52,211,153,0.55);color:#34d399;font-size:0.68rem;font-weight:800;font-family:Poppins,system-ui;display:flex;align-items:center;gap:4px;padding:0 10px;backdrop-filter:blur(16px);cursor:pointer;white-space:nowrap;box-shadow:0 0 12px rgba(52,211,153,0.2)">
+      <button id="au-fab" onclick="openMapActiveUsers()" title="Aktive Nutzer" style="width:auto;min-width:36px;height:36px;border-radius:18px;background:rgba(13,13,24,0.92);border:1.5px solid rgba(52,211,153,0.55);color:#34d399;font-size:0.68rem;font-weight:800;font-family:Poppins,system-ui;display:flex;align-items:center;gap:4px;padding:0 10px;cursor:pointer;white-space:nowrap;box-shadow:0 0 8px rgba(52,211,153,0.15)">
         <span style="width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block;flex-shrink:0;animation:onlinePulse 1.8s ease-in-out infinite"></span>
         <span id="au-fab-count">21 online</span>
       </button>
@@ -778,6 +781,39 @@ function closePopup(e){
   const b=document.getElementById('popup-bg');
   b.classList.remove('open');
   _popHideTimer=setTimeout(()=>{b.style.display='none';_popHideTimer=null;},300);
+}
+
+/* ── Friend Request helpers (shared localStorage with index.html) ── */
+const _MAP_FR_KEY = 'zam_friend_requests_v1';
+function _mapGetFR(){try{return JSON.parse(localStorage.getItem(_MAP_FR_KEY)||'[]');}catch{return [];}}
+function _mapSaveFR(list){localStorage.setItem(_MAP_FR_KEY,JSON.stringify(list));}
+function _mapGetMeId(){try{const s=JSON.parse(localStorage.getItem('zamclub_session')||'null');return s?.user_id||'map_guest';}catch{return 'map_guest';}}
+function _mapFriendStatus(userId){
+  const meId=_mapGetMeId();
+  const fr=_mapGetFR().find(r=>(r.from_id===meId&&r.to_id===userId)||(r.from_id===userId&&r.to_id===meId));
+  if(!fr)return 'none';
+  if(fr.status==='accepted')return 'friends';
+  if(fr.status==='rejected')return 'none';
+  return fr.from_id===meId?'pending_sent':'pending_received';
+}
+function _mapFriendReqObj(userId){
+  const meId=_mapGetMeId();
+  return _mapGetFR().find(r=>(r.from_id===meId&&r.to_id===userId)||(r.from_id===userId&&r.to_id===meId))||null;
+}
+function mapSendFriendReq(userId,userName,initials){
+  const meId=_mapGetMeId();
+  if(_mapFriendStatus(userId)!=='none')return;
+  const req={id:'fr_'+Date.now(),from_id:meId,from_name:'Ich',from_initials:'JM',to_id:userId,to_name:userName,to_initials:initials,status:'pending',created_at:new Date().toISOString()};
+  const reqs=_mapGetFR();reqs.unshift(req);_mapSaveFR(reqs);
+  _showMapToast('➕ Freundschaftsanfrage gesendet!');
+  closePopup();
+  setTimeout(()=>{const u=MAP_DEMO_USERS_EXTENDED.find(x=>x.id===userId);if(u)openUserPopup(u);},200);
+}
+function mapAcceptFriendReq(frId,userName){
+  const reqs=_mapGetFR();const fr=reqs.find(r=>r.id===frId);
+  if(fr){fr.status='accepted';_mapSaveFR(reqs);}
+  _showMapToast('✅ '+userName+' ist jetzt dein Freund!');
+  closePopup();
 }
 
 /* ── Nudge helpers ── */
