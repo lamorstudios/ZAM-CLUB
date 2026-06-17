@@ -367,6 +367,49 @@ function showLevelUpAnimation(tier) {
   setTimeout(() => overlay?.remove(), 4000);
 }
 
+// Helper: derive demo pts for any userId/name combo (consistent per user)
+function _demoUserPts(userId) {
+  if (!userId) return 500;
+  const found = _RANKING_DEMO.find(u => userId.includes(u.initials?.toLowerCase?.()));
+  if (found) return found.pts;
+  let h = 0;
+  for (let i = 0; i < userId.length; i++) h = (h * 31 + userId.charCodeAt(i)) >>> 0;
+  return 500 + (h % 4200);
+}
+
+// Tier popup — small card shown when tapping a tier badge
+function showTierInfoPopup(name, pts, anchorEl) {
+  document.getElementById('zam-tier-popup')?.remove();
+  const tier = _getTier(pts);
+  const nextTier = _getNextTier(pts);
+  const popup = document.createElement('div');
+  popup.id = 'zam-tier-popup';
+  popup.style.cssText = 'position:fixed;z-index:8800;background:#1e1e2e;border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px 16px;box-shadow:0 8px 40px rgba(0,0,0,0.7);min-width:200px;max-width:240px;font-family:var(--font);animation:fadeUp 0.2s ease both';
+  popup.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span style="font-size:1.5rem">${tier.emoji}</span>
+      <div>
+        <div style="font-size:0.85rem;font-weight:800;color:#fff">${name}</div>
+        <div style="font-size:0.65rem;color:${tier.color};font-weight:700">${tier.label} Mitglied</div>
+      </div>
+    </div>
+    <div style="font-size:0.72rem;color:rgba(255,255,255,0.45);margin-bottom:6px">Aktuelle Punkte: <strong style="color:#F7AB00">${pts.toLocaleString('de-DE')}</strong></div>
+    ${nextTier ? `<div style="font-size:0.68rem;color:rgba(255,255,255,0.35)">Nächstes Ziel: <strong style="color:${nextTier.color}">${nextTier.emoji} ${nextTier.label}</strong><br>Noch ${(nextTier.min - pts).toLocaleString('de-DE')} Punkte</div>` : `<div style="font-size:0.68rem;color:#F7AB00">👑 Maximales Level erreicht!</div>`}`;
+  // Position near anchor element
+  if (anchorEl) {
+    const r = anchorEl.getBoundingClientRect();
+    const top = Math.min(r.bottom + 6, window.innerHeight - 170);
+    const left = Math.max(8, Math.min(r.left, window.innerWidth - 250));
+    popup.style.top = top + 'px';
+    popup.style.left = left + 'px';
+  } else {
+    popup.style.top = '50%'; popup.style.left = '50%';
+    popup.style.transform = 'translate(-50%,-50%)';
+  }
+  document.body.appendChild(popup);
+  setTimeout(() => { document.addEventListener('click', () => popup.remove(), { once: true }); }, 50);
+}
+
 // ── Daily Streak ──
 const _STREAK_KEY = 'zam_streak_v1';
 const _STREAK_MILESTONES = [
@@ -852,16 +895,18 @@ function _renderHomeRankingCard() {
         </div>
         <span style="font-size:0.68rem;color:rgba(247,171,0,0.7);font-weight:700;white-space:nowrap;padding-top:2px">Ansehen →</span>
       </div>
-      ${top3.map((u, i) => `
+      ${top3.map((u, i) => {
+        const uTier = _getTier(u.pts);
+        return `
       <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,0.04);${i < 2 ? 'margin-bottom:6px' : ''}">
         <div style="width:26px;text-align:center;font-size:1.1rem">${medals[i]}</div>
-        <div style="width:34px;height:34px;border-radius:50%;background:${u.bg};border:2px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
+        <div class="tier-ring tier-ring--${uTier.key}" style="width:34px;height:34px;background:${u.bg};font-size:0.62rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:0.8rem;font-weight:700;color:#e2e8f0">${u.name}</div>
-          <div style="font-size:0.6rem;color:rgba(255,255,255,0.35)">${prizeTitles[i]}</div>
+          <div style="display:flex;align-items:center;gap:4px;margin-top:1px"><span class="tier-badge tier-badge--${uTier.key}">${uTier.emoji} ${uTier.label}</span><span style="font-size:0.6rem;color:rgba(255,255,255,0.35)">${prizeTitles[i]}</span></div>
         </div>
         <div style="font-size:0.8rem;font-weight:900;color:#F7AB00">${u.pts.toLocaleString('de-DE')}</div>
-      </div>`).join('')}
+      </div>`;}).join('')}
       <div style="margin-top:10px;padding:9px 10px;border-radius:10px;background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.15);display:flex;align-items:center;justify-content:space-between">
         <div style="font-size:0.72rem;color:rgba(255,255,255,0.6)">Dein Rang: <strong style="color:#F7AB00">#${me?.rank || 17}</strong> · ${(me?.pts || 2460).toLocaleString('de-DE')} Pkt.</div>
         <button onclick="event.stopPropagation();openRankingModal()" style="font-size:0.7rem;font-weight:800;color:#F7AB00;background:none;border:none;cursor:pointer;font-family:var(--font)">Verbessern →</button>
@@ -889,16 +934,19 @@ function openRankingModal() {
         <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-bottom:4px">⏳ Noch ${daysMonth} Tage bis Monatsende</div>
         <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">Die Top 3 gewinnen exklusive ZAM-Preise.</div>
       </div>
-      ${_RANKING_DEMO.map((u, i) => `
+      ${_RANKING_DEMO.map((u, i) => {
+        const uTier = _getTier(u.pts);
+        const safeUName = u.name.replace(/'/g,"\\'");
+        return `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${u.isMe ? 'rgba(247,171,0,0.08)' : 'rgba(255,255,255,0.03)'};border:1px solid ${u.isMe ? 'rgba(247,171,0,0.25)' : 'rgba(255,255,255,0.06)'};border-radius:12px;margin-bottom:7px">
         <div style="width:28px;text-align:center;font-size:${i < 3 ? '1.1rem' : '0.8rem'};font-weight:800;color:${i===0?'#d97706':i===1?'#9ca3af':i===2?'#b45309':'rgba(255,255,255,0.3)'}">${i < 3 ? medals[i] : '#'+u.rank}</div>
-        <div style="width:36px;height:36px;border-radius:50%;background:${u.bg};border:2px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
+        <div class="tier-ring tier-ring--${uTier.key}" style="width:36px;height:36px;background:${u.bg};font-size:0.65rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:0.82rem;font-weight:${u.isMe?'900':'700'};color:${u.isMe?'#F7AB00':'#e2e8f0'}">${u.name}${u.isMe?' (Du)':''}</div>
-          ${i < 3 ? `<div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-top:1px">${prizes[i]}</div>` : ''}
+          <div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span class="tier-badge tier-badge--${uTier.key}" style="cursor:pointer" onclick="showTierInfoPopup('${safeUName}',${u.pts},this)">${uTier.emoji} ${uTier.label}</span>${i < 3 ? `<span style="font-size:0.6rem;color:rgba(255,255,255,0.35)">${prizes[i]}</span>` : ''}</div>
         </div>
         <div style="font-size:0.8rem;font-weight:800;color:${u.isMe?'#F7AB00':'rgba(255,255,255,0.6)'}">${u.pts.toLocaleString('de-DE')} Pkt.</div>
-      </div>`).join('')}
+      </div>`;}).join('')}
     </div>
     <div id="rank-content-quarter" style="display:none">
       <div style="text-align:center;margin-bottom:16px">
@@ -2260,15 +2308,19 @@ function _renderMessages() {
   container.innerHTML = msgs.map(m => {
     const isOwn = m.user_id === uid;
     const time  = new Date(m.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    const mPts  = _demoUserPts(m.user_id);
+    const mTier = _getTier(mPts);
+    const safeAuthorName = (m.author?.name||'').replace(/'/g,"\\'");
+    const safeMPts = mPts;
     return `
       <div class="chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}" data-msg-id="${m.id}">
-        ${!isOwn ? `<div class="chat-msg-avatar" style="background:${m.author.color || '#FA4615'}">${m.author.initials || '?'}</div>` : ''}
+        ${!isOwn ? `<div class="tier-ring tier-ring--${mTier.key}" style="width:34px;height:34px;background:${m.author?.color || '#FA4615'};font-size:11px;font-weight:800;color:#fff;flex-shrink:0">${m.author?.initials || '?'}</div>` : ''}
         <div class="chat-msg-bubble-wrap">
-          ${!isOwn ? `<div class="chat-msg-name">${m.author.name}</div>` : ''}
+          ${!isOwn ? `<div class="chat-msg-name" style="display:flex;align-items:center;gap:4px">${m.author?.name || ''}<span class="tier-badge tier-badge--${mTier.key}" style="cursor:pointer" onclick="showTierInfoPopup('${safeAuthorName}',${safeMPts},this)">${mTier.emoji} ${mTier.label}</span></div>` : ''}
           <div class="chat-msg-bubble">${m.content}</div>
           <div class="chat-msg-time">
             ${time}
-            ${!isOwn ? `<button class="chat-report-btn" onclick="openChatOptions('${m.id}','${m.user_id}','${(m.author.name||'').replace(/'/g,"\\'")}',${isAdmin})" aria-label="Optionen">⋯</button>` : ''}
+            ${!isOwn ? `<button class="chat-report-btn" onclick="openChatOptions('${m.id}','${m.user_id}','${safeAuthorName}',${isAdmin})" aria-label="Optionen">⋯</button>` : ''}
             ${isOwn && isAdmin ? `<button class="chat-report-btn" onclick="deleteChatMsg('${m.id}')" aria-label="Löschen">🗑</button>` : ''}
           </div>
         </div>
@@ -2953,10 +3005,13 @@ async function loadComments(postId) {
 
   comments.forEach(c => {
     const item = el('div', 'comment-item');
+    const cPts = c.author?.points || _demoUserPts(c.author?.id || c.author?.name || '');
+    const cTier = _getTier(cPts);
+    const safeName = (c.author?.name||'').replace(/'/g,"\\'");
     item.innerHTML = `
-      <div class="comment-avatar" style="background:${c.author.avatar_color || '#FA4615'}">${c.author.initials}</div>
+      <div class="tier-ring tier-ring--${cTier.key}" style="width:32px;height:32px;background:${c.author?.avatar_color || '#FA4615'};font-size:11px;font-weight:800;color:#fff;flex-shrink:0">${c.author?.initials || '?'}</div>
       <div class="comment-body">
-        <div class="comment-author">${c.author.name}</div>
+        <div class="comment-author" style="display:flex;align-items:center;gap:4px">${c.author?.name || ''}<span class="tier-badge tier-badge--${cTier.key}" style="cursor:pointer" onclick="showTierInfoPopup('${safeName}',${cPts},this)">${cTier.emoji} ${cTier.label}</span></div>
         <div class="comment-text">${c.content}</div>
         <div class="comment-time">${c.time_ago}</div>
       </div>
@@ -3265,11 +3320,16 @@ function renderContacts() {
     friends.forEach(f => {
       const item = document.createElement('div');
       item.className = 'contact-item';
+      const fPts = _demoUserPts(f.user_id);
+      const fTier = _getTier(fPts);
+      const safeFName = f.name.replace(/'/g,"\\'");
       item.innerHTML = `
-        <div class="contact-avatar" style="background:${_avatarColor(f.user_id)}">${f.initials}<div class="contact-online-dot"></div></div>
+        <div class="tier-ring tier-ring--${fTier.key}" style="width:40px;height:40px;background:${_avatarColor(f.user_id)};font-size:13px;font-weight:800;color:#fff;position:relative">
+          ${f.initials}<div class="contact-online-dot" style="position:absolute;bottom:1px;right:1px"></div>
+        </div>
         <div class="contact-info">
           <div class="contact-name">${escHtml(f.name)}</div>
-          <div class="contact-username" style="color:#34d399;font-size:0.6rem">✅ Freund</div>
+          <div class="contact-username" style="display:flex;align-items:center;gap:4px;font-size:0.6rem;color:#34d399">✅ Freund <span class="tier-badge tier-badge--${fTier.key}" style="cursor:pointer" onclick="event.stopPropagation();showTierInfoPopup('${safeFName}',${fPts},this)">${fTier.emoji} ${fTier.label}</span></div>
         </div>
         <button class="contact-action-btn" aria-label="Chat öffnen">💬</button>`;
       item.querySelector('.contact-action-btn').addEventListener('click', e => {
@@ -3326,14 +3386,17 @@ function renderContacts() {
       const item = document.createElement('div');
       item.className = 'contact-item';
       const unread = ZAMApi.privateChat.unreadCount(ZAMApi.privateChat.getOrCreate(c.user_id));
+      const cPts = _demoUserPts(c.user_id);
+      const cTier = _getTier(cPts);
+      const safeCName = (c.display_name||'').replace(/'/g,"\\'");
       item.innerHTML = `
-        <div class="contact-avatar" style="background:${_avatarColor(c.user_id)}">
-          ${c.avatar_url ? `<img src="${c.avatar_url}" alt="${c.initials}" />` : c.initials}
-          <div class="contact-online-dot"></div>
+        <div class="tier-ring tier-ring--${cTier.key}" style="width:40px;height:40px;background:${_avatarColor(c.user_id)};font-size:13px;font-weight:800;color:#fff;position:relative">
+          ${c.avatar_url ? `<img src="${c.avatar_url}" alt="${c.initials}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" />` : c.initials}
+          <div class="contact-online-dot" style="position:absolute;bottom:1px;right:1px"></div>
         </div>
         <div class="contact-info">
           <div class="contact-name">${c.display_name}</div>
-          <div class="contact-username">${c.username || ''}</div>
+          <div class="contact-username" style="display:flex;align-items:center;gap:4px"><span>${c.username || ''}</span><span class="tier-badge tier-badge--${cTier.key}" style="cursor:pointer" onclick="event.stopPropagation();showTierInfoPopup('${safeCName}',${cPts},this)">${cTier.emoji} ${cTier.label}</span></div>
         </div>
         ${unread > 0 ? `<span class="pc-unread-badge">${unread}</span>` : ''}
         <button class="contact-action-btn" data-uid="${c.user_id}" aria-label="Chat öffnen">💬</button>`;
@@ -3398,12 +3461,14 @@ function renderNudgeInbox() {
     const item = document.createElement('div');
     item.className = 'nudge-item';
     const timeStr = _relativeTime(n.created_at);
+    const nPts = _demoUserPts(n.from_id);
+    const nTier = _getTier(nPts);
     item.innerHTML = `
-      <div class="nudge-item-avatar" style="background:${_avatarColor(n.from_id)}">
+      <div class="tier-ring tier-ring--${nTier.key}" style="width:38px;height:38px;background:${_avatarColor(n.from_id)};font-size:12px;font-weight:800;color:#fff;flex-shrink:0">
         ${n.from_initials || n.from_id.slice(0, 2).toUpperCase()}
       </div>
       <div class="nudge-item-info">
-        <div class="nudge-item-name">${n.from_name || 'Jemand'} hat dich angestupst</div>
+        <div class="nudge-item-name" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">${n.from_name || 'Jemand'} hat dich angestupst <span class="tier-badge tier-badge--${nTier.key}">${nTier.emoji} ${nTier.label}</span></div>
         <div class="nudge-item-time">${timeStr}</div>
       </div>
       <div class="nudge-item-actions">
@@ -3464,7 +3529,9 @@ function openPrivateChat(userId, userName, initials, avatarUrl) {
   // Fill header
   const avatarEl = $('#pc-header-avatar');
   const nameEl   = $('#pc-header-name');
+  const headerTier = _getTier(_demoUserPts(userId));
   if (avatarEl) {
+    avatarEl.className = `tier-ring tier-ring--${headerTier.key}`;
     if (avatarUrl) {
       avatarEl.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" />`;
       avatarEl.style.background = 'none';
@@ -3473,7 +3540,10 @@ function openPrivateChat(userId, userName, initials, avatarUrl) {
       avatarEl.style.background = _avatarColor(userId);
     }
   }
-  if (nameEl) nameEl.textContent = userName;
+  if (nameEl) {
+    const safeName = userName.replace(/'/g,"\\'");
+    nameEl.innerHTML = `${userName} <span class="tier-badge tier-badge--${headerTier.key}" style="cursor:pointer;vertical-align:middle" onclick="showTierInfoPopup('${safeName}',${_demoUserPts(userId)},this)">${headerTier.emoji} ${headerTier.label}</span>`;
+  }
 
   // Render messages + mark read
   _pcRenderMessages();
@@ -3527,11 +3597,14 @@ function _pcRenderMessages() {
     }
     const isOwn = m.sender_id === uid;
     const time  = new Date(m.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    const mPts  = _demoUserPts(m.sender_id);
+    const mTier = _getTier(mPts);
+    const safeName = (m.sender_name||'').replace(/'/g,"\\'");
     return `
       <div class="chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}">
-        ${!isOwn ? `<div class="chat-msg-avatar" style="background:${_avatarColor(m.sender_id)}">${m.sender_initials || '?'}</div>` : ''}
+        ${!isOwn ? `<div class="tier-ring tier-ring--${mTier.key}" style="width:34px;height:34px;background:${_avatarColor(m.sender_id)};font-size:11px;font-weight:800;color:#fff;flex-shrink:0">${m.sender_initials || '?'}</div>` : ''}
         <div class="chat-msg-bubble-wrap">
-          ${!isOwn ? `<div class="chat-msg-name">${m.sender_name}</div>` : ''}
+          ${!isOwn ? `<div class="chat-msg-name" style="display:flex;align-items:center;gap:4px">${_escapeHtml(m.sender_name||'')}<span class="tier-badge tier-badge--${mTier.key}" style="cursor:pointer" onclick="showTierInfoPopup('${safeName}',${mPts},this)">${mTier.emoji} ${mTier.label}</span></div>` : ''}
           <div class="chat-msg-bubble">${_escapeHtml(m.content)}</div>
           <div class="chat-msg-time">${time}</div>
         </div>
