@@ -1825,6 +1825,26 @@ async function renderProfile() {
     nearbyBadge.textContent = ns.enabled ? t('profile.active') : t('profile.disabled');
     nearbyBadge.style.color = ns.enabled ? '#34d399' : 'rgba(255,255,255,0.35)';
   }
+
+  // Render logout + footer only inside profile
+  const footerSlot = document.getElementById('profile-footer-slot');
+  if (footerSlot && !footerSlot.hasChildNodes()) {
+    footerSlot.innerHTML = `
+      <div style="padding:16px 16px 8px">
+        <button class="btn btn-ghost btn-full" onclick="handleLogout()">
+          🚪 Abmelden
+        </button>
+      </div>
+      <div style="padding:8px 20px 24px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center">
+        <a href="legal.html#impressum" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Impressum</a>
+        <a href="legal.html#datenschutz" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Datenschutz</a>
+        <a href="legal.html#nutzung" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Nutzungsbedingungen</a>
+        <a href="legal.html#community" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Community-Richtlinien</a>
+      </div>
+      <div style="padding:0 20px 24px;text-align:center;font-size:0.67rem;color:rgba(255,255,255,0.2)">
+        App by <a href="https://lamoragency.de" target="_blank" rel="noopener" style="color:rgba(250,70,21,0.55);text-decoration:none;font-weight:600">LAMOR AGENCY</a>
+      </div>`;
+  }
 }
 
 async function renderSavedSummary() {
@@ -2359,6 +2379,11 @@ function initAuth() {
       showAuthShell('login');
     });
   });
+}
+
+async function handleLogout() {
+  await ZAMApi.auth.signOut();
+  showAuthShell('login');
 }
 
 function showAuthShell(page = 'login') {

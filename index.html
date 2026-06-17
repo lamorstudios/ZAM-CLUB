@@ -568,22 +568,8 @@
 
     </div>
 
-    <div style="padding: 0 16px 8px">
-      <button class="btn btn-ghost btn-full" data-logout>
-        🚪 <span data-i18n="profile.logout">Abmelden</span>
-      </button>
-    </div>
-
-    <!-- Legal Links -->
-    <div style="padding:8px 20px 24px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center">
-      <a href="legal.html#impressum" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Impressum</a>
-      <a href="legal.html#datenschutz" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Datenschutz</a>
-      <a href="legal.html#nutzung" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Nutzungsbedingungen</a>
-      <a href="legal.html#community" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Community-Richtlinien</a>
-    </div>
-    <div style="padding:0 20px 20px;text-align:center;font-size:0.67rem;color:rgba(255,255,255,0.2)">
-      Powered by <a href="https://lamoragency.de" target="_blank" rel="noopener" style="color:rgba(250,70,21,0.55);text-decoration:none;font-weight:600">LAMOR AGENCY</a>
-    </div>
+    <!-- Logout + Footer: dynamisch via JS gerendert, nur im Profil sichtbar -->
+    <div id="profile-footer-slot"></div>
 
   </section>
 
