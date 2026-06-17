@@ -103,25 +103,6 @@ body.subpage-active #app-shell {
   }
 }
 
-/* ── Profile footer: nur im aktiven Profil-Tab sichtbar ── */
-#profile-footer-slot { display: none !important; }
-#page-profile.active #profile-footer-slot { display: block !important; }
-
-/* ── Globale Absicherung: Footer/Logout nur wenn body.profile-active ── */
-body:not(.profile-active) footer,
-body:not(.profile-active) .footer,
-body:not(.profile-active) .legal-footer,
-body:not(.profile-active) .profile-footer,
-body:not(.profile-active) .logout-button,
-body:not(.profile-active) .logout-section,
-body:not(.profile-active) #profile-footer-slot {
-  display: none !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-}
-
 /* ── Page transitions ── */
 .page {
   display: none;
@@ -2657,53 +2638,4 @@ body.perf-mode .merchant-quick-btn {
 body.perf-mode .countdown-badge {
   transition: none !important;
   animation: none !important;
-}
-
-/* Language option buttons */
-.lang-opt-btn {
-  width: 100%;
-  padding: 13px 16px;
-  background: rgba(255,255,255,0.06);
-  border: 1.5px solid rgba(255,255,255,0.1);
-  border-radius: 12px;
-  color: #fff;
-  font-size: 0.88rem;
-  font-weight: 700;
-  font-family: var(--font);
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s, border-color 0.15s;
-}
-.lang-opt-btn:active {
-  background: rgba(250,70,21,0.18);
-  border-color: rgba(250,70,21,0.5);
-}
-
-/* Language Picker Modal */
-.lang-picker-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 9999;
-}
-.lang-picker-box {
-  background: #1a1a1a; border-radius: 16px; padding: 32px 24px;
-  max-width: 320px; width: 90%; text-align: center;
-  border: 1px solid #333;
-}
-.lang-picker-title {
-  font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 8px;
-}
-.lang-picker-subtitle {
-  font-size: 14px; color: #aaa; margin-bottom: 24px;
-}
-.lang-picker-options {
-  display: flex; flex-direction: column; gap: 10px;
-}
-.lang-opt {
-  background: #2a2a2a; border: 1px solid #444; border-radius: 10px;
-  color: #fff; font-size: 16px; padding: 12px;
-  cursor: pointer; transition: background 0.2s, border-color 0.2s;
-}
-.lang-opt:hover, .lang-opt:active {
-  background: #FA4615; border-color: #FA4615;
 }

@@ -7,74 +7,6 @@
 'use strict';
 
 // =============================================
-// i18n — Translations
-// =============================================
-// =============================================
-// Texte (Deutsch)
-// =============================================
-const _STR = {
-    nav:{ home:'Home', deals:'Deals', events:'Events', community:'Community', map:'Map', challenges:'Challenges', alerts:'Alerts', profile:'Profil' },
-    login:{ title:'Willkommen zurück', email:'E-Mail', password:'Passwort', btn:'Anmelden', or:'oder', google:'Mit Google anmelden', demo:'🎯 Demo einloggen', no_account:'Noch kein Konto?', register:'Registrieren', forgot:'Passwort vergessen?' },
-    register:{ title:'Konto erstellen', name:'Dein Name', username:'Benutzername', email:'E-Mail', password:'Passwort', password2:'Passwort wiederholen', btn:'Konto erstellen', google:'Mit Google registrieren', has_account:'Bereits Mitglied?', login:'Anmelden' },
-    forgot:{ title:'Passwort zurücksetzen', btn:'Link senden', hint:'Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link zum Zurücksetzen.' },
-    home:{ points:'Deine Punkte', spin:'Täglich drehen', deals:'Top Deals', events:'Kommende Events', view_all:'Alle →', monthly_rank:'Monatsrang', today:'Heute', to_platin:'bis Platin', monthly_champs:'🏆 Monats-Champions', top3_win:'Top 3 gewinnen geheime Preise!', view:'Ansehen →', your_rank:'Dein Rang:', improve:'Verbessern →', days_left_month:'Noch {n} Tage bis Monatsende', days_left_quarter:'Noch {n} Tage bis Quartalsende', top3_prizes:'Die Top 3 gewinnen exklusive ZAM-Preise.', quarter_prizes:'Die Top 3 des Quartals gewinnen exklusive Hauptpreise.', quarterly_stand:'Dein Quartals-Stand', secret_prize:'Geheimer Hauptgewinn 🎁', secret_premium:'Geheimer Premiumgewinn 🎁', secret_bonus:'Geheimer Bonusgewinn 🎁', secret_win:'Geheimer Gewinn 🎁', rank_month:'🗓️ Monat', rank_quarter:'👑 Quartal', pts:'Pkt.', you:'(Du)', today_spin:'🎰 Jetzt drehen!', already_spun:'✓ Heute bereits gedreht', greeting:'Hallo', greetingMorning:'Guten Morgen', greetingEvening:'Guten Abend' },
-    deals:{ title:'Deals 🏷️', all:'Alle', regular:'Deals', partner:'🤝 Partner', voucher:'Gutschein sichern', claimed:'✓ Eingelöst', loading:'Lädt…', no_deals:'Keine Deals verfügbar', no_partner:'Noch keine Partner-Deals aktiv', redeem:'🎟 Einlösen', too_few:'Zu wenig', today_spin:'🎰 Heute im Spin', today_prize:'🎁 Heute auch zu gewinnen', together:'👥 Gemeinsam', interested:'⭐ Interessiert', interested_q:'⭐ Interessiert?', partner_tag:'🤝 Partner Deal', valid_until:'Bis {date} · {n} Teilnehmer', checkin_points:'📍 {name} Check-in! +25 Punkte' },
-    events:{ title:'Events 📅', join:'Teilnehmen', joined:'✓ Angemeldet', loading:'Lädt…', spots_free:'Plätze frei', spots_low:'Nur noch {n} Plätze!', attendees:'{n} Teilnehmer', all:'Alle', week:'Diese Woche', month:'Diesen Monat', join_success:'🎉 Angemeldet! Checke vor Ort ein um Punkte zu erhalten.' },
-    community:{ title:'Community 👥', nudge:'Anstupsen', chat:'Chat öffnen', online:'online', add_friend:'➕ Freund', req_sent:'Anfrage gesendet', accept:'✅ Annehmen', contacts:'Kontakte', friends:'👫 Meine Freunde', open_requests:'📩 Offene Anfragen', sent_requests:'📤 Gesendete Anfragen', my_contacts:'🤝 Meine Kontakte', wall:'Pinnwand', chat_tab:'Chat', contacts_tab:'Kontakte', write_post:'Beitrag schreiben…', no_posts:'Noch keine Beiträge.', together:'Gemeinsam', interested:'Interessiert', loading:'Lädt…', delete:'Löschen', delete_confirm:'Beitrag löschen?', pending:'⏳ ausstehend' },
-    challenges:{ title:'Challenges 📸', join:'Mitmachen', progress:'Fortschritt', completed:'Abgeschlossen', points:'Punkte', reward:'Belohnung', claim:'Abholen 🎁', done:'Erhalten', today_submit:'📸 Heute Foto aufnehmen', today_submitted:'⏳ Heute bereits eingereicht – morgen wieder', already_submitted:'Heute bereits ein Foto eingereicht!', reward_pts:'+{n} Pkt.', take_photo:'📸 Foto aufnehmen', tomorrow_available:'Morgen wieder verfügbar', no_photo_yet:'Bitte zuerst ein Foto aufnehmen', not_in_zone:'❌ Nicht im ZAM-Bereich. Bitte näher kommen.' },
-    alerts:{ title:'Benachrichtigungen', all:'Alle', messages:'💬 Nachrichten', nudges:'👋 Anstupsien', events:'🎉 Events', deals:'🏷️ Deals', community:'👥 Community', empty:'Keine Benachrichtigungen', in_category:' in dieser Kategorie', friend_request:'➕ Freundschaftsanfrage', wants_friend:' möchte dich als Freund hinzufügen.', deal_asks:' fragt an', request_declined:'Anfrage abgelehnt', chat_open:'💬 Chat öffnen', accept:'✅ Annehmen', decline:'❌ Ablehnen', someone:'Jemand' },
-    profile:{ title:'Profil', edit_short:'Profil bearbeiten', points_history_short:'Punkte-Historie', vouchers:'Meine Gutscheine', my_events:'Meine Events', nearby:'Nearby Alerts', invite:'Freunde einladen', logout:'Abmelden', disabled:'Deaktiviert', active:'✅ Aktiv', invite_bonus:'+100 Punkte', points_label:'Gesammelte Punkte', visits:'Besuche', events_stat:'Events', deals_stat:'Deals', saved_items:'Gemerkte Inhalte', badges:'Meine Abzeichen', challenges_title:'🎯 Monatliche Challenges', my_rewards:'Meine Belohnungen', badge_unlocked:'Abzeichen freigeschaltet! 🎉', nothing_saved:'Noch nichts gemerkt.', events_saved:'🔖 {n} Event{s} gemerkt', deals_saved:'🏷️ {n} Deal{s} gemerkt', saved_deals_link:'Gespeicherte Deals →' },
-    qr:{ checkin_btn_do:'✅ Bei {label} einchecken (+25 Pkt.)', checkin_btn_done:'✓ Heute bei {label} eingecheckt', next_checkin:'⏰ Nächster Check-in morgen möglich', show_code:'📍 Zeige diesen Code bei {label}', valid:'✅ Gültig — beim Händler vorzeigen', checkin_success:'✅ Check-in erfolgreich! +{n} Punkte für {name}' },
-    countdown:{ expired:'⌛ Abgelaufen', today:'⏳ Läuft heute ab', days:'⏳ Noch {n} Tage', time:'⏳ Noch {t}' },
-    toast:{ voucher_saved:'Gutschein gespeichert! 🎟', friend_sent:'Freundschaftsanfrage gesendet! 👋', event_joined:'Du nimmst teil! 🎉', nudge_sent:'👋 {name} wurde angestupst!', nudge_fail:'Anfrage bereits gesendet', already_connected:'Anfrage bereits gesendet oder bereits verbunden.', challenge_done:'🎉 +{n} Punkte! Challenge abgeschlossen!', view:'Ansehen', saved:'🔖 Deal gespeichert! +5 Punkte', event_removed:'Event entfernt', deal_removed:'Deal entfernt', copy:'Text kopiert! 📋', friend_accepted:'✅ {name} ist jetzt dein Freund!', friend_rejected:'Anfrage abgelehnt', deal_request_sent:'✅ Anfrage an {name} gesendet!', deal_accepted:'✅ Angenommen! Chat geöffnet.', deal_rejected:'Anfrage abgelehnt.', spin_next:'⏰ Nächste Drehung ab Mitternacht', partner_voucher:'🎟 Gutschein gesichert! +10 Punkte', voucher_redeemed:'✓ Gutschein eingelöst!', reward_unlocked:'🎁 {title} freigeschaltet!' },
-    buttons:{ save:'Speichern', cancel:'Abbrechen', close:'Schließen', back:'Zurück', confirm:'Bestätigen', share:'Teilen', loading:'Laden…' },
-    errors:{ generic:'Etwas ist schiefgelaufen.', network:'Netzwerkfehler. Bitte versuche es erneut.' },
-    success:{ voucher_saved:'Gutschein gespeichert! 🎟', friend_sent:'Freundschaftsanfrage gesendet! 👋', event_joined:'Du nimmst teil! 🎉' },
-    map:{ title:'ZAM Live Map', online:'online', users:'Nutzer aktiv', close:'Schließen' },
-    levels:{ bronze:'Bronze Member', silver:'Silber Member', gold:'Gold Member', platinum:'Platin Member', platinum_reached:'🎉 Platin erreicht!', progress:'{pts} / {max} Pkt. bis {next}', next_silver:'Silber', next_gold:'Gold', next_platinum:'Platin' },
-    photo:{ title:'📸 Foto-Challenges', how_it_works:'💡 So funktioniert\'s', step1_title:'Challenge auswählen', step1_desc:'Wähle eine aktive Händler-Challenge aus der Liste', step2_title:'Foto aufnehmen', step2_desc:'Mach ein Foto direkt in der App – kein Upload erlaubt', step3_title:'Standort bestätigen', step3_desc:'Die App prüft automatisch, dass du im ZAM bist', step4_title:'Fortschritt sammeln', step4_desc:'Jeden Tag ein Foto – bis das Ziel erreicht ist', step5_title:'Belohnung einlösen', step5_desc:'Scanne deinen QR-Code beim Händler für die Prämie', active_header:'🔥 Aktive Challenges ({n})', gallery_title:'🖼️ ZAM Community Galerie', gallery_sub:'Fotos aus bestätigten ZAM-Challenges', gallery_all:'Alle →', gallery_notice:'Alle öffentlichen Fotos werden vor Veröffentlichung automatisch geprüft und können vom Team abgelehnt werden.', stats_photos:'📸 Community Fotos', stats_redeemed:'🏆 Belohnungen eingelöst', stats_active:'🔥 Aktive Challenges', stats_rewards:'🎁 Verfügbare Prämien' },
-    referral:{ how_it_works:'So funktioniert\'s', step1_title:'Deinen Code teilen', step1_desc:'Sende deinen persönlichen Code an Freunde', step2_title:'Freund registriert sich', step2_desc:'Mit deinem Code im ZAM Club anmelden', step3_title:'Beide erhalten Punkte', step3_desc:'+100 Punkte für dich, +100 Punkte für den Freund', points_earned:'Punkte verdient', link_copied:'✓ Link kopiert!', share_msg:'Hey! Ich nutze die ZAM Club App und lade dich ein. Meld dich mit meinem Code {code} an und wir bekommen beide Punkte! 🎉' },
-    merchant:{ current_deals:'Aktuelle Aktionen' },
-    ai:{ default_msg:'Ich helfe gerne! Du kannst mich fragen:<br><br>• Was gibt es heute im ZAM?<br>• Aktuelle Angebote & Deals<br>• Wo kann ich essen?<br>• Meine persönlichen Empfehlungen<br><br>Was möchtest du wissen? 🤖' },
-};
-
-// Rückwärtskompatibilität für t()-Aufrufe
-function t(key) {
-  const parts = key.split('.');
-  let obj = _STR;
-  for (const p of parts) { if (obj == null) break; obj = obj[p]; }
-  return (obj != null && typeof obj !== 'object') ? obj : key;
-}
-
-// Lokalisierter Feldwert (nur Deutsch)
-function _l(obj, field) {
-  const val = obj?.[field];
-  if (val && typeof val === 'object') return val.de || '';
-  return val || '';
-}
-
-function applyLanguage() {
-  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
-  updateNavLabels();
-}
-
-function updateNavLabels() {
-  document.querySelectorAll('.nav-tab[data-page]').forEach(btn => {
-    const page = btn.dataset.page;
-    const labelSpans = btn.querySelectorAll('span');
-    // Last non-badge span is the text label (first is the icon)
-    const label = labelSpans[labelSpans.length - 1];
-    if (label && page && !label.classList.contains('nav-badge') && !label.classList.contains('nav-community-badge')) {
-      const keyMap = { 'photo-challenges': 'challenges', 'notifications': 'alerts' };
-      const key = keyMap[page] || page;
-      label.textContent = t('nav.' + key);
-    }
-  });
-}
-
-
-// =============================================
 // localStorage Abstraction (Supabase-ready)
 // =============================================
 const Storage = {
@@ -157,7 +89,7 @@ function _countdownBadge(expiryStr) {
   const msLeft = expDate - Date.now();
 
   if (msLeft <= 0) {
-    return `<span class="countdown-badge countdown-expired">${t('countdown.expired')}</span>`;
+    return `<span class="countdown-badge countdown-expired">⌛ Abgelaufen</span>`;
   }
   const hoursLeft = msLeft / 3600000;
   const daysLeft  = Math.ceil(msLeft / 86400000);
@@ -166,15 +98,15 @@ function _countdownBadge(expiryStr) {
     const h = String(Math.floor(hoursLeft)).padStart(2, '0');
     const m = String(Math.floor((msLeft % 3600000) / 60000)).padStart(2, '0');
     const s = String(Math.floor((msLeft % 60000) / 1000)).padStart(2, '0');
-    return `<span class="countdown-badge countdown-urgent" data-expiry="${expiryStr}">${t('countdown.time').replace('{t}',`${h}:${m}:${s}`)}</span>`;
+    return `<span class="countdown-badge countdown-urgent" data-expiry="${expiryStr}">⏳ Noch ${h}:${m}:${s}</span>`;
   }
   if (daysLeft === 1) {
-    return `<span class="countdown-badge countdown-urgent">${t('countdown.today')}</span>`;
+    return `<span class="countdown-badge countdown-urgent">⏳ Läuft heute ab</span>`;
   }
   if (daysLeft <= 5) {
-    return `<span class="countdown-badge countdown-soon">${t('countdown.days').replace('{n}',daysLeft)}</span>`;
+    return `<span class="countdown-badge countdown-soon">⏳ Noch ${daysLeft} Tage</span>`;
   }
-  return `<span class="countdown-badge countdown-active">${t('countdown.days').replace('{n}',daysLeft)}</span>`;
+  return `<span class="countdown-badge countdown-active">⏳ Noch ${daysLeft} Tage</span>`;
 }
 
 let _countdownInterval = null;
@@ -192,7 +124,7 @@ function _startCountdownTicker() {
       const expDate = expiryStr.includes('T') ? new Date(expiryStr) : new Date(expiryStr + 'T23:59:59');
       const msLeft  = expDate - Date.now();
       if (msLeft <= 0) {
-        badge.textContent  = t('countdown.expired');
+        badge.textContent  = '⌛ Abgelaufen';
         badge.className    = 'countdown-badge countdown-expired';
         badge.removeAttribute('data-expiry');
       } else if (msLeft < 86400000) {
@@ -200,10 +132,10 @@ function _startCountdownTicker() {
         const h = String(Math.floor(msLeft / 3600000)).padStart(2, '0');
         const m = String(Math.floor((msLeft % 3600000) / 60000)).padStart(2, '0');
         const s = String(Math.floor((msLeft % 60000) / 1000)).padStart(2, '0');
-        badge.textContent = t('countdown.time').replace('{t}',`${h}:${m}:${s}`);
+        badge.textContent = `⏳ Noch ${h}:${m}:${s}`;
       } else {
         const days = Math.floor(msLeft / 86400000);
-        badge.textContent = t('countdown.days').replace('{n}', days);
+        badge.textContent = `⏳ Noch ${days} Tag${days !== 1 ? 'e' : ''}`;
       }
     });
     _tickFast = hasSeconds;
@@ -270,9 +202,10 @@ function updatePointsDisplay(animate = false) {
   // Level
   const levelKey = pts >= 3000 ? 'platinum' : pts >= 1500 ? 'gold' : pts >= 500 ? 'silver' : 'bronze';
   const levelMap = { bronze: 'BRONZE', silver: 'SILBER', gold: 'GOLD', platinum: 'PLATIN' };
+  const levelDisplay = { bronze: 'Bronze Member', silver: 'Silber Member', gold: 'Gold Member', platinum: 'Platin Member' };
   if (levelBadge) levelBadge.textContent = levelMap[levelKey];
   const levelEl = $('.points-level');
-  if (levelEl) levelEl.innerHTML = `<span class="points-level-dot"></span>${t('levels.' + levelKey)}`;
+  if (levelEl) levelEl.innerHTML = `<span class="points-level-dot"></span>${levelDisplay[levelKey]}`;
 
   // Progress bar
   const thresholds = { bronze: [0, 500], silver: [500, 1500], gold: [1500, 3000], platinum: [3000, 3000] };
@@ -284,10 +217,10 @@ function updatePointsDisplay(animate = false) {
   }
   if (progressLabel) {
     if (levelKey === 'platinum') {
-      progressLabel.textContent = t('levels.platinum_reached');
+      progressLabel.textContent = '🎉 Platin erreicht!';
     } else {
-      const nextKey = { bronze: 'next_silver', silver: 'next_gold', gold: 'next_platinum' }[levelKey];
-      progressLabel.textContent = t('levels.progress').replace('{pts}',pts.toLocaleString('de-DE')).replace('{max}',max.toLocaleString('de-DE')).replace('{next}',t('levels.' + nextKey));
+      const nextLevelName = { bronze: 'Silber', silver: 'Gold', gold: 'Platin' }[levelKey];
+      progressLabel.textContent = `${pts.toLocaleString('de-DE')} / ${max.toLocaleString('de-DE')} Pkt. bis ${nextLevelName}`;
     }
   }
 }
@@ -318,7 +251,6 @@ function navigateTo(pageId) {
   // Collapse app-shell to height:0 when on a sub-page.
   const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings','merchant-preview','nearby-settings','my-events','my-vouchers']);
   document.body.classList.toggle('subpage-active', !MAIN_PAGES.has(pageId));
-  document.body.classList.toggle('profile-active', pageId === 'profile');
 
   // Triple scroll reset — ensure top of page on all mobile browsers
   window.scrollTo(0, 0);
@@ -391,14 +323,6 @@ function navigateTo(pageId) {
     window.scrollTo(0, 0);
     renderMyEvents();
   }
-
-  // Footer + Logout: NUR auf Profilseite sichtbar — auf allen anderen Seiten sofort leeren
-  const footerSlot = document.getElementById('profile-footer-slot');
-  if (footerSlot) {
-    if (pageId !== 'profile') {
-      footerSlot.innerHTML = '';
-    }
-  }
 }
 
 function initNavigation() {
@@ -414,9 +338,9 @@ function renderHome() {
   const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
   document.body.classList.toggle('perf-mode', user.role === 'merchant' || user.role === 'admin');
   const hour = new Date().getHours();
-  let greeting = t('home.greeting');
-  if (hour < 12) greeting = t('home.greetingMorning');
-  else if (hour >= 18) greeting = t('home.greetingEvening');
+  let greeting = 'Guten Tag';
+  if (hour < 12) greeting = 'Guten Morgen';
+  else if (hour >= 18) greeting = 'Guten Abend';
 
   const greetingEl = $('#home-greeting');
   if (greetingEl) greetingEl.textContent = greeting + ',';
@@ -553,14 +477,14 @@ async function renderHomeEvents() {
           ${saved ? '🔖' : '🏷️'}
         </button>
       </div>
-      <h3>${_l(evt, 'title')}</h3>
+      <h3>${evt.title}</h3>
       <div class="event-meta">
         <span>📅 ${evt.date_formatted}</span>
         <span>⏰ ${evt.time}</span>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
-        <div class="event-points-badge">+${evt.points_reward} ${t('home.pts')}</div>
-        <span style="font-size:0.62rem;color:rgba(255,255,255,0.4)">${t('events.attendees').replace('{n}', (evt.spots_total||500)-(evt.spots_left||0))}</span>
+        <div class="event-points-badge">+${evt.points_reward} Punkte</div>
+        <span style="font-size:0.62rem;color:rgba(255,255,255,0.4)">👥 ${(evt.spots_total||500)-(evt.spots_left||0)} dabei</span>
       </div>
     `;
     card.querySelector('.bookmark-btn').addEventListener('click', (e) => {
@@ -591,9 +515,9 @@ async function renderHomeDeals() {
         </div>
         ${deal.is_hot ? '<div class="hot-badge" style="position:absolute;top:6px;right:6px;font-size:0.55rem">🔥 Hot</div>' : ''}
       </div>
-      <div class="deal-title">${_l(deal, 'title')}</div>
+      <div class="deal-title">${deal.title}</div>
       <div style="margin-top:6px">${_countdownBadge(deal.expiry_date)}</div>
-      <button class="btn btn-primary" style="margin-top:10px;padding:6px 12px;font-size:0.72rem;width:100%" onclick="openVoucherQR('${deal.id}','${esc(deal.title)}','${deal.merchant_id||''}');event.stopPropagation()">${t('deals.redeem')}</button>
+      <button class="btn btn-primary" style="margin-top:10px;padding:6px 12px;font-size:0.72rem;width:100%" onclick="openVoucherQR('${deal.id}','${esc(deal.title)}','${deal.merchant_id||''}');event.stopPropagation()">🎟 Einlösen</button>
     `;
     card.addEventListener('click', () => navigateTo('deals'));
     container.appendChild(card);
@@ -625,15 +549,15 @@ function _renderHomeRankStats(user) {
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)">
       <div style="text-align:center">
         <div style="font-size:1.1rem;font-weight:900;color:#F7AB00">🏆 #${rank}</div>
-        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">${t('home.monthly_rank')}</div>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">Monatsrang</div>
       </div>
       <div style="text-align:center;border-left:1px solid rgba(255,255,255,0.06);border-right:1px solid rgba(255,255,255,0.06)">
         <div style="font-size:1.1rem;font-weight:900;color:#34d399">+${todayPts}</div>
-        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">${t('home.today')}</div>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">Heute</div>
       </div>
       <div style="text-align:center">
         <div style="font-size:1.1rem;font-weight:900;color:#ffb399">${ptsToPlatin}</div>
-        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">${t('home.to_platin')}</div>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">bis Platin</div>
       </div>
     </div>`;
 }
@@ -654,11 +578,11 @@ function _renderHomeRankingCard() {
       <div style="position:absolute;top:-18px;right:-18px;font-size:5rem;opacity:0.06;pointer-events:none">🏆</div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
         <div>
-          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:900;color:#F7AB00">${t('home.monthly_champs')}</div>
-          <div style="font-size:0.78rem;font-weight:700;color:#fff;margin-top:3px">${t('home.top3_win')}</div>
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:900;color:#F7AB00">🏆 Monats-Champions</div>
+          <div style="font-size:0.78rem;font-weight:700;color:#fff;margin-top:3px">Top 3 gewinnen geheime Preise!</div>
           <div style="font-size:0.68rem;color:rgba(255,255,255,0.45);margin-top:2px">⏳ Noch <strong style="color:#F7AB00">${daysLeft} Tage</strong> bis Monatsende</div>
         </div>
-        <span style="font-size:0.68rem;color:rgba(247,171,0,0.7);font-weight:700;white-space:nowrap;padding-top:2px">${t('home.view')}</span>
+        <span style="font-size:0.68rem;color:rgba(247,171,0,0.7);font-weight:700;white-space:nowrap;padding-top:2px">Ansehen →</span>
       </div>
       ${top3.map((u, i) => `
       <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,0.04);${i < 2 ? 'margin-bottom:6px' : ''}">
@@ -671,8 +595,8 @@ function _renderHomeRankingCard() {
         <div style="font-size:0.8rem;font-weight:900;color:#F7AB00">${u.pts.toLocaleString('de-DE')}</div>
       </div>`).join('')}
       <div style="margin-top:10px;padding:9px 10px;border-radius:10px;background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.15);display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:0.72rem;color:rgba(255,255,255,0.6)">${t('home.your_rank')} <strong style="color:#F7AB00">#${me?.rank || 17}</strong> · ${(me?.pts || 2460).toLocaleString('de-DE')} ${t('home.pts')}</div>
-        <button onclick="event.stopPropagation();openRankingModal()" style="font-size:0.7rem;font-weight:800;color:#F7AB00;background:none;border:none;cursor:pointer;font-family:var(--font)">${t('home.improve')}</button>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.6)">Dein Rang: <strong style="color:#F7AB00">#${me?.rank || 17}</strong> · ${(me?.pts || 2460).toLocaleString('de-DE')} Pkt.</div>
+        <button onclick="event.stopPropagation();openRankingModal()" style="font-size:0.7rem;font-weight:800;color:#F7AB00;background:none;border:none;cursor:pointer;font-family:var(--font)">Verbessern →</button>
       </div>
     </div>`;
 }
@@ -684,48 +608,49 @@ function openRankingModal() {
   const daysMonth = Math.ceil((endOfMonth - now) / 86400000);
   const daysQ = Math.ceil((endOfQ - now) / 86400000);
   const medals = ['🥇','🥈','🥉'];
-  const prizes = [t('home.secret_prize'),t('home.secret_premium'),t('home.secret_bonus')];
+  const prizes = ['Geheimer Hauptgewinn 🎁','Geheimer Premiumgewinn 🎁','Geheimer Bonusgewinn 🎁'];
   const me = _RANKING_DEMO.find(r => r.isMe);
   const modal = _buildMerchantModal('ranking-modal','🏆 Rankings', `
     <!-- Month tab -->
     <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border-radius:12px;padding:3px;margin-bottom:18px">
-      <button id="rank-tab-month" onclick="rankTab('month')" style="flex:1;border:none;border-radius:10px;padding:8px 4px;font-size:0.75rem;font-weight:800;font-family:var(--font);background:rgba(247,171,0,0.25);color:#F7AB00;cursor:pointer">${t('home.rank_month')}</button>
-      <button id="rank-tab-quarter" onclick="rankTab('quarter')" style="flex:1;border:none;border-radius:10px;padding:8px 4px;font-size:0.75rem;font-weight:800;font-family:var(--font);background:none;color:rgba(255,255,255,0.4);cursor:pointer">${t('home.rank_quarter')}</button>
+      <button id="rank-tab-month" onclick="rankTab('month')" style="flex:1;border:none;border-radius:10px;padding:8px 4px;font-size:0.75rem;font-weight:800;font-family:var(--font);background:rgba(247,171,0,0.25);color:#F7AB00;cursor:pointer">🗓️ Monat</button>
+      <button id="rank-tab-quarter" onclick="rankTab('quarter')" style="flex:1;border:none;border-radius:10px;padding:8px 4px;font-size:0.75rem;font-weight:800;font-family:var(--font);background:none;color:rgba(255,255,255,0.4);cursor:pointer">👑 Quartal</button>
     </div>
     <div id="rank-content-month">
       <div style="text-align:center;margin-bottom:16px">
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-bottom:4px">⏳ ${t('home.days_left_month').replace('{n}',daysMonth)}</div>
-        <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">${t('home.top3_prizes')}</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-bottom:4px">⏳ Noch ${daysMonth} Tage bis Monatsende</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">Die Top 3 gewinnen exklusive ZAM-Preise.</div>
       </div>
       ${_RANKING_DEMO.map((u, i) => `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${u.isMe ? 'rgba(247,171,0,0.08)' : 'rgba(255,255,255,0.03)'};border:1px solid ${u.isMe ? 'rgba(247,171,0,0.25)' : 'rgba(255,255,255,0.06)'};border-radius:12px;margin-bottom:7px">
         <div style="width:28px;text-align:center;font-size:${i < 3 ? '1.1rem' : '0.8rem'};font-weight:800;color:${i===0?'#d97706':i===1?'#9ca3af':i===2?'#b45309':'rgba(255,255,255,0.3)'}">${i < 3 ? medals[i] : '#'+u.rank}</div>
         <div style="width:36px;height:36px;border-radius:50%;background:${u.bg};border:2px solid ${u.color};display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.82rem;font-weight:${u.isMe?'900':'700'};color:${u.isMe?'#F7AB00':'#e2e8f0'}">${u.name}${u.isMe?' '+t('home.you'):''}</div>
+          <div style="font-size:0.82rem;font-weight:${u.isMe?'900':'700'};color:${u.isMe?'#F7AB00':'#e2e8f0'}">${u.name}${u.isMe?' (Du)':''}</div>
           ${i < 3 ? `<div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-top:1px">${prizes[i]}</div>` : ''}
         </div>
-        <div style="font-size:0.8rem;font-weight:800;color:${u.isMe?'#F7AB00':'rgba(255,255,255,0.6)'}">${u.pts.toLocaleString('de-DE')} ${t('home.pts')}</div>
+        <div style="font-size:0.8rem;font-weight:800;color:${u.isMe?'#F7AB00':'rgba(255,255,255,0.6)'}">${u.pts.toLocaleString('de-DE')} Pkt.</div>
       </div>`).join('')}
     </div>
     <div id="rank-content-quarter" style="display:none">
       <div style="text-align:center;margin-bottom:16px">
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-bottom:4px">⏳ ${t('home.days_left_quarter').replace('{n}',daysQ)}</div>
-        <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">${t('home.quarter_prizes')}</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-bottom:4px">⏳ Noch ${daysQ} Tage bis Quartalsende</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">Die Top 3 des Quartals gewinnen exklusive Hauptpreise.</div>
       </div>
-      ${[['🥇',t('home.secret_prize')],['🥈',t('home.secret_premium')],['🥉',t('home.secret_bonus')]].map(([medal,label]) => `
+      ${['🥇 Hauptgewinn','🥈 Premiumgewinn','🥉 Spezialgewinn'].map(p => `
       <div style="display:flex;align-items:center;gap:12px;padding:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;margin-bottom:8px">
-        <div style="font-size:1.5rem">${medal}</div>
+        <div style="font-size:1.5rem">${p.split(' ')[0]}</div>
         <div>
-          <div style="font-size:0.84rem;font-weight:800;color:#e2e8f0">${label}</div>
+          <div style="font-size:0.84rem;font-weight:800;color:#e2e8f0">Geheimer Gewinn 🎁</div>
+          <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px">${p.slice(3)}</div>
         </div>
       </div>`).join('')}
       <div style="margin-top:16px;padding:14px;background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.2);border-radius:14px">
-        <div style="font-size:0.72rem;font-weight:700;color:#F7AB00;margin-bottom:4px">${t('home.quarterly_stand')}</div>
-        <div style="font-size:0.78rem;color:rgba(255,255,255,0.6)">#${me?.rank||17} · ${(me?.pts||2460).toLocaleString('de-DE')} ${t('home.pts')}</div>
+        <div style="font-size:0.72rem;font-weight:700;color:#F7AB00;margin-bottom:4px">Dein Quartals-Stand</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.6)">Rang <strong style="color:#F7AB00">#${me?.rank||17}</strong> · ${(me?.pts||2460).toLocaleString('de-DE')} Punkte</div>
       </div>
     </div>
-    <button onclick="_merchantModalClose('ranking-modal')" style="width:100%;margin-top:16px;padding:12px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:0.84rem;font-weight:600;font-family:var(--font);cursor:pointer">${t('buttons.close')}</button>
+    <button onclick="_merchantModalClose('ranking-modal')" style="width:100%;margin-top:16px;padding:12px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);font-size:0.84rem;font-weight:600;font-family:var(--font);cursor:pointer">Schließen</button>
   `);
   document.body.appendChild(modal);
   modal.style.display = 'flex';
@@ -759,7 +684,7 @@ async function toggleSave(type, id, btnEl) {
       btnEl.textContent = type === 'deal' ? '🏷️ Merken' : '🏷️';
       btnEl.classList.remove('saved');
     }
-    showToast(type === 'event' ? t('toast.event_removed') : t('toast.deal_removed'));
+    showToast(type === 'event' ? 'Event entfernt' : 'Deal entfernt');
   } else {
     if (type === 'event') await ZAMApi.events.save(id);
     else await ZAMApi.deals.save(id);
@@ -769,7 +694,7 @@ async function toggleSave(type, id, btnEl) {
       btnEl.style.transform = 'scale(1.3)';
       setTimeout(() => { btnEl.style.transform = ''; }, 250);
     }
-    showToast(t('toast.saved'), 'success');
+    showToast(type === 'event' ? '🔖 Event gespeichert!' : '🔖 Deal gespeichert! +5 Punkte', 'success');
     if (type === 'deal') {
       // Award points silently (toast already shown above)
       await ZAMApi.points.add(5, 'deal_saved', 'Deal gespeichert');
@@ -794,7 +719,7 @@ function showBadgeUnlockToast(badge) {
     toast = document.createElement('div');
     toast.id = 'badge-unlock-toast';
     toast.className = 'badge-unlock-toast';
-    toast.innerHTML = `<div class="badge-toast-icon"></div><div class="badge-toast-text"><strong></strong><span>${t('profile.badge_unlocked')}</span></div>`;
+    toast.innerHTML = `<div class="badge-toast-icon"></div><div class="badge-toast-text"><strong></strong><span>Abzeichen freigeschaltet! 🎉</span></div>`;
     document.body.appendChild(toast);
   }
   toast.querySelector('.badge-toast-icon').textContent = badge.icon;
@@ -828,10 +753,10 @@ async function renderChallenges() {
       <div class="challenge-header">
         <div class="challenge-icon">${c.icon}</div>
         <div class="challenge-info">
-          <div class="challenge-title">${_l(c, 'title')}</div>
-          <div class="challenge-desc">${_l(c, 'description')}</div>
+          <div class="challenge-title">${c.title}</div>
+          <div class="challenge-desc">${c.description}</div>
         </div>
-        <div class="challenge-reward">${t('challenges.reward_pts').replace('{n}',c.reward_pts)}</div>
+        <div class="challenge-reward">+${c.reward_pts} Pkt.</div>
       </div>
       <div class="challenge-progress-track">
         <div class="challenge-progress-fill" style="width:${c.pct}%"></div>
@@ -839,10 +764,10 @@ async function renderChallenges() {
       <div class="challenge-footer">
         <span>${c.progress} / ${c.target}</span>
         ${c.is_claimed
-          ? `<span class="challenge-done-label">✅ ${t('challenges.done')}</span>`
+          ? `<span class="challenge-done-label">✅ Belohnung erhalten</span>`
           : c.is_complete
-            ? `<button class="challenge-claim-btn" onclick="claimChallenge('${c.id}')">${t('challenges.claim')}</button>`
-            : `<span>${c.pct}% ${t('challenges.progress')}</span>`}
+            ? `<button class="challenge-claim-btn" onclick="claimChallenge('${c.id}')">Belohnung abholen 🎁</button>`
+            : `<span>${c.pct}% geschafft</span>`}
       </div>
     </div>
   `).join('');
@@ -851,7 +776,7 @@ async function renderChallenges() {
 async function claimChallenge(challengeId) {
   const result = await ZAMApi.challenges.claim(challengeId);
   if (!result) return;
-  showToast(t('toast.challenge_done').replace('{n}', result.points), 'success');
+  showToast(`🎉 +${result.points} Punkte! Challenge abgeschlossen!`, 'success');
   updatePointsDisplay(true);
   renderChallenges();
   await checkBadgesAfterAction();
@@ -903,11 +828,11 @@ function openSpinModal() {
   _renderSpinMerchantPreview();
   if (spinBtn) {
     spinBtn.disabled = alreadySpun;
-    spinBtn.textContent = alreadySpun ? t('home.already_spun') : t('home.today_spin');
+    spinBtn.textContent = alreadySpun ? '✓ Heute bereits gedreht' : '🎰 Jetzt drehen!';
     spinBtn.className = alreadySpun ? 'btn btn-full claimed' : 'btn btn-primary btn-full';
   }
   const nextSpin = $('#spin-next-info');
-  if (nextSpin) nextSpin.textContent = alreadySpun ? t('toast.spin_next') : '';
+  if (nextSpin) nextSpin.textContent = alreadySpun ? '⏰ Nächste Drehung ab Mitternacht' : '';
   overlay.classList.add('open');
 }
 
@@ -1173,10 +1098,10 @@ function _updateQRDisplay() {
   generateQRGrid();
   if (checkinBtn) {
     checkinBtn.disabled  = done;
-    checkinBtn.textContent = done ? t('qr.checkin_btn_done').replace('{label}',label) : t('qr.checkin_btn_do').replace('{label}',label);
+    checkinBtn.textContent = done ? `✓ Heute bei ${label} eingecheckt` : `✅ Bei ${label} einchecken (+25 Pkt.)`;
     checkinBtn.className   = done ? 'btn btn-full claimed' : 'btn btn-primary btn-full btn-pulse';
   }
-  if (checkinStatus) checkinStatus.textContent = done ? t('qr.next_checkin') : t('qr.show_code').replace('{label}',label);
+  if (checkinStatus) checkinStatus.textContent = done ? '⏰ Nächster Check-in morgen möglich' : `📍 Zeige diesen Code bei ${label}`;
 }
 
 function openQRModal() {
@@ -1243,14 +1168,14 @@ function generateQRGrid() {
 async function renderCommunity() {
   const container = $('#community-feed');
   if (!container) return;
-  container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--color-text-muted)">${t('community.loading')}</div>`;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-muted)">Lädt…</div>';
 
   const posts = await ZAMApi.posts.list();
   state.posts = posts;
   container.innerHTML = '';
 
   if (posts.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--color-text-muted)">${t('community.no_posts')}</div>`;
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-muted)">Noch keine Beiträge.</div>';
     return;
   }
   posts.forEach((post, idx) => container.appendChild(renderPostCard(post, idx)));
@@ -1263,8 +1188,8 @@ function renderPostCard(post, idx) {
   const isOwn = currentUser && post.user_id === currentUser.id;
 
   const tagsHtml = (post.tags || []).map(t => `<span class="post-tag">${t}</span>`).join('');
-  const deleteBtn = isOwn ? `<button class="post-delete-btn" title="${t('community.delete')}" aria-label="${t('community.delete')}">🗑</button>` : '';
-  const statusBadge = post.status === 'pending' ? `<span style="font-size:0.68rem;color:#F7AB00;margin-left:6px">${t('community.pending')}</span>` : '';
+  const deleteBtn = isOwn ? `<button class="post-delete-btn" title="Löschen" aria-label="Beitrag löschen">🗑</button>` : '';
+  const statusBadge = post.status === 'pending' ? `<span style="font-size:0.68rem;color:#F7AB00;margin-left:6px">⏳ ausstehend</span>` : '';
 
   div.innerHTML = `
     <div class="post-header">
@@ -1305,7 +1230,7 @@ function renderPostCard(post, idx) {
 }
 
 async function deletePost(postId, cardEl) {
-  if (!confirm(t('community.delete_confirm'))) return;
+  if (!confirm('Beitrag löschen?')) return;
   try {
     await ZAMApi.posts.delete(postId);
     cardEl.style.opacity = '0';
@@ -1344,7 +1269,7 @@ async function renderEvents(filter = 'all') {
   state.eventFilter = filter;
   const container = $('#events-list');
   if (!container) return;
-  container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--color-text-muted)">${t('events.loading')}</div>`;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-muted)">Lädt…</div>';
 
   $$('.filter-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.filter === filter));
 
@@ -1378,24 +1303,24 @@ function renderEventCard(evt, idx) {
     <div class="event-card-top" style="margin-bottom:8px">
       <div class="category-tag tag" style="background:${evt.category_color}22;color:${evt.category_color}">${evt.category}</div>
       <div style="display:flex;align-items:center;gap:5px;font-size:0.65rem;color:rgba(255,255,255,0.45)">
-        <span>👥</span><span>${t('events.attendees').replace('{n}', attendees.toLocaleString('de-DE'))}</span>
+        <span>👥</span><span>${attendees.toLocaleString('de-DE')} Teilnehmer</span>
       </div>
     </div>
-    <h3>${_l(evt, 'title')}</h3>
+    <h3>${evt.title}</h3>
     <div class="event-details">
       <div class="event-detail-row"><span>📅</span><span>${evt.date_formatted}</span></div>
       <div class="event-detail-row"><span>⏰</span><span>${evt.time}</span></div>
       <div class="event-detail-row"><span>📍</span><span>${evt.location}</span></div>
     </div>
-    <p class="event-description">${_l(evt, 'description')}</p>
+    <p class="event-description">${evt.description}</p>
     <div class="event-card-footer">
       <div class="spots-info">
         ${spotsLow
-          ? `<strong>${t('events.spots_low').replace('{n}', evt.spots_left)}</strong>`
-          : `${evt.spots_left} ${t('events.spots_free')}`}
+          ? `<strong>Nur noch ${evt.spots_left} Plätze!</strong>`
+          : `${evt.spots_left} Plätze frei`}
       </div>
       <button class="${evt.is_joined ? 'btn btn-sm joined' : 'btn btn-primary btn-sm'}" data-idx="${idx}">
-        ${evt.is_joined ? '✓ ' + t('events.joined') : t('events.join')}
+        ${evt.is_joined ? '✓ Angemeldet' : 'Teilnehmen'}
       </button>
     </div>
     ${evt.is_joined ? _eventCheckinBtn(evt) : ''}
@@ -1433,11 +1358,11 @@ async function joinEvent(idx, cardEl) {
   }
 
   const btn = cardEl.querySelector('.btn');
-  if (btn) { btn.className = 'btn btn-sm joined'; btn.textContent = '✓ ' + t('events.joined'); }
+  if (btn) { btn.className = 'btn btn-sm joined'; btn.textContent = '✓ Angemeldet'; }
 
   const eventsEl = $('#profile-stat-events');
   if (eventsEl) eventsEl.textContent = ZAMData.currentUser.stats?.events_attended || 0;
-  showToast(t('events.join_success'), 'success');
+  showToast('🎉 Angemeldet! Checke vor Ort ein um Punkte zu erhalten.', 'success');
   renderEvents();
 }
 
@@ -1484,7 +1409,7 @@ function _shuffleDeals(deals) {
 async function renderDeals() {
   const container = $('#deals-list');
   if (!container) return;
-  container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--color-text-muted)">${t('deals.loading')}</div>`;
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--color-text-muted)">Lädt…</div>';
 
   const rawDeals = await ZAMApi.deals.list();
   state.deals = _shuffleDeals(rawDeals);
@@ -1495,7 +1420,7 @@ async function renderDeals() {
 
   if (_dealsActiveTab === 'partner') {
     if (!partnerDeals.length) {
-      container.innerHTML = `<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.35);font-size:0.82rem">${t('deals.no_partner')}</div>`;
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.35);font-size:0.82rem">Noch keine Partner-Deals aktiv</div>';
       return;
     }
     partnerDeals.forEach(pd => container.appendChild(_renderPartnerDealCard(pd)));
@@ -1607,19 +1532,19 @@ function renderDealCard(deal, idx) {
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <div class="category-tag tag" style="background:${deal.category_color}22;color:${deal.category_color}">${deal.category}</div>
     </div>
-    <div class="deal-title">${_l(deal, 'title')}</div>
-    <p class="deal-description">${_l(deal, 'description')}</p>
+    <div class="deal-title">${deal.title}</div>
+    <p class="deal-description">${deal.description}</p>
     <div class="deal-footer">
       <div class="deal-validity" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <span style="font-size:0.72rem;color:rgba(255,255,255,0.4)">📅 ${deal.expiry_formatted}</span>
         ${_countdownBadge(deal.expiry_date)}
       </div>
       <div class="deal-actions">
-        <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn deal-action-social">${t('deals.together')}</button>
-        <button id="di_btn_${deal.id}" onclick="_toggleDealInterestUI('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn" style="background:${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.2)' : 'rgba(255,255,255,0.07)'};border:1px solid ${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.4)' : 'rgba(255,255,255,0.12)'};color:${_isInterestedInDeal(deal.id) ? '#F7AB00' : 'rgba(255,255,255,0.55)'};border-radius:10px;padding:0 10px;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">${_isInterestedInDeal(deal.id) ? t('deals.interested') : t('deals.interested_q')}</button>
-        <button onclick="openVoucherQR('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}','${deal.merchant_id||''}');event.stopPropagation()" class="deal-action-btn deal-action-redeem">${t('deals.redeem')}</button>
+        <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn deal-action-social">👥 Gemeinsam</button>
+        <button id="di_btn_${deal.id}" onclick="_toggleDealInterestUI('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn" style="background:${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.2)' : 'rgba(255,255,255,0.07)'};border:1px solid ${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.4)' : 'rgba(255,255,255,0.12)'};color:${_isInterestedInDeal(deal.id) ? '#F7AB00' : 'rgba(255,255,255,0.55)'};border-radius:10px;padding:0 10px;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">${_isInterestedInDeal(deal.id) ? '⭐ Interessiert' : '⭐ Interessiert?'}</button>
+        <button onclick="openVoucherQR('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}','${deal.merchant_id||''}');event.stopPropagation()" class="deal-action-btn deal-action-redeem">🎟 Einlösen</button>
         <button class="${deal.is_claimed ? 'btn btn-sm claimed save-voucher-button' : 'btn btn-primary btn-sm save-voucher-button'}" data-idx="${idx}">
-          ${deal.is_claimed ? t('deals.claimed') : t('deals.voucher')}
+          ${deal.is_claimed ? '✓ Eingelöst' : 'Gutschein sichern'}
         </button>
       </div>
     </div>
@@ -1673,8 +1598,8 @@ function _renderPartnerDealCard(pd) {
     </div>
     <div style="font-size:0.68rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px">${escHtml(pd.description||'')}</div>
     <div style="display:flex;align-items:center;justify-content:space-between">
-      <div style="font-size:0.6rem;color:rgba(255,255,255,0.3)">📅 ${t('deals.valid_until').replace('{date}',expiryStr).replace('{n}',pd.participants||0)}</div>
-      <button onclick="securePartnerVoucher('${escHtml(pd.id)}')" style="background:#FA4615;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('deals.voucher')}</button>
+      <div style="font-size:0.6rem;color:rgba(255,255,255,0.3)">📅 Bis ${expiryStr} · ${pd.participants||0} Teilnehmer</div>
+      <button onclick="securePartnerVoucher('${escHtml(pd.id)}')" style="background:#FA4615;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">Gutschein sichern</button>
     </div>`;
   return div;
 }
@@ -1709,7 +1634,7 @@ async function claimDeal(idx, cardEl, deal) {
 
   state.deals[idx].is_claimed = true;
   const btn = cardEl.querySelector('[data-idx]') || cardEl.querySelector('.btn');
-  if (btn) { btn.className = 'btn btn-sm claimed'; btn.textContent = t('deals.claimed'); btn.disabled = true; }
+  if (btn) { btn.className = 'btn btn-sm claimed'; btn.textContent = '✓ Eingelöst'; btn.disabled = true; }
 
   await addPoints(deal.points_reward || 0, deal.store_name || 'Deal');
   const dealsEl = $('#profile-stat-deals');
@@ -1831,28 +1756,8 @@ async function renderProfile() {
   const nearbyBadge = document.getElementById('nearby-profile-badge');
   if (nearbyBadge) {
     const ns = NEARBY.getSettings();
-    nearbyBadge.textContent = ns.enabled ? t('profile.active') : t('profile.disabled');
+    nearbyBadge.textContent = ns.enabled ? '✅ Aktiv' : 'Deaktiviert';
     nearbyBadge.style.color = ns.enabled ? '#34d399' : 'rgba(255,255,255,0.35)';
-  }
-
-  // Render logout + footer only inside profile
-  const footerSlot = document.getElementById('profile-footer-slot');
-  if (footerSlot && !footerSlot.hasChildNodes()) {
-    footerSlot.innerHTML = `
-      <div style="padding:16px 16px 8px">
-        <button class="btn btn-ghost btn-full" onclick="handleLogout()">
-          🚪 Abmelden
-        </button>
-      </div>
-      <div style="padding:8px 20px 24px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center">
-        <a href="legal.html#impressum" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Impressum</a>
-        <a href="legal.html#datenschutz" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Datenschutz</a>
-        <a href="legal.html#nutzung" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Nutzungsbedingungen</a>
-        <a href="legal.html#community" style="font-size:0.68rem;color:rgba(255,255,255,0.25);text-decoration:none">Community-Richtlinien</a>
-      </div>
-      <div style="padding:0 20px 24px;text-align:center;font-size:0.67rem;color:rgba(255,255,255,0.2)">
-        App by <a href="https://lamoragency.de" target="_blank" rel="noopener" style="color:rgba(250,70,21,0.55);text-decoration:none;font-weight:600">LAMOR AGENCY</a>
-      </div>`;
   }
 }
 
@@ -1864,14 +1769,14 @@ async function renderSavedSummary() {
   if (!container) return;
 
   if (savedDealsArr.length === 0 && savedEventsArr.length === 0) {
-    container.innerHTML = `<div style="font-size:0.8rem;color:var(--color-text-muted)">${t('profile.nothing_saved')}</div>`;
+    container.innerHTML = '<div style="font-size:0.8rem;color:var(--color-text-muted)">Noch nichts gemerkt.</div>';
     return;
   }
 
   container.innerHTML = [
-    savedEventsArr.length ? `<div class="saved-chip" onclick="navigateTo('events')">${t('profile.events_saved').replace('{n}',savedEventsArr.length).replace('{s}',savedEventsArr.length !== 1 ? 's' : '')}</div>` : '',
-    savedDealsArr.length ? `<div class="saved-chip" onclick="navigateTo('deals')">${t('profile.deals_saved').replace('{n}',savedDealsArr.length).replace('{s}',savedDealsArr.length !== 1 ? 's' : '')}</div>` : '',
-    savedDealsArr.length ? `<div class="saved-chip" onclick="openSavedDeals()" style="background:var(--primary,#FA4615);color:white;border-color:var(--primary,#FA4615)">${t('profile.saved_deals_link')}</div>` : '',
+    savedEventsArr.length ? `<div class="saved-chip" onclick="navigateTo('events')">🔖 ${savedEventsArr.length} Event${savedEventsArr.length !== 1 ? 's' : ''} gemerkt</div>` : '',
+    savedDealsArr.length ? `<div class="saved-chip" onclick="navigateTo('deals')">🏷️ ${savedDealsArr.length} Deal${savedDealsArr.length !== 1 ? 's' : ''} gemerkt</div>` : '',
+    savedDealsArr.length ? `<div class="saved-chip" onclick="openSavedDeals()" style="background:var(--primary,#FA4615);color:white;border-color:var(--primary,#FA4615)">Gespeicherte Deals →</div>` : '',
   ].join('');
 }
 
@@ -2390,11 +2295,6 @@ function initAuth() {
   });
 }
 
-async function handleLogout() {
-  await ZAMApi.auth.signOut();
-  showAuthShell('login');
-}
-
 function showAuthShell(page = 'login') {
   const authShell = $('#auth-shell');
   const appShell  = $('#app-shell');
@@ -2531,7 +2431,7 @@ function openVoucherQR(dealId, dealTitle, merchantId) {
   }
 
   $('#voucher-qr-code').textContent = code6;
-  $('#voucher-qr-status').textContent = t('qr.valid');
+  $('#voucher-qr-status').textContent = '✅ Gültig — beim Händler vorzeigen';
   $('#voucher-qr-status').style.color = 'var(--green)';
 
   // Timer countdown
@@ -2695,7 +2595,7 @@ function handleCheckinQR(data) {
     checkins.push({ userId: user.id, merchantId: data.merchantId, ts: Date.now(), type: 'merchant', points: 10 });
     _saveCheckins(checkins);
     ZAMApi.points.add(10, 'merchant_checkin', 'Händler Check-in: ' + (data.merchantName || ''));
-    _showScanResult(t('qr.checkin_success').replace('{n}','10').replace('{name}',data.merchantName||''), 'var(--green)');
+    _showScanResult(`✅ Check-in erfolgreich! +10 Punkte für ${data.merchantName || 'Besuch'}`, 'var(--green)');
     updatePointsDisplay();
   } else if (data.subtype === 'event') {
     const alreadyCheckedIn = checkins.some(c => c.userId === user.id && c.eventId === data.eventId);
@@ -2707,7 +2607,7 @@ function handleCheckinQR(data) {
     checkins.push({ userId: user.id, eventId: data.eventId, ts: Date.now(), type: 'event', points: 25 });
     _saveCheckins(checkins);
     ZAMApi.points.add(25, 'event_checkin', 'Event Check-in: ' + (data.eventName || ''));
-    _showScanResult(t('qr.checkin_success').replace('{n}','25').replace('{name}',data.eventName||'Event'), 'var(--green)');
+    _showScanResult(`✅ Check-in erfolgreich! +25 Punkte für ${data.eventName || 'Event'}`, 'var(--green)');
     updatePointsDisplay();
   }
 }
@@ -2927,7 +2827,7 @@ async function openMerchantDetail(merchantId) {
     </div>
 
     <div class="merchant-detail-section">
-      <div class="merchant-detail-section-title">${t('merchant.current_deals')}</div>
+      <div class="merchant-detail-section-title">Aktuelle Aktionen</div>
       <div class="merchant-deals-list">${dealsHtml}</div>
     </div>
 
@@ -3544,7 +3444,7 @@ function openUserProfileSheet(userId, userName, initials, avatarUrl) {
         if (result) {
           showToast(`👋 Anstupsanfrage an ${userName} gesendet!`, 'nudge');
         } else {
-          showToast(t('toast.already_connected'));
+          showToast('Anfrage bereits gesendet oder bereits verbunden.');
         }
         closeUserProfileSheet();
       });
@@ -3797,7 +3697,7 @@ function renderNotifications() {
   if (!list) return;
 
   if (filtered.length === 0) {
-    list.innerHTML = `<div class="notif-empty"><span class="notif-empty-icon">🔔</span>${t('alerts.empty')}${notifFilter !== 'all' ? t('alerts.in_category') : ''}</div>`;
+    list.innerHTML = `<div class="notif-empty"><span class="notif-empty-icon">🔔</span>Keine Benachrichtigungen${notifFilter !== 'all' ? ' in dieser Kategorie' : ''}</div>`;
     updateNotifBadge();
     return;
   }
@@ -3814,26 +3714,26 @@ function renderNotifications() {
       const avatarColor = _avatarColor(n.from_id || n.fr_id);
       const actionHtml = frStatus === 'pending' ? `
         <div style="display:flex;gap:8px;margin-top:10px">
-          <button onclick="event.stopPropagation();acceptFriendRequest('${n.fr_id}')" style="flex:1;background:linear-gradient(135deg,#059669,#34d399);border:none;border-radius:10px;padding:9px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('alerts.accept')}</button>
-          <button onclick="event.stopPropagation();rejectFriendRequest('${n.fr_id}')" style="flex:1;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:9px;color:#ef4444;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('alerts.decline')}</button>
+          <button onclick="event.stopPropagation();acceptFriendRequest('${n.fr_id}')" style="flex:1;background:linear-gradient(135deg,#059669,#34d399);border:none;border-radius:10px;padding:9px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">✅ Annehmen</button>
+          <button onclick="event.stopPropagation();rejectFriendRequest('${n.fr_id}')" style="flex:1;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:9px;color:#ef4444;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">❌ Ablehnen</button>
         </div>` :
         frStatus === 'accepted' ? `
         <div style="margin-top:10px">
-          <button onclick="event.stopPropagation();openPrivateChat('${n.from_id}','${escHtml(n.from_name||'')}','${initials}',null)" style="width:100%;background:rgba(250,70,21,0.15);border:1.5px solid rgba(250,70,21,0.4);border-radius:10px;padding:9px;color:#FA4615;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('alerts.chat_open')}</button>
-        </div>` : `<div style="margin-top:8px;font-size:0.68rem;color:rgba(255,255,255,0.3)">${t('alerts.request_declined')}</div>`;
+          <button onclick="event.stopPropagation();openPrivateChat('${n.from_id}','${escHtml(n.from_name||'')}','${initials}',null)" style="width:100%;background:rgba(250,70,21,0.15);border:1.5px solid rgba(250,70,21,0.4);border-radius:10px;padding:9px;color:#FA4615;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">💬 Chat öffnen</button>
+        </div>` : `<div style="margin-top:8px;font-size:0.68rem;color:rgba(255,255,255,0.3)">Anfrage abgelehnt</div>`;
       return `
         <div class="notif-item ${isUnread ? 'unread' : ''}" style="padding:12px 14px">
           <div style="display:flex;align-items:flex-start;gap:10px">
             <div style="width:38px;height:38px;border-radius:50%;background:${avatarColor};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-                <div class="notif-title" style="font-size:0.82rem">${t('alerts.friend_request')}</div>
+                <div class="notif-title" style="font-size:0.82rem">➕ Freundschaftsanfrage</div>
                 <div style="display:flex;align-items:center;gap:6px">
                   ${isUnread ? '<div class="notif-unread-dot" style="position:static;margin:0"></div>' : ''}
                   <button class="notif-del-btn" onclick="event.stopPropagation();ZAMApi.notifications.deleteById('${n.id}');renderNotifications()" style="position:static">✕</button>
                 </div>
               </div>
-              <div class="notif-text" style="margin-top:2px">${escHtml(n.body || (n.from_name||t('alerts.someone')) + t('alerts.wants_friend'))}</div>
+              <div class="notif-text" style="margin-top:2px">${escHtml(n.body || n.from_name + ' möchte dich als Freund hinzufügen.')}</div>
               <div class="notif-time">${timeStr}</div>
               ${actionHtml}
             </div>
@@ -3849,13 +3749,13 @@ function renderNotifications() {
 
       const actionHtml = status === 'offen' ? `
         <div style="display:flex;gap:8px;margin-top:10px">
-          <button onclick="event.stopPropagation();acceptDealRequest('${n.deal_req_id}')" style="flex:1;background:linear-gradient(135deg,#059669,#34d399);border:none;border-radius:10px;padding:9px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('alerts.accept')}</button>
-          <button onclick="event.stopPropagation();rejectDealRequest('${n.deal_req_id}')" style="flex:1;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:9px;color:#ef4444;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('alerts.decline')}</button>
+          <button onclick="event.stopPropagation();acceptDealRequest('${n.deal_req_id}')" style="flex:1;background:linear-gradient(135deg,#059669,#34d399);border:none;border-radius:10px;padding:9px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">✅ Annehmen</button>
+          <button onclick="event.stopPropagation();rejectDealRequest('${n.deal_req_id}')" style="flex:1;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:9px;color:#ef4444;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">❌ Ablehnen</button>
         </div>` :
         status === 'angenommen' ? `
         <div style="margin-top:10px">
-          <button onclick="event.stopPropagation();openDealRequestChat('${n.deal_req_id}')" style="width:100%;background:rgba(250,70,21,0.15);border:1.5px solid rgba(250,70,21,0.4);border-radius:10px;padding:9px;color:#FA4615;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('alerts.chat_open')}</button>
-        </div>` : `<div style="margin-top:8px;font-size:0.68rem;color:rgba(255,255,255,0.3)">${t('alerts.request_declined')}</div>`;
+          <button onclick="event.stopPropagation();openDealRequestChat('${n.deal_req_id}')" style="width:100%;background:rgba(250,70,21,0.15);border:1.5px solid rgba(250,70,21,0.4);border-radius:10px;padding:9px;color:#FA4615;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">💬 Chat öffnen</button>
+        </div>` : `<div style="margin-top:8px;font-size:0.68rem;color:rgba(255,255,255,0.3)">Anfrage abgelehnt</div>`;
 
       return `
         <div class="notif-item ${isUnread ? 'unread' : ''}" style="padding:12px 14px">
@@ -3863,7 +3763,7 @@ function renderNotifications() {
             <div style="width:38px;height:38px;border-radius:50%;background:${avatarColor};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-                <div class="notif-title" style="font-size:0.82rem">${escHtml(n.from_name||t('alerts.someone'))}${t('alerts.deal_asks')}</div>
+                <div class="notif-title" style="font-size:0.82rem">${escHtml(n.from_name||'Jemand')} fragt an</div>
                 <div style="display:flex;align-items:center;gap:6px">
                   ${isUnread ? '<div class="notif-unread-dot" style="position:static;margin:0"></div>' : ''}
                   <button class="notif-del-btn" onclick="event.stopPropagation();ZAMApi.notifications.deleteById('${n.id}');renderNotifications()" style="position:static">✕</button>
@@ -5321,7 +5221,7 @@ function aiGenerateAnswer(q) {
   }
 
   // Default
-  return t('ai.default_msg');
+  return `Ich helfe gerne! Du kannst mich fragen:<br><br>• Was gibt es heute im ZAM?<br>• Aktuelle Angebote & Deals<br>• Wo kann ich essen?<br>• Meine persönlichen Empfehlungen<br><br>Was möchtest du wissen? 🤖`;
 }
 
 // ── User Preference Analysis ──
@@ -5551,7 +5451,7 @@ function aiGenerateSocial() {
 
 function aiCopyText(btn, encoded) {
   const text = decodeURIComponent(encoded);
-  if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => showToast(t('toast.copy'))).catch(() => showToast(t('errors.generic')));
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => showToast('Text kopiert! 📋')).catch(() => showToast('Kopieren fehlgeschlagen'));
   else showToast('Kopieren nicht verfügbar');
 }
 
@@ -5700,15 +5600,15 @@ function _renderActiveUsersList(users) {
     } else if (hasPending) {
       nudgeBtn = `<button class="au-action-btn" style="opacity:0.5;cursor:default">⏳ Gesendet</button>`;
     } else {
-      nudgeBtn = `<button class="au-action-btn" onclick="nudgeFromActiveUsers('${u.id}','${esc(u.name)}')">👋 ${t('community.nudge')}</button>`;
+      nudgeBtn = `<button class="au-action-btn" onclick="nudgeFromActiveUsers('${u.id}','${esc(u.name)}')">👋 Anstupsen</button>`;
     }
 
     if (fStatus === 'pending_sent') {
-      frBtn = `<button class="au-action-btn" style="opacity:0.5;cursor:default;font-size:0.6rem;padding:6px 8px">${t('community.req_sent')}</button>`;
+      frBtn = `<button class="au-action-btn" style="opacity:0.5;cursor:default;font-size:0.6rem;padding:6px 8px">Anfrage gesendet</button>`;
     } else if (fStatus === 'pending_received' && frObj) {
-      frBtn = `<button class="au-action-btn" style="background:rgba(5,150,105,0.18);color:#34d399;border:1px solid rgba(5,150,105,0.3)" onclick="acceptFriendRequest('${frObj.id}')">${t('community.accept')}</button>`;
+      frBtn = `<button class="au-action-btn" style="background:rgba(5,150,105,0.18);color:#34d399;border:1px solid rgba(5,150,105,0.3)" onclick="acceptFriendRequest('${frObj.id}')">✅ Annehmen</button>`;
     } else {
-      frBtn = `<button class="au-action-btn" title="${t('community.add_friend')}" onclick="sendFriendRequest('${u.id}','${esc(u.name)}','${u.initials}')">➕</button>`;
+      frBtn = `<button class="au-action-btn" title="Freund hinzufügen" onclick="sendFriendRequest('${u.id}','${esc(u.name)}','${u.initials}')">➕</button>`;
     }
 
     return `<div class="au-user-row">
@@ -5749,7 +5649,7 @@ function setMyAppStatus(status) {
 
 function nudgeFromActiveUsers(userId, userName) {
   const result = ZAMApi.nudges.send(userId, userName);
-  showToast(result ? t('toast.nudge_sent').replace('{name}',userName) : t('toast.nudge_fail'));
+  showToast(result ? `👋 ${userName} wurde angestupst!` : 'Anfrage bereits gesendet');
   // Re-render to show pending state
   _renderActiveUsersList(getActiveUsers());
 }
@@ -5968,7 +5868,7 @@ function requestDealPartner(userId, userName, dealTitle, dealId) {
     deal_title:  dealTitle,
   });
 
-  showToast(t('toast.deal_request_sent').replace('{name}', userName), 'success');
+  showToast('✅ Anfrage an ' + userName + ' gesendet!', 'success');
   // Update button state
   $$('.deal-match-btn').forEach(btn => {
     if (btn.getAttribute('onclick')?.includes(userId)) {
@@ -6007,7 +5907,7 @@ function acceptDealRequest(reqId) {
   const drNotif = notifs.find(n => n.deal_req_id === reqId);
   if (drNotif) ZAMApi.notifications.deleteById(drNotif.id);
 
-  showToast(t('toast.deal_accepted'), 'success');
+  showToast('✅ Angenommen! Chat geöffnet.', 'success');
   renderNotifications();
 
   // Open the chat
@@ -6029,7 +5929,7 @@ function rejectDealRequest(reqId) {
   const drNotif = notifs.find(n => n.deal_req_id === reqId);
   if (drNotif) ZAMApi.notifications.deleteById(drNotif.id);
 
-  showToast(t('toast.deal_rejected'), 'info');
+  showToast('Anfrage abgelehnt.', 'info');
   renderNotifications();
 }
 
@@ -6104,7 +6004,7 @@ function sendFriendRequest(userId, userName, initials) {
     from_id: me.id, from_name: myName, from_initials: myInitials,
     body: `${myName} möchte dich als Freund hinzufügen.`, read: false,
   });
-  showToast(t('toast.friend_sent'), 'success');
+  showToast('➕ Freundschaftsanfrage gesendet!', 'success');
   _renderActiveUsersList(getActiveUsers());
 }
 
@@ -6117,7 +6017,7 @@ function acceptFriendRequest(frId) {
   const notif = ZAMApi.notifications.getAll().find(n => n.fr_id === frId);
   if (notif) ZAMApi.notifications.markReadById(notif.id);
   const friendName = req.from_id === (ZAMApi.auth.currentUser()?.id) ? req.to_name : req.from_name;
-  showToast(t('toast.friend_accepted').replace('{name}', friendName), 'success');
+  showToast(`✅ ${friendName} ist jetzt dein Freund!`, 'success');
   renderNotifications();
   renderContacts();
   const friendId       = req.from_id === (ZAMApi.auth.currentUser()?.id) ? req.to_id       : req.from_id;
@@ -6189,7 +6089,7 @@ function _seedDemoDealRequest() {
 }
 
 function seedZAMContent() {
-  const seeded = localStorage.getItem('zam_seeded_v4');
+  const seeded = localStorage.getItem('zam_seeded_v3');
   if (seeded) return;
 
   const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
@@ -6212,11 +6112,11 @@ function seedZAMContent() {
 
   // ── Events (real ZAM event types) ──
   const zamEvents = [
-    { id: 'ev_001', title: { de: 'Morgen-Yoga im Atrium', en: 'Morning Yoga in the Atrium', tr: 'Atriumda Sabah Yogası' }, category: 'Sport & Wellness', date: new Date(now + 3*864e5).toISOString(), location: 'Atrium, Erdgeschoss', zone: 'mk2_2', merchant_id: 'mer_004', description: { de: 'Starte deinen Tag mit Energie – Yoga für alle Levels unter dem Glasdach des ZAM.', en: 'Start your day with energy – yoga for all levels under the glass roof of ZAM.', tr: 'Gününüze enerjili başlayın – ZAM\'ın cam tavanı altında tüm seviyelere uygun yoga.' }, points: 60, max_participants: 40, registrations: [] },
-    { id: 'ev_002', title: { de: 'Freiham Sommer-Markt', en: 'Freiham Summer Market', tr: 'Freiham Yaz Pazarı' }, category: 'Food & Lifestyle', date: new Date(now + 7*864e5).toISOString(), location: 'Vorplatz ZAM / Gandhi-Platz', zone: 'plaza', merchant_id: null, description: { de: 'Regionale Erzeuger, Foodtrucks und Live-Musik. 40+ Aussteller, Eintritt frei!', en: 'Local producers, food trucks and live music. 40+ exhibitors, free entry!', tr: 'Yerel üreticiler, yemek kamyonları ve canlı müzik. 40+ katılımcı, ücretsiz giriş!' }, points: 80, max_participants: 500, registrations: [] },
-    { id: 'ev_003', title: { de: 'Kids Kreativ-Werkstatt', en: 'Kids Creative Workshop', tr: 'Çocuk Yaratıcı Atölyesi' }, category: 'Familie', date: new Date(now + 10*864e5).toISOString(), location: 'Kinderbereich, OG 1', zone: 'mk2_2', merchant_id: null, description: { de: 'Basteln, malen, stempeln für Kinder von 4–10 Jahren. Alle Materialien inklusive.', en: 'Crafting, painting, stamping for children aged 4–10. All materials included.', tr: '4–10 yaş arası çocuklar için el sanatları, boyama, damgalama. Tüm malzemeler dahil.' }, points: 35, max_participants: 18, registrations: [] },
-    { id: 'ev_004', title: { de: 'Live-Konzert: Sommernacht-Beats', en: 'Live Concert: Summer Night Beats', tr: 'Canlı Konser: Yaz Gecesi Ritmi' }, category: 'Kultur & Musik', date: new Date(now + 14*864e5).toISOString(), location: 'Hauptbühne, EG', zone: 'plaza', merchant_id: null, description: { de: 'Soul, Jazz & Singer-Songwriter aus München – drei Acts live auf der ZAM-Bühne. Eintritt frei!', en: 'Soul, jazz & singer-songwriters from Munich – three acts live on the ZAM stage. Free entry!', tr: 'Münih\'ten soul, caz & söz yazarları – ZAM sahnesinde üç canlı performans. Ücretsiz giriş!' }, points: 45, max_participants: 300, registrations: [] },
-    { id: 'ev_005', title: { de: 'Nachhaltigkeits-Workshop', en: 'Sustainability Workshop', tr: 'Sürdürülebilirlik Atölyesi' }, category: 'Community', date: new Date(now + 19*864e5).toISOString(), location: 'Eventfläche, OG 2', zone: 'mk2_2', merchant_id: null, description: { de: 'Repair Café, Zero-Waste-Tipps und offene Nachbarschaftsrunde. Kostenlos, ohne Anmeldung.', en: 'Repair café, zero-waste tips and open neighbourhood round. Free, no registration.', tr: 'Tamir kafesi, sıfır atık ipuçları ve açık mahalle toplantısı. Ücretsiz, kayıt gerekmez.' }, points: 50, max_participants: 60, registrations: [] },
+    { id: 'ev_001', title: 'Morgen-Yoga im Atrium', category: 'Sport & Wellness', date: new Date(now + 3*864e5).toISOString(), location: 'Atrium, Erdgeschoss', zone: 'mk2_2', merchant_id: 'mer_004', description: 'Starte deinen Tag mit Energie – Yoga für alle Levels unter dem Glasdach des ZAM.', points: 60, max_participants: 40, registrations: [] },
+    { id: 'ev_002', title: 'Freiham Sommer-Markt', category: 'Food & Lifestyle', date: new Date(now + 7*864e5).toISOString(), location: 'Vorplatz ZAM / Gandhi-Platz', zone: 'plaza', merchant_id: null, description: 'Regionale Erzeuger, Foodtrucks und Live-Musik. 40+ Aussteller, Eintritt frei!', points: 80, max_participants: 500, registrations: [] },
+    { id: 'ev_003', title: 'Kids Kreativ-Werkstatt', category: 'Familie', date: new Date(now + 10*864e5).toISOString(), location: 'Kinderbereich, OG 1', zone: 'mk2_2', merchant_id: null, description: 'Basteln, malen, stempeln für Kinder von 4–10 Jahren. Alle Materialien inklusive.', points: 35, max_participants: 18, registrations: [] },
+    { id: 'ev_004', title: 'Live-Konzert: Sommernacht-Beats', category: 'Kultur & Musik', date: new Date(now + 14*864e5).toISOString(), location: 'Hauptbühne, EG', zone: 'plaza', merchant_id: null, description: 'Soul, Jazz & Singer-Songwriter aus München – drei Acts live auf der ZAM-Bühne. Eintritt frei!', points: 45, max_participants: 300, registrations: [] },
+    { id: 'ev_005', title: 'Nachhaltigkeits-Workshop', category: 'Community', date: new Date(now + 19*864e5).toISOString(), location: 'Eventfläche, OG 2', zone: 'mk2_2', merchant_id: null, description: 'Repair Café, Zero-Waste-Tipps und offene Nachbarschaftsrunde. Kostenlos, ohne Anmeldung.', points: 50, max_participants: 60, registrations: [] },
   ];
   const events = g.events || [];
   zamEvents.forEach(ev => { if (!events.find(x => x.id === ev.id)) events.push({ ...ev, status: 'active', created_at: new Date().toISOString() }); });
@@ -6224,12 +6124,12 @@ function seedZAMContent() {
 
   // ── Deals (real ZAM deals) ──
   const zamDeals = [
-    { id: 'deal_001', title: { de: '2. Heißgetränk nur 1 Euro', en: '2nd hot drink for 1€', tr: '2. sıcak içecek 1€' }, merchant_id: 'mer_001', merchant_name: 'Café Freiham', store_icon: '☕', discount: '2. für 1€', category: 'Food & Drinks', description: { de: 'Kauf ein Heißgetränk, bezahl fürs zweite nur 1€. Gilt auf alle Kaffee- und Tee-Spezialitäten.', en: 'Buy one hot drink, pay just 1€ for the second. Valid on all coffee & tea specialities.', tr: 'Bir sıcak içecek al, ikincisi sadece 1€. Tüm kahve ve çay çeşitlerinde geçerli.' }, expires_at: new Date(now + 15*864e5).toISOString(), points_reward: 20, is_hot: true },
-    { id: 'deal_002', title: { de: '20% auf nachhaltige Labels', en: '20% off sustainable labels', tr: 'Sürdürülebilir markalarda %20 indirim' }, merchant_id: 'mer_002', merchant_name: 'Odeya Fashion', store_icon: '👗', discount: '20%', category: 'Mode', description: { de: 'Exklusiv für ZAM-Club-Mitglieder: 20% Rabatt auf alle Nachhaltigkeits-Labels.', en: 'Exclusively for ZAM Club members: 20% discount on all sustainable labels.', tr: 'ZAM Üyeleri için özel: tüm sürdürülebilir markalarda %20 indirim.' }, expires_at: new Date(now + 35*864e5).toISOString(), points_reward: 30, is_hot: false },
-    { id: 'deal_003', title: { de: 'Gratis Hummus zu jedem Hauptgericht', en: 'Free hummus with every main course', tr: 'Her ana yemekle ücretsiz humus' }, merchant_id: 'mer_003', merchant_name: 'Levante Kitchen', store_icon: '🥙', discount: 'Gratis', category: 'Restaurant', description: { de: 'Als ZAM-Club-Mitglied: Hummus mit Pita gratis zum Hauptgericht. Mo–Fr 11–15 Uhr.', en: 'ZAM Club members get free hummus with pita with every main course. Mon–Fri 11am–3pm.', tr: 'ZAM Kulübü üyeleri her ana yemekle pita ekmekli humus ücretsiz alır. Pzt–Cum 11:00–15:00.' }, expires_at: new Date(now + 14*864e5).toISOString(), points_reward: 25, is_hot: true },
-    { id: 'deal_004', title: { de: '7 Tage kostenlos trainieren', en: 'Train free for 7 days', tr: '7 gün ücretsiz antrenman yap' }, merchant_id: 'mer_004', merchant_name: 'Westside Gym', store_icon: '💪', discount: '7 Tage', category: 'Sport', description: { de: 'Teste den Westside Gym eine Woche gratis – alle Geräte, alle Kurse, Sauna inklusive.', en: 'Try Westside Gym for a full week – all equipment, all classes, sauna included.', tr: 'Westside Gym\'i bir hafta ücretsiz dene – tüm ekipmanlar, tüm dersler, sauna dahil.' }, expires_at: new Date(now + 46*864e5).toISOString(), points_reward: 100, is_hot: true },
-    { id: 'deal_005', title: { de: '10% auf alle Neuerscheinungen', en: '10% off all new releases', tr: 'Tüm yeni çıkışlarda %10 indirim' }, merchant_id: 'mer_005', merchant_name: 'Welt der Bücher', store_icon: '📚', discount: '10%', category: 'Bücher', description: { de: 'Alle Neuerscheinungen des Monats mit 10% Mitgliederrabatt – inklusive Vorbestellungen.', en: 'All new releases this month with a 10% member discount – including pre-orders.', tr: 'Bu ayki tüm yeni çıkışlarda %10 üye indirimi – ön siparişler dahil.' }, expires_at: new Date(now + 15*864e5).toISOString(), points_reward: 15, is_hot: false },
-    { id: 'deal_006', title: { de: 'Sonnenschutz-Set: 3 für 2', en: 'Sunscreen set: 3 for 2', tr: 'Güneş kremi seti: 3 al 2 öde' }, merchant_id: 'mer_006', merchant_name: 'Freiham Apotheke', store_icon: '💊', discount: '3 für 2', category: 'Gesundheit', description: { de: 'Sommer-Special: 3 Sonnenschutz-Produkte kaufen, günstigstes ist gratis.', en: 'Summer special: buy 3 sunscreen products, the cheapest is free.', tr: 'Yaz özel: 3 güneş kremi al, en ucuzu bedava.' }, expires_at: new Date(now + 30*864e5).toISOString(), points_reward: 20, is_hot: false },
+    { id: 'deal_001', title: '2. Heißgetränk nur 1 Euro', merchant_id: 'mer_001', merchant_name: 'Café Freiham', store_icon: '☕', discount: '2. für 1€', category: 'Food & Drinks', description: 'Kauf ein Heißgetränk, bezahl fürs zweite nur 1€. Gilt auf alle Kaffee- und Tee-Spezialitäten.', expires_at: new Date(now + 15*864e5).toISOString(), points_reward: 20, is_hot: true },
+    { id: 'deal_002', title: '20% auf nachhaltige Labels', merchant_id: 'mer_002', merchant_name: 'Odeya Fashion', store_icon: '👗', discount: '20%', category: 'Mode', description: 'Exklusiv für ZAM-Club-Mitglieder: 20% Rabatt auf alle Nachhaltigkeits-Labels.', expires_at: new Date(now + 35*864e5).toISOString(), points_reward: 30, is_hot: false },
+    { id: 'deal_003', title: 'Gratis Hummus zu jedem Hauptgericht', merchant_id: 'mer_003', merchant_name: 'Levante Kitchen', store_icon: '🥙', discount: 'Gratis', category: 'Restaurant', description: 'Als ZAM-Club-Mitglied: Hummus mit Pita gratis zum Hauptgericht. Mo–Fr 11–15 Uhr.', expires_at: new Date(now + 14*864e5).toISOString(), points_reward: 25, is_hot: true },
+    { id: 'deal_004', title: '7 Tage kostenlos trainieren', merchant_id: 'mer_004', merchant_name: 'Westside Gym', store_icon: '💪', discount: '7 Tage', category: 'Sport', description: 'Teste den Westside Gym eine Woche gratis – alle Geräte, alle Kurse, Sauna inklusive.', expires_at: new Date(now + 46*864e5).toISOString(), points_reward: 100, is_hot: true },
+    { id: 'deal_005', title: '10% auf alle Neuerscheinungen', merchant_id: 'mer_005', merchant_name: 'Welt der Bücher', store_icon: '📚', discount: '10%', category: 'Bücher', description: 'Alle Neuerscheinungen des Monats mit 10% Mitgliederrabatt – inklusive Vorbestellungen.', expires_at: new Date(now + 15*864e5).toISOString(), points_reward: 15, is_hot: false },
+    { id: 'deal_006', title: 'Sonnenschutz-Set: 3 für 2', merchant_id: 'mer_006', merchant_name: 'Freiham Apotheke', store_icon: '💊', discount: '3 für 2', category: 'Gesundheit', description: 'Sommer-Special: 3 Sonnenschutz-Produkte kaufen, günstigstes ist gratis.', expires_at: new Date(now + 30*864e5).toISOString(), points_reward: 20, is_hot: false },
   ];
   const deals = g.deals || [];
   zamDeals.forEach(d => { if (!deals.find(x => x.id === d.id)) deals.push({ ...d, status: 'active', created_at: new Date().toISOString() }); });
@@ -6261,59 +6161,16 @@ function seedZAMContent() {
   ZAMApi.analytics.seedDemo();
 
   localStorage.setItem('zamclub_global', JSON.stringify(g));
-  localStorage.setItem('zam_seeded_v4', '1');
+  localStorage.setItem('zam_seeded_v3', '1');
   // Clean up old seed flags
-  localStorage.removeItem('zam_seeded_v3');
   localStorage.removeItem('zam_seeded_v2');
   localStorage.removeItem('zam_content_seeded');
 }
 
-window.zamI18nDebug = function() {
-  const lang = localStorage.getItem('zam_lang') || 'de';
-  const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
-  const deals = g.deals || [];
-  const events = g.events || [];
-  const challenges = JSON.parse(localStorage.getItem('zam_photo_challenges') || '[]');
-  let translated = 0, untranslated = [];
-  [...deals, ...events, ...challenges].forEach(item => {
-    const title = item.title;
-    if (title && typeof title === 'object' && title[lang] !== undefined) translated++;
-    else untranslated.push((item.id || '?') + ': ' + (typeof title === 'string' ? title.substring(0, 50) : JSON.stringify(title)));
-  });
-  const total = deals.length + events.length + challenges.length;
-  console.group('ZAM i18n Debug');
-  console.log('Aktuelle Sprache:', lang);
-  console.log('Übersetzte Inhalte:', translated + ' / ' + total);
-  console.log('Nicht übersetzt:', untranslated.length);
-  if (untranslated.length) console.table(untranslated);
-  console.groupEnd();
-  return { lang, translated, untranslated: untranslated.length, details: untranslated };
-};
-
 // =============================================
 // Init
 // =============================================
-function initI18nStaticElements() {
-  const dealsTabAll = document.getElementById('deals-tab-all');
-  if (dealsTabAll) dealsTabAll.textContent = t('deals.all');
-  const dealsTabDeals = document.getElementById('deals-tab-deals');
-  if (dealsTabDeals) dealsTabDeals.textContent = t('deals.regular');
-  const dealsTabPartner = document.getElementById('deals-tab-partner');
-  if (dealsTabPartner) dealsTabPartner.textContent = t('deals.partner');
-  // Apply all data-i18n / data-i18n-placeholder attributes
-  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
-  updateNavLabels();
-}
-
 function init() {
-  // v1: immer Deutsch, alte Spracheinstellungen löschen
-  localStorage.removeItem('zam_lang');
-  localStorage.removeItem('zam_lang_chosen');
-  localStorage.removeItem('language');
-  localStorage.removeItem('selectedLanguage');
-  localStorage.removeItem('locale');
-  initI18nStaticElements();
   seedZAMContent();
   seedDemoMerchantCafeFreiham();
   updateOnlineStatus();
@@ -6469,7 +6326,7 @@ function _saveModQueue(l) { localStorage.setItem('zam_moderation_queue', JSON.st
 
 function _seedChallenges() {
   const existing = _getChallenges();
-  if (existing.length >= 4 && existing[0]?.id === 'zam_ch_001' && existing[0]?.rules && typeof existing[0]?.title === 'object') return;
+  if (existing.length >= 4 && existing[0]?.id === 'zam_ch_001' && existing[0]?.rules) return;
   // Clear old submissions when re-seeding challenges
   localStorage.removeItem('zam_photo_submissions');
   localStorage.removeItem('zam_photo_gallery');
@@ -6477,33 +6334,33 @@ function _seedChallenges() {
   localStorage.setItem('zam_photo_challenges', JSON.stringify([
     { id:'zam_ch_001', merchant_id:'mer_008', merchant_name:'Dunkin Donuts', merchant_icon:'🍩',
       banner_color:'#ea580c', demo_count:5,
-      title:{ de:'Dunkin Donuts Challenge', en:'Dunkin Donuts Challenge', tr:'Dunkin Donuts Challenge' },
-      description:{ de:'Zeig deine süßesten Momente bei Dunkin Donuts! 3 Besuche fotografieren – und beim 3. Besuch gibt es einen Gratis-Donut für dich.', en:'Show your sweetest moments at Dunkin Donuts! Photograph 3 visits – on your 3rd visit you get a free donut.', tr:'Dunkin Donuts\'taki en tatlı anlarını paylaş! 3 ziyaret fotoğrafla – 3. ziyarette ücretsiz donut kazanırsın.' },
-      reward_description:{ de:'Gratis Donut + 200 Punkte', en:'Free Donut + 200 Points', tr:'Bedava Donut + 200 Puan' },
+      title:'Dunkin Donuts Challenge',
+      description:'Zeig deine süßesten Momente bei Dunkin Donuts! 3 Besuche fotografieren – und beim 3. Besuch gibt es einen Gratis-Donut für dich.',
+      reward_description:'Gratis Donut + 200 Punkte',
       rules:['1 Foto pro Tag zählt','Donut oder Kaffee muss im Bild sichtbar sein','Nur bei Dunkin Donuts im ZAM','Kein Upload aus der Galerie'],
       required_photos_count:3, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
     { id:'zam_ch_002', merchant_id:'mer_002', merchant_name:'KFC', merchant_icon:'🍗',
       banner_color:'#b91c1c', demo_count:2,
-      title:{ de:'KFC Fan Challenge', en:'KFC Fan Challenge', tr:'KFC Fan Challenge' },
-      description:{ de:'Bist du ein echter KFC-Fan? Fotografiere deinen Chicken-Moment an 3 verschiedenen Tagen und zeig, dass du der größte KFC-Fan im ZAM bist!', en:'Are you a real KFC fan? Photograph your chicken moment on 3 different days and show you\'re the biggest KFC fan in ZAM!', tr:'Gerçek bir KFC hayranı mısın? 3 farklı günde tavuk anını fotoğrafla ve ZAM\'ın en büyük KFC hayranı olduğunu kanıtla!' },
-      reward_description:{ de:'Gratis Hot Wings + 150 Punkte', en:'Free Hot Wings + 150 Points', tr:'Bedava Hot Wings + 150 Puan' },
+      title:'KFC Fan Challenge',
+      description:'Bist du ein echter KFC-Fan? Fotografiere deinen Chicken-Moment an 3 verschiedenen Tagen und zeig, dass du der größte KFC-Fan im ZAM bist!',
+      reward_description:'Gratis Hot Wings + 150 Punkte',
       rules:['1 Foto pro Tag zählt','Essen muss im Bild erkennbar sein','Nur bei KFC im ZAM Food Court','Kein Upload aus der Galerie'],
       required_photos_count:3, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
     { id:'zam_ch_003', merchant_id:'mer_023', merchant_name:'Fit Star', merchant_icon:'💪',
       banner_color:'#065f46', demo_count:1,
-      title:{ de:'Fit Star Challenge', en:'Fit Star Challenge', tr:'Fit Star Challenge' },
-      description:{ de:'Dokumentiere deine Trainings-Fortschritte bei Fit Star! 5 Check-ins sammeln – zeig dein Workout, die Sauna oder deinen Motivationsmoment.', en:'Document your training progress at Fit Star! Collect 5 check-ins – show your workout, sauna or motivational moment.', tr:'Fit Star\'daki antrenman ilerlemenizi belgeleyin! 5 giriş toplayın – egzersizinizi, saunayı veya motivasyon anınızı gösterin.' },
-      reward_description:{ de:'1 Monat gratis + 300 Punkte', en:'1 Month Free + 300 Points', tr:'1 Ay Bedava + 300 Puan' },
+      title:'Fit Star Challenge',
+      description:'Dokumentiere deine Trainings-Fortschritte bei Fit Star! 5 Check-ins sammeln – zeig dein Workout, die Sauna oder deinen Motivationsmoment.',
+      reward_description:'1 Monat gratis + 300 Punkte',
       rules:['1 Foto pro Tag zählt','Foto muss im Fit Star aufgenommen werden','Training oder Wellness-Bereich erkennbar','Kein Upload aus der Galerie'],
       required_photos_count:5, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
     { id:'zam_ch_004', merchant_id:'mer_019', merchant_name:"L'Osteria", merchant_icon:'🍕',
       banner_color:'#b91c1c', demo_count:3,
-      title:{ de:"L'Osteria Pizza Challenge", en:"L'Osteria Pizza Challenge", tr:"L'Osteria Pizza Challenge" },
-      description:{ de:"Fotografiere deinen Pizzamoment bei L'Osteria! 2 Pizza-Fotos einreichen und den ZAM-Genießer-Bonus sichern – inklusive Rabatt auf deinen nächsten Besuch.", en:"Photograph your pizza moment at L'Osteria! Submit 2 pizza photos and secure the ZAM gourmet bonus – including a discount on your next visit.", tr:"L'Osteria'daki pizza anını fotoğrafla! 2 pizza fotoğrafı gönder ve ZAM gurme bonusunu kap – bir sonraki ziyaretinde indirim dahil." },
-      reward_description:{ de:'15 % Rabatt + 180 Punkte', en:'15% Discount + 180 Points', tr:'%15 İndirim + 180 Puan' },
+      title:"L'Osteria Pizza Challenge",
+      description:"Fotografiere deinen Pizzamoment bei L'Osteria! 2 Pizza-Fotos einreichen und den ZAM-Genießer-Bonus sichern – inklusive Rabatt auf deinen nächsten Besuch.",
+      reward_description:"15 % Rabatt + 180 Punkte",
       rules:['1 Foto pro Tag zählt','Pizza muss deutlich sichtbar sein',"Nur bei L'Osteria im ZAM OG 1",'Kein Upload aus der Galerie'],
       required_photos_count:2, max_per_day:1,
       location_required:true, radius_meters:500, status:'active', created_at:new Date().toISOString() },
@@ -6564,45 +6421,45 @@ function renderPhotoChallenges() {
       <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#ff6b3d">ZAM Community</span>
     </div>
     <div style="position:absolute;top:0;right:-20px;font-size:9rem;opacity:0.06;pointer-events:none">📸</div>
-    <h1 style="font-size:1.45rem;font-weight:900;line-height:1.2;margin-bottom:14px;color:#fff">${t('photo.title')}</h1>
+    <h1 style="font-size:1.45rem;font-weight:900;line-height:1.2;margin-bottom:14px;color:#fff">📸 Foto-Challenges</h1>
     <!-- Live Stats -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
       <div style="background:rgba(250,70,21,0.12);border:1px solid rgba(250,70,21,0.2);border-radius:12px;padding:10px 8px;text-align:center">
         <div style="font-size:1.1rem;font-weight:900;color:#ffb399">${totalPhotos}</div>
-        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">${t('photo.stats_photos').replace('📸 ','📸<br>')}</div>
+        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">📸 Community<br>Fotos</div>
       </div>
       <div style="background:rgba(247,171,0,0.1);border:1px solid rgba(247,171,0,0.2);border-radius:12px;padding:10px 8px;text-align:center">
         <div style="font-size:1.1rem;font-weight:900;color:#F7AB00">${totalRedeemed}</div>
-        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">${t('photo.stats_redeemed').replace('🏆 ','🏆<br>')}</div>
+        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">🏆 Belohnungen<br>eingelöst</div>
       </div>
       <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:10px 8px;text-align:center">
         <div style="font-size:1.1rem;font-weight:900;color:#f87171">${activeChallengesCount}</div>
-        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">${t('photo.stats_active').replace('🔥 ','🔥<br>')}</div>
+        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">🔥 Aktive<br>Challenges</div>
       </div>
       <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:10px 8px;text-align:center">
         <div style="font-size:1.1rem;font-weight:900;color:#34d399">${availableRewards}</div>
-        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">${t('photo.stats_rewards').replace('🎁 ','🎁<br>')}</div>
+        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">🎁 Verfügbare<br>Prämien</div>
       </div>
     </div>
   </div>`;
 
   // ── How it works ──────────────────────────────────
   const steps = [
-    ['1', t('photo.step1_title'), t('photo.step1_desc')],
-    ['2', t('photo.step2_title'), t('photo.step2_desc')],
-    ['3', t('photo.step3_title'), t('photo.step3_desc')],
-    ['4', t('photo.step4_title'), t('photo.step4_desc')],
-    ['5', t('photo.step5_title'), t('photo.step5_desc')],
+    ['1','Challenge auswählen','Wähle eine aktive Händler-Challenge aus der Liste'],
+    ['2','Foto aufnehmen','Mach ein Foto direkt in der App – kein Upload erlaubt'],
+    ['3','Standort bestätigen','Die App prüft automatisch, dass du im ZAM bist'],
+    ['4','Fortschritt sammeln','Jeden Tag ein Foto – bis das Ziel erreicht ist'],
+    ['5','Belohnung einlösen','Scanne deinen QR-Code beim Händler für die Prämie'],
   ];
   const howItWorks = `
   <div style="margin:0 16px 20px;background:rgba(250,70,21,0.07);border:1px solid rgba(250,70,21,0.18);border-radius:16px;padding:16px">
-    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:#ff6b3d;margin-bottom:14px">${t('photo.how_it_works')}</div>
-    ${steps.map(([n,st,sd]) => `
+    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:#ff6b3d;margin-bottom:14px">💡 So funktioniert's</div>
+    ${steps.map(([n,t,d]) => `
     <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
       <div style="width:24px;height:24px;border-radius:50%;background:rgba(250,70,21,0.25);border:1px solid rgba(250,70,21,0.4);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:#ffb399;flex-shrink:0">${n}</div>
       <div>
-        <div style="font-size:0.8rem;font-weight:700;color:#e2e8f0;line-height:1.2">${st}</div>
-        <div style="font-size:0.71rem;color:rgba(255,255,255,0.4);margin-top:2px;line-height:1.4">${sd}</div>
+        <div style="font-size:0.8rem;font-weight:700;color:#e2e8f0;line-height:1.2">${t}</div>
+        <div style="font-size:0.71rem;color:rgba(255,255,255,0.4);margin-top:2px;line-height:1.4">${d}</div>
       </div>
     </div>`).join('')}
   </div>`;
@@ -6631,28 +6488,28 @@ function renderPhotoChallenges() {
       <div style="background:linear-gradient(135deg,${c},${c}99);padding:16px;display:flex;align-items:center;gap:14px">
         <div style="font-size:2.6rem;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))">${ch.merchant_icon}</div>
         <div style="flex:1">
-          <div style="font-size:1rem;font-weight:800;color:#fff;line-height:1.25">${escHtml(_l(ch, 'title'))}</div>
+          <div style="font-size:1rem;font-weight:800;color:#fff;line-height:1.25">${escHtml(ch.title)}</div>
           <div style="font-size:0.72rem;color:rgba(255,255,255,0.65);margin-top:3px">${escHtml(ch.merchant_name)}</div>
         </div>
-        <span style="font-size:0.6rem;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;${done ? 'background:rgba(247,171,0,0.2);color:#F7AB00;border:1px solid rgba(247,171,0,0.3)' : 'background:rgba(255,255,255,0.15);color:#fff'}">${done ? '✅ '+t('challenges.completed') : '🔥 '+t('challenges.join')}</span>
+        <span style="font-size:0.6rem;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;${done ? 'background:rgba(247,171,0,0.2);color:#F7AB00;border:1px solid rgba(247,171,0,0.3)' : 'background:rgba(255,255,255,0.15);color:#fff'}">${done ? '✅ Fertig' : '🔥 Aktiv'}</span>
       </div>
       <!-- Body -->
       <div style="padding:14px 16px">
-        <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px">${escHtml(_l(ch, 'description'))}</p>
+        <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px">${escHtml(ch.description)}</p>
 
         <!-- Reward -->
         <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:11px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
           <span style="font-size:1.3rem">🎁</span>
           <div>
-            <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;font-weight:800;color:rgba(52,211,153,0.7);margin-bottom:2px">${t('challenges.reward')}</div>
-            <div style="font-size:0.85rem;font-weight:700;color:#34d399">${escHtml(_l(ch, 'reward_description'))}</div>
+            <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;font-weight:800;color:rgba(52,211,153,0.7);margin-bottom:2px">Deine Belohnung</div>
+            <div style="font-size:0.85rem;font-weight:700;color:#34d399">${escHtml(ch.reward_description)}</div>
           </div>
         </div>
 
         <!-- Progress -->
         <div style="margin-bottom:12px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <span style="font-size:0.75rem;font-weight:700;color:#e2e8f0">${count} / ${total} ${t('challenges.points')}</span>
+            <span style="font-size:0.75rem;font-weight:700;color:#e2e8f0">${count} / ${total} Fotos</span>
             <span style="font-size:0.72rem;font-weight:700;color:${c}">${pct}%</span>
           </div>
           <div style="height:8px;background:rgba(255,255,255,0.07);border-radius:99px;overflow:hidden">
@@ -6675,13 +6532,13 @@ function renderPhotoChallenges() {
         ${done
           ? `<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:14px;text-align:center">
                <div style="font-size:1.3rem;margin-bottom:6px">🎉</div>
-               <div style="font-size:0.9rem;font-weight:800;color:#34d399;margin-bottom:2px">${t('challenges.completed')}</div>
-               <div style="font-size:0.75rem;color:rgba(52,211,153,0.7)">${escHtml(_l(ch, 'reward_description'))}</div>
+               <div style="font-size:0.9rem;font-weight:800;color:#34d399;margin-bottom:2px">Challenge abgeschlossen!</div>
+               <div style="font-size:0.75rem;color:rgba(52,211,153,0.7)">${escHtml(ch.reward_description)}</div>
              </div>`
           : `<div style="display:flex;gap:8px">
                <button onclick="openChallengeDetail('${ch.id}')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;border-radius:12px;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer">Details</button>
                <button onclick="${doneToday ? '' : `openCameraForChallenge('${ch.id}')`}" ${doneToday ? 'disabled' : ''} style="flex:2;padding:12px;background:${doneToday ? 'rgba(255,255,255,0.04)' : `linear-gradient(135deg,${c},${c}cc)`};border:none;color:${doneToday ? 'rgba(255,255,255,0.25)' : '#fff'};border-radius:12px;font-size:0.85rem;font-weight:700;font-family:var(--font);cursor:${doneToday ? 'default' : 'pointer'};display:flex;align-items:center;justify-content:center;gap:8px;${doneToday ? '' : `box-shadow:0 4px 14px ${c}44`}">
-                 ${doneToday ? t('challenges.tomorrow_available') : t('challenges.take_photo')}
+                 ${doneToday ? 'Morgen wieder verfügbar' : '📸 Foto aufnehmen'}
                </button>
              </div>`
         }
@@ -6724,20 +6581,20 @@ function renderPhotoChallenges() {
   <div style="margin:8px 16px 20px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div>
-        <div style="font-size:1rem;font-weight:800;color:#e2e8f0">${t('photo.gallery_title')}</div>
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-top:2px">${t('photo.gallery_sub')}</div>
+        <div style="font-size:1rem;font-weight:800;color:#e2e8f0">🖼️ ZAM Community Galerie</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-top:2px">Fotos aus bestätigten ZAM-Challenges</div>
       </div>
-      <button onclick="navigateTo('community-gallery')" style="font-size:0.72rem;font-weight:700;color:#ff6b3d;background:rgba(250,70,21,0.1);border:1px solid rgba(250,70,21,0.2);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:var(--font)">${t('photo.gallery_all')}</button>
+      <button onclick="navigateTo('community-gallery')" style="font-size:0.72rem;font-weight:700;color:#ff6b3d;background:rgba(250,70,21,0.1);border:1px solid rgba(250,70,21,0.2);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:var(--font)">Alle →</button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">${galleryHtml}</div>
     <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;display:flex;align-items:center;gap:8px">
       <span style="font-size:1rem">🔍</span>
-      <span style="font-size:0.68rem;color:rgba(255,255,255,0.35);line-height:1.5">${t('photo.gallery_notice')}</span>
+      <span style="font-size:0.68rem;color:rgba(255,255,255,0.35);line-height:1.5">Alle öffentlichen Fotos werden vor Veröffentlichung automatisch geprüft und können vom Team abgelehnt werden.</span>
     </div>
   </div>`;
 
   container.innerHTML = hero + howItWorks
-    + `<div style="padding:0 16px;margin-bottom:4px"><div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:12px">${t('photo.active_header').replace('{n}',challenges.length)}</div>${challengeCards}</div>`
+    + `<div style="padding:0 16px;margin-bottom:4px"><div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:12px">🔥 Aktive Challenges (${challenges.length})</div>${challengeCards}</div>`
     + gallerySection
 ;
 }
@@ -6763,7 +6620,7 @@ function openChallengeDetail(challengeId) {
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
       <div style="width:56px;height:56px;border-radius:14px;background:${c}33;border:2px solid ${c}66;display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0">${ch.merchant_icon}</div>
       <div>
-        <div style="font-size:1.05rem;font-weight:800;color:#fff;line-height:1.2">${escHtml(_l(ch, 'title'))}</div>
+        <div style="font-size:1.05rem;font-weight:800;color:#fff;line-height:1.2">${escHtml(ch.title)}</div>
         <div style="font-size:0.74rem;color:rgba(255,255,255,0.45);margin-top:3px">${escHtml(ch.merchant_name)}</div>
       </div>
     </div>
@@ -6771,8 +6628,8 @@ function openChallengeDetail(challengeId) {
     <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:14px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
       <span style="font-size:1.4rem">🎁</span>
       <div>
-        <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;font-weight:800;color:rgba(52,211,153,0.7);margin-bottom:3px">${t('challenges.reward')}</div>
-        <div style="font-size:0.9rem;font-weight:800;color:#34d399">${escHtml(_l(ch, 'reward_description'))}</div>
+        <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;font-weight:800;color:rgba(52,211,153,0.7);margin-bottom:3px">Deine Belohnung</div>
+        <div style="font-size:0.9rem;font-weight:800;color:#34d399">${escHtml(ch.reward_description)}</div>
       </div>
     </div>
 
@@ -6807,7 +6664,7 @@ function openChallengeDetail(challengeId) {
     </div>
 
     <button onclick="${doneToday ? '' : `closeChallengeDetail();openCameraForChallenge('${ch.id}')`}" ${doneToday ? 'disabled' : ''} style="width:100%;padding:15px;background:${doneToday ? 'rgba(255,255,255,0.04)' : `linear-gradient(135deg,${c},${c}cc)`};border:none;color:${doneToday ? 'rgba(255,255,255,0.25)' : '#fff'};border-radius:14px;font-size:0.95rem;font-weight:800;font-family:var(--font);cursor:${doneToday ? 'default' : 'pointer'};${doneToday ? '' : `box-shadow:0 6px 20px ${c}44`}">
-      ${doneToday ? t('challenges.today_submitted') : t('challenges.today_submit')}
+      ${doneToday ? '⏳ Heute bereits eingereicht – morgen wieder' : '📸 Heute Foto aufnehmen'}
     </button>`;
 
   document.getElementById('challenge-detail-sheet').style.display = 'block';
@@ -6829,7 +6686,7 @@ function openCameraForChallenge(challengeId) {
   const ch = _getChallenges().find(c => c.id === challengeId);
   const modal = document.getElementById('modal-camera');
   if (!modal) return;
-  document.getElementById('camera-challenge-title').textContent = ch ? _l(ch, 'title') : t('challenges.take_photo');
+  document.getElementById('camera-challenge-title').textContent = ch ? ch.title : 'Foto aufnehmen';
   // Reset to viewfinder state
   const preview = document.getElementById('camera-photo-preview');
   const shutterUi = document.getElementById('camera-shutter-ui');
@@ -6969,14 +6826,14 @@ function retakePhoto() {
 }
 
 function submitChallengePhoto() {
-  if (!_capturedDataUrl) { showToast(t('challenges.no_photo_yet')); return; }
-  if (!_userLocation) { showToast(t('challenges.not_in_zone')); return; }
+  if (!_capturedDataUrl) { showToast('Bitte zuerst ein Foto aufnehmen'); return; }
+  if (!_userLocation) { showToast('❌ Nicht im ZAM-Bereich. Bitte näher kommen.'); return; }
   const user = ZAMApi.auth.currentUser();
   const uid = user?.id || 'guest';
   const today = new Date().toISOString().slice(0,10);
   const subs = _getPhotoSubs();
   if (subs.some(s => s.challenge_id===_activeChallengeId && s.user_id===uid && s.submission_day===today && s.status!=='rejected')) {
-    showToast(t('challenges.already_submitted')); return;
+    showToast('Heute bereits ein Foto eingereicht!'); return;
   }
   const btn = document.getElementById('btn-submit-photo');
   if (btn) { btn.textContent = 'Wird eingereicht…'; btn.disabled = true; }
@@ -7287,7 +7144,7 @@ function renderRewards() {
         <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:2px">${p.merchant}</div>
         <div style="font-size:0.7rem;color:#F7AB00;margin-top:3px;font-weight:700">⭐ ${p.points.toLocaleString('de-DE')} Punkte</div>
       </div>
-      <button onclick="redeemPointsReward('${p.id}')" ${canAfford ? '' : 'disabled'} style="padding:9px 14px;border-radius:10px;font-size:0.75rem;font-weight:800;font-family:var(--font);cursor:${canAfford ? 'pointer' : 'default'};border:none;background:${canAfford ? 'linear-gradient(135deg,#8a5f00,#F7AB00)' : 'rgba(255,255,255,0.05)'};color:${canAfford ? '#fff' : 'rgba(255,255,255,0.25)'};white-space:nowrap">${canAfford ? t('deals.redeem') : t('deals.too_few')}</button>
+      <button onclick="redeemPointsReward('${p.id}')" ${canAfford ? '' : 'disabled'} style="padding:9px 14px;border-radius:10px;font-size:0.75rem;font-weight:800;font-family:var(--font);cursor:${canAfford ? 'pointer' : 'default'};border:none;background:${canAfford ? 'linear-gradient(135deg,#8a5f00,#F7AB00)' : 'rgba(255,255,255,0.05)'};color:${canAfford ? '#fff' : 'rgba(255,255,255,0.25)'};white-space:nowrap">${canAfford ? 'Einlösen' : 'Zu wenig'}</button>
     </div>`;
   }).join('');
 
@@ -7418,7 +7275,7 @@ function markRewardRedeemed(rewardId) {
   if (!confirm('Gutschein als eingelöst markieren?')) return;
   const rewards = _getRewards();
   const r = rewards.find(x => x.id === rewardId);
-  if (r) { r.status = 'redeemed'; r.redeemed_at = new Date().toISOString(); _saveRewards(rewards); renderRewards(); showToast(t('toast.voucher_redeemed')); }
+  if (r) { r.status = 'redeemed'; r.redeemed_at = new Date().toISOString(); _saveRewards(rewards); renderRewards(); showToast('✓ Gutschein eingelöst!'); }
 }
 
 function redeemPointsReward(catalogId) {
@@ -7440,7 +7297,7 @@ function redeemPointsReward(catalogId) {
   rewards.unshift({ id:'rew_'+Date.now(), type:'points', merchant_name:item.merchant, merchant_icon:item.icon, title:item.title, description:item.description, voucher_id:_generateVoucherId(), status:'available', points_cost:item.points, expires_at:new Date(Date.now()+30*86400000).toISOString(), earned_at:new Date().toISOString() });
   _saveRewards(rewards);
   renderRewards();
-  showToast(t('toast.reward_unlocked').replace('{title}', item.title));
+  showToast(`🎁 ${item.title} freigeschaltet!`);
 }
 
 function _awardChallengeReward(challengeId) {
@@ -7448,9 +7305,9 @@ function _awardChallengeReward(challengeId) {
   if (!ch) return;
   const rewards = _getRewards();
   if (rewards.some(r => r.challenge_id === challengeId && r.status !== 'expired')) return;
-  rewards.unshift({ id:'rew_'+Date.now(), type:'challenge', merchant_name:ch.merchant_name, merchant_icon:ch.merchant_icon, title:_l(ch, 'reward_description'), description:t('toast.reward_unlocked').replace('{title}', _l(ch, 'title')), voucher_id:_generateVoucherId(), status:'available', challenge_id:challengeId, expires_at:new Date(Date.now()+30*86400000).toISOString(), earned_at:new Date().toISOString() });
+  rewards.unshift({ id:'rew_'+Date.now(), type:'challenge', merchant_name:ch.merchant_name, merchant_icon:ch.merchant_icon, title:ch.reward_description, description:`Belohnung für: ${ch.title}`, voucher_id:_generateVoucherId(), status:'available', challenge_id:challengeId, expires_at:new Date(Date.now()+30*86400000).toISOString(), earned_at:new Date().toISOString() });
   _saveRewards(rewards);
-  showToast(t('toast.reward_unlocked').replace('{title}', _l(ch, 'reward_description')));
+  showToast(`🎁 Belohnung freigeschaltet: ${ch.reward_description}`);
 }
 
 // ═══════════════════════════════════════════════
@@ -7491,18 +7348,18 @@ function openReferralSheet() {
       </div>
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;text-align:center">
         <div style="font-size:1.6rem;font-weight:900;color:#F7AB00">${refCount * 100}</div>
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">${t('referral.points_earned')}</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Punkte verdient</div>
       </div>
     </div>
     <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;margin-bottom:16px">
-      <div style="font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em">${t('referral.how_it_works')}</div>
-      ${[[1,t('referral.step1_title'),t('referral.step1_desc')],[2,t('referral.step2_title'),t('referral.step2_desc')],[3,t('referral.step3_title'),t('referral.step3_desc')]].map(([n,rs,rd]) => `
+      <div style="font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em">So funktioniert's</div>
+      ${[['1','Deinen Code teilen','Sende deinen persönlichen Code an Freunde'],['2','Freund registriert sich','Mit deinem Code im ZAM Club anmelden'],['3','Beide erhalten Punkte','+100 Punkte für dich, +100 Punkte für den Freund']].map(([n,t,d]) => `
       <div style="display:flex;gap:10px;margin-bottom:8px">
         <div style="width:20px;height:20px;border-radius:50%;background:rgba(250,70,21,0.2);border:1px solid rgba(250,70,21,0.3);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#ffb399;flex-shrink:0;margin-top:1px">${n}</div>
-        <div><div style="font-size:0.78rem;font-weight:700;color:#e2e8f0">${rs}</div><div style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-top:1px">${rd}</div></div>
+        <div><div style="font-size:0.78rem;font-weight:700;color:#e2e8f0">${t}</div><div style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-top:1px">${d}</div></div>
       </div>`).join('')}
     </div>
-    <button onclick="closeReferralSheet()" style="width:100%;padding:13px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.84rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('buttons.close')}</button>`;
+    <button onclick="closeReferralSheet()" style="width:100%;padding:13px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.84rem;font-weight:700;font-family:var(--font);cursor:pointer">Schließen</button>`;
   sheet.style.display = 'block';
   document.body.style.overflow = 'hidden';
 }
@@ -7549,7 +7406,7 @@ function copyShareLink() {
   const code = _getReferralCode(user) || 'DEMO250';
   const link = `https://zamclub.de/invite/${code}`;
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(link).then(() => showToast(t('referral.link_copied')));
+    navigator.clipboard.writeText(link).then(() => showToast('✓ Link kopiert!'));
   } else {
     showToast('✓ ' + link);
   }
@@ -7558,7 +7415,7 @@ function copyShareLink() {
 function shareWhatsApp() {
   const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
   const code = _getReferralCode(user) || 'DEMO250';
-  const msg = encodeURIComponent(t('referral.share_msg').replace('{code}', code) + '\nhttps://zamclub.de/invite/' + code);
+  const msg = encodeURIComponent(`Hey! Ich nutze die ZAM Club App und lade dich ein. Meld dich mit meinem Code ${code} an und wir bekommen beide Punkte! 🎉\nhttps://zamclub.de/invite/${code}`);
   window.open(`https://wa.me/?text=${msg}`, '_blank');
 }
 
@@ -8506,7 +8363,7 @@ function _showNearbyBanner(msgs) {
         <div style="font-size:0.72rem;font-weight:800;color:#FA4615;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:1px">📍 Du bist in der Nähe</div>
         <div style="font-size:0.8rem;color:rgba(255,255,255,0.85);line-height:1.3">${escHtml(msg.text)}</div>
       </div>
-      <button onclick="navigateTo('${msg.action}');document.getElementById('nearby-alert-banner')?.remove()" style="padding:7px 12px;border-radius:8px;background:rgba(250,70,21,0.2);border:1px solid rgba(250,70,21,0.4);color:#ffb399;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">${t('toast.view')}</button>
+      <button onclick="navigateTo('${msg.action}');document.getElementById('nearby-alert-banner')?.remove()" style="padding:7px 12px;border-radius:8px;background:rgba(250,70,21,0.2);border:1px solid rgba(250,70,21,0.4);color:#ffb399;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">Ansehen</button>
       <button onclick="document.getElementById('nearby-alert-banner')?.remove()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:1.3rem;cursor:pointer;padding:2px 4px;flex-shrink:0">×</button>
     </div>`;
   document.body.prepend(banner);
@@ -8721,7 +8578,7 @@ function secureVoucherFromDeal(dealId, dealTitle, storeIcon, storeName, discount
   };
   vouchers.unshift(voucher);
   _saveMyVouchers(vouchers);
-  showToast(t('toast.partner_voucher'), 'success');
+  showToast('🎟 Gutschein gesichert! +10 Punkte', 'success');
   showMyVoucherQR(voucher.id);
 }
 
