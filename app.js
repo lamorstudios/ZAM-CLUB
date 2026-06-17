@@ -19,7 +19,7 @@ window.ZAM_I18N = {
     deals:{ title:'Deals 🏷️', all:'Alle', regular:'Deals', partner:'🤝 Partner', voucher:'Gutschein sichern', claimed:'✓ Eingelöst', loading:'Lädt…', no_deals:'Keine Deals verfügbar', no_partner:'Noch keine Partner-Deals aktiv', redeem:'🎟 Einlösen', too_few:'Zu wenig', today_spin:'🎰 Heute im Spin', today_prize:'🎁 Heute auch zu gewinnen', together:'👥 Gemeinsam', interested:'⭐ Interessiert', interested_q:'⭐ Interessiert?', partner_tag:'🤝 Partner Deal', valid_until:'Bis {date} · {n} Teilnehmer', checkin_points:'📍 {name} Check-in! +25 Punkte' },
     events:{ title:'Events 📅', join:'Teilnehmen', joined:'✓ Angemeldet', loading:'Lädt…', spots_free:'Plätze frei', spots_low:'Nur noch {n} Plätze!', attendees:'{n} Teilnehmer', all:'Alle', week:'Diese Woche', month:'Diesen Monat', join_success:'🎉 Angemeldet! Checke vor Ort ein um Punkte zu erhalten.' },
     community:{ title:'Community 👥', nudge:'Anstupsen', chat:'Chat öffnen', online:'online', add_friend:'➕ Freund', req_sent:'Anfrage gesendet', accept:'✅ Annehmen', contacts:'Kontakte', friends:'👫 Meine Freunde', open_requests:'📩 Offene Anfragen', sent_requests:'📤 Gesendete Anfragen', my_contacts:'🤝 Meine Kontakte', wall:'Pinnwand', chat_tab:'Chat', contacts_tab:'Kontakte', write_post:'Beitrag schreiben…', no_posts:'Noch keine Beiträge.', together:'Gemeinsam', interested:'Interessiert', loading:'Lädt…', delete:'Löschen', delete_confirm:'Beitrag löschen?', pending:'⏳ ausstehend' },
-    challenges:{ title:'Challenges 📸', join:'Mitmachen', progress:'Fortschritt', completed:'Abgeschlossen', points:'Punkte', reward:'Belohnung', claim:'Abholen 🎁', done:'Erhalten', today_submit:'📸 Heute Foto aufnehmen', today_submitted:'⏳ Heute bereits eingereicht – morgen wieder', already_submitted:'Heute bereits ein Foto eingereicht!', reward_pts:'+{n} Pkt.' },
+    challenges:{ title:'Challenges 📸', join:'Mitmachen', progress:'Fortschritt', completed:'Abgeschlossen', points:'Punkte', reward:'Belohnung', claim:'Abholen 🎁', done:'Erhalten', today_submit:'📸 Heute Foto aufnehmen', today_submitted:'⏳ Heute bereits eingereicht – morgen wieder', already_submitted:'Heute bereits ein Foto eingereicht!', reward_pts:'+{n} Pkt.', take_photo:'📸 Foto aufnehmen', tomorrow_available:'Morgen wieder verfügbar', no_photo_yet:'Bitte zuerst ein Foto aufnehmen', not_in_zone:'❌ Nicht im ZAM-Bereich. Bitte näher kommen.' },
     alerts:{ title:'Benachrichtigungen', all:'Alle', messages:'💬 Nachrichten', nudges:'👋 Anstupsien', events:'🎉 Events', deals:'🏷️ Deals', community:'👥 Community', empty:'Keine Benachrichtigungen', in_category:' in dieser Kategorie', friend_request:'➕ Freundschaftsanfrage', wants_friend:' möchte dich als Freund hinzufügen.', deal_asks:' fragt an', request_declined:'Anfrage abgelehnt', chat_open:'💬 Chat öffnen', accept:'✅ Annehmen', decline:'❌ Ablehnen', someone:'Jemand' },
     profile:{ title:'Profil', edit_short:'Profil bearbeiten', points_history_short:'Punkte-Historie', vouchers:'Meine Gutscheine', my_events:'Meine Events', nearby:'Nearby Alerts', invite:'Freunde einladen', logout:'Abmelden', language:'🌍 Sprache', disabled:'Deaktiviert', active:'✅ Aktiv', invite_bonus:'+100 Punkte', points_label:'Gesammelte Punkte', visits:'Besuche', events_stat:'Events', deals_stat:'Deals', saved_items:'Gemerkte Inhalte', badges:'Meine Abzeichen', challenges_title:'🎯 Monatliche Challenges', my_rewards:'Meine Belohnungen', badge_unlocked:'Abzeichen freigeschaltet! 🎉', nothing_saved:'Noch nichts gemerkt.', events_saved:'🔖 {n} Event{s} gemerkt', deals_saved:'🏷️ {n} Deal{s} gemerkt', saved_deals_link:'Gespeicherte Deals →' },
     qr:{ checkin_btn_do:'✅ Bei {label} einchecken (+25 Pkt.)', checkin_btn_done:'✓ Heute bei {label} eingecheckt', next_checkin:'⏰ Nächster Check-in morgen möglich', show_code:'📍 Zeige diesen Code bei {label}', valid:'✅ Gültig — beim Händler vorzeigen', checkin_success:'✅ Check-in erfolgreich! +{n} Punkte für {name}' },
@@ -29,6 +29,11 @@ window.ZAM_I18N = {
     errors:{ generic:'Etwas ist schiefgelaufen.', network:'Netzwerkfehler. Bitte versuche es erneut.' },
     success:{ voucher_saved:'Gutschein gespeichert! 🎟', friend_sent:'Freundschaftsanfrage gesendet! 👋', event_joined:'Du nimmst teil! 🎉' },
     map:{ title:'ZAM Live Map', online:'online', users:'Nutzer aktiv', close:'Schließen' },
+    levels:{ bronze:'Bronze Member', silver:'Silber Member', gold:'Gold Member', platinum:'Platin Member', platinum_reached:'🎉 Platin erreicht!', progress:'{pts} / {max} Pkt. bis {next}', next_silver:'Silber', next_gold:'Gold', next_platinum:'Platin' },
+    photo:{ title:'📸 Foto-Challenges', how_it_works:'💡 So funktioniert\'s', step1_title:'Challenge auswählen', step1_desc:'Wähle eine aktive Händler-Challenge aus der Liste', step2_title:'Foto aufnehmen', step2_desc:'Mach ein Foto direkt in der App – kein Upload erlaubt', step3_title:'Standort bestätigen', step3_desc:'Die App prüft automatisch, dass du im ZAM bist', step4_title:'Fortschritt sammeln', step4_desc:'Jeden Tag ein Foto – bis das Ziel erreicht ist', step5_title:'Belohnung einlösen', step5_desc:'Scanne deinen QR-Code beim Händler für die Prämie', active_header:'🔥 Aktive Challenges ({n})', gallery_title:'🖼️ ZAM Community Galerie', gallery_sub:'Fotos aus bestätigten ZAM-Challenges', gallery_all:'Alle →', gallery_notice:'Alle öffentlichen Fotos werden vor Veröffentlichung automatisch geprüft und können vom Team abgelehnt werden.', stats_photos:'📸 Community Fotos', stats_redeemed:'🏆 Belohnungen eingelöst', stats_active:'🔥 Aktive Challenges', stats_rewards:'🎁 Verfügbare Prämien' },
+    referral:{ how_it_works:'So funktioniert\'s', step1_title:'Deinen Code teilen', step1_desc:'Sende deinen persönlichen Code an Freunde', step2_title:'Freund registriert sich', step2_desc:'Mit deinem Code im ZAM Club anmelden', step3_title:'Beide erhalten Punkte', step3_desc:'+100 Punkte für dich, +100 Punkte für den Freund', points_earned:'Punkte verdient', link_copied:'✓ Link kopiert!', share_msg:'Hey! Ich nutze die ZAM Club App und lade dich ein. Meld dich mit meinem Code {code} an und wir bekommen beide Punkte! 🎉' },
+    merchant:{ current_deals:'Aktuelle Aktionen' },
+    ai:{ default_msg:'Ich helfe gerne! Du kannst mich fragen:<br><br>• Was gibt es heute im ZAM?<br>• Aktuelle Angebote & Deals<br>• Wo kann ich essen?<br>• Meine persönlichen Empfehlungen<br><br>Was möchtest du wissen? 🤖' },
   },
   en: {
     nav:{ home:'Home', deals:'Deals', events:'Events', community:'Community', map:'Map', challenges:'Challenges', alerts:'Alerts', profile:'Profile' },
@@ -39,7 +44,7 @@ window.ZAM_I18N = {
     deals:{ title:'Deals 🏷️', all:'All', regular:'Deals', partner:'🤝 Partner', voucher:'Get voucher', claimed:'✓ Redeemed', loading:'Loading…', no_deals:'No deals available', no_partner:'No partner deals yet', redeem:'🎟 Redeem', too_few:'Not enough', today_spin:'🎰 Today in spin', today_prize:'🎁 Also to win today', together:'👥 Together', interested:'⭐ Interested', interested_q:'⭐ Interested?', partner_tag:'🤝 Partner Deal', valid_until:'Until {date} · {n} participants', checkin_points:'📍 {name} Check-in! +25 points' },
     events:{ title:'Events 📅', join:'Join', joined:'✓ Registered', loading:'Loading…', spots_free:'spots left', spots_low:'Only {n} spots left!', attendees:'{n} attendees', all:'All', week:'This week', month:'This month', join_success:"🎉 Registered! Check in on-site to earn points." },
     community:{ title:'Community 👥', nudge:'Nudge', chat:'Open chat', online:'online', add_friend:'➕ Add friend', req_sent:'Request sent', accept:'✅ Accept', contacts:'Contacts', friends:'👫 My Friends', open_requests:'📩 Pending Requests', sent_requests:'📤 Sent Requests', my_contacts:'🤝 My Contacts', wall:'Wall', chat_tab:'Chat', contacts_tab:'Contacts', write_post:'Write a post…', no_posts:'No posts yet.', together:'Together', interested:'Interested', loading:'Loading…', delete:'Delete', delete_confirm:'Delete post?', pending:'⏳ pending' },
-    challenges:{ title:'Challenges 📸', join:'Join', progress:'Progress', completed:'Completed', points:'Points', reward:'Reward', claim:'Collect 🎁', done:'Collected', today_submit:'📸 Take photo today', today_submitted:'⏳ Already submitted today – come back tomorrow', already_submitted:'Already submitted a photo today!', reward_pts:'+{n} pts' },
+    challenges:{ title:'Challenges 📸', join:'Join', progress:'Progress', completed:'Completed', points:'Points', reward:'Reward', claim:'Collect 🎁', done:'Collected', today_submit:'📸 Take photo today', today_submitted:'⏳ Already submitted today – come back tomorrow', already_submitted:'Already submitted a photo today!', reward_pts:'+{n} pts', take_photo:'📸 Take photo', tomorrow_available:'Available again tomorrow', no_photo_yet:'Please take a photo first', not_in_zone:'❌ Not in ZAM area. Please come closer.' },
     alerts:{ title:'Notifications', all:'All', messages:'💬 Messages', nudges:'👋 Nudges', events:'🎉 Events', deals:'🏷️ Deals', community:'👥 Community', empty:'No notifications', in_category:' in this category', friend_request:'➕ Friend request', wants_friend:' wants to add you as a friend.', deal_asks:' is asking', request_declined:'Request declined', chat_open:'💬 Open chat', accept:'✅ Accept', decline:'❌ Decline', someone:'Someone' },
     profile:{ title:'Profile', edit_short:'Edit profile', points_history_short:'Points history', vouchers:'My vouchers', my_events:'My events', nearby:'Nearby Alerts', invite:'Invite friends', logout:'Sign out', language:'🌍 Language', disabled:'Disabled', active:'✅ Active', invite_bonus:'+100 points', points_label:'Points collected', visits:'Visits', events_stat:'Events', deals_stat:'Deals', saved_items:'Saved items', badges:'My Badges', challenges_title:'🎯 Monthly Challenges', my_rewards:'My Rewards', badge_unlocked:'Badge unlocked! 🎉', nothing_saved:'Nothing saved yet.', events_saved:'🔖 {n} event{s} saved', deals_saved:'🏷️ {n} deal{s} saved', saved_deals_link:'Saved deals →' },
     qr:{ checkin_btn_do:'✅ Check in at {label} (+25 pts)', checkin_btn_done:'✓ Checked in at {label} today', next_checkin:'⏰ Next check-in possible tomorrow', show_code:'📍 Show this code at {label}', valid:'✅ Valid — show to merchant', checkin_success:'✅ Check-in successful! +{n} points for {name}' },
@@ -49,6 +54,11 @@ window.ZAM_I18N = {
     errors:{ generic:'Something went wrong.', network:'Network error. Please try again.' },
     success:{ voucher_saved:'Voucher saved! 🎟', friend_sent:'Friend request sent! 👋', event_joined:"You're in! 🎉" },
     map:{ title:'ZAM Live Map', online:'online', users:'users active', close:'Close' },
+    levels:{ bronze:'Bronze Member', silver:'Silver Member', gold:'Gold Member', platinum:'Platinum Member', platinum_reached:'🎉 Platinum reached!', progress:'{pts} / {max} pts to {next}', next_silver:'Silver', next_gold:'Gold', next_platinum:'Platinum' },
+    photo:{ title:'📸 Photo Challenges', how_it_works:'💡 How it works', step1_title:'Choose challenge', step1_desc:'Pick an active merchant challenge from the list', step2_title:'Take a photo', step2_desc:'Take a photo directly in the app – no uploads allowed', step3_title:'Confirm location', step3_desc:'The app automatically checks you\'re in the ZAM', step4_title:'Collect progress', step4_desc:'One photo per day – until the goal is reached', step5_title:'Redeem reward', step5_desc:'Scan your QR code at the merchant to claim your prize', active_header:'🔥 Active Challenges ({n})', gallery_title:'🖼️ ZAM Community Gallery', gallery_sub:'Photos from verified ZAM challenges', gallery_all:'All →', gallery_notice:'All public photos are automatically reviewed before publication and may be rejected by the team.', stats_photos:'📸 Community Photos', stats_redeemed:'🏆 Rewards redeemed', stats_active:'🔥 Active Challenges', stats_rewards:'🎁 Available Rewards' },
+    referral:{ how_it_works:'How it works', step1_title:'Share your code', step1_desc:'Send your personal code to friends', step2_title:'Friend registers', step2_desc:'Sign up at ZAM Club with your code', step3_title:'Both get points', step3_desc:'+100 points for you, +100 points for your friend', points_earned:'Points earned', link_copied:'✓ Link copied!', share_msg:'Hey! I\'m using the ZAM Club app and invite you. Sign up with my code {code} and we both get points! 🎉' },
+    merchant:{ current_deals:'Current offers' },
+    ai:{ default_msg:'I\'m happy to help! You can ask me:<br><br>• What\'s on at ZAM today?<br>• Current offers & deals<br>• Where can I eat?<br>• My personal recommendations<br><br>What would you like to know? 🤖' },
   },
   tr: {
     nav:{ home:'Ana Sayfa', deals:'Fırsatlar', events:'Etkinlikler', community:'Topluluk', map:'Harita', challenges:'Görevler', alerts:'Bildirimler', profile:'Profil' },
@@ -59,7 +69,7 @@ window.ZAM_I18N = {
     deals:{ title:'Fırsatlar 🏷️', all:'Tümü', regular:'Fırsatlar', partner:'🤝 Ortak', voucher:'Kuponu al', claimed:'✓ Kullanıldı', loading:'Yükleniyor…', no_deals:'Fırsat bulunamadı', no_partner:'Henüz ortak fırsatı yok', redeem:'🎟 Kullan', too_few:'Yetersiz', today_spin:'🎰 Bugün çevirmede', today_prize:'🎁 Bugün de kazanılabilir', together:'👥 Birlikte', interested:'⭐ İlgileniyor', interested_q:'⭐ İlgileniyor musun?', partner_tag:'🤝 Ortak Fırsatı', valid_until:'Bitiş: {date} · {n} katılımcı', checkin_points:'📍 {name} Giriş! +25 puan' },
     events:{ title:'Etkinlikler 📅', join:'Katıl', joined:'✓ Kayıt olundu', loading:'Yükleniyor…', spots_free:'yer mevcut', spots_low:'Yalnızca {n} yer kaldı!', attendees:'{n} katılımcı', all:'Tümü', week:'Bu hafta', month:'Bu ay', join_success:'🎉 Kayıt olundu! Puan kazanmak için yerinde giriş yap.' },
     community:{ title:'Topluluk 👥', nudge:'Dürt', chat:'Sohbet aç', online:'çevrimiçi', add_friend:'➕ Arkadaş ekle', req_sent:'İstek gönderildi', accept:'✅ Kabul et', contacts:'Kişiler', friends:'👫 Arkadaşlarım', open_requests:'📩 Bekleyen İstekler', sent_requests:'📤 Gönderilen İstekler', my_contacts:'🤝 Kişilerim', wall:'Duvar', chat_tab:'Sohbet', contacts_tab:'Kişiler', write_post:'Gönderi yaz…', no_posts:'Henüz gönderi yok.', together:'Birlikte', interested:'İlgileniyor', loading:'Yükleniyor…', delete:'Sil', delete_confirm:'Gönderi silinsin mi?', pending:'⏳ beklemede' },
-    challenges:{ title:'Görevler 📸', join:'Katıl', progress:'İlerleme', completed:'Tamamlandı', points:'Puan', reward:'Ödül', claim:'Al 🎁', done:'Alındı', today_submit:'📸 Bugün fotoğraf çek', today_submitted:'⏳ Bugün zaten gönderildi – yarın tekrar dene', already_submitted:'Bugün zaten bir fotoğraf gönderildi!', reward_pts:'+{n} puan' },
+    challenges:{ title:'Görevler 📸', join:'Katıl', progress:'İlerleme', completed:'Tamamlandı', points:'Puan', reward:'Ödül', claim:'Al 🎁', done:'Alındı', today_submit:'📸 Bugün fotoğraf çek', today_submitted:'⏳ Bugün zaten gönderildi – yarın tekrar dene', already_submitted:'Bugün zaten bir fotoğraf gönderildi!', reward_pts:'+{n} puan', take_photo:'📸 Fotoğraf çek', tomorrow_available:'Yarın tekrar mevcut', no_photo_yet:'Lütfen önce bir fotoğraf çekin', not_in_zone:'❌ ZAM alanında değilsiniz. Lütfen daha yakına gelin.' },
     alerts:{ title:'Bildirimler', all:'Tümü', messages:'💬 Mesajlar', nudges:'👋 Dürtmeler', events:'🎉 Etkinlikler', deals:'🏷️ Fırsatlar', community:'👥 Topluluk', empty:'Bildirim yok', in_category:' bu kategoride', friend_request:'➕ Arkadaşlık isteği', wants_friend:' seni arkadaş olarak eklemek istiyor.', deal_asks:' istek gönderiyor', request_declined:'İstek reddedildi', chat_open:'💬 Sohbet aç', accept:'✅ Kabul et', decline:'❌ Reddet', someone:'Biri' },
     profile:{ title:'Profil', edit_short:'Profili düzenle', points_history_short:'Puan geçmişi', vouchers:'Kuponlarım', my_events:'Etkinliklerim', nearby:'Yakın Uyarılar', invite:'Arkadaş davet et', logout:'Çıkış yap', language:'🌍 Dil', disabled:'Devre dışı', active:'✅ Aktif', invite_bonus:'+100 puan', points_label:'Toplanan puanlar', visits:'Ziyaretler', events_stat:'Etkinlikler', deals_stat:'Fırsatlar', saved_items:'Kaydedilenler', badges:'Rozetlerim', challenges_title:'🎯 Aylık Görevler', my_rewards:'Ödüllerim', badge_unlocked:'Rozet açıldı! 🎉', nothing_saved:'Henüz kaydedilen yok.', events_saved:'🔖 {n} etkinlik kaydedildi', deals_saved:'🏷️ {n} fırsat kaydedildi', saved_deals_link:'Kaydedilen fırsatlar →' },
     qr:{ checkin_btn_do:'✅ {label}\'da giriş yap (+25 puan)', checkin_btn_done:'✓ Bugün {label}\'da giriş yapıldı', next_checkin:'⏰ Sonraki giriş yarın mümkün', show_code:'📍 Bu kodu {label}\'da göster', valid:'✅ Geçerli — mağazada göster', checkin_success:'✅ Giriş başarılı! {name} için +{n} puan' },
@@ -69,6 +79,11 @@ window.ZAM_I18N = {
     errors:{ generic:'Bir şeyler ters gitti.', network:'Ağ hatası. Lütfen tekrar dene.' },
     success:{ voucher_saved:'Kupon kaydedildi! 🎟', friend_sent:'Arkadaşlık isteği gönderildi! 👋', event_joined:'Katıldın! 🎉' },
     map:{ title:'ZAM Canlı Harita', online:'çevrimiçi', users:'kullanıcı aktif', close:'Kapat' },
+    levels:{ bronze:'Bronz Üye', silver:'Gümüş Üye', gold:'Altın Üye', platinum:'Platin Üye', platinum_reached:'🎉 Platin\'e ulaştın!', progress:'{pts} / {max} puana {next}\'e kadar', next_silver:'Gümüş', next_gold:'Altın', next_platinum:'Platin' },
+    photo:{ title:'📸 Fotoğraf Görevleri', how_it_works:'💡 Nasıl çalışır', step1_title:'Görev seç', step1_desc:'Listeden aktif bir mağaza görevi seç', step2_title:'Fotoğraf çek', step2_desc:'Doğrudan uygulamada fotoğraf çek – yükleme yapılamaz', step3_title:'Konumu onayla', step3_desc:'Uygulama otomatik olarak ZAM\'da olduğunu kontrol eder', step4_title:'İlerleme topla', step4_desc:'Her gün bir fotoğraf – hedefe ulaşana kadar', step5_title:'Ödülü kullan', step5_desc:'Ödülü almak için mağazada QR kodunu tarat', active_header:'🔥 Aktif Görevler ({n})', gallery_title:'🖼️ ZAM Topluluk Galerisi', gallery_sub:'Onaylanan ZAM görevlerinden fotoğraflar', gallery_all:'Tümü →', gallery_notice:'Tüm genel fotoğraflar yayınlanmadan önce otomatik olarak incelenir ve ekip tarafından reddedilebilir.', stats_photos:'📸 Topluluk Fotoğrafları', stats_redeemed:'🏆 Kullanılan ödüller', stats_active:'🔥 Aktif Görevler', stats_rewards:'🎁 Mevcut ödüller' },
+    referral:{ how_it_works:'Nasıl çalışır', step1_title:'Kodunu paylaş', step1_desc:'Kişisel kodunu arkadaşlarına gönder', step2_title:'Arkadaş kayıt olur', step2_desc:'Kodunla ZAM Club\'a kaydol', step3_title:'İkisi de puan alır', step3_desc:'Sana +100 puan, arkadaşına +100 puan', points_earned:'Kazanılan puanlar', link_copied:'✓ Bağlantı kopyalandı!', share_msg:'Hey! ZAM Club uygulamasını kullanıyorum ve seni davet ediyorum. {code} kodumla kayıt ol ve ikimiz de puan kazanalım! 🎉' },
+    merchant:{ current_deals:'Mevcut teklifler' },
+    ai:{ default_msg:'Yardımcı olmaktan memnuniyet duyarım! Bana sorabilirsin:<br><br>• Bugün ZAM\'da ne var?<br>• Güncel teklifler ve fırsatlar<br>• Nerede yiyebilirim?<br>• Kişisel önerilerim<br><br>Ne öğrenmek istersin? 🤖' },
   },
   es: {
     nav:{ home:'Inicio', deals:'Ofertas', events:'Eventos', community:'Comunidad', map:'Mapa', challenges:'Retos', alerts:'Alertas', profile:'Perfil' },
@@ -142,6 +157,24 @@ window.ZAM_CONTENT_I18N = {
     ev_003: { en: { title:'Kids Creative Workshop', description:'Crafting, painting, stamping for children aged 4–10. All materials included.' }, tr: { title:'Çocuk Yaratıcı Atölyesi', description:'4–10 yaş arası çocuklar için el sanatları, boyama, damgalama. Tüm malzemeler dahil.' } },
     ev_004: { en: { title:'Live Concert: Summer Night Beats', description:'Soul, jazz & singer-songwriters from Munich – three acts live on the ZAM stage. Free entry!' }, tr: { title:'Canlı Konser: Yaz Gecesi Ritmi', description:'Münih\'ten soul, caz & söz yazarları – ZAM sahnesinde üç canlı performans. Ücretsiz giriş!' } },
     ev_005: { en: { title:'Sustainability Workshop', description:'Repair café, zero-waste tips and open neighbourhood round. Free, no registration.' }, tr: { title:'Sürdürülebilirlik Atölyesi', description:'Tamir kafesi, sıfır atık ipuçları ve açık mahalle toplantısı. Ücretsiz, kayıt gerekmez.' } },
+  },
+  challenges: {
+    zam_ch_001: {
+      en: { title:'Dunkin Donuts Challenge', description:'Show your sweetest moments at Dunkin Donuts! Photograph 3 visits – on your 3rd visit you get a free donut.', reward:'Free Donut + 200 Points' },
+      tr: { title:'Dunkin Donuts Challenge', description:'Dunkin Donuts\'taki en tatlı anlarını paylaş! 3 ziyaret fotoğrafla – 3. ziyarette ücretsiz donut kazanırsın.', reward:'Bedava Donut + 200 Puan' }
+    },
+    zam_ch_002: {
+      en: { title:'KFC Fan Challenge', description:'Are you a real KFC fan? Photograph your chicken moment on 3 different days and show you\'re the biggest KFC fan in ZAM!', reward:'Free Hot Wings + 150 Points' },
+      tr: { title:'KFC Fan Challenge', description:'Gerçek bir KFC hayranı mısın? 3 farklı günde tavuk anını fotoğrafla ve ZAM\'ın en büyük KFC hayranı olduğunu kanıtla!', reward:'Bedava Hot Wings + 150 Puan' }
+    },
+    zam_ch_003: {
+      en: { title:'Fit Star Challenge', description:'Document your training progress at Fit Star! Collect 5 check-ins – show your workout, sauna or motivational moment.', reward:'1 Month Free + 300 Points' },
+      tr: { title:'Fit Star Challenge', description:'Fit Star\'daki antrenman ilerlemenizi belgeleyin! 5 giriş toplayın – egzersizinizi, saunayı veya motivasyon anınızı gösterin.', reward:'1 Ay Bedava + 300 Puan' }
+    },
+    zam_ch_004: {
+      en: { title:'L\'Osteria Pizza Challenge', description:'Photograph your pizza moment at L\'Osteria! Submit 2 pizza photos and secure the ZAM gourmet bonus – including a discount on your next visit.', reward:'15% Discount + 180 Points' },
+      tr: { title:'L\'Osteria Pizza Challenge', description:'L\'Osteria\'daki pizza anını fotoğrafla! 2 pizza fotoğrafı gönder ve ZAM gurme bonusunu kap – bir sonraki ziyaretinde indirim dahil.', reward:'%15 İndirim + 180 Puan' }
+    },
   }
 };
 
@@ -423,10 +456,9 @@ function updatePointsDisplay(animate = false) {
   // Level
   const levelKey = pts >= 3000 ? 'platinum' : pts >= 1500 ? 'gold' : pts >= 500 ? 'silver' : 'bronze';
   const levelMap = { bronze: 'BRONZE', silver: 'SILBER', gold: 'GOLD', platinum: 'PLATIN' };
-  const levelDisplay = { bronze: 'Bronze Member', silver: 'Silber Member', gold: 'Gold Member', platinum: 'Platin Member' };
   if (levelBadge) levelBadge.textContent = levelMap[levelKey];
   const levelEl = $('.points-level');
-  if (levelEl) levelEl.innerHTML = `<span class="points-level-dot"></span>${levelDisplay[levelKey]}`;
+  if (levelEl) levelEl.innerHTML = `<span class="points-level-dot"></span>${t('levels.' + levelKey)}`;
 
   // Progress bar
   const thresholds = { bronze: [0, 500], silver: [500, 1500], gold: [1500, 3000], platinum: [3000, 3000] };
@@ -438,10 +470,10 @@ function updatePointsDisplay(animate = false) {
   }
   if (progressLabel) {
     if (levelKey === 'platinum') {
-      progressLabel.textContent = '🎉 Platin erreicht!';
+      progressLabel.textContent = t('levels.platinum_reached');
     } else {
-      const nextLevelName = { bronze: 'Silber', silver: 'Gold', gold: 'Platin' }[levelKey];
-      progressLabel.textContent = `${pts.toLocaleString('de-DE')} / ${max.toLocaleString('de-DE')} Pkt. bis ${nextLevelName}`;
+      const nextKey = { bronze: 'next_silver', silver: 'next_gold', gold: 'next_platinum' }[levelKey];
+      progressLabel.textContent = t('levels.progress').replace('{pts}',pts.toLocaleString('de-DE')).replace('{max}',max.toLocaleString('de-DE')).replace('{next}',t('levels.' + nextKey));
     }
   }
 }
@@ -3047,7 +3079,7 @@ async function openMerchantDetail(merchantId) {
     </div>
 
     <div class="merchant-detail-section">
-      <div class="merchant-detail-section-title">Aktuelle Aktionen</div>
+      <div class="merchant-detail-section-title">${t('merchant.current_deals')}</div>
       <div class="merchant-deals-list">${dealsHtml}</div>
     </div>
 
@@ -5441,7 +5473,7 @@ function aiGenerateAnswer(q) {
   }
 
   // Default
-  return `Ich helfe gerne! Du kannst mich fragen:<br><br>• Was gibt es heute im ZAM?<br>• Aktuelle Angebote & Deals<br>• Wo kann ich essen?<br>• Meine persönlichen Empfehlungen<br><br>Was möchtest du wissen? 🤖`;
+  return t('ai.default_msg');
 }
 
 // ── User Preference Analysis ──
@@ -6657,45 +6689,45 @@ function renderPhotoChallenges() {
       <span style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#ff6b3d">ZAM Community</span>
     </div>
     <div style="position:absolute;top:0;right:-20px;font-size:9rem;opacity:0.06;pointer-events:none">📸</div>
-    <h1 style="font-size:1.45rem;font-weight:900;line-height:1.2;margin-bottom:14px;color:#fff">📸 Foto-Challenges</h1>
+    <h1 style="font-size:1.45rem;font-weight:900;line-height:1.2;margin-bottom:14px;color:#fff">${t('photo.title')}</h1>
     <!-- Live Stats -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
       <div style="background:rgba(250,70,21,0.12);border:1px solid rgba(250,70,21,0.2);border-radius:12px;padding:10px 8px;text-align:center">
         <div style="font-size:1.1rem;font-weight:900;color:#ffb399">${totalPhotos}</div>
-        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">📸 Community<br>Fotos</div>
+        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">${t('photo.stats_photos').replace('📸 ','📸<br>')}</div>
       </div>
       <div style="background:rgba(247,171,0,0.1);border:1px solid rgba(247,171,0,0.2);border-radius:12px;padding:10px 8px;text-align:center">
         <div style="font-size:1.1rem;font-weight:900;color:#F7AB00">${totalRedeemed}</div>
-        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">🏆 Belohnungen<br>eingelöst</div>
+        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">${t('photo.stats_redeemed').replace('🏆 ','🏆<br>')}</div>
       </div>
       <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:10px 8px;text-align:center">
         <div style="font-size:1.1rem;font-weight:900;color:#f87171">${activeChallengesCount}</div>
-        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">🔥 Aktive<br>Challenges</div>
+        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">${t('photo.stats_active').replace('🔥 ','🔥<br>')}</div>
       </div>
       <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:10px 8px;text-align:center">
         <div style="font-size:1.1rem;font-weight:900;color:#34d399">${availableRewards}</div>
-        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">🎁 Verfügbare<br>Prämien</div>
+        <div style="font-size:0.54rem;color:rgba(255,255,255,0.4);margin-top:2px;font-weight:600;line-height:1.2">${t('photo.stats_rewards').replace('🎁 ','🎁<br>')}</div>
       </div>
     </div>
   </div>`;
 
   // ── How it works ──────────────────────────────────
   const steps = [
-    ['1','Challenge auswählen','Wähle eine aktive Händler-Challenge aus der Liste'],
-    ['2','Foto aufnehmen','Mach ein Foto direkt in der App – kein Upload erlaubt'],
-    ['3','Standort bestätigen','Die App prüft automatisch, dass du im ZAM bist'],
-    ['4','Fortschritt sammeln','Jeden Tag ein Foto – bis das Ziel erreicht ist'],
-    ['5','Belohnung einlösen','Scanne deinen QR-Code beim Händler für die Prämie'],
+    ['1', t('photo.step1_title'), t('photo.step1_desc')],
+    ['2', t('photo.step2_title'), t('photo.step2_desc')],
+    ['3', t('photo.step3_title'), t('photo.step3_desc')],
+    ['4', t('photo.step4_title'), t('photo.step4_desc')],
+    ['5', t('photo.step5_title'), t('photo.step5_desc')],
   ];
   const howItWorks = `
   <div style="margin:0 16px 20px;background:rgba(250,70,21,0.07);border:1px solid rgba(250,70,21,0.18);border-radius:16px;padding:16px">
-    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:#ff6b3d;margin-bottom:14px">💡 So funktioniert's</div>
-    ${steps.map(([n,t,d]) => `
+    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:#ff6b3d;margin-bottom:14px">${t('photo.how_it_works')}</div>
+    ${steps.map(([n,st,sd]) => `
     <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
       <div style="width:24px;height:24px;border-radius:50%;background:rgba(250,70,21,0.25);border:1px solid rgba(250,70,21,0.4);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:#ffb399;flex-shrink:0">${n}</div>
       <div>
-        <div style="font-size:0.8rem;font-weight:700;color:#e2e8f0;line-height:1.2">${t}</div>
-        <div style="font-size:0.71rem;color:rgba(255,255,255,0.4);margin-top:2px;line-height:1.4">${d}</div>
+        <div style="font-size:0.8rem;font-weight:700;color:#e2e8f0;line-height:1.2">${st}</div>
+        <div style="font-size:0.71rem;color:rgba(255,255,255,0.4);margin-top:2px;line-height:1.4">${sd}</div>
       </div>
     </div>`).join('')}
   </div>`;
@@ -6727,25 +6759,25 @@ function renderPhotoChallenges() {
           <div style="font-size:1rem;font-weight:800;color:#fff;line-height:1.25">${escHtml(ch.title)}</div>
           <div style="font-size:0.72rem;color:rgba(255,255,255,0.65);margin-top:3px">${escHtml(ch.merchant_name)}</div>
         </div>
-        <span style="font-size:0.6rem;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;${done ? 'background:rgba(247,171,0,0.2);color:#F7AB00;border:1px solid rgba(247,171,0,0.3)' : 'background:rgba(255,255,255,0.15);color:#fff'}">${done ? '✅ Fertig' : '🔥 Aktiv'}</span>
+        <span style="font-size:0.6rem;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;${done ? 'background:rgba(247,171,0,0.2);color:#F7AB00;border:1px solid rgba(247,171,0,0.3)' : 'background:rgba(255,255,255,0.15);color:#fff'}">${done ? '✅ '+t('challenges.completed') : '🔥 '+t('challenges.join')}</span>
       </div>
       <!-- Body -->
       <div style="padding:14px 16px">
-        <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px">${escHtml(ch.description)}</p>
+        <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px">${escHtml(_getContentTitle('challenges', ch.id, 'description') || ch.description)}</p>
 
         <!-- Reward -->
         <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:11px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
           <span style="font-size:1.3rem">🎁</span>
           <div>
-            <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;font-weight:800;color:rgba(52,211,153,0.7);margin-bottom:2px">Deine Belohnung</div>
-            <div style="font-size:0.85rem;font-weight:700;color:#34d399">${escHtml(ch.reward_description)}</div>
+            <div style="font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;font-weight:800;color:rgba(52,211,153,0.7);margin-bottom:2px">${t('challenges.reward')}</div>
+            <div style="font-size:0.85rem;font-weight:700;color:#34d399">${escHtml(_getContentTitle('challenges', ch.id, 'reward') || ch.reward_description)}</div>
           </div>
         </div>
 
         <!-- Progress -->
         <div style="margin-bottom:12px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <span style="font-size:0.75rem;font-weight:700;color:#e2e8f0">${count} / ${total} Fotos</span>
+            <span style="font-size:0.75rem;font-weight:700;color:#e2e8f0">${count} / ${total} ${t('challenges.points')}</span>
             <span style="font-size:0.72rem;font-weight:700;color:${c}">${pct}%</span>
           </div>
           <div style="height:8px;background:rgba(255,255,255,0.07);border-radius:99px;overflow:hidden">
@@ -6774,7 +6806,7 @@ function renderPhotoChallenges() {
           : `<div style="display:flex;gap:8px">
                <button onclick="openChallengeDetail('${ch.id}')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;border-radius:12px;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer">Details</button>
                <button onclick="${doneToday ? '' : `openCameraForChallenge('${ch.id}')`}" ${doneToday ? 'disabled' : ''} style="flex:2;padding:12px;background:${doneToday ? 'rgba(255,255,255,0.04)' : `linear-gradient(135deg,${c},${c}cc)`};border:none;color:${doneToday ? 'rgba(255,255,255,0.25)' : '#fff'};border-radius:12px;font-size:0.85rem;font-weight:700;font-family:var(--font);cursor:${doneToday ? 'default' : 'pointer'};display:flex;align-items:center;justify-content:center;gap:8px;${doneToday ? '' : `box-shadow:0 4px 14px ${c}44`}">
-                 ${doneToday ? 'Morgen wieder verfügbar' : '📸 Foto aufnehmen'}
+                 ${doneToday ? t('challenges.tomorrow_available') : t('challenges.take_photo')}
                </button>
              </div>`
         }
@@ -6817,20 +6849,20 @@ function renderPhotoChallenges() {
   <div style="margin:8px 16px 20px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div>
-        <div style="font-size:1rem;font-weight:800;color:#e2e8f0">🖼️ ZAM Community Galerie</div>
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-top:2px">Fotos aus bestätigten ZAM-Challenges</div>
+        <div style="font-size:1rem;font-weight:800;color:#e2e8f0">${t('photo.gallery_title')}</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-top:2px">${t('photo.gallery_sub')}</div>
       </div>
-      <button onclick="navigateTo('community-gallery')" style="font-size:0.72rem;font-weight:700;color:#ff6b3d;background:rgba(250,70,21,0.1);border:1px solid rgba(250,70,21,0.2);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:var(--font)">Alle →</button>
+      <button onclick="navigateTo('community-gallery')" style="font-size:0.72rem;font-weight:700;color:#ff6b3d;background:rgba(250,70,21,0.1);border:1px solid rgba(250,70,21,0.2);border-radius:8px;padding:5px 10px;cursor:pointer;font-family:var(--font)">${t('photo.gallery_all')}</button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">${galleryHtml}</div>
     <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;display:flex;align-items:center;gap:8px">
       <span style="font-size:1rem">🔍</span>
-      <span style="font-size:0.68rem;color:rgba(255,255,255,0.35);line-height:1.5">Alle öffentlichen Fotos werden vor Veröffentlichung automatisch geprüft und können vom Team abgelehnt werden.</span>
+      <span style="font-size:0.68rem;color:rgba(255,255,255,0.35);line-height:1.5">${t('photo.gallery_notice')}</span>
     </div>
   </div>`;
 
   container.innerHTML = hero + howItWorks
-    + `<div style="padding:0 16px;margin-bottom:4px"><div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:12px">🔥 Aktive Challenges (${challenges.length})</div>${challengeCards}</div>`
+    + `<div style="padding:0 16px;margin-bottom:4px"><div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(255,255,255,0.3);margin-bottom:12px">${t('photo.active_header').replace('{n}',challenges.length)}</div>${challengeCards}</div>`
     + gallerySection
 ;
 }
@@ -6922,7 +6954,7 @@ function openCameraForChallenge(challengeId) {
   const ch = _getChallenges().find(c => c.id === challengeId);
   const modal = document.getElementById('modal-camera');
   if (!modal) return;
-  document.getElementById('camera-challenge-title').textContent = ch ? ch.title : 'Foto aufnehmen';
+  document.getElementById('camera-challenge-title').textContent = ch ? ch.title : t('challenges.take_photo');
   // Reset to viewfinder state
   const preview = document.getElementById('camera-photo-preview');
   const shutterUi = document.getElementById('camera-shutter-ui');
@@ -7062,8 +7094,8 @@ function retakePhoto() {
 }
 
 function submitChallengePhoto() {
-  if (!_capturedDataUrl) { showToast('Bitte zuerst ein Foto aufnehmen'); return; }
-  if (!_userLocation) { showToast('❌ Nicht im ZAM-Bereich. Bitte näher kommen.'); return; }
+  if (!_capturedDataUrl) { showToast(t('challenges.no_photo_yet')); return; }
+  if (!_userLocation) { showToast(t('challenges.not_in_zone')); return; }
   const user = ZAMApi.auth.currentUser();
   const uid = user?.id || 'guest';
   const today = new Date().toISOString().slice(0,10);
@@ -7584,18 +7616,18 @@ function openReferralSheet() {
       </div>
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;text-align:center">
         <div style="font-size:1.6rem;font-weight:900;color:#F7AB00">${refCount * 100}</div>
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Punkte verdient</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">${t('referral.points_earned')}</div>
       </div>
     </div>
     <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;margin-bottom:16px">
-      <div style="font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em">So funktioniert's</div>
-      ${[['1','Deinen Code teilen','Sende deinen persönlichen Code an Freunde'],['2','Freund registriert sich','Mit deinem Code im ZAM Club anmelden'],['3','Beide erhalten Punkte','+100 Punkte für dich, +100 Punkte für den Freund']].map(([n,t,d]) => `
+      <div style="font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em">${t('referral.how_it_works')}</div>
+      ${[[1,t('referral.step1_title'),t('referral.step1_desc')],[2,t('referral.step2_title'),t('referral.step2_desc')],[3,t('referral.step3_title'),t('referral.step3_desc')]].map(([n,rs,rd]) => `
       <div style="display:flex;gap:10px;margin-bottom:8px">
         <div style="width:20px;height:20px;border-radius:50%;background:rgba(250,70,21,0.2);border:1px solid rgba(250,70,21,0.3);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#ffb399;flex-shrink:0;margin-top:1px">${n}</div>
-        <div><div style="font-size:0.78rem;font-weight:700;color:#e2e8f0">${t}</div><div style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-top:1px">${d}</div></div>
+        <div><div style="font-size:0.78rem;font-weight:700;color:#e2e8f0">${rs}</div><div style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-top:1px">${rd}</div></div>
       </div>`).join('')}
     </div>
-    <button onclick="closeReferralSheet()" style="width:100%;padding:13px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.84rem;font-weight:700;font-family:var(--font);cursor:pointer">Schließen</button>`;
+    <button onclick="closeReferralSheet()" style="width:100%;padding:13px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.84rem;font-weight:700;font-family:var(--font);cursor:pointer">${t('buttons.close')}</button>`;
   sheet.style.display = 'block';
   document.body.style.overflow = 'hidden';
 }
@@ -7642,7 +7674,7 @@ function copyShareLink() {
   const code = _getReferralCode(user) || 'DEMO250';
   const link = `https://zamclub.de/invite/${code}`;
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(link).then(() => showToast('✓ Link kopiert!'));
+    navigator.clipboard.writeText(link).then(() => showToast(t('referral.link_copied')));
   } else {
     showToast('✓ ' + link);
   }
@@ -7651,7 +7683,7 @@ function copyShareLink() {
 function shareWhatsApp() {
   const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
   const code = _getReferralCode(user) || 'DEMO250';
-  const msg = encodeURIComponent(`Hey! Ich nutze die ZAM Club App und lade dich ein. Meld dich mit meinem Code ${code} an und wir bekommen beide Punkte! 🎉\nhttps://zamclub.de/invite/${code}`);
+  const msg = encodeURIComponent(t('referral.share_msg').replace('{code}', code) + '\nhttps://zamclub.de/invite/' + code);
   window.open(`https://wa.me/?text=${msg}`, '_blank');
 }
 
