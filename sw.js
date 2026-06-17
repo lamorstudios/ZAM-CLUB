@@ -1,4 +1,4 @@
-const CACHE = 'zam-club-v4';
+const CACHE = 'zam-club-v5';
 const ASSETS = [
   '/', '/index.html', '/style.css', '/app.js', '/api.js', '/map.html',
   '/manifest.json', '/assets/icon.svg'
@@ -31,7 +31,16 @@ self.addEventListener('fetch', e => {
     );
     return;
   }
-  // Assets: stale-while-revalidate
+  // JS/CSS: network-first to always get latest version
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+    e.respondWith(
+      fetch(e.request)
+        .then(r => { if (r.ok) caches.open(CACHE).then(c => c.put(e.request, r.clone())); return r; })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+  // Other assets: stale-while-revalidate
   e.respondWith(
     caches.open(CACHE).then(cache =>
       cache.match(e.request).then(cached => {
