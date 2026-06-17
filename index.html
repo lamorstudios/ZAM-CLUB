@@ -541,13 +541,7 @@
       </button>
     </div>
 
-    <!-- Sprache -->
-    <div style="padding: 0 16px 4px">
-      <button class="btn btn-ghost btn-full" onclick="openLangSheet()" style="display:flex;align-items:center;gap:10px;justify-content:flex-start">
-        🌍 <span data-i18n="profile.language">Sprache</span>
-        <span id="lang-current-label" style="margin-left:auto;font-size:0.7rem;color:rgba(255,255,255,0.35)">🇩🇪 Deutsch</span>
-      </button>
-    </div>
+    <!-- Sprache (deaktiviert für v1) -->
 
     <!-- Demo Rollen Umschalter -->
     <div style="margin:12px 16px 4px;background:rgba(247,171,0,0.06);border:1px solid rgba(247,171,0,0.2);border-radius:14px;padding:14px 16px">
@@ -574,16 +568,7 @@
       <div id="demo-role-actions" style="margin-top:12px"></div>
     </div>
 
-    <!-- Language Selector -->
-    <div style="padding:0 16px 12px">
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px 16px">
-        <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:10px">🌍 Sprache / Language</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button onclick="setLang('de')" class="lang-sel-btn" data-lang="de" style="flex:1;min-width:52px;padding:8px 4px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s">🇩🇪 DE</button>
-          <button onclick="setLang('en')" class="lang-sel-btn" data-lang="en" style="flex:1;min-width:52px;padding:8px 4px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s">🇬🇧 EN</button>
-          <button onclick="setLang('tr')" class="lang-sel-btn" data-lang="tr" style="flex:1;min-width:52px;padding:8px 4px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s">🇹🇷 TR</button>
-        </div>
-      </div>
+    <!-- Language Selector (deaktiviert für v1) -->
     </div>
 
     <div style="padding: 0 16px 8px">
@@ -1803,30 +1788,9 @@
 <!-- =====================
      LANGUAGE SHEET (in-app switcher)
 ========================== -->
-<div id="lang-sheet-overlay" onclick="if(event.target===this)closeLangSheet()" style="position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.72);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.22s;will-change:opacity">
-  <div style="width:100%;max-width:480px;background:#1e1e1e;border-radius:20px 20px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 24px)">
-    <div style="width:36px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;margin:0 auto 18px"></div>
-    <div style="font-size:1rem;font-weight:800;color:#fff;margin-bottom:6px" data-i18n="profile.language">🌍 Sprache</div>
-    <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-bottom:16px">Wähle deine bevorzugte Sprache</div>
-    <div style="display:flex;flex-direction:column;gap:8px" id="lang-sheet-options">
-      <button onclick="setLang('de');closeLangSheet()" class="lang-opt-btn" data-lang="de">🇩🇪 Deutsch</button>
-      <button onclick="setLang('en');closeLangSheet()" class="lang-opt-btn" data-lang="en">🇬🇧 English</button>
-      <button onclick="setLang('tr');closeLangSheet()" class="lang-opt-btn" data-lang="tr">🇹🇷 Türkçe</button>
-    </div>
-  </div>
-</div>
+<div id="lang-sheet-overlay" style="display:none"></div>
 
 <!-- =====================
      FIRST-RUN LANGUAGE PICKER
 ========================== -->
-<div id="first-run-lang-overlay" style="display:none;position:fixed;inset:0;z-index:9200;background:#1a1a1a;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px">
-  <div style="font-size:3rem;margin-bottom:16px">🌍</div>
-  <div style="font-size:1.4rem;font-weight:900;color:#fff;margin-bottom:8px;text-align:center" id="first-run-title">Sprache wählen</div>
-  <div style="font-size:0.82rem;color:rgba(255,255,255,0.45);margin-bottom:28px;text-align:center" id="first-run-subtitle">Wähle deine bevorzugte Sprache</div>
-  <div style="width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px">
-    <button onclick="dismissFirstRunLang('de')" class="lang-opt-btn" style="font-size:0.95rem;padding:14px">🇩🇪 Deutsch</button>
-    <button onclick="dismissFirstRunLang('en')" class="lang-opt-btn" style="font-size:0.95rem;padding:14px">🇬🇧 English</button>
-    <button onclick="dismissFirstRunLang('tr')" class="lang-opt-btn" style="font-size:0.95rem;padding:14px">🇹🇷 Türkçe</button>
-  </div>
-  <button onclick="dismissFirstRunLang(null)" style="margin-top:20px;background:none;border:none;color:rgba(255,255,255,0.3);font-size:0.75rem;cursor:pointer;font-family:inherit">Überspringen / Skip</button>
-</div>
+<div id="first-run-lang-overlay" style="display:none"></div>

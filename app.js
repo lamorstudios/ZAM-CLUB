@@ -126,19 +126,13 @@ window.ZAM_I18N = {
 };
 
 function t(key) {
-  const lang = localStorage.getItem('zam_lang') || 'de';
   const parts = key.split('.');
-  let obj = window.ZAM_I18N[lang] || window.ZAM_I18N['de'];
+  let obj = window.ZAM_I18N['de'];
   for (const p of parts) {
     if (obj == null) break;
     obj = obj[p];
   }
-  if (obj == null || obj === '') {
-    let fb = window.ZAM_I18N['de'];
-    for (const p of parts) { if (fb == null) break; fb = fb[p]; }
-    return fb || key;
-  }
-  return obj;
+  return obj || key;
 }
 
 // Content translations for demo deals/events (titles & descriptions per language)
@@ -185,17 +179,12 @@ function _getContentTitle(type, id, field) {
 }
 
 function _l(obj, field) {
-  const lang = localStorage.getItem('zam_lang') || 'de';
   const val = obj?.[field];
-  if (val && typeof val === 'object') return val[lang] || val.de || '';
+  if (val && typeof val === 'object') return val.de || '';
   return val || '';
 }
 
-function setLang(code) {
-  localStorage.setItem('zam_lang', code);
-  localStorage.setItem('zam_lang_chosen', '1');
-  applyLanguage();
-}
+function setLang(code) { /* multilingual deactivated */ }
 
 function applyLanguage() {
   // 1. Immediately update all static [data-i18n] elements across the whole page
@@ -261,11 +250,7 @@ function updateNavLabels() {
   });
 }
 
-function showLangPickerIfNeeded() {
-  if (localStorage.getItem('zam_lang_chosen')) return;
-  const overlay = document.getElementById('first-run-lang-overlay');
-  if (overlay) overlay.style.display = 'flex';
-}
+function showLangPickerIfNeeded() { /* multilingual deactivated */ }
 
 // =============================================
 // localStorage Abstraction (Supabase-ready)
@@ -6467,6 +6452,7 @@ function initI18nStaticElements() {
 }
 
 function init() {
+  localStorage.setItem('zam_lang', 'de'); // v1: Deutsch fest
   showLangPickerIfNeeded();
   initI18nStaticElements();
   seedZAMContent();
