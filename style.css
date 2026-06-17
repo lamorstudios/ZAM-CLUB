@@ -2640,6 +2640,26 @@ body.perf-mode .countdown-badge {
   animation: none !important;
 }
 
+/* Language option buttons */
+.lang-opt-btn {
+  width: 100%;
+  padding: 13px 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: var(--font);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+.lang-opt-btn:active {
+  background: rgba(250,70,21,0.18);
+  border-color: rgba(250,70,21,0.5);
+}
+
 /* Language Picker Modal */
 .lang-picker-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.85);

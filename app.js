@@ -105,11 +105,16 @@ function t(key) {
 
 function setLang(code) {
   localStorage.setItem('zam_lang', code);
+  localStorage.setItem('zam_lang_chosen', '1');
   applyLanguage();
 }
 
 function applyLanguage() {
+  // Update static data-i18n elements
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   updateNavLabels();
+  _updateLangPickerUI();
   // Re-render current active tab
   const activeTab = document.querySelector('.nav-tab.active');
   if (activeTab) {
@@ -122,6 +127,31 @@ function applyLanguage() {
     else if (tab === 'notifications') typeof renderNotifications !== 'undefined' && renderNotifications();
     else if (tab === 'profile') typeof renderProfile !== 'undefined' && renderProfile();
   }
+}
+
+function _updateLangPickerUI() {
+  const btn = document.getElementById('lang-current-label');
+  if (!btn) return;
+  const lang = localStorage.getItem('zam_lang') || 'de';
+  const labels = { de:'🇩🇪 Deutsch', en:'🇬🇧 English', tr:'🇹🇷 Türkçe', es:'🇪🇸 Español', it:'🇮🇹 Italiano' };
+  btn.textContent = labels[lang] || '🇩🇪 Deutsch';
+}
+
+function openLangSheet() {
+  const sheet = document.getElementById('lang-sheet-overlay');
+  if (sheet) { sheet.style.opacity = '1'; sheet.style.pointerEvents = 'all'; }
+}
+
+function closeLangSheet() {
+  const sheet = document.getElementById('lang-sheet-overlay');
+  if (sheet) { sheet.style.opacity = '0'; sheet.style.pointerEvents = 'none'; }
+}
+
+function dismissFirstRunLang(code) {
+  if (code) setLang(code);
+  else { localStorage.setItem('zam_lang_chosen', '1'); applyLanguage(); }
+  const overlay = document.getElementById('first-run-lang-overlay');
+  if (overlay) overlay.style.display = 'none';
 }
 
 function updateNavLabels() {
@@ -140,32 +170,8 @@ function updateNavLabels() {
 
 function showLangPickerIfNeeded() {
   if (localStorage.getItem('zam_lang_chosen')) return;
-  const modal = document.createElement('div');
-  modal.id = 'lang-picker-modal';
-  modal.innerHTML = `
-    <div class="lang-picker-overlay">
-      <div class="lang-picker-box">
-        <div class="lang-picker-title">🌍 Sprache / Language</div>
-        <div class="lang-picker-subtitle">Wähle deine Sprache</div>
-        <div class="lang-picker-options">
-          <button class="lang-opt" data-lang="de">🇩🇪 Deutsch</button>
-          <button class="lang-opt" data-lang="en">🇬🇧 English</button>
-          <button class="lang-opt" data-lang="tr">🇹🇷 Türkçe</button>
-          <button class="lang-opt" data-lang="es">🇪🇸 Español</button>
-          <button class="lang-opt" data-lang="it">🇮🇹 Italiano</button>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  modal.querySelectorAll('.lang-opt').forEach(btn => {
-    btn.addEventListener('click', () => {
-      localStorage.setItem('zam_lang', btn.dataset.lang);
-      localStorage.setItem('zam_lang_chosen', '1');
-      modal.remove();
-      applyLanguage();
-    });
-  });
+  const overlay = document.getElementById('first-run-lang-overlay');
+  if (overlay) overlay.style.display = 'flex';
 }
 
 // =============================================
@@ -5762,15 +5768,15 @@ function _renderActiveUsersList(users) {
     } else if (hasPending) {
       nudgeBtn = `<button class="au-action-btn" style="opacity:0.5;cursor:default">⏳ Gesendet</button>`;
     } else {
-      nudgeBtn = `<button class="au-action-btn" onclick="nudgeFromActiveUsers('${u.id}','${esc(u.name)}')">👋 Anstupsen</button>`;
+      nudgeBtn = `<button class="au-action-btn" onclick="nudgeFromActiveUsers('${u.id}','${esc(u.name)}')">👋 ${t('community.nudge')}</button>`;
     }
 
     if (fStatus === 'pending_sent') {
-      frBtn = `<button class="au-action-btn" style="opacity:0.5;cursor:default;font-size:0.6rem;padding:6px 8px">Anfrage gesendet</button>`;
+      frBtn = `<button class="au-action-btn" style="opacity:0.5;cursor:default;font-size:0.6rem;padding:6px 8px">${t('community.req_sent')}</button>`;
     } else if (fStatus === 'pending_received' && frObj) {
-      frBtn = `<button class="au-action-btn" style="background:rgba(5,150,105,0.18);color:#34d399;border:1px solid rgba(5,150,105,0.3)" onclick="acceptFriendRequest('${frObj.id}')">✅ Annehmen</button>`;
+      frBtn = `<button class="au-action-btn" style="background:rgba(5,150,105,0.18);color:#34d399;border:1px solid rgba(5,150,105,0.3)" onclick="acceptFriendRequest('${frObj.id}')">${t('community.accept')}</button>`;
     } else {
-      frBtn = `<button class="au-action-btn" title="Freund hinzufügen" onclick="sendFriendRequest('${u.id}','${esc(u.name)}','${u.initials}')">➕</button>`;
+      frBtn = `<button class="au-action-btn" title="${t('community.add_friend')}" onclick="sendFriendRequest('${u.id}','${esc(u.name)}','${u.initials}')">➕</button>`;
     }
 
     return `<div class="au-user-row">
@@ -6333,12 +6339,17 @@ function seedZAMContent() {
 // Init
 // =============================================
 function initI18nStaticElements() {
-  // Apply translations to static HTML elements that can't use t() inline
   const dealsTabAll = document.getElementById('deals-tab-all');
   if (dealsTabAll) dealsTabAll.textContent = t('deals.all');
   const dealsTabDeals = document.getElementById('deals-tab-deals');
-  if (dealsTabDeals) dealsTabDeals.textContent = 'Deals';
+  if (dealsTabDeals) dealsTabDeals.textContent = t('deals.regular');
+  const dealsTabPartner = document.getElementById('deals-tab-partner');
+  if (dealsTabPartner) dealsTabPartner.textContent = t('deals.partner');
+  // Apply all data-i18n / data-i18n-placeholder attributes
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   updateNavLabels();
+  _updateLangPickerUI();
 }
 
 function init() {

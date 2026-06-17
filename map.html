@@ -938,7 +938,7 @@ function openMapActiveUsers() {
 
   // Content already pre-rendered in initMap() — zero DOM work here
   const ctxt = document.getElementById('au-count-txt');
-  if (ctxt) ctxt.textContent = MAP_DEMO_USERS_EXTENDED.length + ' Nutzer gerade aktiv';
+  if (ctxt) ctxt.textContent = MAP_DEMO_USERS_EXTENDED.length + ' ' + mapT('users');
 
   // Pure compositor animation — no DOM mutation, no layout, no paint
   ov.style.pointerEvents = 'all';
