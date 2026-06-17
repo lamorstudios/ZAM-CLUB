@@ -3710,6 +3710,17 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+function _fmtDate(raw) {
+  if (!raw) return '';
+  // Already a friendly string (no T, no Z)? Return as-is
+  if (typeof raw === 'string' && !raw.includes('T') && !raw.match(/^\d{4}-\d{2}-\d{2}$/)) return raw;
+  try {
+    const d = new Date(raw);
+    if (isNaN(d)) return raw;
+    return d.toLocaleDateString('de-DE', { weekday:'short', day:'numeric', month:'long', year:'numeric' });
+  } catch { return raw; }
+}
+
 function timeAgo(ts) {
   if (!ts) return '';
   const s = Math.floor((Date.now() - ts) / 1000);
@@ -5181,18 +5192,20 @@ function renderHomeRecs() {
     if (r.type === 'event') {
       const e = (g.events || []).find(x => x.id === r.id);
       if (!e) return '';
-      return `<div class="event-card" style="min-width:200px;flex-shrink:0" onclick="navigateTo('events')">
-        <div class="event-card-header"><span class="event-tag">Empfohlen ✨</span></div>
-        <div class="event-card-content"><div class="event-card-title">${esc(e.title)}</div><div class="event-card-meta">📅 ${esc(e.date||'')}</div></div>
+      const dateStr = e.date_formatted || _fmtDate(e.date_iso || e.date);
+      return `<div onclick="navigateTo('events')" style="min-width:160px;max-width:160px;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:10px;cursor:pointer">
+        <div style="font-size:0.6rem;font-weight:700;color:rgba(250,70,21,0.9);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">✨ Empfohlen</div>
+        <div style="font-size:0.78rem;font-weight:700;color:#fff;line-height:1.2;margin-bottom:5px">${esc(e.title)}</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.45)">📅 ${esc(dateStr)}</div>
       </div>`;
     } else {
       const d = (g.deals || []).find(x => x.id === r.id);
       if (!d) return '';
-      return `<div class="deal-card" style="min-width:200px;flex-shrink:0" onclick="navigateTo('deals')">
-        <div class="deal-tag-row"><span class="deal-tag deal-tag-new">Empfohlen ✨</span></div>
-        <div class="deal-card-title">${esc(d.title)}</div>
-        <div class="deal-card-merchant">${esc(d.merchant_name||'')}</div>
-        <div class="deal-discount">${esc(d.discount||'')}</div>
+      return `<div onclick="navigateTo('deals')" style="min-width:160px;max-width:160px;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:10px;cursor:pointer">
+        <div style="font-size:0.6rem;font-weight:700;color:rgba(250,70,21,0.9);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">✨ Empfohlen</div>
+        <div style="font-size:0.78rem;font-weight:700;color:#fff;line-height:1.2;margin-bottom:3px">${esc(d.title)}</div>
+        <div style="font-size:0.72rem;font-weight:800;color:#FA4615">${esc(d.discount||'')}</div>
+        <div style="font-size:0.62rem;color:rgba(255,255,255,0.4);margin-top:2px">${esc(d.store_name||d.merchant_name||'')}</div>
       </div>`;
     }
   }).join('');
@@ -5231,7 +5244,7 @@ function renderRecommendations() {
     html += `<div class="rec-section-title">🎉 Passende Events für dich</div><div class="rec-scroll">`;
     html += evRecs.map(e => `<div class="rec-card" onclick="navigateTo('events')">
       <div class="rec-card-header"><span class="rec-card-icon">🎉</span><div><div class="rec-card-tag">Event</div><div class="rec-card-title">${esc(e.title)}</div></div></div>
-      <div class="rec-card-body"><div class="rec-card-sub">📅 ${esc(e.date||'')} · ${esc(e.location||'ZAM Freiham')}</div></div>
+      <div class="rec-card-body"><div class="rec-card-sub">📅 ${esc(e.date_formatted || _fmtDate(e.date_iso || e.date))} · ${esc(e.location||'ZAM Freiham')}</div></div>
     </div>`).join('');
     html += '</div>';
   }

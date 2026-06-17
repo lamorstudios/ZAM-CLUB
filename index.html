@@ -219,9 +219,6 @@
     <!-- Spin Prize Preview (rendered by app.js) -->
     <div id="home-spin-preview" style="display:none"></div>
 
-    <!-- Ranking Card (rendered by JS) -->
-    <div id="home-ranking-card" style="margin-top:4px"></div>
-
     <!-- AI Concierge Banner — compact -->
     <div class="ai-home-banner" onclick="navigateTo('ai')" style="padding:10px 14px;margin:4px 16px 0">
       <div class="ai-home-banner-icon" style="font-size:1.2rem;width:32px;height:32px">🤖</div>
@@ -257,12 +254,14 @@
       </div>
     </div>
 
-    <!-- Personalized Recommendations -->
-    <div class="section-label" id="home-rec-label" style="display:none">
-      <h2>Für dich ✨</h2>
-      <a href="#" onclick="navigateTo('recommendations');return false;">Alle →</a>
+    <!-- Current Deals (horizontal scroll) -->
+    <div class="section-label">
+      <h2>Aktuelle Deals</h2>
+      <a href="#" onclick="navigateTo('deals');return false;">Alle →</a>
     </div>
-    <div class="scroll-row" id="home-recs-scroll"></div>
+    <div class="scroll-row" id="home-deals-scroll">
+      <!-- Rendered by app.js -->
+    </div>
 
     <!-- Current Events (horizontal scroll) -->
     <div class="section-label">
@@ -273,15 +272,15 @@
       <!-- Rendered by app.js -->
     </div>
 
-    <!-- Current Deals (horizontal scroll) -->
-    <div class="section-label">
-      <h2>Aktuelle Deals</h2>
-      <a href="#" onclick="navigateTo('deals');return false;">Alle →</a>
+    <!-- Personalized Recommendations — compact -->
+    <div class="section-label" id="home-rec-label" style="display:none">
+      <h2>Für dich ✨</h2>
+      <a href="#" onclick="navigateTo('recommendations');return false;">Alle →</a>
     </div>
-    <div class="scroll-row" id="home-deals-scroll">
-      <!-- Rendered by app.js -->
-    </div>
+    <div class="scroll-row" id="home-recs-scroll"></div>
 
+    <!-- Ranking Card (rendered by JS) — below fold -->
+    <div id="home-ranking-card" style="margin-top:4px"></div>
 
   </section>
 
