@@ -103,6 +103,10 @@ body.subpage-active #app-shell {
   }
 }
 
+/* ── Profile footer: nur im aktiven Profil-Tab sichtbar ── */
+#profile-footer-slot { display: none !important; }
+#page-profile.active #profile-footer-slot { display: block !important; }
+
 /* ── Page transitions ── */
 .page {
   display: none;

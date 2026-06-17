@@ -390,6 +390,14 @@ function navigateTo(pageId) {
     window.scrollTo(0, 0);
     renderMyEvents();
   }
+
+  // Footer + Logout: NUR auf Profilseite sichtbar — auf allen anderen Seiten sofort leeren
+  const footerSlot = document.getElementById('profile-footer-slot');
+  if (footerSlot) {
+    if (pageId !== 'profile') {
+      footerSlot.innerHTML = '';
+    }
+  }
 }
 
 function initNavigation() {
