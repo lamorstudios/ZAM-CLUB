@@ -107,6 +107,21 @@ body.subpage-active #app-shell {
 #profile-footer-slot { display: none !important; }
 #page-profile.active #profile-footer-slot { display: block !important; }
 
+/* ── Globale Absicherung: Footer/Logout nur wenn body.profile-active ── */
+body:not(.profile-active) footer,
+body:not(.profile-active) .footer,
+body:not(.profile-active) .legal-footer,
+body:not(.profile-active) .profile-footer,
+body:not(.profile-active) .logout-button,
+body:not(.profile-active) .logout-section,
+body:not(.profile-active) #profile-footer-slot {
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
 /* ── Page transitions ── */
 .page {
   display: none;
