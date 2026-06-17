@@ -976,10 +976,19 @@ function _renderAUUserList() {
       ? `<div style="display:inline-flex;align-items:center;gap:3px;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);border-radius:6px;padding:2px 7px;font-size:0.6rem;font-weight:700;color:#34d399;margin-top:4px">${u.status}</div>`
       : '';
 
+    const fStatus   = _mapFriendStatus(u.id);
+    const frObj     = _mapFriendReqObj(u.id);
     let nudgeBtn;
-    if (connected)    nudgeBtn = `<button onclick="auOpenChat('${u.id}','${_esc(u.name)}','${u.initials}')" style="${_auBtnS('#7c3aed')}">💬 Chat</button>`;
+    if (fStatus==='friends') nudgeBtn = `<button onclick="auOpenChat('${u.id}','${_esc(u.name)}','${u.initials}')" style="${_auBtnS('#7c3aed')}color:#c4b5fd">💬 Chat</button>`;
+    else if (connected)    nudgeBtn = `<button onclick="auOpenChat('${u.id}','${_esc(u.name)}','${u.initials}')" style="${_auBtnS('#7c3aed')}">💬 Chat</button>`;
     else if (pending) nudgeBtn = `<button disabled style="${_auBtnS('#555')}opacity:0.45;cursor:default">⏳</button>`;
     else              nudgeBtn = `<button onclick="auNudge('${u.id}','${_esc(u.name)}')" style="${_auBtnS('#7c3aed')}">👋</button>`;
+
+    let frBtn2;
+    if (fStatus==='friends')        frBtn2 = `<button disabled style="${_auBtnS('#059669')}color:#34d399;opacity:0.6;cursor:default">✅ Freund</button>`;
+    else if (fStatus==='pending_sent') frBtn2 = `<button disabled style="${_auBtnS('#555')}opacity:0.45;cursor:default;font-size:0.58rem">Gesendet</button>`;
+    else if (fStatus==='pending_received'&&frObj) frBtn2 = `<button onclick="mapAcceptFriendReq('${frObj.id}','${_esc(u.name)}')" style="${_auBtnS('#059669')}color:#34d399;border-color:rgba(52,211,153,0.4)">✅ Annehmen</button>`;
+    else frBtn2 = `<button onclick="mapSendFriendReq('${u.id}','${_esc(u.name)}','${u.initials}')" style="${_auBtnS('#FA4615')}color:#FA4615;border-color:rgba(250,70,21,0.35)">➕</button>`;
 
     const dealBtn = isMatch
       ? `<button onclick="openDealReqDialog('${u.id}','${_esc(u.name)}','${u.initials}','${u.bg||u.color}')" style="${_auBtnS('#059669')}color:#34d399;border-color:rgba(52,211,153,0.4)">🤝 2-für-1</button>`
@@ -1003,6 +1012,7 @@ function _renderAUUserList() {
       <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
         <button onclick="auZoomAndProfile('${u.id}')" style="${_auBtnS('#6d28d9')}">Profil</button>
         ${nudgeBtn}
+        ${frBtn2}
         ${dealBtn}
       </div>
     </div>`;
@@ -1265,39 +1275,61 @@ function renderMarkers(){
   });
 }
 
-// Update openUserPopup to add security buttons
+// Update openUserPopup to add security buttons + friend request
 function openUserPopup(u){
   const z=ZONES[u.zone]||{label:u.zone,color:'#8b5cf6'};
   const api=window.ZAMApi;
   const connected  = api ? api.nudges.isConnected(u.id) : false;
   const hasPending = api ? api.nudges.hasPendingNudgeTo(u.id) : false;
-  let actionBtn='';
-  if(connected){
-    actionBtn=`<button onclick="pcFromMap('${u.id}','${u.name}','${u.initials||u.name.slice(0,2).toUpperCase()}')" style="flex:1;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);border-radius:10px;padding:10px;color:#a78bfa;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">💬 Nachricht</button>`;
+  const fStatus    = _mapFriendStatus(u.id);
+  const frObj      = _mapFriendReqObj(u.id);
+  const uid        = _esc(u.id);
+  const uname      = _esc(u.name);
+  const uini       = u.initials||u.name.slice(0,2).toUpperCase();
+
+  let nudgeBtn='';
+  if(fStatus==='friends'){
+    nudgeBtn=`<button onclick="pcFromMap('${uid}','${uname}','${uini}')" style="flex:1;background:rgba(139,92,246,0.22);border:1px solid rgba(139,92,246,0.45);border-radius:10px;padding:10px;color:#c4b5fd;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">💬 Chat öffnen</button>`;
+  } else if(connected){
+    nudgeBtn=`<button onclick="pcFromMap('${uid}','${uname}','${uini}')" style="flex:1;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);border-radius:10px;padding:10px;color:#a78bfa;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">💬 Nachricht</button>`;
   } else if(hasPending){
-    actionBtn=`<button disabled style="flex:1;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:10px;color:rgba(167,139,250,0.5);font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:not-allowed">⏳ Gesendet</button>`;
+    nudgeBtn=`<button disabled style="flex:1;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:10px;color:rgba(167,139,250,0.5);font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:not-allowed">⏳ Gesendet</button>`;
   } else {
-    actionBtn=`<button onclick="nudgeUser('${u.id}','${u.name}')" style="flex:1;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);border-radius:10px;padding:10px;color:#a78bfa;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">👋 Anstupsen</button>`;
+    nudgeBtn=`<button onclick="nudgeUser('${uid}','${uname}')" style="flex:1;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);border-radius:10px;padding:10px;color:#a78bfa;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">👋 Anstupsen</button>`;
   }
+
+  let frBtn='';
+  if(fStatus==='none'){
+    frBtn=`<button onclick="mapSendFriendReq('${uid}','${uname}','${uini}')" style="flex:1;background:rgba(250,70,21,0.12);border:1px solid rgba(250,70,21,0.3);border-radius:10px;padding:10px;color:#FA4615;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">➕ Freund</button>`;
+  } else if(fStatus==='pending_sent'){
+    frBtn=`<button disabled style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px;color:rgba(255,255,255,0.3);font-size:0.72rem;font-weight:600;font-family:Poppins,system-ui;cursor:not-allowed">⏳ Anfrage gesendet</button>`;
+  } else if(fStatus==='pending_received'&&frObj){
+    frBtn=`<button onclick="mapAcceptFriendReq('${frObj.id}','${uname}')" style="flex:1;background:linear-gradient(135deg,#059669,#34d399);border:none;border-radius:10px;padding:10px;color:#fff;font-size:0.78rem;font-weight:700;font-family:Poppins,system-ui;cursor:pointer">✅ Annehmen</button>`;
+  }
+
   document.getElementById('pop-content').innerHTML=`
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-      <div style="width:52px;height:52px;border-radius:50%;background:${u.bg||'#2d1b69'};border:3px solid ${u.color||'#7c3aed'};display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:#fff;flex-shrink:0">${u.initials||u.name.slice(0,2).toUpperCase()}</div>
+      <div style="width:52px;height:52px;border-radius:50%;background:${u.bg||'#2d1b69'};border:3px solid ${u.color||'#7c3aed'};display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:#fff;flex-shrink:0">${uini}</div>
       <div>
         <div style="font-size:1rem;font-weight:700;color:#fff">${u.name}</div>
         <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:2px">${u.status||''}</div>
         <div style="font-size:0.65rem;margin-top:3px;display:flex;align-items:center;gap:4px">
           <span style="width:8px;height:8px;border-radius:50%;background:${z.color};display:inline-block"></span>
           <span style="color:rgba(255,255,255,0.4)">${z.label}</span>
+          ${fStatus==='friends'?'<span style="color:#34d399;font-size:0.6rem;font-weight:700">✅ Freund</span>':''}
         </div>
       </div>
     </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      ${nudgeBtn}
+      ${frBtn||'<div style="flex:1"></div>'}
+    </div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
-      ${actionBtn}
       <button onclick="closePopup()" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">Schließen</button>
     </div>
     <div style="display:flex;gap:8px">
-      <button onclick="reportMapUser('${u.id}','${u.name}')" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:7px;color:rgba(255,255,255,0.3);font-size:0.68rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">🚩 Melden</button>
-      <button onclick="blockMapUser('${u.id}','${u.name}')" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:7px;color:rgba(255,255,255,0.3);font-size:0.68rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">🚫 Blockieren</button>
+      <button onclick="reportMapUser('${uid}','${uname}')" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:7px;color:rgba(255,255,255,0.3);font-size:0.68rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">🚩 Melden</button>
+      <button onclick="blockMapUser('${uid}','${uname}')" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:7px;color:rgba(255,255,255,0.3);font-size:0.68rem;font-weight:600;font-family:Poppins,system-ui;cursor:pointer">🚫 Blockieren</button>
     </div>`;
   showPopup();
 }
