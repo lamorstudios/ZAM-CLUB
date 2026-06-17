@@ -475,7 +475,7 @@ button{cursor:pointer;font-family:var(--font);border:none;background:none;color:
 </div>
 
 <!-- ═══ AKTIVE NUTZER PANEL (Bottom Sheet) ═══ -->
-<div id="au-overlay" onclick="if(event.target===this)closeMapActiveUsers()" style="display:flex;align-items:flex-end;justify-content:center;position:fixed;inset:0;z-index:260;background:rgba(0,0,0,0.72);opacity:0;pointer-events:none;transition:opacity 0.22s">
+<div id="au-overlay" onclick="if(event.target===this)closeMapActiveUsers()" style="display:flex;align-items:flex-end;justify-content:center;position:fixed;inset:0;z-index:260;background:rgba(0,0,0,0.72);opacity:0;pointer-events:none;transition:opacity 0.22s;will-change:opacity">
   <div id="au-sheet" style="position:absolute;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:#0d0d1e;border-radius:22px 22px 0 0;border-top:1px solid rgba(139,92,246,0.35);max-height:88vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.34s cubic-bezier(0.16,1,0.3,1);overflow:hidden">
     <!-- Handle + Header -->
     <div style="flex-shrink:0;padding:12px 16px 0">
@@ -713,6 +713,8 @@ function initMap(){
   scale=Math.min(wrapW/520,wrapH/800)*0.9;
   tx=(wrapW-520*scale)/2;ty=(wrapH-800*scale)/2;
   applyT();renderUsers();renderMarkers();_renderShopMarkers();loadMyState();
+  // Pre-render user list once so openMapActiveUsers() does zero DOM work
+  requestIdleCallback ? requestIdleCallback(()=>_renderAUUserList()) : setTimeout(()=>_renderAUUserList(),200);
 }
 
 function renderMarkers(){
@@ -923,13 +925,11 @@ function openMapActiveUsers() {
   const sh = document.getElementById('au-sheet');
   if (!ov || !sh) return;
 
-  // 1. Update counts and pre-render content while overlay is still invisible
-  const count = MAP_DEMO_USERS_EXTENDED.length;
+  // Content already pre-rendered in initMap() — zero DOM work here
   const ctxt = document.getElementById('au-count-txt');
-  if (ctxt) ctxt.textContent = count + ' Nutzer gerade aktiv';
-  auSwitchTab('users'); // builds innerHTML while opacity:0 — no visible flash
+  if (ctxt) ctxt.textContent = MAP_DEMO_USERS_EXTENDED.length + ' Nutzer gerade aktiv';
 
-  // 2. Animate in on next frame — no DOM changes during transition
+  // Pure compositor animation — no DOM mutation, no layout, no paint
   ov.style.pointerEvents = 'all';
   requestAnimationFrame(() => {
     ov.style.opacity = '1';
