@@ -1107,16 +1107,18 @@ a.nav-tab-map { text-decoration: none; }
 /* Toast */
 .toast {
   position: fixed;
-  bottom: calc(var(--nav-h) + 20px);
+  bottom: calc(var(--nav-h) + max(20px, env(safe-area-inset-bottom, 0px)) + 16px);
   left: 50%; transform: translateX(-50%) translateY(14px);
   background: var(--surface-2); color: var(--text);
-  padding: 12px 20px; border-radius: var(--r-full);
-  font-size: 0.82rem; font-weight: 600;
+  padding: 11px 18px; border-radius: 14px;
+  font-size: 0.82rem; font-weight: 600; line-height: 1.4;
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
   z-index: 300; border: 1px solid var(--border-2);
   opacity: 0; pointer-events: none;
   transition: opacity .22s, transform .22s var(--spring);
-  white-space: nowrap; max-width: calc(var(--app-w) - 40px); text-align: center;
+  white-space: normal; word-break: break-word;
+  max-width: calc(100vw - 32px); width: max-content; max-width: min(calc(100vw - 32px), 360px);
+  text-align: center;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .toast.success { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.14); }

@@ -5659,7 +5659,7 @@ function openDealMatch(dealId, dealTitle) {
 function _toggleDealInterestUI(dealId, dealTitle) {
   const added = _toggleDealInterest(dealId, dealTitle);
   if (added) {
-    showToast('⭐ Du bist jetzt als interessiert sichtbar. Andere können dich anfragen.', 'success');
+    showToast('⭐ Du bist als interessiert markiert. Andere können dich anfragen.', 'success');
   } else {
     showToast('Nicht mehr als interessiert angezeigt.');
   }
