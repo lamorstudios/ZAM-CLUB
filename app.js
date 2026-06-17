@@ -3177,6 +3177,9 @@ function _pcRenderMessages() {
   }
 
   container.innerHTML = msgs.map(m => {
+    if (m.is_system) {
+      return `<div style="text-align:center;margin:10px 0;padding:8px 14px;background:rgba(250,70,21,0.1);border:1px solid rgba(250,70,21,0.2);border-radius:12px;font-size:0.72rem;color:rgba(255,255,255,0.6);line-height:1.4">${_escapeHtml(m.content)}</div>`;
+    }
     const isOwn = m.sender_id === uid;
     const time  = new Date(m.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     return `
@@ -3606,6 +3609,7 @@ function setNotifFilter(f, btn) {
 
 function renderNotifications() {
   const me = ZAMApi.auth.currentUser();
+  if (me) _seedDemoDealRequest();
 
   // Push-Permission Banner
   const banner = document.getElementById('push-permission-banner');
@@ -3627,18 +3631,59 @@ function renderNotifications() {
     return;
   }
 
-  const icons = {message:'💬', nudge:'👋', event:'🎉', deal:'🏷️', community:'👥', badge:'🏆', info:'ℹ️'};
-  list.innerHTML = filtered.map(n => `
-    <div class="notif-item ${n.read ? '' : 'unread'}" onclick="onNotifClick('${n.id}','${(n.url||'').replace(/'/g,"\\'")}','${n.type||''}')">
+  const icons = {message:'💬', nudge:'👋', event:'🎉', deal:'🏷️', deal_request:'🤝', community:'👥', badge:'🏆', info:'ℹ️'};
+  list.innerHTML = filtered.map(n => {
+    const timeStr = timeAgo(n.createdAt);
+    const isUnread = !n.read;
+
+    if (n.type === 'deal_request' && n.deal_req_id) {
+      const req = _getDealRequests().find(r => r.id === n.deal_req_id);
+      const status = req?.status || 'offen';
+      const initials = (n.from_initials || (n.from_name||'?').slice(0,2)).toUpperCase();
+      const avatarColor = _avatarColor(n.from_id || n.deal_req_id);
+
+      const actionHtml = status === 'offen' ? `
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="event.stopPropagation();acceptDealRequest('${n.deal_req_id}')" style="flex:1;background:linear-gradient(135deg,#059669,#34d399);border:none;border-radius:10px;padding:9px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">✅ Annehmen</button>
+          <button onclick="event.stopPropagation();rejectDealRequest('${n.deal_req_id}')" style="flex:1;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:9px;color:#ef4444;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">❌ Ablehnen</button>
+        </div>` :
+        status === 'angenommen' ? `
+        <div style="margin-top:10px">
+          <button onclick="event.stopPropagation();openDealRequestChat('${n.deal_req_id}')" style="width:100%;background:rgba(250,70,21,0.15);border:1.5px solid rgba(250,70,21,0.4);border-radius:10px;padding:9px;color:#FA4615;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">💬 Chat öffnen</button>
+        </div>` : `<div style="margin-top:8px;font-size:0.68rem;color:rgba(255,255,255,0.3)">Anfrage abgelehnt</div>`;
+
+      return `
+        <div class="notif-item ${isUnread ? 'unread' : ''}" style="padding:12px 14px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:38px;height:38px;border-radius:50%;background:${avatarColor};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0">${initials}</div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+                <div class="notif-title" style="font-size:0.82rem">${escHtml(n.from_name||'Jemand')} fragt an</div>
+                <div style="display:flex;align-items:center;gap:6px">
+                  ${isUnread ? '<div class="notif-unread-dot" style="position:static;margin:0"></div>' : ''}
+                  <button class="notif-del-btn" onclick="event.stopPropagation();ZAMApi.notifications.deleteById('${n.id}');renderNotifications()" style="position:static">✕</button>
+                </div>
+              </div>
+              <div class="notif-text" style="margin-top:2px">🏷️ <em>${escHtml(n.deal_title||'Deal')}</em></div>
+              <div class="notif-time">${timeStr}</div>
+              ${actionHtml}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    return `
+    <div class="notif-item ${isUnread ? 'unread' : ''}" onclick="onNotifClick('${n.id}','${(n.url||'').replace(/'/g,"\\'")}','${n.type||''}')">
       <div class="notif-icon type-${n.type||'info'}">${icons[n.type] || '🔔'}</div>
       <div class="notif-body">
         <div class="notif-title">${escHtml(n.title||'')}</div>
         <div class="notif-text">${escHtml(n.body||'')}</div>
-        <div class="notif-time">${timeAgo(n.createdAt)}</div>
+        <div class="notif-time">${timeStr}</div>
       </div>
-      ${n.read ? '' : '<div class="notif-unread-dot"></div>'}
+      ${isUnread ? '<div class="notif-unread-dot"></div>' : ''}
       <button class="notif-del-btn" onclick="event.stopPropagation();ZAMApi.notifications.deleteById('${n.id}');renderNotifications()">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   updateNotifBadge();
 }
 
@@ -5467,7 +5512,12 @@ function openPCFromActiveUsers(userId, userName, initials) {
   setTimeout(() => openPrivateChat(userId, userName, initials, null), 350);
 }
 
+let _currentDealMatchId = '';
+let _currentDealMatchTitle = '';
+
 function openDealMatch(dealId, dealTitle) {
+  _currentDealMatchId = dealId;
+  _currentDealMatchTitle = dealTitle;
   const sheet = $('#active-users-sheet');
   const inner = $('#active-users-sheet-inner');
   if (!sheet || !inner) return;
@@ -5493,7 +5543,7 @@ function openDealMatch(dealId, dealTitle) {
           <div style="font-size:0.82rem;font-weight:600;color:#e2e8f0">${esc(u.name)}</div>
           <div style="font-size:0.68rem;color:rgba(255,255,255,0.4)">${esc(u.status)}</div>
         </div>
-        <button class="deal-match-btn" onclick="requestDealPartner('${u.id}','${esc(u.name)}',\`${esc(dealTitle)}\`)">Anfragen</button>
+        <button class="deal-match-btn" onclick="requestDealPartner('${u.id}','${esc(u.name)}',\`${esc(dealTitle)}\`,\`${esc(dealId)}\`)">Anfragen</button>
       </div>`).join('');
     }
   }
@@ -5502,23 +5552,152 @@ function openDealMatch(dealId, dealTitle) {
   requestAnimationFrame(() => { inner.style.transform = 'translateX(-50%) translateY(0)'; });
 }
 
-function requestDealPartner(userId, userName, dealTitle) {
-  ZAMApi.nudges.send(userId, userName);
+// =============================================
+// DEAL-ANFRAGEN (Deal Match Request System)
+// =============================================
+const _DR_KEY = 'zam_deal_requests_v2';
+
+function _getDealRequests() {
+  try { return JSON.parse(localStorage.getItem(_DR_KEY) || '[]'); } catch { return []; }
+}
+function _saveDealRequests(list) {
+  localStorage.setItem(_DR_KEY, JSON.stringify(list.slice(0, 100)));
+}
+
+function requestDealPartner(userId, userName, dealTitle, dealId) {
+  const me = ZAMApi.auth.currentUser();
+  if (!me) return;
+
+  // Prevent duplicate open requests
+  const existing = _getDealRequests().find(r => r.from_id === me.id && r.to_id === userId && r.status === 'offen');
+  if (existing) { showToast('Du hast dieser Person bereits eine Anfrage gesendet.'); return; }
+
+  const reqId = 'dr_' + Date.now();
+  const req = {
+    id: reqId,
+    from_id:    me.id,
+    from_name:  me.display_name || me.username || 'Ich',
+    from_initials: (me.display_name || me.username || '?').slice(0, 2).toUpperCase(),
+    to_id:   userId,
+    to_name: userName,
+    deal_title: dealTitle,
+    deal_id: dealId || '',
+    status: 'offen',
+    created_at: Date.now()
+  };
+  const list = _getDealRequests();
+  list.unshift(req);
+  _saveDealRequests(list);
+
+  // Notification for recipient (stored against current user as demo — in real app this would be server-side)
   ZAMApi.notifications.add({
-    type: 'deal',
-    title: 'Deal-Anfrage',
-    body: `${ZAMApi.auth.currentUser()?.display_name || 'Jemand'} möchte "${dealTitle}" gemeinsam einlösen`,
+    id: 'drn_' + reqId,
+    type: 'deal_request',
+    title: '🤝 Deal-Anfrage erhalten',
+    body: req.from_name + ' möchte "' + dealTitle + '" gemeinsam einlösen.',
     icon: '🏷️',
+    deal_req_id: reqId,
+    from_id:     me.id,
+    from_name:   req.from_name,
+    from_initials: req.from_initials,
+    deal_title:  dealTitle,
   });
-  showToast(`✅ Anfrage an ${userName} gesendet!`, 'success');
-  // Update button
-  const btns = $$('.deal-match-btn');
-  btns.forEach(btn => {
+
+  showToast('✅ Anfrage an ' + userName + ' gesendet!', 'success');
+  // Update button state
+  $$('.deal-match-btn').forEach(btn => {
     if (btn.getAttribute('onclick')?.includes(userId)) {
-      btn.textContent = '✓ Gesendet';
+      btn.textContent = '✓ Angefragt';
       btn.disabled = true;
       btn.style.opacity = '0.5';
     }
+  });
+}
+
+function acceptDealRequest(reqId) {
+  const list  = _getDealRequests();
+  const req   = list.find(r => r.id === reqId);
+  if (!req) return;
+  req.status = 'angenommen';
+  _saveDealRequests(list);
+
+  // Create/open private chat and inject system message
+  const chatId = ZAMApi.privateChat.getOrCreate(req.from_id);
+  if (chatId) {
+    const me = ZAMApi.auth.currentUser();
+    // Inject system message directly into chat storage
+    const msgs = ZAMApi.privateChat.getMessages(chatId);
+    const sysMsg = {
+      id: 'sys_' + reqId, chat_id: chatId, sender_id: 'system',
+      sender_name: 'System', sender_initials: 'SY', sender_avatar: null,
+      content: '🏷️ Ihr habt euch verbunden, um den Deal gemeinsam einzulösen: "' + req.deal_title + '"',
+      is_system: true, read_by_recipient: false, created_at: Date.now()
+    };
+    msgs.push(sysMsg);
+    localStorage.setItem('zamclub_pc_' + chatId, JSON.stringify(msgs.slice(-200)));
+  }
+
+  // Remove the notification
+  const notifs = ZAMApi.notifications.getAll();
+  const drNotif = notifs.find(n => n.deal_req_id === reqId);
+  if (drNotif) ZAMApi.notifications.deleteById(drNotif.id);
+
+  showToast('✅ Angenommen! Chat geöffnet.', 'success');
+  renderNotifications();
+
+  // Open the chat
+  setTimeout(() => {
+    const initials = req.from_initials || req.from_name.slice(0, 2).toUpperCase();
+    openPrivateChat(req.from_id, req.from_name, initials, null);
+  }, 300);
+}
+
+function rejectDealRequest(reqId) {
+  const list = _getDealRequests();
+  const req  = list.find(r => r.id === reqId);
+  if (!req) return;
+  req.status = 'abgelehnt';
+  _saveDealRequests(list);
+
+  // Remove notification
+  const notifs = ZAMApi.notifications.getAll();
+  const drNotif = notifs.find(n => n.deal_req_id === reqId);
+  if (drNotif) ZAMApi.notifications.deleteById(drNotif.id);
+
+  showToast('Anfrage abgelehnt.', 'info');
+  renderNotifications();
+}
+
+function openDealRequestChat(reqId) {
+  const req = _getDealRequests().find(r => r.id === reqId);
+  if (!req) return;
+  const initials = req.from_initials || req.from_name.slice(0, 2).toUpperCase();
+  openPrivateChat(req.from_id, req.from_name, initials, null);
+}
+
+function _seedDemoDealRequest() {
+  // Create one demo pending deal request so the user can test the flow
+  const key = 'zam_demo_dr_seeded';
+  if (localStorage.getItem(key)) return;
+  localStorage.setItem(key, '1');
+
+  const reqId = 'dr_demo1';
+  const existing = _getDealRequests().find(r => r.id === reqId);
+  if (existing) return;
+
+  const req = {
+    id: reqId, from_id: 'user_felix', from_name: 'Felix B.',
+    from_initials: 'FB', to_id: 'current', to_name: 'Du',
+    deal_title: 'Gratis Donut zum Kaffee', deal_id: 'deal_002',
+    status: 'offen', created_at: Date.now() - 120000
+  };
+  _saveDealRequests([req, ..._getDealRequests()]);
+  ZAMApi.notifications.add({
+    id: 'drn_demo1', type: 'deal_request',
+    title: '🤝 Deal-Anfrage von Felix B.',
+    body: 'Felix B. möchte "Gratis Donut zum Kaffee" gemeinsam einlösen.',
+    icon: '🏷️', deal_req_id: reqId,
+    from_id: 'user_felix', from_name: 'Felix B.', from_initials: 'FB', deal_title: 'Gratis Donut zum Kaffee',
   });
 }
 
