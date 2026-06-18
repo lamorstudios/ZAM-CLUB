@@ -3246,3 +3246,197 @@ body.perf-mode .streak-fire { animation: none !important; }
   justify-content: center;
   font-size: 1rem;
 }
+
+/* =============================================
+   BANNER UPGRADE — Facebook-Style Profile Header
+   20 Banners, Unlock Logic, Premium Picker
+   ============================================= */
+
+/* ── Taller banner, full-width ── */
+.profile-banner {
+  height: 160px !important;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  transition: background 0.4s ease;
+}
+/* Rare banner shimmer effect */
+.profile-banner.banner-rare::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.08) 50%, transparent 65%);
+  animation: banner-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes banner-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.profile-banner-edit {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  bottom: auto;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 20px;
+  padding: 5px 11px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  cursor: pointer;
+  z-index: 3;
+  font-family: var(--font);
+  transition: background 0.15s;
+}
+.profile-banner-edit:active { background: rgba(0,0,0,0.7); }
+
+/* ── Hero overlaps banner — Facebook style ── */
+.profile-hero {
+  background: none !important;
+  overflow: visible !important;
+  margin-top: -54px !important;
+  padding-top: 0 !important;
+  padding-bottom: 52px !important;
+  position: relative;
+  z-index: 2;
+}
+.profile-hero::before,
+.profile-hero::after {
+  display: none !important;
+}
+/* Stronger avatar border to separate from banner */
+.profile-hero .profile-avatar {
+  border: 3.5px solid #1a1a1a !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08) !important;
+}
+
+/* ── Banner Picker — full redesign ── */
+#modal-banner-picker .modal-sheet {
+  max-height: 90dvh;
+  overflow-y: auto;
+  padding-bottom: max(28px, env(safe-area-inset-bottom, 28px));
+}
+.banner-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px 8px;
+}
+.banner-picker-card {
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.18s, transform 0.15s var(--spring);
+}
+.banner-picker-card.active-banner {
+  border-color: #FA4615;
+  box-shadow: 0 0 0 1px rgba(250,70,21,0.4);
+}
+.banner-picker-card.locked-banner {
+  cursor: default;
+}
+.banner-picker-card:not(.locked-banner):active { transform: scale(0.98); }
+
+.banner-picker-preview {
+  height: 72px;
+  position: relative;
+  overflow: hidden;
+}
+.banner-picker-preview.rare-preview::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.1) 50%, transparent 65%);
+  animation: banner-shimmer 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+.banner-picker-info {
+  padding: 9px 12px 10px;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.banner-picker-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+}
+.banner-picker-status {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.bps-active    { background: rgba(250,70,21,0.2); color: #FA4615; border: 1px solid rgba(250,70,21,0.4); }
+.bps-unlocked  { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.bps-locked    { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.35); border: 1px solid rgba(255,255,255,0.1); }
+
+.banner-picker-lock-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.58);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  z-index: 2;
+}
+.banner-lock-icon { font-size: 1.4rem; }
+.banner-lock-req  { font-size: 0.62rem; font-weight: 700; color: rgba(255,255,255,0.7); text-align: center; line-height: 1.4; }
+
+.banner-picker-progress {
+  padding: 6px 12px 8px;
+  background: var(--surface-2);
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.banner-picker-progress-bar-track {
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.banner-picker-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FA4615, #F7AB00);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.banner-picker-progress-label {
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.4);
+}
+.banner-picker-progress-label strong { color: #F7AB00; }
+
+/* Rare banner label */
+.banner-rare-tag {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  background: rgba(124,58,237,0.85);
+  border: 1px solid rgba(167,139,250,0.4);
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  color: #ddd6fe;
+  z-index: 3;
+  backdrop-filter: blur(4px);
+}
+
+/* perf-mode: freeze banner shimmer */
+body.perf-mode .profile-banner.banner-rare::before,
+body.perf-mode .banner-picker-preview.rare-preview::before { animation: none !important; }

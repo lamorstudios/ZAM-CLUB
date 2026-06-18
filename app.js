@@ -415,14 +415,28 @@ function showTierInfoPopup(name, pts, anchorEl) {
 // =============================================
 
 const _PROFILE_BANNERS = [
-  { key: 'default',  label: 'Standard',    gradient: 'linear-gradient(135deg,#c43510 0%,#FA4615 50%,#ff6b3d 100%)', tier: null },
-  { key: 'night',    label: 'Nacht',       gradient: 'linear-gradient(135deg,#0f0c29,#302b63,#24243e)',             tier: null },
-  { key: 'ocean',    label: 'Ozean',       gradient: 'linear-gradient(135deg,#0575e6,#021b79)',                     tier: null },
-  { key: 'gold',     label: 'Gold',        gradient: 'linear-gradient(135deg,#f7971e,#ffd200)',                     tier: 'gold' },
-  { key: 'platin',   label: 'Platin',      gradient: 'linear-gradient(135deg,#8e9eab,#eef2f3)',                     tier: 'platin' },
-  { key: 'diamond',  label: 'Diamond',     gradient: 'linear-gradient(135deg,#48c6ef,#6f86d6)',                     tier: 'diamond' },
-  { key: 'legend',   label: 'Legend',      gradient: 'linear-gradient(135deg,#f7971e,#ffd200,#FA4615)',             tier: 'legend' },
-  { key: 'forest',   label: 'Wald',        gradient: 'linear-gradient(135deg,#134e5e,#71b280)',                     tier: null },
+  // ── Points-unlocked (free → high) ──
+  { key: 'classic',        name: 'ZAM Club Classic',  gradient: 'linear-gradient(135deg,#1a1a1a 0%,#FA4615 55%,#c43510 100%)',                                   req_pts: 0,     demo: true },
+  { key: 'freiham_sunset', name: 'Freiham Sunset',    gradient: 'linear-gradient(135deg,#7f1d1d 0%,#dc2626 25%,#f97316 55%,#fbbf24 80%,#fef3c7 100%)',             req_pts: 1000 },
+  { key: 'orange_glow',    name: 'Orange Glow',       gradient: 'linear-gradient(135deg,#c43510 0%,#FA4615 40%,#ff8c42 70%,#ffd200 100%)',                         req_pts: 2000,  demo: true },
+  { key: 'dark_premium',   name: 'Dark Premium',      gradient: 'linear-gradient(135deg,#0f0f1a 0%,#1e1b4b 40%,#312e81 70%,#1e1b4b 100%)',                         req_pts: 2500 },
+  { key: 'silver_clean',   name: 'Silber Clean',      gradient: 'linear-gradient(135deg,#374151 0%,#6b7280 35%,#9ca3af 65%,#f3f4f6 100%)',                         req_pts: 3000,  demo: true },
+  { key: 'food_lover',     name: 'Food Lover',        gradient: 'linear-gradient(135deg,#7c2d12 0%,#ea580c 35%,#fbbf24 70%,#fef08a 100%)',                         req_pts: 3500,  demo: true },
+  { key: 'gold_champion',  name: 'Gold Champion',     gradient: 'linear-gradient(135deg,#78350f 0%,#b45309 20%,#d97706 45%,#fef08a 70%,#d97706 100%)',             req_pts: 6000 },
+  { key: 'fitness_energy', name: 'Fitness Energy',    gradient: 'linear-gradient(135deg,#052e16 0%,#064e3b 30%,#059669 60%,#34d399 100%)',                         req_pts: 9000 },
+  { key: 'platin_light',   name: 'Platin Light',      gradient: 'linear-gradient(135deg,#1e293b 0%,#475569 30%,#94a3b8 60%,#e2e8f0 100%)',                         req_pts: 13000 },
+  { key: 'diamond_spark',  name: 'Diamond Sparkle',   gradient: 'linear-gradient(135deg,#1e3a8a 0%,#2563eb 30%,#60a5fa 60%,#bfdbfe 85%,#93c5fd 100%)',             req_pts: 15000 },
+  { key: 'event_vibes',    name: 'Event Vibes',       gradient: 'linear-gradient(135deg,#500724 0%,#9d174d 30%,#db2777 60%,#f9a8d4 90%,#fce7f3 100%)',             req_pts: 20000 },
+  { key: 'legend_crown',   name: 'Legend Crown',      gradient: 'linear-gradient(135deg,#78350f 0%,#b45309 15%,#F7AB00 40%,#fef08a 60%,#F7AB00 80%,#b45309 100%)',req_pts: 25000 },
+  { key: 'neon_map',       name: 'Neon Map',          gradient: 'linear-gradient(135deg,#042f2e 0%,#0d9488 30%,#22d3ee 60%,#a78bfa 85%,#6d28d9 100%)',             req_pts: 30000 },
+  { key: 'shopping_night', name: 'Shopping Night',    gradient: 'linear-gradient(135deg,#1e1b4b 0%,#4c1d95 25%,#7c3aed 50%,#ec4899 80%,#fda4af 100%)',             req_pts: 35000 },
+  { key: 'community_hero', name: 'Community Hero',    gradient: 'linear-gradient(135deg,#0c1445 0%,#1d4ed8 35%,#0ea5e9 60%,#38bdf8 85%,#bae6fd 100%)',             req_pts: 40000 },
+  { key: 'secret_rare',    name: 'Secret Rare',       gradient: 'linear-gradient(135deg,#0f0c29 0%,#302b63 20%,#7c3aed 45%,#ec4899 70%,#f472b6 90%,#fce7f3 100%)',req_pts: 50000, rare: true },
+  // ── Achievement-unlocked ──
+  { key: 'challenge_pro',  name: 'Challenge Pro',     gradient: 'linear-gradient(135deg,#1c1917 0%,#92400e 25%,#d97706 55%,#fbbf24 75%,#dc2626 100%)',             req_achievement: 'challenge_master', req_label: '10 Challenges abgeschlossen',   req_progress_key: 'challenges',  req_progress_max: 10 },
+  { key: 'lucky_spin',     name: 'Lucky Spin',        gradient: 'linear-gradient(135deg,#052e16 0%,#166534 25%,#16a34a 50%,#4ade80 75%,#fef08a 100%)',             req_achievement: 'glueckspilz',      req_label: '3× Daily Spin gewonnen',       req_progress_key: 'spins',       req_progress_max: 3  },
+  { key: 'qr_master',      name: 'QR Master',         gradient: 'linear-gradient(135deg,#0c0a09 0%,#064e3b 30%,#0284c7 60%,#38bdf8 90%,#e0f2fe 100%)',             req_achievement: 'event_hunter',     req_label: '5 Events besucht',             req_progress_key: 'events',      req_progress_max: 5  },
+  { key: 'daily_spinner',  name: 'Daily Spinner',     gradient: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 30%,#0f3460 55%,#533483 80%,#e94560 100%)',             req_achievement: 'glueckspilz',      req_label: '3× Daily Spin gewonnen',       req_progress_key: 'spins',       req_progress_max: 3  },
 ];
 
 const _PROFILE_TITLES = [
@@ -435,27 +449,56 @@ const _PROFILE_TITLES = [
 ];
 
 const _VITRINE_ITEMS = [
-  { key: 'first_checkin',     icon: '🏁', name: 'Erster Check-in',    rarity: 'common',   desc: 'Willkommen im ZAM Club!' },
-  { key: 'early_adopter',     icon: '⚡', name: 'Early Adopter',      rarity: 'rare',     desc: 'Unter den ersten 1.000 Mitgliedern' },
-  { key: 'monthly_top10',     icon: '🏆', name: 'Monats-Top 10',      rarity: 'epic',     desc: 'Unter den Top 10 im Monat-Ranking' },
-  { key: 'streak_30',         icon: '🔥', name: '30 Tage Streak',     rarity: 'epic',     desc: '30 Tage am Stück aktiv' },
-  { key: 'deal_master',       icon: '🎯', name: 'Deal Master',        rarity: 'rare',     desc: '25 Deals eingelöst' },
-  { key: 'social_butterfly',  icon: '🦋', name: 'Social Butterfly',   rarity: 'rare',     desc: '10 Freunde im ZAM Club' },
-  { key: 'spin_jackpot',      icon: '💰', name: 'Jackpot',            rarity: 'epic',     desc: 'Händler-Preis beim Spin gewonnen' },
-  { key: 'quarter_champion',  icon: '👑', name: 'Quartals-Champion',  rarity: 'legendary',desc: 'Platz 1–3 im Quartal' },
-  { key: 'zam_original',      icon: '💎', name: 'ZAM Original',       rarity: 'legendary',desc: 'Besondere Auszeichnung' },
+  { key: 'first_checkin',     icon: '🏁', name: 'Erster Check-in',    rarity: 'common',    desc: 'Willkommen im ZAM Club!' },
+  { key: 'early_adopter',     icon: '⚡', name: 'Early Adopter',      rarity: 'rare',      desc: 'Unter den ersten 1.000 Mitgliedern' },
+  { key: 'monthly_top10',     icon: '🏆', name: 'Monats-Top 10',      rarity: 'epic',      desc: 'Unter den Top 10 im Monat-Ranking' },
+  { key: 'streak_30',         icon: '🔥', name: '30 Tage Streak',     rarity: 'epic',      desc: '30 Tage am Stück aktiv' },
+  { key: 'deal_master',       icon: '🎯', name: 'Deal Master',        rarity: 'rare',      desc: '25 Deals eingelöst' },
+  { key: 'social_butterfly',  icon: '🦋', name: 'Social Butterfly',   rarity: 'rare',      desc: '10 Freunde im ZAM Club' },
+  { key: 'spin_jackpot',      icon: '💰', name: 'Jackpot',            rarity: 'epic',      desc: 'Händler-Preis beim Spin gewonnen' },
+  { key: 'quarter_champion',  icon: '👑', name: 'Quartals-Champion',  rarity: 'legendary', desc: 'Platz 1–3 im Quartal' },
+  { key: 'zam_original',      icon: '💎', name: 'ZAM Original',       rarity: 'legendary', desc: 'Besondere Auszeichnung' },
 ];
 
 const _RARITY_COLORS = { common: 'rgba(255,255,255,0.5)', rare: '#60a5fa', epic: '#a78bfa', legendary: '#F7AB00' };
 
 // ── Storage helpers ──
-function _getBanner() { return localStorage.getItem('zam_profile_banner') || 'default'; }
+function _getBanner() { return localStorage.getItem('zam_profile_banner') || 'classic'; }
 function _setBanner(key) { localStorage.setItem('zam_profile_banner', key); }
 function _getTopBadges() { try { return JSON.parse(localStorage.getItem('zam_top_badges') || '[]'); } catch { return []; } }
 function _setTopBadges(arr) { localStorage.setItem('zam_top_badges', JSON.stringify(arr.slice(0, 3))); }
 function _getProfileTitle() { return localStorage.getItem('zam_profile_title') || ''; }
 function _setProfileTitle(key) { localStorage.setItem('zam_profile_title', key); }
 function _getVitrine() { try { return JSON.parse(localStorage.getItem('zam_vitrine_v1') || '["first_checkin","early_adopter"]'); } catch { return []; } }
+
+// ── Banner unlock logic ──
+function _isBannerUnlocked(banner, pts) {
+  // Always unlocked (demo banners or 0-pts)
+  if (!banner.req_pts && !banner.req_achievement) return true;
+  // Points requirement met
+  if (banner.req_pts !== undefined && pts >= banner.req_pts) return true;
+  // Achievement requirement met
+  if (banner.req_achievement && _getAchievements().includes(banner.req_achievement)) return true;
+  // Demo unlock flag
+  if (banner.demo && pts >= 0) return banner.req_pts <= pts;
+  return false;
+}
+
+function _bannerProgress(banner, pts) {
+  if (banner.req_pts !== undefined && !banner.req_achievement) {
+    return { current: pts, max: banner.req_pts, label: `${pts.toLocaleString('de-DE')} / ${banner.req_pts.toLocaleString('de-DE')} Punkte` };
+  }
+  if (banner.req_achievement) {
+    const user = ZAMApi.auth.currentUser();
+    const d = user ? JSON.parse(localStorage.getItem(`zamclub_u_${user.id}`) || '{}') : {};
+    const stats = d.stats || {};
+    const key = banner.req_progress_key;
+    const cur = key ? (stats[key] || 0) : 0;
+    const max = banner.req_progress_max || 1;
+    return { current: cur, max, label: `${cur} / ${max} ${banner.req_label.split(' ').slice(-1)[0]}` };
+  }
+  return null;
+}
 
 // ── Apply banner to profile hero ──
 function _applyProfileBanner(containerId = 'profile-banner') {
@@ -464,6 +507,7 @@ function _applyProfileBanner(containerId = 'profile-banner') {
   const key = _getBanner();
   const banner = _PROFILE_BANNERS.find(b => b.key === key) || _PROFILE_BANNERS[0];
   el.style.background = banner.gradient;
+  el.classList.toggle('banner-rare', !!banner.rare);
 }
 
 // ── Render top badges in hero ──
@@ -497,7 +541,6 @@ function renderProfileVitrine(containerId = 'profile-vitrine') {
   if (!c) return;
   const earned = _getVitrine();
   const achievements = _getAchievements();
-  // Merge vitrine + achievements
   const all = _VITRINE_ITEMS.map(v => ({ ...v, unlocked: earned.includes(v.key) || achievements.includes(v.key) }));
   const unlocked = all.filter(v => v.unlocked);
   const locked = all.filter(v => !v.unlocked).slice(0, 9 - unlocked.length);
@@ -514,35 +557,76 @@ function renderProfileVitrine(containerId = 'profile-vitrine') {
     </div>`;
 }
 
-// ── Banner Picker ──
+// ── Banner Picker — full redesign with 20 banners ──
 function openBannerPicker() {
-  const grid = document.getElementById('banner-picker-grid');
+  const list = document.getElementById('banner-picker-list');
   const modal = document.getElementById('modal-banner-picker');
-  if (!grid || !modal) return;
+  if (!list || !modal) return;
   const current = _getBanner();
-  const userTier = _getTier(ZAMApi.auth.currentUser()?.points || 0);
-  const tierOrder = ['starter','silver','gold','platin','diamond','legend'];
-  const userTierIdx = tierOrder.indexOf(userTier.key);
+  const pts = ZAMApi.auth.currentUser()?.points || ZAMData?.currentUser?.points || 0;
 
-  grid.innerHTML = _PROFILE_BANNERS.map(b => {
-    const reqIdx = b.tier ? tierOrder.indexOf(b.tier) : -1;
-    const locked = b.tier && userTierIdx < reqIdx;
+  list.innerHTML = _PROFILE_BANNERS.map(b => {
+    const unlocked = _isBannerUnlocked(b, pts);
     const isActive = current === b.key;
+    const progress = unlocked ? null : _bannerProgress(b, pts);
+    const pct = progress ? Math.min((progress.current / progress.max) * 100, 99) : 0;
+
+    let lockText = '';
+    if (!unlocked) {
+      if (b.req_pts !== undefined && !b.req_achievement) {
+        const diff = b.req_pts - pts;
+        lockText = `🔒 Noch ${diff.toLocaleString('de-DE')} Punkte fehlen`;
+      } else if (b.req_achievement) {
+        lockText = `🔒 ${b.req_label}`;
+      }
+    }
+
+    const statusHtml = isActive
+      ? `<span class="banner-picker-status bps-active">✓ Aktiv</span>`
+      : unlocked
+        ? `<span class="banner-picker-status bps-unlocked">Auswählen</span>`
+        : `<span class="banner-picker-status bps-locked">Gesperrt</span>`;
+
     return `
-      <div class="banner-picker-item ${isActive ? 'active' : ''}" style="background:${b.gradient}" onclick="${locked ? '' : `selectBanner('${b.key}')`}">
-        <span class="banner-picker-label">${b.label}</span>
-        <span class="bp-check">✓ Aktiv</span>
-        ${locked ? `<div class="banner-locked">🔒 ${b.tier} erforderlich</div>` : ''}
+      <div class="banner-picker-card ${isActive ? 'active-banner' : ''} ${unlocked ? '' : 'locked-banner'}"
+           onclick="${unlocked ? `selectBanner('${b.key}')` : ''}">
+        <div class="banner-picker-preview ${b.rare ? 'rare-preview' : ''}" style="background:${b.gradient}">
+          ${b.rare ? '<span class="banner-rare-tag">✨ Selten</span>' : ''}
+          ${!unlocked ? `
+            <div class="banner-picker-lock-overlay">
+              <span class="banner-lock-icon">🔒</span>
+              <span class="banner-lock-req">${lockText}</span>
+            </div>` : ''}
+        </div>
+        <div class="banner-picker-info">
+          <span class="banner-picker-name">${b.name}</span>
+          ${statusHtml}
+        </div>
+        ${!unlocked && progress && progress.max > 0 ? `
+        <div class="banner-picker-progress">
+          <div class="banner-picker-progress-bar-track">
+            <div class="banner-picker-progress-bar-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="banner-picker-progress-label">Fortschritt: <strong>${progress.label}</strong></div>
+        </div>` : ''}
       </div>`;
   }).join('');
+
   modal.style.display = 'flex';
 }
+
 function selectBanner(key) {
+  const pts = ZAMApi.auth.currentUser()?.points || ZAMData?.currentUser?.points || 0;
+  const banner = _PROFILE_BANNERS.find(b => b.key === key);
+  if (!banner || !_isBannerUnlocked(banner, pts)) return;
   _setBanner(key);
   _applyProfileBanner();
-  openBannerPicker(); // re-render to update active state
+  showToast(`🖼️ Banner aktiviert: ${banner.name}`, 'success');
+  openBannerPicker();
 }
+
 function closeBannerPicker() { document.getElementById('modal-banner-picker').style.display = 'none'; }
+
 
 // ── Top Badge Picker ──
 let _tmpTopBadges = [];

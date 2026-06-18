@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" /></noscript>
 
-  <link rel="stylesheet" href="style.css?v=20260618d" />
+  <link rel="stylesheet" href="style.css?v=20260618e" />
   <link rel="manifest" href="manifest.json"/>
   <link rel="apple-touch-icon" href="assets/icon.svg"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -788,12 +788,10 @@
 
   <!-- Banner Picker Modal -->
   <div class="modal-overlay" id="modal-banner-picker" role="dialog" aria-modal="true" style="display:none;align-items:flex-end;justify-content:center">
-    <div class="modal-sheet" style="max-height:80vh;overflow-y:auto">
-      <div class="modal-handle"></div>
-      <div class="modal-header"><div class="modal-title">🖼️ Banner auswählen</div><button class="modal-close" onclick="closeBannerPicker()">✕</button></div>
-      <div style="padding:0 16px 20px">
-        <div class="banner-picker-grid" id="banner-picker-grid"></div>
-      </div>
+    <div class="modal-sheet" style="max-height:90dvh;overflow-y:auto;padding-left:0;padding-right:0">
+      <div class="modal-handle" style="margin:14px auto 0"></div>
+      <div class="modal-header" style="padding:12px 16px 10px"><div class="modal-title">🖼️ Banner auswählen</div><button class="modal-close" onclick="closeBannerPicker()">✕</button></div>
+      <div class="banner-picker-list" id="banner-picker-list"></div>
     </div>
   </div>
 
@@ -1697,9 +1695,9 @@
 </div>
 
 <!-- Scripts (load data first, then app logic) -->
-<script src="data.js?v=20260618d"></script>
-<script src="api.js?v=20260618d"></script>
-<script src="app.js?v=20260618d"></script>
+<script src="data.js?v=20260618e"></script>
+<script src="api.js?v=20260618e"></script>
+<script src="app.js?v=20260618e"></script>
 
 <!-- QR Code Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
