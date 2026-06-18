@@ -2678,18 +2678,34 @@ function _renderMessages() {
   const isAdmin = user?.role === 'admin';
   _chatMsgCount = msgs.length;
 
+  const myPts  = _demoUserPts(uid);
+  const myTier = _getTier(myPts);
+  const myInitials = user?.initials || user?.name?.slice(0,2).toUpperCase() || 'Ich';
+  const myColor = user?.avatar_color || '#FA4615';
+  const myName = (user?.name || 'Du').replace(/'/g,"\\'");
+
   container.innerHTML = msgs.map(m => {
     const isOwn = m.user_id === uid;
     const time  = new Date(m.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-    const mPts  = _demoUserPts(m.user_id);
-    const mTier = _getTier(mPts);
-    const safeAuthorName = (m.author?.name||'').replace(/'/g,"\\'");
+    const mPts  = isOwn ? myPts : _demoUserPts(m.user_id);
+    const mTier = isOwn ? myTier : _getTier(mPts);
+    const safeAuthorName = isOwn ? myName : (m.author?.name||'').replace(/'/g,"\\'");
     const safeMPts = mPts;
+    const mInitials = isOwn ? myInitials : (m.author?.initials || '?');
+    const mColor = isOwn ? myColor : (m.author?.color || '#FA4615');
+    const isOwnAdmin = isOwn && isAdmin;
+
+    const avatarHtml = `<div class="tier-ring ${isOwnAdmin ? 'tier-ring--admin' : `tier-ring--${mTier.key}`}" style="width:34px;height:34px;background:${mColor};font-size:11px;font-weight:800;color:#fff;flex-shrink:0;cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${mInitials}',null,${safeMPts})">${mInitials}</div>`;
+
+    const nameHtml = isOwn
+      ? `<div class="chat-msg-name" style="display:flex;align-items:center;gap:4px;justify-content:flex-end">${isOwnAdmin ? _adminBadgeHtml() : `<span class="tier-badge tier-badge--${mTier.key}">${mTier.emoji} ${mTier.label}</span>`}<span style="cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${mInitials}',null,${safeMPts})">${user?.name || 'Du'}</span></div>`
+      : `<div class="chat-msg-name" style="display:flex;align-items:center;gap:4px"><span style="cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${m.author?.name || ''}</span>${_isUserAdmin(m.user_id) ? _adminBadgeHtml() : `<span class="tier-badge tier-badge--${mTier.key}" style="cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${mTier.emoji} ${mTier.label}</span>`}</div>`;
+
     return `
       <div class="chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}" data-msg-id="${m.id}">
-        ${!isOwn ? `<div class="tier-ring ${_isUserAdmin(m.user_id) ? 'tier-ring--admin' : `tier-ring--${mTier.key}`}" style="width:34px;height:34px;background:${m.author?.color || '#FA4615'};font-size:11px;font-weight:800;color:#fff;flex-shrink:0;cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${m.author?.initials || '?'}</div>` : ''}
+        ${avatarHtml}
         <div class="chat-msg-bubble-wrap">
-          ${!isOwn ? `<div class="chat-msg-name" style="display:flex;align-items:center;gap:4px"><span style="cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${m.author?.name || ''}</span>${_isUserAdmin(m.user_id) ? _adminBadgeHtml() : `<span class="tier-badge tier-badge--${mTier.key}" style="cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${mTier.emoji} ${mTier.label}</span>`}</div>` : ''}
+          ${nameHtml}
           <div class="chat-msg-bubble">${m.content}</div>
           <div class="chat-msg-time">
             ${time}
@@ -4178,82 +4194,111 @@ function openUserProfileSheet(userId, userName, initials, avatarUrl, userPts = n
 
   // Build action buttons
   const actionsEl = $('#ups-actions');
+  const currentUid = ZAMApi.auth.currentUser()?.id;
+  const isOwnProfile = userId === currentUid;
+
   if (actionsEl) {
     actionsEl.innerHTML = '';
-    const connected  = ZAMApi.nudges.isConnected(userId);
-    const hasPending = ZAMApi.nudges.hasPendingNudgeTo(userId);
 
-    if (connected) {
-      const msgBtn = document.createElement('button');
-      msgBtn.className = 'btn btn-primary btn-full';
-      msgBtn.innerHTML = '💬 Nachricht schreiben';
-      msgBtn.addEventListener('click', () => {
+    if (isOwnProfile) {
+      const viewBtn = document.createElement('button');
+      viewBtn.className = 'btn btn-primary btn-full';
+      viewBtn.innerHTML = '👤 Mein Profil ansehen';
+      viewBtn.addEventListener('click', () => {
         closeUserProfileSheet();
-        // Navigate first, then open chat overlay on top
-        navigateTo('community');
-        setTimeout(() => openPrivateChat(userId, userName, initials, avatarUrl), 250);
+        navigateTo('profile');
       });
-      actionsEl.appendChild(msgBtn);
+      actionsEl.appendChild(viewBtn);
 
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'btn btn-ghost btn-full';
-      removeBtn.textContent = '🔗 Verbindung entfernen';
-      removeBtn.addEventListener('click', () => {
-        const conn = ZAMApi.connections.all().find(c => c.user_id === userId);
-        if (conn) {
-          ZAMApi.connections.remove(conn.connection_id);
-          showToast('Verbindung entfernt.');
-        }
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn btn-ghost btn-full';
+      editBtn.innerHTML = '✏️ Profil bearbeiten';
+      editBtn.addEventListener('click', () => {
         closeUserProfileSheet();
+        navigateTo('profile');
+        setTimeout(() => {
+          const editSection = document.querySelector('.profile-edit-section, [data-section="edit"]');
+          if (editSection) editSection.scrollIntoView({ behavior: 'smooth' });
+        }, 300);
       });
-      actionsEl.appendChild(removeBtn);
-    } else if (hasPending) {
-      const pendingBtn = document.createElement('button');
-      pendingBtn.className = 'btn btn-ghost btn-full';
-      pendingBtn.textContent = '⏳ Anstupsanfrage gesendet';
-      pendingBtn.disabled = true;
-      actionsEl.appendChild(pendingBtn);
+      actionsEl.appendChild(editBtn);
     } else {
-      const nudgeBtn = document.createElement('button');
-      nudgeBtn.className = 'btn btn-primary btn-full';
-      nudgeBtn.innerHTML = '👋 Anstupsen';
-      nudgeBtn.addEventListener('click', () => {
-        const result = ZAMApi.nudges.send(userId, userName);
-        if (result) {
-          showToast(`👋 Anstupsanfrage an ${userName} gesendet!`, 'nudge');
-        } else {
-          showToast('Anfrage bereits gesendet oder bereits verbunden.');
-        }
-        closeUserProfileSheet();
-      });
-      actionsEl.appendChild(nudgeBtn);
+      const connected  = ZAMApi.nudges.isConnected(userId);
+      const hasPending = ZAMApi.nudges.hasPendingNudgeTo(userId);
+
+      if (connected) {
+        const msgBtn = document.createElement('button');
+        msgBtn.className = 'btn btn-primary btn-full';
+        msgBtn.innerHTML = '💬 Nachricht schreiben';
+        msgBtn.addEventListener('click', () => {
+          closeUserProfileSheet();
+          navigateTo('community');
+          setTimeout(() => openPrivateChat(userId, userName, initials, avatarUrl), 250);
+        });
+        actionsEl.appendChild(msgBtn);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'btn btn-ghost btn-full';
+        removeBtn.textContent = '🔗 Verbindung entfernen';
+        removeBtn.addEventListener('click', () => {
+          const conn = ZAMApi.connections.all().find(c => c.user_id === userId);
+          if (conn) {
+            ZAMApi.connections.remove(conn.connection_id);
+            showToast('Verbindung entfernt.');
+          }
+          closeUserProfileSheet();
+        });
+        actionsEl.appendChild(removeBtn);
+      } else if (hasPending) {
+        const pendingBtn = document.createElement('button');
+        pendingBtn.className = 'btn btn-ghost btn-full';
+        pendingBtn.textContent = '⏳ Anstupsanfrage gesendet';
+        pendingBtn.disabled = true;
+        actionsEl.appendChild(pendingBtn);
+      } else {
+        const nudgeBtn = document.createElement('button');
+        nudgeBtn.className = 'btn btn-primary btn-full';
+        nudgeBtn.innerHTML = '👋 Anstupsen';
+        nudgeBtn.addEventListener('click', () => {
+          const result = ZAMApi.nudges.send(userId, userName);
+          if (result) {
+            showToast(`👋 Anstupsanfrage an ${userName} gesendet!`, 'nudge');
+          } else {
+            showToast('Anfrage bereits gesendet oder bereits verbunden.');
+          }
+          closeUserProfileSheet();
+        });
+        actionsEl.appendChild(nudgeBtn);
+      }
     }
   }
 
-  // Danger zone
+  // Danger zone — nur bei fremden Profilen
   const dangerEl = $('#ups-danger');
   if (dangerEl) {
     dangerEl.innerHTML = '';
-    const blockBtn = document.createElement('button');
-    blockBtn.textContent = ZAMApi.connections.isBlocked(userId) ? '✅ Entblockieren' : '🚫 Blockieren';
-    blockBtn.addEventListener('click', () => {
-      if (ZAMApi.connections.isBlocked(userId)) {
-        ZAMApi.chat.unblockUser(userId);
-        showToast(`${userName} entblockiert.`);
-      } else {
-        ZAMApi.connections.block(userId);
-        showToast(`🚫 ${userName} blockiert.`);
-      }
-      closeUserProfileSheet();
-    });
-    const reportBtn = document.createElement('button');
-    reportBtn.textContent = '🚩 Melden';
-    reportBtn.addEventListener('click', () => {
-      closeUserProfileSheet();
-      openUserReportModal(userId, userName);
-    });
-    dangerEl.appendChild(blockBtn);
-    dangerEl.appendChild(reportBtn);
+    if (!isOwnProfile) {
+      const blockBtn = document.createElement('button');
+      blockBtn.textContent = ZAMApi.connections.isBlocked(userId) ? '✅ Entblockieren' : '🚫 Blockieren';
+      blockBtn.addEventListener('click', () => {
+        if (ZAMApi.connections.isBlocked(userId)) {
+          ZAMApi.chat.unblockUser(userId);
+          showToast(`${userName} entblockiert.`);
+        } else {
+          ZAMApi.connections.block(userId);
+          showToast(`🚫 ${userName} blockiert.`);
+        }
+        closeUserProfileSheet();
+      });
+      const reportBtn = document.createElement('button');
+      reportBtn.textContent = '🚩 Melden';
+      reportBtn.addEventListener('click', () => {
+        closeUserProfileSheet();
+        openUserReportModal(userId, userName);
+      });
+      dangerEl.appendChild(blockBtn);
+      dangerEl.appendChild(reportBtn);
+    }
   }
 
   $('#profile-sheet-backdrop')?.classList.add('open');
