@@ -477,6 +477,31 @@ function _getProfileTitle() { return localStorage.getItem('zam_profile_title') |
 function _setProfileTitle(key) { localStorage.setItem('zam_profile_title', key); }
 function _getVitrine() { try { return JSON.parse(localStorage.getItem('zam_vitrine_v1') || '["first_checkin","early_adopter"]'); } catch { return []; } }
 
+// ── Admin helpers ──
+function _isAdmin() {
+  const u = ZAMApi.auth.currentUser() || ZAMData?.currentUser;
+  return u?.role === 'admin';
+}
+function _isUserAdmin(userId) {
+  // For demo: check if it's the current user and they're admin
+  const me = ZAMApi.auth.currentUser() || ZAMData?.currentUser;
+  return me?.role === 'admin' && userId === me?.id;
+}
+// Admin unlocks everything
+function _isBannerUnlockedWithAdmin(banner, pts) {
+  if (_isAdmin()) return true;
+  return _isBannerUnlocked(banner, pts);
+}
+function _isTitleEarned(t, pts, earnedAchievements) {
+  if (_isAdmin()) return true;
+  return (t.req === null && pts >= (t.req_pts || 0))
+    || (t.req !== null && t.req !== undefined && earnedAchievements.includes(t.req));
+}
+function _adminBadgeHtml(small = true) {
+  const sz = small ? 'font-size:0.52rem;padding:2px 5px' : 'font-size:0.65rem;padding:3px 9px';
+  return `<span class="admin-badge" style="${sz}">👑 Admin</span>`;
+}
+
 // ── Banner unlock logic ──
 function _isBannerUnlocked(banner, pts) {
   if (!banner.req_achievement) {
@@ -572,7 +597,7 @@ function openBannerPicker() {
   const pts = ZAMApi.auth.currentUser()?.points || ZAMData?.currentUser?.points || 0;
 
   list.innerHTML = _PROFILE_BANNERS.map(b => {
-    const unlocked = _isBannerUnlocked(b, pts);
+    const unlocked = _isBannerUnlockedWithAdmin(b, pts);
     const isActive = current === b.key;
     const progress = unlocked ? null : _bannerProgress(b, pts);
     const pct = progress ? Math.min((progress.current / progress.max) * 100, 99) : 0;
@@ -585,13 +610,18 @@ function openBannerPicker() {
       } else {
         lockText = b.req_label;
       }
+    } else if (_isAdmin() && (b.req_pts > 0 || b.req_achievement)) {
+      lockText = 'ADMIN';
     }
 
+    const isAdminUnlock = _isAdmin() && (b.req_pts > 0 || b.req_achievement);
     const statusHtml = isActive
       ? `<span class="banner-picker-status bps-active">✓ Aktiv</span>`
-      : unlocked
-        ? `<span class="banner-picker-status bps-unlocked">Auswählen</span>`
-        : `<span class="banner-picker-status bps-locked">Gesperrt</span>`;
+      : isAdminUnlock
+        ? `<span class="banner-picker-status bps-admin">👑 Admin</span>`
+        : unlocked
+          ? `<span class="banner-picker-status bps-unlocked">Auswählen</span>`
+          : `<span class="banner-picker-status bps-locked">Gesperrt</span>`;
 
     return `
       <div class="banner-picker-card ${isActive ? 'active-banner' : ''} ${unlocked ? '' : 'locked-banner'}"
@@ -618,7 +648,7 @@ function openBannerPicker() {
 function selectBanner(key) {
   const pts = ZAMApi.auth.currentUser()?.points || ZAMData?.currentUser?.points || 0;
   const banner = _PROFILE_BANNERS.find(b => b.key === key);
-  if (!banner || !_isBannerUnlocked(banner, pts)) return;
+  if (!banner || !_isBannerUnlockedWithAdmin(banner, pts)) return;
   _setBanner(key);
   _applyProfileBanner();
   showToast(`🖼️ Banner aktiviert: ${banner.name}`, 'success');
@@ -697,8 +727,7 @@ function openTitlePicker() {
   const current = _getProfileTitle();
   const pts = ZAMApi.auth.currentUser()?.points || ZAMData?.currentUser?.points || 0;
   list.innerHTML = _PROFILE_TITLES.map(t => {
-    const isEarned = (t.req === null && pts >= (t.req_pts || 0))
-      || (t.req !== null && t.req !== undefined && earned.includes(t.req));
+    const isEarned = _isTitleEarned(t, pts, earned);
     const isActive = current === t.key;
     return `
       <div class="title-picker-item ${isActive ? 'active' : ''} ${!isEarned ? 'locked' : ''}"
@@ -727,7 +756,7 @@ function selectTitle(key) {
   const newCurrent = _getProfileTitle();
   const list = document.getElementById('title-picker-list');
   if (list) list.innerHTML = _PROFILE_TITLES.map(t => {
-    const isEarned = (t.req === null && pts >= (t.req_pts || 0)) || (t.req !== null && t.req !== undefined && earned.includes(t.req));
+    const isEarned = _isTitleEarned(t, pts, earned);
     const isActive = newCurrent === t.key;
     return `<div class="title-picker-item ${isActive ? 'active' : ''} ${!isEarned ? 'locked' : ''}" onclick="${isEarned ? `selectTitle('${t.key}')` : `showToast('🔒 Noch nicht freigeschaltet','error')`}"><span class="tpi-label">${t.label}</span><span class="tpi-req">${isEarned ? (isActive ? '✅ Aktiv' : '✓ Freigeschaltet') : '🔒 ' + t.desc}</span></div>`;
   }).join('');
@@ -1848,9 +1877,9 @@ function renderPostCard(post, idx) {
     : '';
   div.innerHTML = `
     <div class="post-header">
-      <div class="tier-ring tier-ring--${authorTier.key}" style="width:38px;height:38px;background:${post.author?.avatar_color || '#FA4615'};font-size:13px;font-weight:800;color:#fff;flex-shrink:0;cursor:pointer" onclick="openUserProfileSheet('${post.user_id||''}','${(post.author?.name||'').replace(/'/g,"\\'")}','${post.author?.initials||'?'}',null,${authorPts})">${post.author?.initials || '?'}</div>
+      <div class="tier-ring ${_isUserAdmin(post.user_id||'') ? 'tier-ring--admin' : `tier-ring--${authorTier.key}`}" style="width:38px;height:38px;background:${post.author?.avatar_color || '#FA4615'};font-size:13px;font-weight:800;color:#fff;flex-shrink:0;cursor:pointer" onclick="openUserProfileSheet('${post.user_id||''}','${(post.author?.name||'').replace(/'/g,"\\'")}','${post.author?.initials||'?'}',null,${authorPts})">${post.author?.initials || '?'}</div>
       <div class="post-author-info">
-        <div class="post-author-name" style="display:flex;align-items:center;gap:5px;cursor:pointer" onclick="openUserProfileSheet('${post.user_id||''}','${(post.author?.name||'').replace(/'/g,"\\'")}','${post.author?.initials||'?'}',null,${authorPts})">${post.author?.name || 'Unbekannt'}${statusBadge}${topBadgesHtml ? `<span style="display:flex;gap:2px;margin-left:2px">${topBadgesHtml}</span>` : ''}</div>
+        <div class="post-author-name" style="display:flex;align-items:center;gap:5px;cursor:pointer" onclick="openUserProfileSheet('${post.user_id||''}','${(post.author?.name||'').replace(/'/g,"\\'")}','${post.author?.initials||'?'}',null,${authorPts})">${post.author?.name || 'Unbekannt'}${statusBadge}${_isUserAdmin(post.user_id||'') ? _adminBadgeHtml() : ''}${topBadgesHtml ? `<span style="display:flex;gap:2px;margin-left:2px">${topBadgesHtml}</span>` : ''}</div>
         <div class="post-author-level" style="display:flex;align-items:center;gap:4px">${authorTitleObj ? `<span style="font-size:0.6rem;color:#ffb399;font-weight:700">${authorTitleObj.label}</span>` : ''}<span class="tier-badge tier-badge--${authorTier.key}">${authorTier.emoji} ${authorTier.label}</span></div>
       </div>
       <div class="post-time">${post.time_ago || ''}</div>
@@ -2415,7 +2444,7 @@ async function renderProfile() {
   _renderProfileTitle();
   // Set tier data attribute for CSS tier effects
   const heroEl = document.querySelector('.profile-hero');
-  if (heroEl) heroEl.dataset.tier = _getTier(pts).key;
+  if (heroEl) heroEl.dataset.tier = _isAdmin() ? 'admin' : _getTier(pts).key;
   renderProfileVitrine();
 
   // Update Nearby badge in profile
@@ -2658,9 +2687,9 @@ function _renderMessages() {
     const safeMPts = mPts;
     return `
       <div class="chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}" data-msg-id="${m.id}">
-        ${!isOwn ? `<div class="tier-ring tier-ring--${mTier.key}" style="width:34px;height:34px;background:${m.author?.color || '#FA4615'};font-size:11px;font-weight:800;color:#fff;flex-shrink:0;cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${m.author?.initials || '?'}</div>` : ''}
+        ${!isOwn ? `<div class="tier-ring ${_isUserAdmin(m.user_id) ? 'tier-ring--admin' : `tier-ring--${mTier.key}`}" style="width:34px;height:34px;background:${m.author?.color || '#FA4615'};font-size:11px;font-weight:800;color:#fff;flex-shrink:0;cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${m.author?.initials || '?'}</div>` : ''}
         <div class="chat-msg-bubble-wrap">
-          ${!isOwn ? `<div class="chat-msg-name" style="display:flex;align-items:center;gap:4px"><span style="cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${m.author?.name || ''}</span><span class="tier-badge tier-badge--${mTier.key}" style="cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${mTier.emoji} ${mTier.label}</span></div>` : ''}
+          ${!isOwn ? `<div class="chat-msg-name" style="display:flex;align-items:center;gap:4px"><span style="cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${m.author?.name || ''}</span>${_isUserAdmin(m.user_id) ? _adminBadgeHtml() : `<span class="tier-badge tier-badge--${mTier.key}" style="cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${mTier.emoji} ${mTier.label}</span>`}</div>` : ''}
           <div class="chat-msg-bubble">${m.content}</div>
           <div class="chat-msg-time">
             ${time}
@@ -4095,7 +4124,7 @@ function openUserProfileSheet(userId, userName, initials, avatarUrl, userPts = n
   // Avatar with tier ring
   const avatarEl = document.getElementById('ups-avatar');
   if (avatarEl) {
-    avatarEl.className = `user-profile-sheet-avatar tier-ring tier-ring--${tier.key}`;
+    avatarEl.className = `user-profile-sheet-avatar tier-ring ${_isUserAdmin(userId) ? 'tier-ring--admin' : `tier-ring--${tier.key}`}`;
     if (avatarUrl) {
       avatarEl.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" />`;
       avatarEl.style.background = 'none';
@@ -4118,7 +4147,10 @@ function openUserProfileSheet(userId, userName, initials, avatarUrl, userPts = n
 
   // Tier badge
   const tierRowEl = document.getElementById('ups-tier-row');
-  if (tierRowEl) tierRowEl.innerHTML = `<span class="tier-badge tier-badge--${tier.key}" style="font-size:0.72rem;padding:4px 10px">${tier.emoji} ${tier.label} Mitglied</span>`;
+  const isViewedAdmin = _isUserAdmin(userId);
+  if (tierRowEl) tierRowEl.innerHTML = isViewedAdmin
+    ? `<span class="tier-badge tier-badge--admin" style="font-size:0.72rem;padding:4px 10px">👑 Administrator</span>`
+    : `<span class="tier-badge tier-badge--${tier.key}" style="font-size:0.72rem;padding:4px 10px">${tier.emoji} ${tier.label} Mitglied</span>`;
 
   // Rank + Pts row
   const rankRowEl = document.getElementById('ups-rank-row');
