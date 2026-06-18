@@ -9455,9 +9455,12 @@ function openMerchantDealModal() {
   _buildMerchantModal('_dyn_deal_modal', '🏷️ Deal einreichen',
     _inp('Deal-Titel', '_dl_title', 'text', 'z.B. Fitness + Burger Aktion', true) +
     _ta('Beschreibung', '_dl_desc', 'Was beinhaltet der Deal?') +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
-    _inp('Rabatt / Mein Vorteil', '_dl_disc', 'text', 'z.B. 20% oder 5€') +
-    _inp('Gültig bis', '_dl_exp', 'date', '', true) +
+    _inp('Dein Angebot / Beitrag', '_dl_offer', 'text', 'z.B. 20% Rabatt auf Monatsbeitrag für Neukunden') +
+    _inp('Bedingung (optional)', '_dl_cond', 'text', 'z.B. Nur für Neukunden, min. 3 Monate') +
+    _inp('Gewünschter Rabatt / Prämie', '_dl_disc', 'text', 'z.B. 15% Rabatt, 1 Gratis-Menü, …') +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">' +
+      '<div><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Zeitraum von</label><input id="_dl_start" type="date" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:inherit;font-size:0.82rem;outline:none"></div>' +
+      '<div><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Zeitraum bis *</label><input id="_dl_exp" type="date" required style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:inherit;font-size:0.82rem;outline:none"></div>' +
     '</div>' +
     '<div style="margin-bottom:14px">' +
       '<div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">📎 Medien (optional)</div>' +
@@ -9488,6 +9491,8 @@ function openMerchantDealModal() {
           '<option value="">— Händler wählen —</option>' +
           merchantOptions +
         '</select>' +
+        '<label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Nachricht an Partner</label>' +
+        '<textarea id="_dl_partner_msg" rows="2" placeholder="Kurze persönliche Nachricht an den Partner-Händler …" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:inherit;font-size:0.82rem;outline:none;resize:none;margin-bottom:10px"></textarea>' +
         '<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);padding:8px;background:rgba(247,171,0,0.08);border-radius:8px;border:1px solid rgba(247,171,0,0.15)">💡 Der Partner erhält eine Anfrage und ergänzt seinen eigenen Vorteil bevor der Deal aktiviert wird.</div>' +
       '</div>' +
     '</div>' +
@@ -9548,17 +9553,25 @@ function submitNewEvent() {
 }
 
 function submitNewDeal() {
-  const title = document.getElementById('_dl_title')?.value?.trim();
-  const desc  = document.getElementById('_dl_desc')?.value?.trim();
-  const exp   = document.getElementById('_dl_exp')?.value;
-  const disc  = document.getElementById('_dl_disc')?.value?.trim() || '';
-  if (!title || !desc || !exp) { showToast('⚠️ Titel, Beschreibung und Ablaufdatum erforderlich'); return; }
+  const v = id => document.getElementById(id)?.value?.trim() || '';
+  const title  = v('_dl_title');
+  const desc   = v('_dl_desc');
+  const offer  = v('_dl_offer');
+  const cond   = v('_dl_cond');
+  const disc   = v('_dl_disc');
+  const start  = v('_dl_start');
+  const exp    = v('_dl_exp');
+  if (!title || !desc || !exp) { showToast('⚠️ Titel, Beschreibung und Zeitraum bis erforderlich'); return; }
+
+  const mediaType = document.querySelector('input[name="_dl_media_type"]:checked')?.value || 'text';
+  const mediaUrl  = v('_dl_media_url');
 
   const isPartner = document.getElementById('_dl_partner_toggle')?.checked;
   const partnerSel = document.getElementById('_dl_partner_id');
   const partnerId  = partnerSel?.value;
   const partnerName = partnerSel?.options[partnerSel.selectedIndex]?.dataset?.name || 'Partner';
   const partnerIcon = partnerSel?.options[partnerSel.selectedIndex]?.dataset?.icon || '🏪';
+  const partnerMsg  = v('_dl_partner_msg');
 
   if (isPartner) {
     if (!partnerId) { showToast('⚠️ Bitte einen Partner-Shop auswählen'); return; }
@@ -9570,8 +9583,12 @@ function submitNewDeal() {
       title,
       description: desc,
       expires_at: exp,
-      from: { id: myM.id, name: myM.name, icon: myM.icon, benefit: disc, condition: '' },
+      period_start: start,
+      from: { id: myM.id, name: myM.name, icon: myM.icon, benefit: offer || disc, condition: cond },
       to:   { id: partnerId, name: partnerName, icon: partnerIcon },
+      message: partnerMsg,
+      media_type: mediaType !== 'text' ? mediaType : undefined,
+      media_url:  mediaType !== 'text' && mediaUrl ? mediaUrl : undefined,
       created_at: new Date().toISOString()
     };
     const reqs = _getPD2Requests();
@@ -9583,13 +9600,11 @@ function submitNewDeal() {
   }
 
   // Regular deal
-  const mediaType = document.querySelector('input[name="_dl_media_type"]:checked')?.value || 'text';
-  const mediaUrl  = (document.getElementById('_dl_media_url')?.value || '').trim();
-  const btn = document.querySelector('#_dyn_deal_modal button:last-child');
+  const btn = document.querySelector('#_dyn_deal_modal button[onclick="submitNewDeal()"]');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird eingereicht…'; }
   const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
   const list = getMerchantSubmissions();
-  const dealEntry = { id:'deal_'+Date.now(), type:'deal', status:'pending', title, description:desc, discount:disc, expiry:exp, merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() };
+  const dealEntry = { id:'deal_'+Date.now(), type:'deal', status:'pending', title, description:desc, offer, condition:cond, discount:disc, period_start:start, expiry:exp, merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() };
   if (mediaType && mediaType !== 'text' && mediaUrl) { dealEntry.media_type = mediaType; dealEntry.media_url = mediaUrl; }
   list.unshift(dealEntry);
   saveMerchantSubmissions(list);

@@ -363,10 +363,24 @@ function openNewPartnerDealModal() {
         </div>
         ${lbl('Nachricht an Partner')}
         <textarea id="pdw-new-msg" rows="2" placeholder="Kurze persönliche Nachricht an den Partner-Händler …" ${inp('resize:none')}></textarea>
+        <div style="margin-top:14px">
+          <div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:rgba(255,255,255,0.4);margin-bottom:8px">📎 Medien (optional)</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+            <label style="flex:1;min-width:70px"><input type="radio" name="pdw-new-media-type" value="text" checked onchange="_onPDWMediaTypeChange()" style="display:none"><div class="_pdw_mtype_btn" style="padding:7px 10px;border-radius:10px;border:1px solid rgba(250,70,21,0.4);background:rgba(250,70,21,0.15);color:#FA4615;font-size:0.72rem;font-weight:700;text-align:center;cursor:pointer">Nur Text</div></label>
+            <label style="flex:1;min-width:70px"><input type="radio" name="pdw-new-media-type" value="image" onchange="_onPDWMediaTypeChange()" style="display:none"><div class="_pdw_mtype_btn" style="padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-size:0.72rem;font-weight:700;text-align:center;cursor:pointer">🖼 Bild</div></label>
+            <label style="flex:1;min-width:70px"><input type="radio" name="pdw-new-media-type" value="video" onchange="_onPDWMediaTypeChange()" style="display:none"><div class="_pdw_mtype_btn" style="padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-size:0.72rem;font-weight:700;text-align:center;cursor:pointer">📹 Video</div></label>
+            <label style="flex:1;min-width:70px"><input type="radio" name="pdw-new-media-type" value="instagram" onchange="_onPDWMediaTypeChange()" style="display:none"><div class="_pdw_mtype_btn" style="padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-size:0.72rem;font-weight:700;text-align:center;cursor:pointer">📸 Instagram</div></label>
+            <label style="flex:1;min-width:70px"><input type="radio" name="pdw-new-media-type" value="tiktok" onchange="_onPDWMediaTypeChange()" style="display:none"><div class="_pdw_mtype_btn" style="padding:7px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-size:0.72rem;font-weight:700;text-align:center;cursor:pointer">🎵 TikTok</div></label>
+          </div>
+          <div id="pdw-new-media-url-wrap" style="display:none">
+            <input id="pdw-new-media-url" type="url" placeholder="Link / URL eingeben" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:var(--font);font-size:0.82rem;outline:none">
+          </div>
+        </div>
         <div id="pdw-new-error" style="display:none;color:#f87171;font-size:0.76rem;margin-top:10px;padding:10px;background:rgba(239,68,68,0.1);border-radius:8px"></div>
         <button onclick="_pdwSubmitNew()" style="width:100%;margin-top:16px;background:linear-gradient(135deg,#c43510,#FA4615);border:none;border-radius:12px;padding:14px;color:#fff;font-size:0.88rem;font-weight:800;font-family:var(--font);cursor:pointer;box-shadow:0 4px 16px rgba(196,53,16,0.35)">
           🤝 Anfrage senden
         </button>
+        <button type="button" onclick="closeModal('modal-pdw-new');openVideoDrehModal()" style="width:100%;box-sizing:border-box;background:rgba(250,70,21,0.08);border:1.5px solid rgba(250,70,21,0.35);border-radius:12px;padding:12px;color:#FA4615;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:8px">🎥 Passendes Reel produzieren lassen</button>
       </div>
     </div>`;
   modal.classList.add('open');
@@ -393,6 +407,9 @@ function _pdwSubmitNew() {
   const myMerchants = _pdwGetMerchants();
   const myData = myMerchants.find(m => m.id === me.id) || { id: me.id, name: me.display_name || me.name || 'Händler', icon: '🏪' };
 
+  const mediaType = document.querySelector('input[name="pdw-new-media-type"]:checked')?.value || 'text';
+  const mediaUrl  = (document.getElementById('pdw-new-media-url')?.value || '').trim();
+
   const deal = PDW.create({
     initiator: myData,
     partner:   { id: partnerId, name: partnerName, icon: partnerIcon },
@@ -403,6 +420,8 @@ function _pdwSubmitNew() {
     periodEnd:   v('pdw-new-end'),
     discount:    v('pdw-new-discount'),
     message:     v('pdw-new-msg'),
+    media_type:  mediaType !== 'text' ? mediaType : undefined,
+    media_url:   mediaType !== 'text' && mediaUrl ? mediaUrl : undefined,
   });
 
   if (typeof ZAMNotif !== 'undefined') {
@@ -422,6 +441,23 @@ function _pdwShowError(el, msg) {
   if (!el) return;
   el.style.display = '';
   el.textContent = msg;
+}
+
+function _onPDWMediaTypeChange() {
+  const selected = document.querySelector('input[name="pdw-new-media-type"]:checked')?.value || 'text';
+  document.querySelectorAll('._pdw_mtype_btn').forEach(b => {
+    const isActive = b.parentElement.querySelector('input').value === selected;
+    b.style.background = isActive ? 'rgba(250,70,21,0.15)' : 'rgba(255,255,255,0.05)';
+    b.style.color = isActive ? '#FA4615' : 'rgba(255,255,255,0.55)';
+    b.style.border = isActive ? '1px solid rgba(250,70,21,0.4)' : '1px solid rgba(255,255,255,0.12)';
+  });
+  const wrap = document.getElementById('pdw-new-media-url-wrap');
+  if (!wrap) return;
+  wrap.style.display = selected === 'text' ? 'none' : 'block';
+  const urlInput = document.getElementById('pdw-new-media-url');
+  if (!urlInput) return;
+  const placeholders = { image: 'Bild-URL (https://...)', video: 'Video-URL (https://...)', instagram: 'Instagram Reel-Link', tiktok: 'TikTok-Video-Link' };
+  urlInput.placeholder = placeholders[selected] || 'URL';
 }
 
 // ============================================================
