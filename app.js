@@ -438,6 +438,28 @@ const _PROFILE_BANNERS = [
   { key: 'qr_master',      name: 'Explorer',           gradient: 'linear-gradient(135deg,#012d22 0%,#064e3b 22%,#0284c7 50%,#0ea5e9 72%,#38bdf8 88%,#bae6fd 100%)', req_achievement: 'event_hunter',     req_label: '10 Events besucht',       req_progress_key: 'events',          req_progress_max: 10,  anim_class: 'bx-explorer' },
   { key: 'food_explorer',  name: 'Event Master',       gradient: 'linear-gradient(135deg,#1a0533 0%,#4c0d9f 22%,#7c3aed 44%,#a855f7 66%,#e879f9 84%,#fdf4ff 100%)', req_achievement: 'food_explorer',    req_label: '20 Food-Deals eingelöst', req_progress_key: 'food_deals',      req_progress_max: 20,  anim_class: 'bx-event' },
   { key: 'event_hunter',   name: 'Diamond Club',       gradient: 'linear-gradient(135deg,#020d1f 0%,#0c2461 22%,#1a56db 44%,#60a5fa 66%,#bfdbfe 84%,#dbeafe 100%)', req_achievement: 'zam_legend',       req_label: 'Legend-Status erreichen', req_progress_key: 'events',          req_progress_max: 5,   anim_class: 'bx-dclub' },
+  // ── Food Banner ──
+  { key: 'food_burger',   name: 'Burger Time',      gradient: 'linear-gradient(135deg,#7c2d12 0%,#b91c1c 40%,#ea580c 70%,#fbbf24 100%)',                               req_pts: 1000,  anim_class: 'bx-burger' },
+  { key: 'food_donut',    name: 'Donut Party',       gradient: 'linear-gradient(135deg,#831843 0%,#be185d 40%,#f472b6 72%,#fecdd3 100%)',                               req_pts: 1500,  anim_class: 'bx-donut' },
+  { key: 'food_coffee',   name: 'Coffee Love',       gradient: 'linear-gradient(135deg,#1c1007 0%,#3d1f0a 35%,#78350f 65%,#a16207 88%,#ca8a04 100%)',                  req_pts: 500,   anim_class: 'bx-coffee' },
+  { key: 'food_pizza',    name: 'Pizza Night',       gradient: 'linear-gradient(135deg,#7f1d1d 0%,#b91c1c 35%,#dc2626 60%,#f97316 85%,#fbbf24 100%)',                  req_pts: 2500,  anim_class: 'bx-pizza' },
+  // ── Lifestyle Banner ──
+  { key: 'life_travel',   name: 'Travel Mode',       gradient: 'linear-gradient(135deg,#082f49 0%,#0369a1 30%,#0ea5e9 60%,#7dd3fc 88%,#e0f2fe 100%)',                  req_pts: 4000,  anim_class: 'bx-travel' },
+  { key: 'life_city',     name: 'City Lights',       gradient: 'linear-gradient(135deg,#09090b 0%,#18181b 35%,#27272a 60%,#1e293b 82%,#0f172a 100%)',                  req_pts: 5000,  anim_class: 'bx-city' },
+  { key: 'life_shopping', name: 'Shopping Day',      gradient: 'linear-gradient(135deg,#2e1065 0%,#6d28d9 35%,#a855f7 60%,#e879f9 85%,#fdf4ff 100%)',                  req_achievement: 'shopping_king', req_label: '10 Deals eingelöst', req_progress_key: 'deals', req_progress_max: 10, anim_class: 'bx-shopping' },
+  // ── Community Banner ──
+  { key: 'comm_concert',  name: 'Concert Night',     gradient: 'linear-gradient(135deg,#0f0726 0%,#1e1b4b 35%,#3730a3 60%,#6366f1 85%,#818cf8 100%)',                  req_pts: 8000,  anim_class: 'bx-concert' },
+  { key: 'comm_firework', name: 'Fireworks',         gradient: 'linear-gradient(135deg,#0a0018 0%,#1c0041 30%,#4c1d95 55%,#7c3aed 75%,#c084fc 90%,#f0abfc 100%)',     req_achievement: 'event_hunter', req_label: '5 Events besucht', req_progress_key: 'events', req_progress_max: 5, anim_class: 'bx-fireworks' },
+  // ── Challenge Banner ──
+  { key: 'chal_camera',   name: 'Photo Moments',     gradient: 'linear-gradient(135deg,#0f172a 0%,#1e293b 35%,#374151 60%,#6b7280 80%,#d1d5db 100%)',                  req_achievement: 'foto_profi', req_label: '5 Fotos geteilt', req_progress_key: 'photos', req_progress_max: 5, anim_class: 'bx-camera' },
+  { key: 'chal_fitness',  name: 'Fitness Energy',    gradient: 'linear-gradient(135deg,#1a0000 0%,#450a0a 30%,#dc2626 55%,#ef4444 75%,#f97316 95%,#fbbf24 100%)',     req_achievement: 'challenge_master', req_label: '10 Challenges', req_progress_key: 'challenges', req_progress_max: 10, anim_class: 'bx-fitness' },
+  // ── Premium Extra ──
+  { key: 'prem_ocean',    name: 'Ocean Depths',      gradient: 'linear-gradient(135deg,#020d1f 0%,#0c2461 25%,#1e40af 50%,#0369a1 70%,#0891b2 85%,#06b6d4 100%)',     req_pts: 18000, anim_class: 'bx-ocean', rare: true },
+  { key: 'prem_matrix',   name: 'Matrix',            gradient: 'linear-gradient(135deg,#000000 0%,#001a00 35%,#003300 60%,#006600 80%,#00aa00 100%)',                   req_pts: 35000, anim_class: 'bx-matrix', rare: true },
+  // ── Admin Exclusive ──
+  { key: 'admin_gold',    name: 'Admin Gold',        gradient: 'linear-gradient(135deg,#1c0e00 0%,#451a03 25%,#92400e 50%,#d97706 72%,#F7AB00 88%,#fef3c7 100%)',     admin_only: true, anim_class: 'bx-admin-gold' },
+  { key: 'admin_dev',     name: 'Developer',         gradient: 'linear-gradient(135deg,#001a0d 0%,#022c22 30%,#064e3b 55%,#065f46 75%,#10b981 90%,#34d399 100%)',     admin_only: true, anim_class: 'bx-developer' },
+  { key: 'admin_center',  name: 'ZAM Center',        gradient: 'linear-gradient(135deg,#1a0505 0%,#4c0519 25%,#FA4615 55%,#ff6b3d 75%,#F7AB00 90%,#fef3c7 100%)',    admin_only: true, anim_class: 'bx-center' },
 ];
 
 const _PROFILE_TITLES = [
@@ -504,11 +526,10 @@ function _adminBadgeHtml(small = true) {
 
 // ── Banner unlock logic ──
 function _isBannerUnlocked(banner, pts) {
+  if (banner.admin_only) return false; // Nur für Admins
   if (!banner.req_achievement) {
-    // Points-based (req_pts: 0 = always free)
     return pts >= (banner.req_pts || 0);
   }
-  // Achievement-based
   return _getAchievements().includes(banner.req_achievement);
 }
 
@@ -596,7 +617,8 @@ function openBannerPicker() {
   const current = _getBanner();
   const pts = ZAMApi.auth.currentUser()?.points || ZAMData?.currentUser?.points || 0;
 
-  list.innerHTML = _PROFILE_BANNERS.map(b => {
+  const _bannersVisible = _isAdmin() ? _PROFILE_BANNERS : _PROFILE_BANNERS.filter(b => !b.admin_only);
+  list.innerHTML = _bannersVisible.map(b => {
     const unlocked = _isBannerUnlockedWithAdmin(b, pts);
     const isActive = current === b.key;
     const progress = unlocked ? null : _bannerProgress(b, pts);
@@ -657,7 +679,8 @@ function selectBanner(key) {
   if (list) {
     const pts = ZAMApi.auth.currentUser()?.points || ZAMData?.currentUser?.points || 0;
     const current = key;
-    list.innerHTML = _PROFILE_BANNERS.map(b => {
+    const _bannersVisible2 = _isAdmin() ? _PROFILE_BANNERS : _PROFILE_BANNERS.filter(b => !b.admin_only);
+    list.innerHTML = _bannersVisible2.map(b => {
       const unlocked = _isBannerUnlocked(b, pts);
       const isActive = current === b.key;
       const lockText = !unlocked ? (!b.req_achievement ? `Noch ${(b.req_pts - pts).toLocaleString('de-DE')} Pkt.` : b.req_label) : '';

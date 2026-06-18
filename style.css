@@ -3938,3 +3938,304 @@ body.perf-mode .bx-event::before,
 body.perf-mode .bx-dclub::before, body.perf-mode .bx-dclub::after,
 body.perf-mode .tier-ring--admin::after,
 body.perf-mode .admin-badge { animation: none !important; }
+
+/* ═══════════════════════════════════════
+   NEUE BANNER-ANIMATIONEN (Erweiterung)
+   Alle: transform + background-position
+   Icon-Kacheln: nahtlos via background-size + Scroll
+   ═══════════════════════════════════════ */
+
+/* ── Icon-Tile Scroll Keyframes ── */
+@keyframes bx-tile-d90 { from { background-position: 0 0; } to { background-position: 90px 90px; } }
+@keyframes bx-tile-d80 { from { background-position: 0 0; } to { background-position: 80px 80px; } }
+@keyframes bx-tile-d70 { from { background-position: 0 0; } to { background-position: 70px 70px; } }
+@keyframes bx-tile-r90 { from { background-position: 0 0; } to { background-position: 90px 0; } }
+@keyframes bx-tile-u90 { from { background-position: 0 0; } to { background-position: 0 -90px; } }
+@keyframes bx-tile-u80 { from { background-position: 0 0; } to { background-position: 0 -80px; } }
+
+/* ── Burger Time ── */
+.bx-burger::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ctext x='45' y='58' text-anchor='middle' font-size='34' opacity='0.18'%3E%F0%9F%8D%94%3C/text%3E%3C/svg%3E");
+  background-size: 90px 90px;
+  animation: bx-tile-d90 22s linear infinite;
+  will-change: background-position;
+}
+.bx-burger::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ctext x='30' y='40' text-anchor='middle' font-size='20' opacity='0.09'%3E%F0%9F%8D%94%3C/text%3E%3C/svg%3E");
+  background-size: 60px 60px;
+  background-position: 45px 30px;
+  animation: bx-tile-d90 16s linear infinite;
+  will-change: background-position;
+}
+
+/* ── Donut Party ── */
+.bx-donut::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='85' height='85'%3E%3Ctext x='42' y='54' text-anchor='middle' font-size='32' opacity='0.2'%3E%F0%9F%8D%A9%3C/text%3E%3C/svg%3E");
+  background-size: 85px 85px;
+  animation: bx-tile-d90 20s linear infinite;
+  will-change: background-position;
+}
+.bx-donut::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 40% 50%, rgba(244,114,182,0.2) 0%, transparent 55%);
+  animation: bx-breathe 7s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── Coffee Love ── */
+.bx-coffee::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ctext x='40' y='52' text-anchor='middle' font-size='30' opacity='0.2'%3E%E2%98%95%3C/text%3E%3C/svg%3E");
+  background-size: 80px 80px;
+  animation: bx-tile-d80 24s linear infinite;
+  will-change: background-position;
+}
+.bx-coffee::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 55%, rgba(202,138,4,0.22) 0%, transparent 52%);
+  animation: bx-breathe 9s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── Pizza Night ── */
+.bx-pizza::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ctext x='45' y='58' text-anchor='middle' font-size='34' opacity='0.18'%3E%F0%9F%8D%95%3C/text%3E%3C/svg%3E");
+  background-size: 90px 90px;
+  animation: bx-tile-d90 20s linear infinite;
+  will-change: background-position;
+}
+.bx-pizza::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(105deg, transparent 0%, transparent 28%, rgba(251,191,36,0.18) 50%, transparent 72%, transparent 100%);
+  animation: bx-shimmer 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ── Travel Mode — Flugzeuge + Wolken ── */
+.bx-travel::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Ctext x='30' y='36' text-anchor='middle' font-size='22' opacity='0.18'%3E%E2%9C%88%3C/text%3E%3Ctext x='90' y='24' text-anchor='middle' font-size='18' opacity='0.12'%3E%E2%98%81%3C/text%3E%3C/svg%3E");
+  background-size: 120px 60px;
+  animation: bx-tile-r90 25s linear infinite;
+  will-change: background-position;
+}
+.bx-travel::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 45%, rgba(125,211,252,0.2) 0%, transparent 55%);
+  animation: bx-breathe 8s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── City Lights — animierte Lichtpunkte ── */
+.bx-city::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image:
+    radial-gradient(circle, rgba(250,210,60,0.7) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px),
+    radial-gradient(circle, rgba(250,130,60,0.6) 1px, transparent 1px),
+    radial-gradient(circle, rgba(100,180,255,0.5) 1px, transparent 1px);
+  background-size: 80px 60px, 60px 45px, 110px 70px, 90px 55px;
+  background-position: 10px 10px, 35px 28px, 55px 8px, 20px 38px;
+  animation: bx-tile-d90 30s linear infinite;
+  will-change: background-position;
+}
+.bx-city::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.18) 100%);
+}
+
+/* ── Shopping Day ── */
+.bx-shopping::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ctext x='45' y='58' text-anchor='middle' font-size='32' opacity='0.18'%3E%F0%9F%9B%8D%3C/text%3E%3C/svg%3E");
+  background-size: 90px 90px;
+  animation: bx-tile-d80 22s linear infinite;
+  will-change: background-position;
+}
+.bx-shopping::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 45% 50%, rgba(232,121,249,0.22) 0%, transparent 55%);
+  animation: bx-breathe 7s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── Concert Night — Lichtstrahlen + Noten ── */
+.bx-concert::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ctext x='40' y='52' text-anchor='middle' font-size='28' opacity='0.16'%3E%F0%9F%8E%B5%3C/text%3E%3C/svg%3E");
+  background-size: 80px 80px;
+  animation: bx-tile-d80 26s linear infinite;
+  will-change: background-position;
+}
+.bx-concert::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background:
+    linear-gradient(160deg, transparent 0%, transparent 38%, rgba(129,140,248,0.2) 50%, transparent 62%, transparent 100%),
+    linear-gradient(20deg, transparent 0%, transparent 38%, rgba(99,102,241,0.15) 50%, transparent 62%, transparent 100%);
+  animation: bx-breathe 5s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── Fireworks — Leuchtpunkte ── */
+.bx-fireworks::before {
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background:
+    radial-gradient(circle, rgba(255,255,100,0.8) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,100,200,0.7) 1px, transparent 1px),
+    radial-gradient(circle, rgba(100,200,255,0.7) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,150,50,0.7) 1px, transparent 1px),
+    radial-gradient(circle, rgba(200,100,255,0.6) 1px, transparent 1px);
+  background-size: 55px 55px, 40px 40px, 70px 70px, 45px 45px, 65px 65px;
+  background-position: 8px 12px, 25px 32px, 14px 50px, 38px 8px, 50px 38px;
+  animation: bx-orb-bounce 8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.bx-fireworks::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 50%, rgba(192,132,252,0.2) 0%, transparent 58%);
+  animation: bx-breathe 6s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── Photo Moments — Kamera Icons + Fokuskreis ── */
+.bx-camera::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ctext x='45' y='58' text-anchor='middle' font-size='32' opacity='0.14'%3E%F0%9F%93%B7%3C/text%3E%3C/svg%3E");
+  background-size: 90px 90px;
+  animation: bx-tile-d90 24s linear infinite;
+  will-change: background-position;
+}
+.bx-camera::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(circle at 50% 50%, transparent 28%, rgba(255,255,255,0.08) 30%, transparent 32%);
+  animation: bx-breathe 6s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── Fitness Energy — Blitze + Glühen ── */
+.bx-fitness::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ctext x='40' y='52' text-anchor='middle' font-size='28' opacity='0.18'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E");
+  background-size: 80px 80px;
+  animation: bx-tile-d80 18s linear infinite;
+  will-change: background-position;
+}
+.bx-fitness::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 50%, rgba(249,115,22,0.24) 0%, transparent 55%);
+  animation: bx-orb-pulse 4s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ── Ocean Depths — Blasen + Lichtstrahlen ── */
+.bx-ocean::before {
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background:
+    radial-gradient(circle, rgba(125,211,252,0.55) 2px, transparent 2px),
+    radial-gradient(circle, rgba(186,230,253,0.4) 1px, transparent 1px),
+    radial-gradient(circle, rgba(56,189,248,0.45) 2px, transparent 2px),
+    radial-gradient(circle, rgba(224,242,254,0.35) 1px, transparent 1px);
+  background-size: 70px 90px, 50px 65px, 90px 75px, 60px 80px;
+  background-position: 12px 20px, 38px 45px, 58px 10px, 25px 60px;
+  animation: bx-tile-u90 14s linear infinite;
+  will-change: background-position;
+}
+.bx-ocean::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background:
+    linear-gradient(175deg, transparent 35%, rgba(56,189,248,0.14) 50%, transparent 65%),
+    radial-gradient(ellipse at 50% 60%, rgba(14,165,233,0.2) 0%, transparent 55%);
+  animation: bx-breathe 10s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── Matrix — Datenregen ── */
+.bx-matrix::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='80'%3E%3Ctext x='10' y='16' text-anchor='middle' font-size='9' fill='%2300ff41' opacity='0.35' font-family='monospace'%3E1%3C/text%3E%3Ctext x='10' y='32' text-anchor='middle' font-size='9' fill='%2300ff41' opacity='0.2' font-family='monospace'%3E0%3C/text%3E%3Ctext x='10' y='48' text-anchor='middle' font-size='9' fill='%2300ff41' opacity='0.28' font-family='monospace'%3E1%3C/text%3E%3Ctext x='10' y='64' text-anchor='middle' font-size='9' fill='%2300ff41' opacity='0.15' font-family='monospace'%3E0%3C/text%3E%3Ctext x='10' y='80' text-anchor='middle' font-size='9' fill='%2300ff41' opacity='0.22' font-family='monospace'%3E1%3C/text%3E%3C/svg%3E");
+  background-size: 20px 80px;
+  animation: bx-tile-u80 4s linear infinite;
+  will-change: background-position;
+}
+.bx-matrix::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,200,65,0.15) 0%, transparent 58%);
+  animation: bx-breathe 8s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── Admin Gold — goldene Partikel ── */
+.bx-admin-gold::before {
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background:
+    radial-gradient(circle, rgba(247,171,0,0.8) 2px, transparent 2px),
+    radial-gradient(circle, rgba(254,240,138,0.6) 1px, transparent 1px),
+    radial-gradient(circle, rgba(251,191,36,0.7) 2px, transparent 2px),
+    radial-gradient(circle, rgba(255,255,150,0.5) 1px, transparent 1px);
+  background-size: 60px 70px, 45px 50px, 80px 65px, 55px 80px;
+  background-position: 10px 15px, 30px 35px, 50px 8px, 20px 55px;
+  animation: bx-orb-float 12s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.bx-admin-gold::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 35% 55%, rgba(247,171,0,0.3) 0%, transparent 52%),
+              radial-gradient(ellipse at 75% 30%, rgba(254,240,138,0.22) 0%, transparent 45%);
+  animation: bx-orb-drift 6s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ── Developer — grüner Code-Glow ── */
+.bx-developer::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='45'%3E%3Ctext x='25' y='28' text-anchor='middle' font-size='16' fill='%2310b981' opacity='0.22' font-family='monospace'%3E%3C/%3E%3C/text%3E%3Ctext x='72' y='28' text-anchor='middle' font-size='16' fill='%2334d399' opacity='0.16' font-family='monospace'%3E%7B%7D%3C/text%3E%3C/svg%3E");
+  background-size: 90px 45px;
+  animation: bx-tile-d70 20s linear infinite;
+  will-change: background-position;
+}
+.bx-developer::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 50%, rgba(16,185,129,0.22) 0%, transparent 56%);
+  animation: bx-breathe 7s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── ZAM Center — ZAM Spezialdesign ── */
+.bx-center::before {
+  content:''; position:absolute; inset:-40%; z-index:2; pointer-events:none;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg at 50% 50%,
+    transparent 0deg, rgba(250,70,21,0.22) 45deg, rgba(247,171,0,0.18) 90deg,
+    transparent 130deg, rgba(250,70,21,0.16) 200deg, rgba(247,171,0,0.12) 260deg,
+    transparent 310deg);
+  animation: bx-spin-orb 20s linear infinite;
+  will-change: transform;
+}
+.bx-center::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(105deg, transparent 0%, transparent 28%, rgba(247,171,0,0.2) 50%, transparent 72%, transparent 100%);
+  animation: bx-shimmer 4s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ── Perf-mode Ergänzung für neue Banner ── */
+body.perf-mode .bx-burger::before, body.perf-mode .bx-burger::after,
+body.perf-mode .bx-donut::before, body.perf-mode .bx-donut::after,
+body.perf-mode .bx-coffee::before, body.perf-mode .bx-coffee::after,
+body.perf-mode .bx-pizza::before, body.perf-mode .bx-pizza::after,
+body.perf-mode .bx-travel::before, body.perf-mode .bx-travel::after,
+body.perf-mode .bx-city::before,
+body.perf-mode .bx-shopping::before, body.perf-mode .bx-shopping::after,
+body.perf-mode .bx-concert::before, body.perf-mode .bx-concert::after,
+body.perf-mode .bx-fireworks::before, body.perf-mode .bx-fireworks::after,
+body.perf-mode .bx-camera::before, body.perf-mode .bx-camera::after,
+body.perf-mode .bx-fitness::before, body.perf-mode .bx-fitness::after,
+body.perf-mode .bx-ocean::before, body.perf-mode .bx-ocean::after,
+body.perf-mode .bx-matrix::before, body.perf-mode .bx-matrix::after,
+body.perf-mode .bx-admin-gold::before, body.perf-mode .bx-admin-gold::after,
+body.perf-mode .bx-developer::before, body.perf-mode .bx-developer::after,
+body.perf-mode .bx-center::before, body.perf-mode .bx-center::after { animation: none !important; }
