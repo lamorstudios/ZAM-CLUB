@@ -2410,6 +2410,9 @@ async function renderProfile() {
   _applyProfileBanner();
   _renderTopBadgesDisplay();
   _renderProfileTitle();
+  // Set tier data attribute for CSS tier effects
+  const heroEl = document.querySelector('.profile-hero');
+  if (heroEl) heroEl.dataset.tier = _getTier(pts).key;
   renderProfileVitrine();
 
   // Update Nearby badge in profile
