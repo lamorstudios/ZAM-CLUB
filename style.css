@@ -4422,3 +4422,81 @@ body.perf-mode .bx-creator-v::before, body.perf-mode .bx-creator-v::after,
 body.perf-mode .bx-ticket::before, body.perf-mode .bx-ticket::after,
 body.perf-mode .bx-icecream::before, body.perf-mode .bx-icecream::after,
 body.perf-mode .bx-baker::before, body.perf-mode .bx-baker::after { animation: none !important; }
+
+/* ══════════════════════════════════════════
+   MONATS-CHAMPIONS MICRO-ANIMATIONEN
+   GPU-safe: transform + opacity only
+   ══════════════════════════════════════════ */
+
+@keyframes mc-trophy-float {
+  0%,100% { transform: translateY(0) rotate(0deg); opacity: 0.06; }
+  50%      { transform: translateY(-9px) rotate(1.8deg); opacity: 0.1; }
+}
+@keyframes mc-medal-swing {
+  0%,100% { transform: rotate(0deg) translateY(0); }
+  25%      { transform: rotate(-4deg) translateY(-1px); }
+  75%      { transform: rotate(4deg) translateY(-1px); }
+}
+@keyframes mc-ring-pulse {
+  0%,100% { opacity: 0.65; }
+  50%      { opacity: 1; }
+}
+@keyframes mc-card-shimmer {
+  0%           { transform: translateX(-160%) skewX(-12deg); opacity: 0; }
+  20%,80%      { opacity: 1; }
+  100%         { transform: translateX(260%) skewX(-12deg); opacity: 0; }
+}
+
+/* Trophy background */
+.mc-trophy {
+  animation: mc-trophy-float 9s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* Medal swing — different delays for natural feel */
+.mc-medal {
+  display: inline-block;
+  transform-origin: 50% 0;
+  will-change: transform;
+}
+.mc-medal-1 { animation: mc-medal-swing 5s ease-in-out infinite; }
+.mc-medal-2 { animation: mc-medal-swing 5s 0.9s ease-in-out infinite; }
+.mc-medal-3 { animation: mc-medal-swing 5s 1.8s ease-in-out infinite; }
+
+/* Top-3 tier rings — gentle opacity pulse on their ::after glow ring */
+.mc-ring-gold::after   { animation: mc-ring-pulse 3.5s ease-in-out infinite !important; }
+.mc-ring-silver::after { animation: mc-ring-pulse 4s 0.6s ease-in-out infinite !important; }
+.mc-ring-bronze::after { animation: mc-ring-pulse 4.5s 1.2s ease-in-out infinite !important; }
+
+/* Card inner light sweep */
+.mc-card-inner { position: relative; overflow: hidden; }
+.mc-card-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 0%, transparent 28%, rgba(247,171,0,0.055) 50%, transparent 72%, transparent 100%);
+  animation: mc-card-shimmer 10s 2s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+  will-change: transform, opacity;
+}
+
+/* Pause all when card off-screen (set by IntersectionObserver) */
+.mc-paused .mc-trophy,
+.mc-paused .mc-medal-1,
+.mc-paused .mc-medal-2,
+.mc-paused .mc-medal-3,
+.mc-paused .mc-ring-gold::after,
+.mc-paused .mc-ring-silver::after,
+.mc-paused .mc-ring-bronze::after,
+.mc-paused .mc-card-inner::before { animation-play-state: paused !important; }
+
+/* Perf mode */
+body.perf-mode .mc-trophy,
+body.perf-mode .mc-medal-1,
+body.perf-mode .mc-medal-2,
+body.perf-mode .mc-medal-3,
+body.perf-mode .mc-ring-gold::after,
+body.perf-mode .mc-ring-silver::after,
+body.perf-mode .mc-ring-bronze::after,
+body.perf-mode .mc-card-inner::before { animation: none !important; }

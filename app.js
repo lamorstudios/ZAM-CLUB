@@ -1263,8 +1263,8 @@ function _renderHomeRankingCard() {
   const me = _RANKING_DEMO.find(r => r.isMe);
 
   el.innerHTML = `
-    <div style="margin:0 16px 4px;background:linear-gradient(135deg,rgba(247,171,0,0.13),rgba(250,70,21,0.09));border:1.5px solid rgba(247,171,0,0.3);border-radius:18px;padding:16px;cursor:pointer;position:relative;overflow:hidden" onclick="openRankingModal()">
-      <div style="position:absolute;top:-18px;right:-18px;font-size:5rem;opacity:0.06;pointer-events:none">🏆</div>
+    <div class="mc-card-inner" style="margin:0 16px 4px;background:linear-gradient(135deg,rgba(247,171,0,0.13),rgba(250,70,21,0.09));border:1.5px solid rgba(247,171,0,0.3);border-radius:18px;padding:16px;cursor:pointer;position:relative;overflow:hidden" onclick="openRankingModal()">
+      <div class="mc-trophy" style="position:absolute;top:-18px;right:-18px;font-size:5rem;opacity:0.06;pointer-events:none">🏆</div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
         <div>
           <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:900;color:#F7AB00">🏆 Monats-Champions</div>
@@ -1279,8 +1279,8 @@ function _renderHomeRankingCard() {
         const uid = 'rank_' + u.initials.toLowerCase();
         return `
       <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,0.04);${i < 2 ? 'margin-bottom:6px' : ''};cursor:pointer" onclick="event.stopPropagation();openUserProfileSheet('${uid}','${safeUName}','${u.initials}',null,${u.pts})">
-        <div style="width:26px;text-align:center;font-size:1.1rem">${medals[i]}</div>
-        <div class="tier-ring tier-ring--${uTier.key}" style="width:34px;height:34px;background:${u.bg};font-size:0.62rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
+        <div style="width:26px;text-align:center;font-size:1.1rem"><span class="mc-medal mc-medal-${i+1}">${medals[i]}</span></div>
+        <div class="tier-ring tier-ring--${uTier.key} ${i===0?'mc-ring-gold':i===1?'mc-ring-silver':'mc-ring-bronze'}" style="width:34px;height:34px;background:${u.bg};font-size:0.62rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:0.8rem;font-weight:700;color:#e2e8f0">${u.name}</div>
           <div style="margin-top:2px"><span class="tier-badge tier-badge--${uTier.key}">${uTier.emoji} ${uTier.label}</span></div>
@@ -1293,6 +1293,16 @@ function _renderHomeRankingCard() {
         <button onclick="event.stopPropagation();openRankingModal()" style="font-size:0.7rem;font-weight:800;color:#F7AB00;background:none;border:none;cursor:pointer;font-family:var(--font)">Verbessern →</button>
       </div>
     </div>`;
+
+  // Pause animations when card scrolls out of view
+  if (window.IntersectionObserver) {
+    const mcCard = el.querySelector('.mc-card-inner');
+    if (mcCard) {
+      new IntersectionObserver(entries => {
+        entries.forEach(e => el.classList.toggle('mc-paused', !e.isIntersecting));
+      }, { threshold: 0.1 }).observe(mcCard);
+    }
+  }
 }
 
 function openRankingModal() {
