@@ -1057,6 +1057,7 @@ function renderHome() {
 
   // Ranking always visible — core motivation element
   _renderHomeRankingCard();
+  _renderHomeActivityFeed();
   // Recs DOM nodes kept hidden (removed from home UI)
   const recsLabel = document.getElementById('home-rec-label');
   const recsScroll = document.getElementById('home-recs-scroll');
@@ -1255,6 +1256,138 @@ function _renderHomeRankStats(user) {
     </div>
     ${hint ? `<div style="margin-top:8px;padding:6px 10px;background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.18);border-radius:8px;font-size:0.65rem;font-weight:700;color:#F7AB00;text-align:center">${hint}</div>` : ''}`;
 }
+
+// ── HEUTE IM ZAM – Live Activity Feed ──────────────────────────────────────
+
+function _zamActivityItems() {
+  // Build activity list from real local data + plausible demo items
+  const items = [];
+  const now = Date.now();
+
+  // From merchant submissions (deals/events recently submitted)
+  try {
+    const subs = JSON.parse(localStorage.getItem('zam_merchant_submissions') || '[]');
+    subs.slice(0, 3).forEach(s => {
+      const ts = s.submittedAt ? new Date(s.submittedAt).getTime() : now - 600000;
+      items.push({
+        icon: s.type === 'event' ? '📅' : '🏷️',
+        text: s.type === 'event'
+          ? escHtml(s.merchantName || 'Ein Händler') + ' hat ein neues Event eingereicht'
+          : escHtml(s.merchantName || 'Ein Händler') + ' hat einen neuen Deal veröffentlicht',
+        ts
+      });
+    });
+  } catch {}
+
+  // From in-app notifications
+  try {
+    const notifs = JSON.parse(localStorage.getItem('zam_inapp_notifs') || '[]');
+    notifs.slice(0, 3).forEach(n => {
+      const ts = n.ts ? new Date(n.ts).getTime() : now - 900000;
+      items.push({ icon: n.icon || '🔔', text: escHtml(n.body || n.title || ''), ts });
+    });
+  } catch {}
+
+  // Plausible demo seed — deterministic relative to today so feed feels fresh
+  const day = new Date();
+  const seed = day.getFullYear() * 10000 + (day.getMonth() + 1) * 100 + day.getDate();
+  const pool = [
+    { icon: '🎉', text: 'Sarah hat einen Gratis-Donut eingelöst',         offset: 3  },
+    { icon: '📸', text: 'Tom hat die Burger-Challenge abgeschlossen',      offset: 8  },
+    { icon: '🍕', text: "L'Osteria hat einen neuen Deal veröffentlicht",   offset: 15 },
+    { icon: '🏆', text: 'Emma hat 500 Punkte gesammelt',                   offset: 22 },
+    { icon: '🎰', text: 'Lena hat beim Spin 100 Punkte gewonnen',          offset: 31 },
+    { icon: '🤝', text: 'Zwei Händler haben einen Partnerdeal gestartet',  offset: 44 },
+    { icon: '🏋️', text: 'Alex hat die Fitness-Challenge gestartet',        offset: 57 },
+    { icon: '☕', text: 'Kaffeehaus Freiham hat ein Event eingereicht',    offset: 68 },
+  ];
+  // Pick 5 items pseudo-randomly based on seed
+  const pick = (seed % pool.length);
+  for (let i = 0; i < 5; i++) {
+    const p = pool[(pick + i) % pool.length];
+    items.push({ icon: p.icon, text: p.text, ts: now - p.offset * 60000 });
+  }
+
+  // Sort newest first, deduplicate loosely, cap at 5
+  items.sort((a, b) => b.ts - a.ts);
+  const seen = new Set();
+  return items.filter(it => {
+    if (!it.text || seen.has(it.text)) return false;
+    seen.add(it.text);
+    return true;
+  }).slice(0, 5);
+}
+
+function _zamActivityRelTime(ts) {
+  const diff = Math.round((Date.now() - ts) / 60000);
+  if (diff < 1) return 'gerade eben';
+  if (diff === 1) return 'vor 1 Min';
+  if (diff < 60) return 'vor ' + diff + ' Min';
+  const h = Math.round(diff / 60);
+  return h === 1 ? 'vor 1 Std' : 'vor ' + h + ' Std';
+}
+
+function _renderHomeActivityFeed() {
+  const el = document.getElementById('home-activity-feed');
+  if (!el) return;
+
+  const items = _zamActivityItems();
+  if (!items.length) { el.innerHTML = ''; return; }
+
+  const rows = items.map(it => `
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <span style="font-size:1.1rem;flex-shrink:0;margin-top:1px">${it.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.79rem;font-weight:600;color:rgba(255,255,255,0.88);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.text}</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-top:2px">${_zamActivityRelTime(it.ts)}</div>
+      </div>
+    </div>`).join('');
+
+  el.innerHTML = `
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:14px 14px 6px;animation:_zamFeedIn 0.4s ease both">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="font-size:0.72rem;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.45)">🔥 Heute im ZAM</div>
+        <button onclick="openActivityFeedModal()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:0.68rem;font-weight:700;cursor:pointer;font-family:var(--font);padding:0">Alle →</button>
+      </div>
+      ${rows}
+    </div>`;
+}
+
+function openActivityFeedModal() {
+  let modal = document.getElementById('modal-activity-feed');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-activity-feed';
+    modal.className = 'modal-overlay';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal('modal-activity-feed'); });
+  }
+
+  const allItems = _zamActivityItems().concat(_zamActivityItems().map(it => ({
+    ...it, ts: it.ts - 3600000 * (1 + Math.random())
+  }))).sort((a, b) => b.ts - a.ts).slice(0, 20);
+
+  const rows = allItems.map(it => `
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <span style="font-size:1.2rem;flex-shrink:0;margin-top:1px">${it.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.82rem;font-weight:600;color:rgba(255,255,255,0.88);line-height:1.4">${it.text}</div>
+        <div style="font-size:0.67rem;color:rgba(255,255,255,0.35);margin-top:3px">${_zamActivityRelTime(it.ts)}</div>
+      </div>
+    </div>`).join('');
+
+  modal.innerHTML = `
+    <div class="modal-sheet" style="max-height:92vh;overflow-y:auto;padding:0">
+      <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 0;margin-bottom:4px">
+        <button onclick="closeModal('modal-activity-feed')" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">←</button>
+        <div style="flex:1;font-size:0.95rem;font-weight:900;color:#fff">🔥 Heute im ZAM</div>
+      </div>
+      <div style="padding:0 18px 24px">${rows}</div>
+    </div>`;
+  modal.classList.add('open');
+}
+
+// ── END HEUTE IM ZAM ───────────────────────────────────────────────────────
 
 function _renderHomeRankingCard() {
   const el = document.getElementById('home-ranking-card');
