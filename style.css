@@ -4500,3 +4500,28 @@ body.perf-mode .mc-ring-gold::after,
 body.perf-mode .mc-ring-silver::after,
 body.perf-mode .mc-ring-bronze::after,
 body.perf-mode .mc-card-inner::before { animation: none !important; }
+
+/* ── Reward QR Confetti ── */
+.reward-confetti-wrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 18px;
+  z-index: 10;
+}
+.reward-confetti-piece {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--c, #F7AB00);
+  border-radius: 2px;
+  opacity: 0;
+  animation: confetti-burst var(--dur, 1s) var(--delay, 0s) ease-out forwards;
+}
+@keyframes confetti-burst {
+  0%   { transform: translate(0,0) rotate(0deg) scale(1); opacity: 1; }
+  60%  { opacity: 0.8; }
+  100% { transform: translate(var(--x,60px), -140px) rotate(var(--r,180deg)) scale(0.4); opacity: 0; }
+}
+body.perf-mode .reward-confetti-piece { animation: none !important; }

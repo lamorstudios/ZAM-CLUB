@@ -4843,6 +4843,7 @@ function renderMerchantDashboard() {
           <button class="merchant-quick-btn" onclick="openMerchantEventModal()"><span>📅</span><span>Event einreichen</span></button>
           <button class="merchant-quick-btn" onclick="openMerchantDealModal()"><span>🏷️</span><span>Deal einreichen</span></button>
           <button class="merchant-quick-btn" onclick="openVideoDrehModal()" style="background:linear-gradient(135deg,rgba(250,70,21,0.25),rgba(250,70,21,0.1));border:1px solid rgba(250,70,21,0.4)"><span>🎥</span><span style="color:#FA4615">Videodreh</span></button>
+          <button class="merchant-quick-btn" onclick="openMerchantRewardScanner()" style="background:linear-gradient(135deg,rgba(247,171,0,0.2),rgba(247,171,0,0.08));border:1px solid rgba(247,171,0,0.35)"><span>🎁</span><span style="color:#F7AB00">Belohnung einlösen</span></button>
         </div>
       `;
       kpiGridEl.parentNode.insertBefore(scannerBtnWrap, kpiGridEl);
@@ -7215,6 +7216,33 @@ function _getChallenges() { try { return JSON.parse(localStorage.getItem('zam_ph
 function _getPhotoSubs()  { try { return JSON.parse(localStorage.getItem('zam_photo_submissions')||'[]'); } catch { return []; } }
 function _savePhotoSubs(l){ localStorage.setItem('zam_photo_submissions', JSON.stringify(l)); }
 function _getGallery()    { try { return JSON.parse(localStorage.getItem('zam_community_gallery')||'[]'); } catch { return []; } }
+function _getRewards()    { try { return JSON.parse(localStorage.getItem('zam_challenge_rewards')||'[]'); } catch { return []; } }
+function _saveRewards(l)  { localStorage.setItem('zam_challenge_rewards', JSON.stringify(l)); }
+
+function _generateRewardToken(challengeId, merchantId) {
+  const user = ZAMApi.auth.currentUser();
+  const userId = user?.id || 'guest';
+  const existing = _getRewards().find(r => r.challengeId === challengeId && r.userId === userId && r.status === 'active');
+  if (existing) return existing;
+  const token = Math.random().toString(36).slice(2,10).toUpperCase() + Math.random().toString(36).slice(2,6).toUpperCase();
+  const reward = {
+    id: 'rwd_' + Date.now(),
+    userId, merchantId, challengeId, token,
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 14*24*60*60*1000).toISOString(),
+    status: 'active'
+  };
+  const all = _getRewards();
+  all.push(reward);
+  _saveRewards(all);
+  return reward;
+}
+
+function _getRewardForChallenge(challengeId) {
+  const user = ZAMApi.auth.currentUser();
+  const userId = user?.id || 'guest';
+  return _getRewards().find(r => r.challengeId === challengeId && r.userId === userId);
+}
 function _saveGallery(l)  { localStorage.setItem('zam_community_gallery', JSON.stringify(l)); }
 function _getModQueue()   { try { return JSON.parse(localStorage.getItem('zam_moderation_queue')||'[]'); } catch { return []; } }
 function _saveModQueue(l) { localStorage.setItem('zam_moderation_queue', JSON.stringify(l)); }
@@ -7425,11 +7453,34 @@ function renderPhotoChallenges() {
 
         <!-- Actions -->
         ${done
-          ? `<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:14px;text-align:center">
-               <div style="font-size:1.3rem;margin-bottom:6px">🎉</div>
-               <div style="font-size:0.9rem;font-weight:800;color:#34d399;margin-bottom:2px">Challenge abgeschlossen!</div>
-               <div style="font-size:0.75rem;color:rgba(52,211,153,0.7)">${escHtml(ch.reward_description)}</div>
-             </div>`
+          ? (() => {
+              const rwd = _getRewardForChallenge(ch.id);
+              const isRedeemed = rwd?.status === 'redeemed';
+              const isExpired = rwd && new Date(rwd.expiresAt) < new Date();
+              return `<div class="challenge-reward-unlocked" style="background:linear-gradient(135deg,rgba(247,171,0,0.1),rgba(250,70,21,0.08));border:1px solid rgba(247,171,0,0.3);border-radius:14px;padding:16px;position:relative;overflow:hidden">
+                <div style="position:absolute;top:-10px;right:-10px;font-size:4rem;opacity:0.06;pointer-events:none">🎁</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                  <div style="width:36px;height:36px;border-radius:50%;background:rgba(247,171,0,0.2);border:1.5px solid rgba(247,171,0,0.4);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">${isRedeemed ? '✅' : '🎁'}</div>
+                  <div>
+                    <div style="font-size:0.82rem;font-weight:800;color:#F7AB00;line-height:1.2">${isRedeemed ? 'Belohnung eingelöst!' : '🎁 Belohnung freigeschaltet'}</div>
+                    <div style="font-size:0.7rem;color:rgba(255,255,255,0.45);margin-top:2px">${escHtml(ch.reward_description)}</div>
+                  </div>
+                </div>
+                ${isRedeemed
+                  ? `<div style="text-align:center;padding:8px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:10px">
+                       <div style="font-size:0.75rem;color:#34d399;font-weight:700">✅ Bereits eingelöst beim Händler</div>
+                     </div>`
+                  : isExpired
+                    ? `<div style="text-align:center;padding:8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px">
+                         <div style="font-size:0.75rem;color:#f87171;font-weight:700">⏰ QR-Code abgelaufen</div>
+                         <div style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-top:2px">Bitte kontaktiere den Händler</div>
+                       </div>`
+                    : `<button onclick="openRewardQRModal('${ch.id}')" style="width:100%;padding:13px;background:linear-gradient(135deg,#F7AB00,#FA4615);border:none;color:#fff;border-radius:11px;font-size:0.88rem;font-weight:800;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(247,171,0,0.3)">
+                         <span>📲</span> QR-Code für Belohnung anzeigen
+                       </button>`
+                }
+              </div>`;
+            })()
           : `<div style="display:flex;gap:8px">
                <button onclick="openChallengeDetail('${ch.id}')" style="flex:1;padding:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;border-radius:12px;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer">Details</button>
                <button onclick="${doneToday ? '' : `openCameraForChallenge('${ch.id}')`}" ${doneToday ? 'disabled' : ''} style="flex:2;padding:12px;background:${doneToday ? 'rgba(255,255,255,0.04)' : `linear-gradient(135deg,${c},${c}cc)`};border:none;color:${doneToday ? 'rgba(255,255,255,0.25)' : '#fff'};border-radius:12px;font-size:0.85rem;font-weight:700;font-family:var(--font);cursor:${doneToday ? 'default' : 'pointer'};display:flex;align-items:center;justify-content:center;gap:8px;${doneToday ? '' : `box-shadow:0 4px 14px ${c}44`}">
@@ -7569,6 +7620,215 @@ function openChallengeDetail(challengeId) {
 function closeChallengeDetail() {
   document.getElementById('challenge-detail-sheet').style.display = 'none';
   document.body.style.overflow = '';
+}
+
+// ── Reward QR Modal ──
+function openRewardQRModal(challengeId) {
+  const ch = _getChallenges().find(c => c.id === challengeId);
+  if (!ch) return;
+  const rwd = _generateRewardToken(challengeId, ch.merchant_id);
+  const user = ZAMApi.auth.currentUser();
+  const userName = user?.name || 'ZAM Mitglied';
+
+  const qrData = JSON.stringify({
+    userId: rwd.userId,
+    merchantId: rwd.merchantId,
+    challengeId: rwd.challengeId,
+    token: rwd.token,
+    expiresAt: rwd.expiresAt
+  });
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}&bgcolor=1a1a1a&color=F7AB00&qzone=2&format=png`;
+  const expiryStr = new Date(rwd.expiresAt).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+
+  let modal = document.getElementById('modal-reward-qr');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-reward-qr';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px)';
+    modal.onclick = function(e) { if (e.target === modal) closeRewardQRModal(); };
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div style="background:#1e1e1e;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:28px 24px 40px;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(247,171,0,0.07) 0%,transparent 60%);pointer-events:none"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;position:relative">
+        <div>
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#F7AB00;margin-bottom:4px">Belohnungs-QR-Code</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#fff;line-height:1.2">${escHtml(ch.title)}</div>
+          <div style="font-size:0.74rem;color:rgba(255,255,255,0.45);margin-top:3px">${escHtml(ch.merchant_name)}</div>
+        </div>
+        <button onclick="closeRewardQRModal()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#fff;font-size:1.1rem;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center">✕</button>
+      </div>
+      <!-- Reward info -->
+      <div style="background:rgba(16,185,129,0.09);border:1px solid rgba(52,211,153,0.22);border-radius:12px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;position:relative">
+        <span style="font-size:1.6rem">🎁</span>
+        <div>
+          <div style="font-size:0.62rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:rgba(52,211,153,0.65);margin-bottom:2px">Deine Prämie</div>
+          <div style="font-size:0.9rem;font-weight:800;color:#34d399">${escHtml(ch.reward_description)}</div>
+        </div>
+      </div>
+      <!-- QR Code -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:20px">
+        <div style="background:#141414;border:2px solid rgba(247,171,0,0.35);border-radius:18px;padding:20px;box-shadow:0 0 40px rgba(247,171,0,0.12)">
+          <div id="reward-qr-confetti" class="reward-confetti-wrap"></div>
+          <img src="${qrUrl}" alt="QR Code" width="200" height="200" style="display:block;border-radius:8px"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <div style="display:none;width:200px;height:200px;background:rgba(247,171,0,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:2rem">📲</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-family:monospace;font-size:1.1rem;font-weight:800;color:#F7AB00;letter-spacing:0.12em">${rwd.token}</div>
+          <div style="font-size:0.63rem;color:rgba(255,255,255,0.3);margin-top:4px">Token · gültig bis ${expiryStr}</div>
+        </div>
+      </div>
+      <!-- Hint -->
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 16px;display:flex;align-items:flex-start;gap:10px;margin-bottom:6px">
+        <span style="font-size:1.1rem;flex-shrink:0">💬</span>
+        <span style="font-size:0.74rem;color:rgba(255,255,255,0.45);line-height:1.55">Zeige diesen QR-Code dem Händler zur Einlösung. Der Code ist einmalig verwendbar und läuft am ${expiryStr} ab.</span>
+      </div>
+      <div style="text-align:center;margin-top:8px">
+        <span style="font-size:0.65rem;color:rgba(255,255,255,0.2)">@${escHtml(userName)} · ZAM Club</span>
+      </div>
+    </div>`;
+
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  // Trigger confetti
+  _triggerRewardConfetti();
+}
+
+function closeRewardQRModal() {
+  const modal = document.getElementById('modal-reward-qr');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function _triggerRewardConfetti() {
+  const wrap = document.getElementById('reward-qr-confetti');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const colors = ['#F7AB00','#FA4615','#34d399','#a78bfa','#f472b6','#60a5fa'];
+  for (let i = 0; i < 32; i++) {
+    const el = document.createElement('div');
+    el.className = 'reward-confetti-piece';
+    el.style.cssText = `--c:${colors[i%colors.length]};--x:${Math.random()*220-110}px;--r:${Math.random()*360}deg;left:${40+Math.random()*120}px;top:${40+Math.random()*120}px;animation-delay:${Math.random()*0.6}s;animation-duration:${0.8+Math.random()*0.7}s`;
+    wrap.appendChild(el);
+  }
+}
+
+// Merchant: validate and redeem challenge reward token
+function openMerchantRewardScanner() {
+  let modal = document.getElementById('modal-merchant-redeem');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-merchant-redeem';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px)';
+    modal.onclick = function(e) { if (e.target === modal) closeMerchantRewardScanner(); };
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div style="background:#1e1e1e;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:28px 24px 40px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div style="font-size:1rem;font-weight:800;color:#fff">📲 Challenge-Belohnung einlösen</div>
+        <button onclick="closeMerchantRewardScanner()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:#fff;font-size:1.1rem;cursor:pointer;font-family:var(--font)">✕</button>
+      </div>
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:16px;line-height:1.5">Gib den 12-stelligen Token des Kunden ein, um die Challenge-Belohnung zu bestätigen.</div>
+      <input id="merchant-token-input" type="text" placeholder="Token eingeben (z.B. A1B2C3D4E5F6)"
+        style="width:100%;box-sizing:border-box;padding:14px 16px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.12);border-radius:12px;color:#fff;font-size:0.9rem;font-family:monospace;letter-spacing:0.08em;font-family:var(--font);outline:none;text-transform:uppercase"
+        oninput="this.value=this.value.toUpperCase()">
+      <button onclick="_verifyRewardToken()" style="width:100%;margin-top:12px;padding:14px;background:linear-gradient(135deg,#F7AB00,#FA4615);border:none;color:#fff;border-radius:12px;font-size:0.9rem;font-weight:800;font-family:var(--font);cursor:pointer">Token prüfen</button>
+      <div id="merchant-redeem-result" style="margin-top:16px"></div>
+    </div>`;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('merchant-token-input')?.focus(), 100);
+}
+
+function closeMerchantRewardScanner() {
+  const modal = document.getElementById('modal-merchant-redeem');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function _verifyRewardToken() {
+  const input = document.getElementById('merchant-token-input');
+  const resultEl = document.getElementById('merchant-redeem-result');
+  if (!input || !resultEl) return;
+  const token = input.value.trim().toUpperCase();
+  if (!token) { resultEl.innerHTML = '<div style="color:#f87171;font-size:0.8rem;text-align:center">Bitte Token eingeben.</div>'; return; }
+
+  const all = _getRewards();
+  const rwd = all.find(r => r.token === token);
+  const challenges = _getChallenges();
+
+  if (!rwd) {
+    resultEl.innerHTML = `<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:16px;text-align:center">
+      <div style="font-size:1.4rem;margin-bottom:6px">❌</div>
+      <div style="font-size:0.85rem;font-weight:700;color:#f87171">Token nicht gefunden</div>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:4px">Bitte Token erneut prüfen</div>
+    </div>`; return;
+  }
+  if (rwd.status === 'redeemed') {
+    resultEl.innerHTML = `<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:16px;text-align:center">
+      <div style="font-size:1.4rem;margin-bottom:6px">⛔</div>
+      <div style="font-size:0.85rem;font-weight:700;color:#f87171">Bereits eingelöst</div>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:4px">Dieser Token wurde bereits verwendet</div>
+    </div>`; return;
+  }
+  if (new Date(rwd.expiresAt) < new Date()) {
+    resultEl.innerHTML = `<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:16px;text-align:center">
+      <div style="font-size:1.4rem;margin-bottom:6px">⏰</div>
+      <div style="font-size:0.85rem;font-weight:700;color:#f87171">Token abgelaufen</div>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:4px">Gültig bis ${new Date(rwd.expiresAt).toLocaleDateString('de-DE')}</div>
+    </div>`; return;
+  }
+  const ch = challenges.find(c => c.id === rwd.challengeId);
+  const me = ZAMApi.auth.currentUser();
+  if (ch && me && ch.merchant_id !== me.id) {
+    resultEl.innerHTML = `<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:16px;text-align:center">
+      <div style="font-size:1.4rem;margin-bottom:6px">🔒</div>
+      <div style="font-size:0.85rem;font-weight:700;color:#f87171">Falscher Händler</div>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:4px">Dieser Token gehört zu einem anderen Händler</div>
+    </div>`; return;
+  }
+
+  // Valid – show confirm
+  resultEl.innerHTML = `
+    <div style="background:rgba(16,185,129,0.09);border:1px solid rgba(52,211,153,0.25);border-radius:14px;padding:18px">
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:1.8rem;margin-bottom:6px">✅</div>
+        <div style="font-size:0.9rem;font-weight:800;color:#34d399">Token gültig!</div>
+      </div>
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.55);margin-bottom:6px"><b style="color:#e2e8f0">Challenge:</b> ${escHtml(ch?.title || rwd.challengeId)}</div>
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.55);margin-bottom:6px"><b style="color:#e2e8f0">Belohnung:</b> ${escHtml(ch?.reward_description || '–')}</div>
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.55);margin-bottom:16px"><b style="color:#e2e8f0">Nutzer:</b> ${escHtml(rwd.userId)}</div>
+      <button onclick="_confirmRewardRedemption('${rwd.token}')" style="width:100%;padding:14px;background:linear-gradient(135deg,#34d399,#059669);border:none;color:#fff;border-radius:12px;font-size:0.9rem;font-weight:800;font-family:var(--font);cursor:pointer">🎁 Belohnung bestätigen & ${ch?.reward_description?.match(/\d+\s*Punkte/i)?.[0] || 'Punkte'} gutschreiben</button>
+    </div>`;
+}
+
+function _confirmRewardRedemption(token) {
+  const all = _getRewards();
+  const idx = all.findIndex(r => r.token === token);
+  if (idx === -1) return;
+  const rwd = all[idx];
+  const ch = _getChallenges().find(c => c.id === rwd.challengeId);
+  all[idx] = { ...rwd, status: 'redeemed', redeemedAt: new Date().toISOString() };
+  _saveRewards(all);
+
+  // Credit points (extract from reward_description)
+  const pts = parseInt((ch?.reward_description || '').match(/(\d+)\s*Punkte/i)?.[1] || '0');
+
+  const resultEl = document.getElementById('merchant-redeem-result');
+  if (resultEl) {
+    resultEl.innerHTML = `
+      <div style="background:rgba(247,171,0,0.1);border:1px solid rgba(247,171,0,0.3);border-radius:14px;padding:22px;text-align:center">
+        <div style="font-size:2.5rem;margin-bottom:10px">🎉</div>
+        <div style="font-size:1rem;font-weight:900;color:#F7AB00;margin-bottom:6px">Belohnung eingelöst!</div>
+        ${pts > 0 ? `<div style="font-size:0.78rem;color:rgba(255,255,255,0.5)">+${pts} Punkte wurden dem Kunden gutgeschrieben</div>` : ''}
+        <button onclick="closeMerchantRewardScanner();renderPhotoChallenges&&renderPhotoChallenges()" style="margin-top:14px;padding:10px 20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#e2e8f0;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer">Schließen</button>
+      </div>`;
+  }
+  // Refresh page if on challenges view
+  if (typeof renderPhotoChallenges === 'function') setTimeout(renderPhotoChallenges, 1500);
 }
 
 // ── Camera ──
