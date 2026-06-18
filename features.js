@@ -68,9 +68,10 @@ function openSecureRewardScanner() {
   modal.className = 'modal-overlay';
   modal.innerHTML = `
     <div class="modal-sheet" style="max-height:88vh;overflow-y:auto">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-        <div style="font-size:1rem;font-weight:800;color:#F7AB00">🎁 Gutschein einlösen</div>
-        <button onclick="closeModal('modal-secure-scanner')" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.4rem;cursor:pointer;padding:0">×</button>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+        <button onclick="closeModal('modal-secure-scanner')" class="back-btn" aria-label="Zurück" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:1.1rem;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;flex-shrink:0">←</button>
+        <div style="flex:1;font-size:1rem;font-weight:800;color:#F7AB00">🎁 Gutschein einlösen</div>
+        <button onclick="closeModal('modal-secure-scanner')" aria-label="Schließen" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.5);font-size:1.1rem;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
       </div>
       <div id="scanner-status" style="display:none;border-radius:12px;padding:14px 16px;margin-bottom:14px;font-size:0.82rem;font-weight:700;text-align:center"></div>
       <div style="position:relative">
