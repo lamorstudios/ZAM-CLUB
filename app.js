@@ -1157,7 +1157,7 @@ function _renderHomeRankStats(user) {
         <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">Heute</div>
       </div>
       <div style="text-align:center">
-        <div style="font-size:0.88rem;font-weight:900;color:#ffb399">${_getTier(pts).emoji} ${_getTier(pts).label}</div>
+        <div style="font-size:0.9rem;font-weight:900;color:#ffb399"><span class="tier-badge tier-badge--${_getTier(pts).key}">${_getTier(pts).emoji} ${_getTier(pts).label}</span></div>
         <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">Level</div>
       </div>
     </div>
@@ -1196,7 +1196,8 @@ function _renderHomeRankingCard() {
         <div class="tier-ring tier-ring--${uTier.key}" style="width:34px;height:34px;background:${u.bg};font-size:0.62rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:0.8rem;font-weight:700;color:#e2e8f0">${u.name}</div>
-          <div style="display:flex;align-items:center;gap:4px;margin-top:1px"><span class="tier-badge tier-badge--${uTier.key}">${uTier.emoji} ${uTier.label}</span><span style="font-size:0.6rem;color:rgba(255,255,255,0.35)">${prizeTitles[i]}</span></div>
+          <div style="margin-top:2px"><span class="tier-badge tier-badge--${uTier.key}">${uTier.emoji} ${uTier.label}</span></div>
+          <div style="font-size:0.58rem;color:rgba(255,255,255,0.3);margin-top:2px">${prizeTitles[i]}</div>
         </div>
         <div style="font-size:0.8rem;font-weight:900;color:#F7AB00">${u.pts.toLocaleString('de-DE')}</div>
       </div>`;}).join('')}
@@ -1237,7 +1238,8 @@ function openRankingModal() {
         <div class="tier-ring tier-ring--${uTier.key}" style="width:36px;height:36px;background:${u.bg};font-size:0.65rem;font-weight:800;color:#fff;flex-shrink:0">${u.initials}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:0.82rem;font-weight:${u.isMe?'900':'700'};color:${u.isMe?'#F7AB00':'#e2e8f0'}">${u.name}${u.isMe?' (Du)':''}</div>
-          <div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span class="tier-badge tier-badge--${uTier.key}">${uTier.emoji} ${uTier.label}</span>${i < 3 ? `<span style="font-size:0.6rem;color:rgba(255,255,255,0.35)">${prizes[i]}</span>` : ''}</div>
+          <div style="margin-top:2px"><span class="tier-badge tier-badge--${uTier.key}">${uTier.emoji} ${uTier.label}</span></div>
+          ${i < 3 ? `<div style="font-size:0.58rem;color:rgba(255,255,255,0.3);margin-top:2px">${prizes[i]}</div>` : ''}
         </div>
         <div style="font-size:0.8rem;font-weight:800;color:${u.isMe?'#F7AB00':'rgba(255,255,255,0.6)'}">${u.pts.toLocaleString('de-DE')} Pkt.</div>
       </div>`;}).join('')}

@@ -1,4 +1,4 @@
-const CACHE = 'zam-club-v13';
+const CACHE = 'zam-club-v14';
 const ASSETS = [
   '/', '/index.html', '/style.css', '/app.js', '/api.js', '/map.html',
   '/manifest.json', '/assets/icon.svg'
