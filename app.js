@@ -4855,25 +4855,25 @@ function renderMerchantDashboard() {
   // Quick actions grid at top of dashboard
   const kpiGridEl = document.getElementById('merchant-kpi-grid');
   if (kpiGridEl) {
-    let scannerBtnWrap = document.getElementById('merchant-qr-scanner-wrap');
-    if (!scannerBtnWrap) {
-      scannerBtnWrap = document.createElement('div');
-      scannerBtnWrap.id = 'merchant-qr-scanner-wrap';
-      scannerBtnWrap.innerHTML = `
-        <div class="merchant-quick-actions">
-          <button class="merchant-quick-btn" onclick="openQRScanner()"><span>📷</span><span>QR scannen</span></button>
-          <button class="merchant-quick-btn" onclick="openMerchantEventModal()"><span>📅</span><span>Event einreichen</span></button>
-          <button class="merchant-quick-btn" onclick="openMerchantDealModal()"><span>🏷️</span><span>Deal einreichen</span></button>
-          <button class="merchant-quick-btn" onclick="openVideoDrehModal()" style="background:linear-gradient(135deg,rgba(250,70,21,0.25),rgba(250,70,21,0.1));border:1px solid rgba(250,70,21,0.4)"><span>🎥</span><span style="color:#FA4615">Videodreh</span></button>
-          <button class="merchant-quick-btn" onclick="openMerchantRewardScanner()" style="background:linear-gradient(135deg,rgba(247,171,0,0.2),rgba(247,171,0,0.08));border:1px solid rgba(247,171,0,0.35)"><span>🎁</span><span style="color:#F7AB00">Belohnung einlösen</span></button>
-          <button id="merchant-btn-anfragen" class="merchant-quick-btn" onclick="openPartnerDealWorkflow()" style="background:linear-gradient(135deg,rgba(250,140,30,0.2),rgba(250,140,30,0.07));border:1px solid rgba(250,140,30,0.35);position:relative">
-            <span>🤝</span><span style="color:#ffb060">Anfragen</span>
-            <span id="merchant-anfragen-badge" style="display:none;position:absolute;top:6px;right:6px;min-width:16px;height:16px;border-radius:8px;background:#FA4615;color:#fff;font-size:0.55rem;font-weight:800;line-height:16px;text-align:center;padding:0 3px;font-family:var(--font)"></span>
-          </button>
-        </div>
-      `;
-      kpiGridEl.parentNode.insertBefore(scannerBtnWrap, kpiGridEl);
-    }
+    // Always recreate so new buttons (e.g. Anfragen) appear even on re-render
+    const existing = document.getElementById('merchant-qr-scanner-wrap');
+    if (existing) existing.remove();
+    const scannerBtnWrap = document.createElement('div');
+    scannerBtnWrap.id = 'merchant-qr-scanner-wrap';
+    scannerBtnWrap.innerHTML = `
+      <div class="merchant-quick-actions">
+        <button class="merchant-quick-btn" onclick="openQRScanner()"><span>📷</span><span>QR scannen</span></button>
+        <button class="merchant-quick-btn" onclick="openMerchantEventModal()"><span>📅</span><span>Event einreichen</span></button>
+        <button class="merchant-quick-btn" onclick="openMerchantDealModal()"><span>🏷️</span><span>Deal einreichen</span></button>
+        <button class="merchant-quick-btn" onclick="openVideoDrehModal()" style="background:linear-gradient(135deg,rgba(250,70,21,0.25),rgba(250,70,21,0.1));border:1px solid rgba(250,70,21,0.4)"><span>🎥</span><span style="color:#FA4615">Videodreh</span></button>
+        <button class="merchant-quick-btn" onclick="openMerchantRewardScanner()" style="background:linear-gradient(135deg,rgba(247,171,0,0.2),rgba(247,171,0,0.08));border:1px solid rgba(247,171,0,0.35)"><span>🎁</span><span style="color:#F7AB00">Belohnung einlösen</span></button>
+        <button id="merchant-btn-anfragen" class="merchant-quick-btn" onclick="openPartnerDealWorkflow()" style="background:linear-gradient(135deg,rgba(250,140,30,0.2),rgba(250,140,30,0.07));border:1px solid rgba(250,140,30,0.35);position:relative">
+          <span>🤝</span><span style="color:#ffb060">Anfragen</span>
+          <span id="merchant-anfragen-badge" style="display:none;position:absolute;top:6px;right:6px;min-width:16px;height:16px;border-radius:8px;background:#FA4615;color:#fff;font-size:0.55rem;font-weight:800;line-height:16px;text-align:center;padding:0 3px;font-family:var(--font)"></span>
+        </button>
+      </div>
+    `;
+    kpiGridEl.parentNode.insertBefore(scannerBtnWrap, kpiGridEl);
     // Update Anfragen-Badge
     _merchantUpdateAnfragenBadge(me.id);
   }
