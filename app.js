@@ -7680,7 +7680,11 @@ function closeChallengeDetail() {
 }
 
 // ── Reward QR Modal ──
+// Track which challenge opened the QR modal so we can return to it
+let _rewardQRSourceChallengeId = null;
+
 function openRewardQRModal(challengeId) {
+  _rewardQRSourceChallengeId = challengeId;  // remember origin
   const ch = _getChallenges().find(c => c.id === challengeId);
   if (!ch) return;
   const rwd = _generateRewardToken(challengeId, ch.merchant_id);
@@ -7782,7 +7786,24 @@ function closeRewardQRModal() {
   const modal = document.getElementById('modal-reward-qr');
   if (modal) modal.style.display = 'none';
   document.body.style.overflow = '';
-  // Return to challenges — the modal is always opened from there
+
+  // The challenge detail sheet is still in the DOM and open —
+  // just reveal it by doing nothing if it's already visible.
+  const sheet = document.getElementById('challenge-detail-sheet');
+  const sheetOpen = sheet && sheet.style.display !== 'none';
+
+  if (sheetOpen) {
+    // Sheet is already open behind the QR modal — nothing to do, it shows immediately.
+    return;
+  }
+
+  // Sheet was closed somehow — re-open the originating challenge if we know it.
+  if (_rewardQRSourceChallengeId && typeof openChallengeDetail === 'function') {
+    openChallengeDetail(_rewardQRSourceChallengeId);
+    return;
+  }
+
+  // Final fallback: go to the challenges page.
   if (typeof navigateTo === 'function') navigateTo('challenges');
 }
 
