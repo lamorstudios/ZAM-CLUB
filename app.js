@@ -1845,9 +1845,9 @@ function renderPostCard(post, idx) {
     : '';
   div.innerHTML = `
     <div class="post-header">
-      <div class="tier-ring tier-ring--${authorTier.key}" style="width:38px;height:38px;background:${post.author?.avatar_color || '#FA4615'};font-size:13px;font-weight:800;color:#fff;flex-shrink:0">${post.author?.initials || '?'}</div>
+      <div class="tier-ring tier-ring--${authorTier.key}" style="width:38px;height:38px;background:${post.author?.avatar_color || '#FA4615'};font-size:13px;font-weight:800;color:#fff;flex-shrink:0;cursor:pointer" onclick="openUserProfileSheet('${post.user_id||''}','${(post.author?.name||'').replace(/'/g,"\\'")}','${post.author?.initials||'?'}',null,${authorPts})">${post.author?.initials || '?'}</div>
       <div class="post-author-info">
-        <div class="post-author-name" style="display:flex;align-items:center;gap:5px">${post.author?.name || 'Unbekannt'}${statusBadge}${topBadgesHtml ? `<span style="display:flex;gap:2px;margin-left:2px">${topBadgesHtml}</span>` : ''}</div>
+        <div class="post-author-name" style="display:flex;align-items:center;gap:5px;cursor:pointer" onclick="openUserProfileSheet('${post.user_id||''}','${(post.author?.name||'').replace(/'/g,"\\'")}','${post.author?.initials||'?'}',null,${authorPts})">${post.author?.name || 'Unbekannt'}${statusBadge}${topBadgesHtml ? `<span style="display:flex;gap:2px;margin-left:2px">${topBadgesHtml}</span>` : ''}</div>
         <div class="post-author-level" style="display:flex;align-items:center;gap:4px">${authorTitleObj ? `<span style="font-size:0.6rem;color:#ffb399;font-weight:700">${authorTitleObj.label}</span>` : ''}<span class="tier-badge tier-badge--${authorTier.key}">${authorTier.emoji} ${authorTier.label}</span></div>
       </div>
       <div class="post-time">${post.time_ago || ''}</div>
@@ -2655,9 +2655,9 @@ function _renderMessages() {
     const safeMPts = mPts;
     return `
       <div class="chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}" data-msg-id="${m.id}">
-        ${!isOwn ? `<div class="tier-ring tier-ring--${mTier.key}" style="width:34px;height:34px;background:${m.author?.color || '#FA4615'};font-size:11px;font-weight:800;color:#fff;flex-shrink:0">${m.author?.initials || '?'}</div>` : ''}
+        ${!isOwn ? `<div class="tier-ring tier-ring--${mTier.key}" style="width:34px;height:34px;background:${m.author?.color || '#FA4615'};font-size:11px;font-weight:800;color:#fff;flex-shrink:0;cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${m.author?.initials || '?'}</div>` : ''}
         <div class="chat-msg-bubble-wrap">
-          ${!isOwn ? `<div class="chat-msg-name" style="display:flex;align-items:center;gap:4px">${m.author?.name || ''}<span class="tier-badge tier-badge--${mTier.key}" style="cursor:pointer" onclick="showTierInfoPopup('${safeAuthorName}',${safeMPts},this)">${mTier.emoji} ${mTier.label}</span></div>` : ''}
+          ${!isOwn ? `<div class="chat-msg-name" style="display:flex;align-items:center;gap:4px"><span style="cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${m.author?.name || ''}</span><span class="tier-badge tier-badge--${mTier.key}" style="cursor:pointer" onclick="openUserProfileSheet('${m.user_id}','${safeAuthorName}','${m.author?.initials||'?'}',null,${safeMPts})">${mTier.emoji} ${mTier.label}</span></div>` : ''}
           <div class="chat-msg-bubble">${m.content}</div>
           <div class="chat-msg-time">
             ${time}
@@ -3352,7 +3352,7 @@ async function loadComments(postId) {
     item.innerHTML = `
       <div class="tier-ring tier-ring--${cTier.key}" style="width:32px;height:32px;background:${c.author?.avatar_color || '#FA4615'};font-size:11px;font-weight:800;color:#fff;flex-shrink:0">${c.author?.initials || '?'}</div>
       <div class="comment-body">
-        <div class="comment-author" style="display:flex;align-items:center;gap:4px">${c.author?.name || ''}<span class="tier-badge tier-badge--${cTier.key}" style="cursor:pointer" onclick="showTierInfoPopup('${safeName}',${cPts},this)">${cTier.emoji} ${cTier.label}</span></div>
+        <div class="comment-author" style="display:flex;align-items:center;gap:4px"><span style="cursor:pointer" onclick="openUserProfileSheet('${c.user_id||''}','${safeName}','${(c.author?.initials||c.author?.name||'?').slice(0,2)}',null,${cPts})">${c.author?.name || ''}</span><span class="tier-badge tier-badge--${cTier.key}" style="cursor:pointer" onclick="openUserProfileSheet('${c.user_id||''}','${safeName}','${(c.author?.initials||c.author?.name||'?').slice(0,2)}',null,${cPts})">${cTier.emoji} ${cTier.label}</span></div>
         <div class="comment-text">${c.content}</div>
         <div class="comment-time">${c.time_ago}</div>
       </div>
@@ -3665,19 +3665,19 @@ function renderContacts() {
       const fTier = _getTier(fPts);
       const safeFName = f.name.replace(/'/g,"\\'");
       item.innerHTML = `
-        <div class="tier-ring tier-ring--${fTier.key}" style="width:40px;height:40px;background:${_avatarColor(f.user_id)};font-size:13px;font-weight:800;color:#fff;position:relative">
+        <div class="tier-ring tier-ring--${fTier.key}" style="width:40px;height:40px;background:${_avatarColor(f.user_id)};font-size:13px;font-weight:800;color:#fff;position:relative;cursor:pointer">
           ${f.initials}<div class="contact-online-dot" style="position:absolute;bottom:1px;right:1px"></div>
         </div>
-        <div class="contact-info">
+        <div class="contact-info" style="cursor:pointer">
           <div class="contact-name">${escHtml(f.name)}</div>
-          <div class="contact-username" style="display:flex;align-items:center;gap:4px;font-size:0.6rem;color:#34d399">✅ Freund <span class="tier-badge tier-badge--${fTier.key}" style="cursor:pointer" onclick="event.stopPropagation();showTierInfoPopup('${safeFName}',${fPts},this)">${fTier.emoji} ${fTier.label}</span></div>
+          <div class="contact-username" style="display:flex;align-items:center;gap:4px;font-size:0.6rem;color:#34d399">✅ Freund <span class="tier-badge tier-badge--${fTier.key}">${fTier.emoji} ${fTier.label}</span></div>
         </div>
         <button class="contact-action-btn" aria-label="Chat öffnen">💬</button>`;
       item.querySelector('.contact-action-btn').addEventListener('click', e => {
         e.stopPropagation();
         openPrivateChat(f.user_id, f.name, f.initials, null);
       });
-      item.addEventListener('click', () => openPrivateChat(f.user_id, f.name, f.initials, null));
+      item.addEventListener('click', () => openUserProfileSheet(f.user_id, f.name, f.initials, null, fPts));
       container.appendChild(item);
     });
   }
@@ -3731,13 +3731,13 @@ function renderContacts() {
       const cTier = _getTier(cPts);
       const safeCName = (c.display_name||'').replace(/'/g,"\\'");
       item.innerHTML = `
-        <div class="tier-ring tier-ring--${cTier.key}" style="width:40px;height:40px;background:${_avatarColor(c.user_id)};font-size:13px;font-weight:800;color:#fff;position:relative">
+        <div class="tier-ring tier-ring--${cTier.key}" style="width:40px;height:40px;background:${_avatarColor(c.user_id)};font-size:13px;font-weight:800;color:#fff;position:relative;cursor:pointer">
           ${c.avatar_url ? `<img src="${c.avatar_url}" alt="${c.initials}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" />` : c.initials}
           <div class="contact-online-dot" style="position:absolute;bottom:1px;right:1px"></div>
         </div>
-        <div class="contact-info">
+        <div class="contact-info" style="cursor:pointer">
           <div class="contact-name">${c.display_name}</div>
-          <div class="contact-username" style="display:flex;align-items:center;gap:4px"><span>${c.username || ''}</span><span class="tier-badge tier-badge--${cTier.key}" style="cursor:pointer" onclick="event.stopPropagation();showTierInfoPopup('${safeCName}',${cPts},this)">${cTier.emoji} ${cTier.label}</span></div>
+          <div class="contact-username" style="display:flex;align-items:center;gap:4px"><span>${c.username || ''}</span><span class="tier-badge tier-badge--${cTier.key}">${cTier.emoji} ${cTier.label}</span></div>
         </div>
         ${unread > 0 ? `<span class="pc-unread-badge">${unread}</span>` : ''}
         <button class="contact-action-btn" data-uid="${c.user_id}" aria-label="Chat öffnen">💬</button>`;
@@ -3745,7 +3745,7 @@ function renderContacts() {
         e.stopPropagation();
         openPrivateChat(c.user_id, c.display_name, c.initials, c.avatar_url);
       });
-      item.addEventListener('click', () => openPrivateChat(c.user_id, c.display_name, c.initials, c.avatar_url));
+      item.addEventListener('click', () => openUserProfileSheet(c.user_id, c.display_name, c.initials, c.avatar_url, cPts));
       container.appendChild(item);
     });
   }
@@ -3943,9 +3943,9 @@ function _pcRenderMessages() {
     const safeName = (m.sender_name||'').replace(/'/g,"\\'");
     return `
       <div class="chat-msg ${isOwn ? 'chat-msg-own' : 'chat-msg-other'}">
-        ${!isOwn ? `<div class="tier-ring tier-ring--${mTier.key}" style="width:34px;height:34px;background:${_avatarColor(m.sender_id)};font-size:11px;font-weight:800;color:#fff;flex-shrink:0">${m.sender_initials || '?'}</div>` : ''}
+        ${!isOwn ? `<div class="tier-ring tier-ring--${mTier.key}" style="width:34px;height:34px;background:${_avatarColor(m.sender_id)};font-size:11px;font-weight:800;color:#fff;flex-shrink:0;cursor:pointer" onclick="openUserProfileSheet('${m.sender_id}','${safeName}','${m.sender_initials||'?'}',null,${mPts})">${m.sender_initials || '?'}</div>` : ''}
         <div class="chat-msg-bubble-wrap">
-          ${!isOwn ? `<div class="chat-msg-name" style="display:flex;align-items:center;gap:4px">${_escapeHtml(m.sender_name||'')}<span class="tier-badge tier-badge--${mTier.key}" style="cursor:pointer" onclick="showTierInfoPopup('${safeName}',${mPts},this)">${mTier.emoji} ${mTier.label}</span></div>` : ''}
+          ${!isOwn ? `<div class="chat-msg-name" style="display:flex;align-items:center;gap:4px"><span style="cursor:pointer" onclick="openUserProfileSheet('${m.sender_id}','${safeName}','${m.sender_initials||'?'}',null,${mPts})">${_escapeHtml(m.sender_name||'')}</span><span class="tier-badge tier-badge--${mTier.key}" style="cursor:pointer" onclick="openUserProfileSheet('${m.sender_id}','${safeName}','${m.sender_initials||'?'}',null,${mPts})">${mTier.emoji} ${mTier.label}</span></div>` : ''}
           <div class="chat-msg-bubble">${_escapeHtml(m.content)}</div>
           <div class="chat-msg-time">${time}</div>
         </div>
