@@ -3329,6 +3329,23 @@ function handleCheckinQR(data) {
   const user = ZAMApi.auth.currentUser();
   if (!user) { _showScanResult('❌ Nicht angemeldet', 'var(--red)'); return; }
 
+  // Betrugsschutz
+  if (typeof ZAMSecurity !== 'undefined') {
+    const check = ZAMSecurity.fraud.check(user.id, 'checkin');
+    if (check.blocked) {
+      _showScanResult('⚠️ ' + check.reason, 'var(--yellow)');
+      return;
+    }
+    // QR-Scan-Rate-Check
+    const qrCheck = ZAMSecurity.fraud.check(user.id, 'qr_scan');
+    if (qrCheck.blocked) {
+      _showScanResult('⚠️ Zu viele Scans in kurzer Zeit — bitte warten', 'var(--yellow)');
+      ZAMSecurity.auditLog.add('qr_scan_blocked', { userId: user.id, subtype: data.subtype });
+      return;
+    }
+    ZAMSecurity.auditLog.add('qr_scan', { userId: user.id, subtype: data.subtype, merchantId: data.merchantId, eventId: data.eventId });
+  }
+
   const checkins = _getCheckins();
   const today = new Date().toDateString();
 
@@ -3345,6 +3362,7 @@ function handleCheckinQR(data) {
     checkins.push({ userId: user.id, merchantId: data.merchantId, ts: Date.now(), type: 'merchant', points: 10 });
     _saveCheckins(checkins);
     ZAMApi.points.add(10, 'merchant_checkin', 'Händler Check-in: ' + (data.merchantName || ''));
+    if (typeof ZAMSecurity !== 'undefined') ZAMSecurity.auditLog.add('checkin', { userId: user.id, type: 'merchant', merchantId: data.merchantId });
     _showScanResult(`✅ Check-in erfolgreich! +10 Punkte für ${data.merchantName || 'Besuch'}`, 'var(--green)');
     updatePointsDisplay();
   } else if (data.subtype === 'event') {
@@ -3357,6 +3375,7 @@ function handleCheckinQR(data) {
     checkins.push({ userId: user.id, eventId: data.eventId, ts: Date.now(), type: 'event', points: 25 });
     _saveCheckins(checkins);
     ZAMApi.points.add(25, 'event_checkin', 'Event Check-in: ' + (data.eventName || ''));
+    if (typeof ZAMSecurity !== 'undefined') ZAMSecurity.auditLog.add('checkin', { userId: user.id, type: 'event', eventId: data.eventId });
     _showScanResult(`✅ Check-in erfolgreich! +25 Punkte für ${data.eventName || 'Event'}`, 'var(--green)');
     updatePointsDisplay();
   }
@@ -5530,6 +5549,39 @@ function renderAdminDashboard() {
   // Ausstehende Einladungsboni
   const refSection = document.getElementById('admin-referral-list');
   if (refSection) renderAdminReferrals('admin-referral-list');
+
+  // Security Dashboard Button
+  let secBtnWrap = document.getElementById('admin-security-quick');
+  if (!secBtnWrap) {
+    secBtnWrap = document.createElement('div');
+    secBtnWrap.id = 'admin-security-quick';
+    secBtnWrap.style.cssText = 'padding:0 16px 20px';
+    const kpiGridEl = document.getElementById('admin-kpi-grid');
+    if (kpiGridEl?.parentNode) kpiGridEl.parentNode.appendChild(secBtnWrap);
+  }
+  const secStatus = typeof ZAMSecurity !== 'undefined' ? ZAMSecurity.getStatus() : null;
+  secBtnWrap.innerHTML = `
+    <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:14px;padding:14px 16px;margin-top:4px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:0.82rem;font-weight:700;color:#fca5a5">🔐 Security Übersicht</div>
+        ${secStatus?.fraudFlagged > 0 ? `<span style="font-size:0.65rem;padding:3px 8px;border-radius:6px;background:rgba(239,68,68,0.2);color:#f87171;font-weight:700">⚠️ ${secStatus.fraudFlagged} Auffällig</span>` : '<span style="font-size:0.65rem;color:rgba(52,211,153,0.7);font-weight:700">✅ Alles OK</span>'}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="text-align:center;padding:8px;background:rgba(255,255,255,0.04);border-radius:8px">
+          <div style="font-size:0.95rem;font-weight:800;color:#fff">${secStatus?.auditEntries || 0}</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.35)">Audit-Logs</div>
+        </div>
+        <div style="text-align:center;padding:8px;background:rgba(255,255,255,0.04);border-radius:8px">
+          <div style="font-size:0.95rem;font-weight:800;color:${(secStatus?.fraudFlagged||0) > 0 ? '#f87171' : '#fff'}">${secStatus?.fraudFlagged || 0}</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.35)">Verdächtig</div>
+        </div>
+        <div style="text-align:center;padding:8px;background:rgba(255,255,255,0.04);border-radius:8px">
+          <div style="font-size:0.95rem;font-weight:800;color:#fff">${secStatus?.rateLimitedKeys || 0}</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.35)">Rate-Blocked</div>
+        </div>
+      </div>
+      <button onclick="openSecurityPanel()" style="width:100%;padding:10px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);color:#fca5a5;border-radius:10px;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer">🔐 Security Dashboard öffnen</button>
+    </div>`;
 }
 
 function adminQuickPreviewSelected() {
@@ -8954,6 +9006,289 @@ function _renderEventCheckinStats() {
 document.readyState === 'loading'
   ? document.addEventListener('DOMContentLoaded', init)
   : init();
+
+// ════════════════════════════════════════════════════════════
+// SECURITY / DSGVO UI
+// ════════════════════════════════════════════════════════════
+
+function hideBanner() {
+  const b = document.getElementById('consent-banner');
+  if (b) b.style.display = 'none';
+}
+
+function _initConsentBanner() {
+  if (typeof ZAMSecurity === 'undefined') return;
+  if (!ZAMSecurity.consent.hasAccepted()) {
+    const b = document.getElementById('consent-banner');
+    if (b) b.style.display = 'block';
+  }
+}
+
+function openConsentSettings() {
+  const modal = document.getElementById('modal-consent-settings');
+  if (!modal) return;
+  const c = ZAMSecurity.consent.get();
+  const items = [
+    { key: 'location',  label: 'Standort',               icon: '📍', desc: 'Für Check-ins und Challenge-Verifizierung', required: false },
+    { key: 'push',      label: 'Push-Benachrichtigungen', icon: '🔔', desc: 'Event-Erinnerungen, Belohnungen, Neuigkeiten', required: false },
+    { key: 'analytics', label: 'Analyse & Statistiken',   icon: '📊', desc: 'Anonymisierte Nutzungsstatistiken zur App-Verbesserung', required: false },
+  ];
+  document.getElementById('consent-toggles').innerHTML = items.map(item => `
+    <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <div style="font-size:1.4rem;flex-shrink:0">${item.icon}</div>
+      <div style="flex:1">
+        <div style="font-size:0.85rem;font-weight:700;color:#e2e8f0">${item.label}</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:3px;line-height:1.4">${item.desc}</div>
+      </div>
+      <label style="position:relative;display:flex;align-items:center;cursor:pointer;flex-shrink:0">
+        <input type="checkbox" id="consent-${item.key}" ${c[item.key] ? 'checked' : ''} onchange="ZAMSecurity.consent.set('${item.key}',this.checked)"
+          style="position:absolute;opacity:0;width:0;height:0">
+        <div class="consent-toggle-track" style="width:42px;height:24px;border-radius:12px;background:${c[item.key] ? '#FA4615' : 'rgba(255,255,255,0.12)'};transition:background 0.2s;position:relative">
+          <div style="position:absolute;top:3px;left:${c[item.key] ? '21px' : '3px'};width:18px;height:18px;border-radius:50%;background:#fff;transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>
+        </div>
+      </label>
+    </div>`).join('');
+  modal.style.display = 'flex';
+}
+
+function closeConsentSettings() {
+  const modal = document.getElementById('modal-consent-settings');
+  if (modal) modal.style.display = 'none';
+}
+
+// ── Impressum / Datenschutz ───────────────────────────────────
+const _LEGAL_CONTENT = {
+  impressum: {
+    title: '📋 Impressum',
+    body: `
+      <div style="margin-bottom:18px">
+        <div style="font-size:0.82rem;font-weight:800;color:#fff;margin-bottom:8px">Angaben gemäß § 5 TMG</div>
+        <div><b style="color:#e2e8f0">ZAM Center Freiham</b><br>
+        Freiham-Ring · 81249 München<br>
+        E-Mail: <a href="mailto:info@zam-freiham.de" style="color:#ff6b3d">info@zam-freiham.de</a></div>
+      </div>
+      <div style="margin-bottom:18px">
+        <div style="font-size:0.82rem;font-weight:800;color:#fff;margin-bottom:8px">Verantwortlich für den Inhalt</div>
+        <div>ZAM Center Freiham GmbH &amp; Co. KG<br>Geschäftsführung: [Name]</div>
+      </div>
+      <div style="margin-bottom:18px">
+        <div style="font-size:0.82rem;font-weight:800;color:#fff;margin-bottom:8px">Technische Umsetzung</div>
+        <div>LAMOR Studios<br>
+        <a href="mailto:info@lamorstudios.de" style="color:#ff6b3d">info@lamorstudios.de</a></div>
+      </div>
+      <div style="margin-bottom:18px">
+        <div style="font-size:0.82rem;font-weight:800;color:#fff;margin-bottom:8px">Haftungsausschluss</div>
+        <div>Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung für die Inhalte externer Links. Für den Inhalt der verlinkten Seiten sind ausschließlich deren Betreiber verantwortlich.</div>
+      </div>
+      <div style="font-size:0.68rem;color:rgba(255,255,255,0.3);margin-top:20px">Stand: Juni 2026</div>
+    `
+  },
+  datenschutz: {
+    title: '🔒 Datenschutzerklärung',
+    body: `
+      <div style="margin-bottom:16px">
+        <div style="font-size:0.82rem;font-weight:800;color:#fff;margin-bottom:8px">1. Verantwortlicher</div>
+        <div>ZAM Center Freiham GmbH &amp; Co. KG, Freiham-Ring, 81249 München</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:0.82rem;font-weight:800;color:#fff;margin-bottom:8px">2. Welche Daten wir speichern</div>
+        <div>Alle App-Daten (Konto, Punkte, Aktivität) werden ausschließlich lokal auf deinem Gerät im Browser-Speicher (localStorage) gespeichert. Es werden keine Daten an Server übermittelt (Demo-Betrieb).<br><br>
+        Im Produktivbetrieb werden folgende Daten serverseitig gespeichert:<br>
+        · E-Mail-Adresse (verschlüsselt)<br>
+        · Benutzername, Anzeigename<br>
+        · Punkte-Historie (anonym)<br>
+        · Check-in-Zeitstempel (ohne Standort-Koordinaten)</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:0.82rem;font-weight:800;color:#fff;margin-bottom:8px">3. Standortdaten</div>
+        <div>Standortdaten werden nur mit deiner ausdrücklichen Einwilligung und nur für die Dauer der Check-in-Verifikation genutzt. Sie werden nicht dauerhaft gespeichert oder weitergegeben.</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:0.82rem;font-weight:800;color:#fff;margin-bottom:8px">4. Push-Benachrichtigungen</div>
+        <div>Push-Benachrichtigungen werden nur nach ausdrücklicher Einwilligung gesendet. Du kannst die Einwilligung jederzeit in den App-Einstellungen oder im Browser widerrufen.</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:0.82rem;font-weight:800;color:#fff;margin-bottom:8px">5. Deine Rechte (DSGVO)</div>
+        <div>
+          · <b style="color:#e2e8f0">Auskunft</b> (Art. 15 DSGVO): Welche Daten haben wir?<br>
+          · <b style="color:#e2e8f0">Berichtigung</b> (Art. 16 DSGVO): Falsche Daten korrigieren<br>
+          · <b style="color:#e2e8f0">Löschung</b> (Art. 17 DSGVO): Account vollständig löschen<br>
+          · <b style="color:#e2e8f0">Einschränkung</b> (Art. 18 DSGVO): Verarbeitung einschränken<br>
+          · <b style="color:#e2e8f0">Datenportabilität</b> (Art. 20 DSGVO): Daten exportieren<br><br>
+          Anfragen an: <a href="mailto:datenschutz@zam-freiham.de" style="color:#ff6b3d">datenschutz@zam-freiham.de</a>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:0.82rem;font-weight:800;color:#fff;margin-bottom:8px">6. Account löschen</div>
+        <div>Du kannst deinen Account und alle zugehörigen Daten jederzeit in den Profileinstellungen unter „Account löschen" löschen.
+          <button onclick="closeLegal();openDeleteAccount()" style="display:block;margin-top:8px;padding:8px 16px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:8px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">Account löschen</button>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:0.82rem;font-weight:800;color:#fff;margin-bottom:8px">7. Passwort-Sicherheit</div>
+        <div>Passwörter werden mit PBKDF2 (100.000 Iterationen, SHA-256) gehasht und gesalzen gespeichert. Klartext-Passwörter werden nie gespeichert oder übertragen.</div>
+      </div>
+      <div style="font-size:0.68rem;color:rgba(255,255,255,0.3);margin-top:20px">Stand: Juni 2026 · Version 1.0</div>
+    `
+  }
+};
+
+function openImpressum() { _openLegal('impressum'); }
+function openDatenschutz() { _openLegal('datenschutz'); }
+
+function _openLegal(type) {
+  const content = _LEGAL_CONTENT[type];
+  if (!content) return;
+  const modal = document.getElementById('modal-legal');
+  const title = document.getElementById('legal-title');
+  const body  = document.getElementById('legal-body');
+  if (!modal || !title || !body) return;
+  title.textContent = content.title;
+  body.innerHTML    = content.body;
+  modal.style.display = 'flex';
+}
+
+function closeLegal() {
+  const modal = document.getElementById('modal-legal');
+  if (modal) modal.style.display = 'none';
+}
+
+// ── Account löschen ───────────────────────────────────────────
+function openDeleteAccount() {
+  const modal = document.getElementById('modal-delete-account');
+  if (!modal) return;
+  const input = document.getElementById('delete-confirm-input');
+  if (input) input.value = '';
+  modal.style.display = 'flex';
+}
+
+function closeDeleteAccount() {
+  const modal = document.getElementById('modal-delete-account');
+  if (modal) modal.style.display = 'none';
+}
+
+function confirmDeleteAccount() {
+  const input = document.getElementById('delete-confirm-input');
+  if (!input || input.value.trim().toUpperCase() !== 'LÖSCHEN') {
+    showToast('Bitte "LÖSCHEN" eingeben zur Bestätigung');
+    return;
+  }
+  const user = ZAMApi.auth.currentUser();
+  if (!user) { showToast('Nicht eingeloggt'); return; }
+  const result = ZAMSecurity.deleteAccount(user.id);
+  if (result.ok) {
+    closeDeleteAccount();
+    showToast('Account wurde gelöscht.');
+    setTimeout(() => {
+      ZAMData.currentUser = ZAMData.profiles[0];
+      navigateTo('home');
+      if (typeof renderAfterLogin === 'function') renderAfterLogin();
+    }, 1000);
+  }
+}
+
+// ── Security Admin Panel ──────────────────────────────────────
+function openSecurityPanel() {
+  const user = ZAMApi.auth.currentUser();
+  if (user?.role !== 'admin') { showToast('Nur für Admins'); return; }
+  const modal = document.getElementById('modal-security-panel');
+  const body  = document.getElementById('security-panel-body');
+  if (!modal || !body) return;
+
+  const status     = ZAMSecurity.getStatus();
+  const auditLog   = ZAMSecurity.auditLog.get(30);
+  const fraudReport= ZAMSecurity.fraud.getReport();
+
+  body.innerHTML = `
+    <!-- Status-Kacheln -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+      ${[
+        { icon:'📋', label:'Audit-Einträge', val: status.auditEntries },
+        { icon:'⚠️', label:'Verdächtige', val: status.fraudFlagged, warn: status.fraudFlagged > 0 },
+        { icon:'🔒', label:'Rate-Blocked', val: status.rateLimitedKeys, warn: status.rateLimitedKeys > 0 },
+      ].map(k => `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;text-align:center">
+        <div style="font-size:1.3rem">${k.icon}</div>
+        <div style="font-size:1.1rem;font-weight:900;color:${k.warn ? '#f87171' : '#fff'}">${k.val}</div>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.4)">${k.label}</div>
+      </div>`).join('')}
+    </div>
+
+    <!-- Betrugsschutz -->
+    ${fraudReport.length ? `
+    <div style="margin-bottom:20px">
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:#f87171;margin-bottom:10px">⚠️ Verdächtige Nutzer</div>
+      ${fraudReport.slice(0,5).map(f => `
+        <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:10px 12px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:0.78rem;font-weight:700;color:#e2e8f0;font-family:monospace">${f.userId}</span>
+            <span style="font-size:0.62rem;padding:2px 8px;border-radius:6px;font-weight:700;background:${f.blocked ? 'rgba(239,68,68,0.2)' : 'rgba(247,171,0,0.15)'};color:${f.blocked ? '#f87171' : '#F7AB00'}">${f.blocked ? '🚫 Blockiert' : '⚠️ Auffällig'}</span>
+          </div>
+          <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);margin-top:4px">${f.flags?.slice(-2).map(x => x.reason).join(' · ')}</div>
+        </div>`).join('')}
+    </div>` : ''}
+
+    <!-- Audit-Log -->
+    <div>
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:rgba(255,255,255,0.4);margin-bottom:10px">📋 Letzter Audit-Log</div>
+      ${auditLog.slice(0, 20).map(e => `
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div style="font-size:0.62rem;color:rgba(255,255,255,0.25);white-space:nowrap;font-family:monospace;margin-top:2px">${e.ts?.slice(11,19) || ''}</div>
+          <div>
+            <span style="font-size:0.72rem;font-weight:700;color:${e.action.includes('fail')||e.action.includes('fraud') ? '#f87171' : e.action.includes('success')||e.action.includes('login_s') ? '#34d399' : '#e2e8f0'}">${e.action}</span>
+            <span style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-left:6px">${e.actor_name || e.actor_id}</span>
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <!-- Punkte-Log Integrität -->
+    <div style="margin-top:20px;padding:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px">
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:6px">🔗 Punkte-Log Integrität</div>
+      <button onclick="_checkPointsIntegrity()" style="padding:8px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;border-radius:8px;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">Integrität prüfen</button>
+      <div id="integrity-result" style="margin-top:8px;font-size:0.72rem;color:rgba(255,255,255,0.5)"></div>
+    </div>`;
+
+  modal.style.display = 'flex';
+}
+
+function closeSecurityPanel() {
+  const modal = document.getElementById('modal-security-panel');
+  if (modal) modal.style.display = 'none';
+}
+
+function _checkPointsIntegrity() {
+  const uid = ZAMApi.auth.currentUser()?.id;
+  const log = uid ? JSON.parse(localStorage.getItem('zamclub_u_' + uid) || '{}').points_log || [] : [];
+  const valid = ZAMSecurity.verifyPointsLog(log);
+  const el = document.getElementById('integrity-result');
+  if (el) el.innerHTML = valid
+    ? '<span style="color:#34d399">✅ Punkte-Log unverändert</span>'
+    : '<span style="color:#f87171">⚠️ Mögliche Manipulation erkannt</span>';
+}
+
+// ── Audit-Log: QR-Scan Wrapper ────────────────────────────────
+// Fügt Security-Logging zu bestehenden QR-Scan-Aktionen hinzu
+const _origHandleCheckinQR = typeof handleCheckinQR !== 'undefined' ? handleCheckinQR : null;
+
+// ── Init Security Layer ───────────────────────────────────────
+function _initSecurityLayer() {
+  if (typeof ZAMSecurity === 'undefined') return;
+  ZAMSecurity.injectSecurityHeaders();
+  _initConsentBanner();
+
+  // Session-Signatur erneuern nach Seiten-Load
+  const user = ZAMApi.auth.currentUser();
+  if (user) ZAMSecurity.signSession(user);
+}
+
+// Hooks in bestehende Init-Funktion einbinden
+const _origInit = typeof init === 'function' ? init : null;
+if (_origInit) {
+  const _zamSecurityInitHook = _origInit;
+  // Wir patchen _initSecurityLayer nach dem DOM-Load
+  setTimeout(_initSecurityLayer, 200);
+} else {
+  setTimeout(_initSecurityLayer, 200);
+}
 
 // ── Merchant form modals — dynamically created, zero CSS-class dependency ──
 

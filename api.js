@@ -98,7 +98,16 @@ const ZAMApi = {
     /** Session des aktuellen Nutzers
      * Supabase: const { data: { user } } = await supabase.auth.getUser() */
     currentUser() {
-      return _gLoad('session_user', null);
+      const user = _gLoad('session_user', null);
+      if (!user) return null;
+      // Session-Integritätsprüfung — erkennt naives devtools-Editieren
+      if (typeof ZAMSecurity !== 'undefined' && !ZAMSecurity.verifySession(user)) {
+        // Session kompromittiert — abmelden
+        _gSet('session_user', null);
+        console.warn('[ZAM Security] Session-Integritätsprüfung fehlgeschlagen. Abmeldung.');
+        return null;
+      }
+      return user;
     },
 
     isLoggedIn() { return this.currentUser() !== null; },
@@ -109,11 +118,41 @@ const ZAMApi = {
      */
     async signIn(email, password) {
       if (!email || !password) throw new Error('E-Mail und Passwort erforderlich.');
-      // Demo: Accounts-Registry prüfen
+
+      // Rate-Limiting: max. 5 Versuche pro 15 Minuten pro E-Mail
+      if (typeof ZAMSecurity !== 'undefined') {
+        const rl = ZAMSecurity.rateLimit.check('login_' + email.toLowerCase(), 5, 15 * 60 * 1000);
+        if (!rl.allowed) throw new Error(rl.message);
+      }
+
       const accounts = _gLoad('accounts', []);
-      const account  = accounts.find(a => a.email.toLowerCase() === email.toLowerCase() && a.password === password);
-      if (!account) throw new Error('E-Mail oder Passwort falsch.');
+      const account  = accounts.find(a => a.email.toLowerCase() === email.toLowerCase());
+
+      let valid = false;
+      if (account) {
+        if (typeof ZAMSecurity !== 'undefined') {
+          valid = await ZAMSecurity.verifyPassword(password, account.password);
+        } else {
+          valid = account.password === password;
+        }
+      }
+
+      if (!valid) {
+        if (typeof ZAMSecurity !== 'undefined') {
+          ZAMSecurity.auditLog.add('login_failed', { email });
+        }
+        // Generische Fehlermeldung (keine Info ob E-Mail existiert)
+        throw new Error('E-Mail oder Passwort falsch.');
+      }
+
+      // Rate-Limit zurücksetzen nach Erfolg
+      if (typeof ZAMSecurity !== 'undefined') {
+        ZAMSecurity.rateLimit.reset('login_' + email.toLowerCase());
+        ZAMSecurity.auditLog.add('login_success', { userId: account.profile.id });
+      }
+
       _gSet('session_user', account.profile);
+      if (typeof ZAMSecurity !== 'undefined') ZAMSecurity.signSession(account.profile);
       ZAMData.currentUser = { ...ZAMData.currentUser, ...account.profile };
       _migrateLegacy(account.profile.id);
       return { user: account.profile };
@@ -179,10 +218,19 @@ const ZAMApi = {
         stats:                  { visits: 0, events_attended: 0, deals_used: 0 },
       };
 
-      accounts.push({ email, password, profile });
-      _gLoad('accounts') !== undefined; // ensure global initialized
+      // Passwort hashen (PBKDF2)
+      let hashedPassword = password;
+      if (typeof ZAMSecurity !== 'undefined') {
+        hashedPassword = await ZAMSecurity.hashPassword(password);
+      }
+
+      accounts.push({ email, password: hashedPassword, profile });
       _gSet('accounts', accounts);
       _gSet('session_user', profile);
+      if (typeof ZAMSecurity !== 'undefined') {
+        ZAMSecurity.signSession(profile);
+        ZAMSecurity.auditLog.add('signup', { userId: profile.id, email });
+      }
 
       // Willkommens-Bonus in Punkte-Log
       _uSet(profile.id, 'points', 50);
@@ -228,6 +276,11 @@ const ZAMApi = {
      * Supabase: await supabase.auth.signOut()
      */
     async signOut() {
+      if (typeof ZAMSecurity !== 'undefined') {
+        const user = this.currentUser();
+        if (user) ZAMSecurity.auditLog.add('logout', { userId: user.id });
+        sessionStorage.removeItem('zam_session_sig');
+      }
       _gSet('session_user', null);
       ZAMData.currentUser = ZAMData.profiles[0];
     },
@@ -646,6 +699,21 @@ const ZAMApi = {
      *   (Trigger sync_points aktualisiert profiles.points automatisch)
      */
     async add(amount, action, description = '') {
+      // [BACKEND] Punkte niemals nur client-seitig vergeben!
+      // Supabase: RPC call_add_points(user_id, amount, action) — serverseitig validiert
+
+      const user    = ZAMApi.auth.currentUser();
+      const userId  = user?.id;
+
+      // Betrugsschutz-Prüfung
+      if (typeof ZAMSecurity !== 'undefined' && userId) {
+        const check = ZAMSecurity.fraud.check(userId, 'points_add', amount);
+        if (check.blocked) {
+          console.warn('[ZAM Security] Punktevergabe blockiert:', check.reason);
+          return _s('points', ZAMData.currentUser.points);
+        }
+      }
+
       const current = _s('points', ZAMData.currentUser.points);
       const newPts  = current + amount;
       _set('points', newPts);
@@ -653,13 +721,21 @@ const ZAMApi = {
 
       // Level aktualisieren
       const level = newPts >= 3000 ? 'platinum' : newPts >= 1500 ? 'gold' : newPts >= 500 ? 'silver' : 'bronze';
-      const user  = ZAMApi.auth.currentUser();
       if (user) { user.level = level; _gSet('session_user', user); ZAMData.currentUser.level = level; }
 
-      // Log-Eintrag
-      const log = _s('points_log', []);
-      log.unshift({ id: _uuid(), points: amount, action, description: description || action, created_at: _now() });
+      // Log-Eintrag mit Integritäts-Hash
+      const log   = _s('points_log', []);
+      const entry = { id: _uuid(), points: amount, action, description: description || action, created_at: _now() };
+      if (typeof ZAMSecurity !== 'undefined') {
+        entry._hash = ZAMSecurity.hashPointsEntry(entry, log[0]?._hash || '');
+      }
+      log.unshift(entry);
       _set('points_log', log.slice(0, 100));
+
+      // Audit-Log
+      if (typeof ZAMSecurity !== 'undefined' && userId) {
+        ZAMSecurity.auditLog.add('points_add', { userId, amount, action, newTotal: newPts });
+      }
 
       return newPts;
     },
