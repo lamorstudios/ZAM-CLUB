@@ -1107,6 +1107,7 @@ function renderHome() {
               <button id="ht-spin"  style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(247,171,0,0.12);border:1px solid rgba(247,171,0,0.28);color:#F7AB00;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>🎰</span> Spin-Preis</button>
               <button id="ht-stats" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(16,185,129,0.12);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>📊</span> Statistiken</button>
               <button id="ht-dash"  style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer"><span>⚙️</span> Dashboard</button>
+              <button id="ht-anfragen" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(250,140,30,0.15);border:1px solid rgba(250,140,30,0.35);color:#ffb060;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer;position:relative"><span>🤝</span> Anfragen<span id="ht-anfragen-badge" style="display:none;position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:#FA4615;color:#fff;font-size:0.55rem;font-weight:800;line-height:16px;text-align:center;padding:0 3px;font-family:var(--font)"></span></button>
               ${isAdmin ? `<button id="ht-admin-spin" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#f87171;border-radius:10px;font-size:0.74rem;font-weight:600;font-family:var(--font);cursor:pointer;grid-column:1/-1"><span>🛡️</span> Spin-Gewinne verwalten</button>` : ''}
             </div>
           </div>
@@ -1124,7 +1125,10 @@ function renderHome() {
       document.getElementById('ht-spin')      ?.addEventListener('click', openSpinPrizeModal);
       document.getElementById('ht-stats')     ?.addEventListener('click', openMerchantStatsOverlay);
       document.getElementById('ht-dash')      ?.addEventListener('click', () => navigateTo('merchant-dashboard'));
+      document.getElementById('ht-anfragen')  ?.addEventListener('click', () => { if (typeof openPartnerDealWorkflow === 'function') openPartnerDealWorkflow(); });
       document.getElementById('ht-admin-spin')?.addEventListener('click', openAdminSpinManagement);
+      // Badge für offene Anfragen
+      _merchantUpdateAnfragenBadge(user.id, 'ht-anfragen-badge');
     }
   }
 }
@@ -4989,9 +4993,10 @@ function renderMerchantDashboard() {
 
 // =============================================
 // ── Anfragen-Badge für Quick-Action-Button ──────────────────
-function _merchantUpdateAnfragenBadge(merchantId) {
-  const badge = document.getElementById('merchant-anfragen-badge');
-  if (!badge) return;
+function _merchantUpdateAnfragenBadge(merchantId, badgeId) {
+  const ids = ['merchant-anfragen-badge', ...(badgeId ? [badgeId] : [])];
+  const badges = ids.map(id => document.getElementById(id)).filter(Boolean);
+  if (!badges.length) return;
   try {
     const S = typeof PDW !== 'undefined' ? PDW.STATUS : null;
     let count = 0;
@@ -5005,13 +5010,15 @@ function _merchantUpdateAnfragenBadge(merchantId) {
     // Also count classic PD2 incoming requests
     const reqs = typeof _getPD2Requests === 'function' ? _getPD2Requests() : [];
     count += reqs.filter(r => r.to?.id === merchantId && r.status === 'pending').length;
+    badges.forEach(badge => {
     if (count > 0) {
       badge.style.display = 'inline-block';
       badge.textContent = count > 9 ? '9+' : String(count);
     } else {
       badge.style.display = 'none';
     }
-  } catch { badge.style.display = 'none'; }
+    });
+  } catch { badges.forEach(b => { b.style.display = 'none'; }); }
 }
 
 // VIDEODREH ANFRAGEN – LAMOR AGENCY
