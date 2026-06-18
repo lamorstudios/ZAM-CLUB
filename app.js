@@ -609,6 +609,7 @@ function openBannerPicker() {
   }).join('');
 
   modal.style.display = 'flex';
+  requestAnimationFrame(() => modal.classList.add('open'));
 }
 
 function selectBanner(key) {
@@ -618,10 +619,28 @@ function selectBanner(key) {
   _setBanner(key);
   _applyProfileBanner();
   showToast(`🖼️ Banner aktiviert: ${banner.name}`, 'success');
-  openBannerPicker();
+  // Re-render list in-place to update active state without closing
+  const list = document.getElementById('banner-picker-list');
+  if (list) {
+    const pts = ZAMApi.auth.currentUser()?.points || ZAMData?.currentUser?.points || 0;
+    const current = key;
+    list.innerHTML = _PROFILE_BANNERS.map(b => {
+      const unlocked = _isBannerUnlocked(b, pts);
+      const isActive = current === b.key;
+      const lockText = !unlocked ? (!b.req_achievement ? `Noch ${(b.req_pts - pts).toLocaleString('de-DE')} Pkt.` : b.req_label) : '';
+      const statusHtml = isActive ? `<span class="banner-picker-status bps-active">✓ Aktiv</span>` : unlocked ? `<span class="banner-picker-status bps-unlocked">Auswählen</span>` : `<span class="banner-picker-status bps-locked">Gesperrt</span>`;
+      return `<div class="banner-picker-card ${isActive ? 'active-banner' : ''} ${unlocked ? '' : 'locked-banner'}" onclick="${unlocked ? `selectBanner('${b.key}')` : `showToast('🔒 Dieser Banner ist noch gesperrt.','error')`}">
+        <div class="banner-picker-preview ${b.rare ? 'rare-preview' : ''}" style="background:${b.gradient}">
+          ${b.rare ? '<span class="banner-rare-tag">✨ Selten</span>' : ''}
+          ${!unlocked ? `<div class="banner-picker-lock-overlay"><span class="banner-lock-icon">🔒</span><span class="banner-lock-req">${lockText}</span></div>` : ''}
+        </div>
+        <div class="banner-picker-info"><span class="banner-picker-name">${b.name}</span>${statusHtml}</div>
+      </div>`;
+    }).join('');
+  }
 }
 
-function closeBannerPicker() { document.getElementById('modal-banner-picker').style.display = 'none'; }
+function closeBannerPicker() { const m = document.getElementById('modal-banner-picker'); m.classList.remove('open'); setTimeout(() => { m.style.display = 'none'; }, 260); }
 
 
 // ── Top Badge Picker ──
@@ -644,6 +663,7 @@ function openTopBadgePicker() {
       </div>`;
   }).join('');
   modal.style.display = 'flex';
+  requestAnimationFrame(() => modal.classList.add('open'));
 }
 function toggleTopBadge(key, el) {
   const idx = _tmpTopBadges.indexOf(key);
@@ -663,7 +683,7 @@ function saveTopBadges() {
   closeTopBadgePicker();
   showToast('Top Badges gespeichert ✅', 'success');
 }
-function closeTopBadgePicker() { document.getElementById('modal-badge-picker').style.display = 'none'; }
+function closeTopBadgePicker() { const m = document.getElementById('modal-badge-picker'); m.classList.remove('open'); setTimeout(() => { m.style.display = 'none'; }, 260); }
 
 // ── Title Picker ──
 function openTitlePicker() {
@@ -685,6 +705,7 @@ function openTitlePicker() {
       </div>`;
   }).join('');
   modal.style.display = 'flex';
+  requestAnimationFrame(() => modal.classList.add('open'));
 }
 function selectTitle(key) {
   const current = _getProfileTitle();
@@ -697,9 +718,18 @@ function selectTitle(key) {
     showToast(`Titel gesetzt: ${t?.label}`, 'success');
   }
   _renderProfileTitle();
-  openTitlePicker(); // re-render
+  // Re-render list in-place without reopening modal
+  const pts = ZAMApi.auth.currentUser()?.points || ZAMData?.currentUser?.points || 0;
+  const earned = _getAchievements();
+  const newCurrent = _getProfileTitle();
+  const list = document.getElementById('title-picker-list');
+  if (list) list.innerHTML = _PROFILE_TITLES.map(t => {
+    const isEarned = (t.req === null && pts >= (t.req_pts || 0)) || (t.req !== null && t.req !== undefined && earned.includes(t.req));
+    const isActive = newCurrent === t.key;
+    return `<div class="title-picker-item ${isActive ? 'active' : ''} ${!isEarned ? 'locked' : ''}" onclick="${isEarned ? `selectTitle('${t.key}')` : `showToast('🔒 Noch nicht freigeschaltet','error')`}"><span class="tpi-label">${t.label}</span><span class="tpi-req">${isEarned ? (isActive ? '✅ Aktiv' : '✓ Freigeschaltet') : '🔒 ' + t.desc}</span></div>`;
+  }).join('');
 }
-function closeTitlePicker() { document.getElementById('modal-title-picker').style.display = 'none'; }
+function closeTitlePicker() { const m = document.getElementById('modal-title-picker'); m.classList.remove('open'); setTimeout(() => { m.style.display = 'none'; }, 260); }
 
 // ── Daily Streak ──
 const _STREAK_KEY = 'zam_streak_v1';
