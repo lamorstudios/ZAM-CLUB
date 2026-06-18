@@ -4866,10 +4866,16 @@ function renderMerchantDashboard() {
           <button class="merchant-quick-btn" onclick="openMerchantDealModal()"><span>🏷️</span><span>Deal einreichen</span></button>
           <button class="merchant-quick-btn" onclick="openVideoDrehModal()" style="background:linear-gradient(135deg,rgba(250,70,21,0.25),rgba(250,70,21,0.1));border:1px solid rgba(250,70,21,0.4)"><span>🎥</span><span style="color:#FA4615">Videodreh</span></button>
           <button class="merchant-quick-btn" onclick="openMerchantRewardScanner()" style="background:linear-gradient(135deg,rgba(247,171,0,0.2),rgba(247,171,0,0.08));border:1px solid rgba(247,171,0,0.35)"><span>🎁</span><span style="color:#F7AB00">Belohnung einlösen</span></button>
+          <button id="merchant-btn-anfragen" class="merchant-quick-btn" onclick="openPartnerDealWorkflow()" style="background:linear-gradient(135deg,rgba(250,140,30,0.2),rgba(250,140,30,0.07));border:1px solid rgba(250,140,30,0.35);position:relative">
+            <span>🤝</span><span style="color:#ffb060">Anfragen</span>
+            <span id="merchant-anfragen-badge" style="display:none;position:absolute;top:6px;right:6px;min-width:16px;height:16px;border-radius:8px;background:#FA4615;color:#fff;font-size:0.55rem;font-weight:800;line-height:16px;text-align:center;padding:0 3px;font-family:var(--font)"></span>
+          </button>
         </div>
       `;
       kpiGridEl.parentNode.insertBefore(scannerBtnWrap, kpiGridEl);
     }
+    // Update Anfragen-Badge
+    _merchantUpdateAnfragenBadge(me.id);
   }
 
   const days = parseInt(document.getElementById('dash-period')?.value || '30');
@@ -4982,6 +4988,32 @@ function renderMerchantDashboard() {
 }
 
 // =============================================
+// ── Anfragen-Badge für Quick-Action-Button ──────────────────
+function _merchantUpdateAnfragenBadge(merchantId) {
+  const badge = document.getElementById('merchant-anfragen-badge');
+  if (!badge) return;
+  try {
+    const S = typeof PDW !== 'undefined' ? PDW.STATUS : null;
+    let count = 0;
+    if (S) {
+      const deals = PDW.getForMerchant(merchantId);
+      count = deals.filter(d =>
+        d.partner.id === merchantId &&
+        (d.status === S.AWAITING_PARTNER || d.status === S.AWAITING_CONFIRM)
+      ).length;
+    }
+    // Also count classic PD2 incoming requests
+    const reqs = typeof _getPD2Requests === 'function' ? _getPD2Requests() : [];
+    count += reqs.filter(r => r.to?.id === merchantId && r.status === 'pending').length;
+    if (count > 0) {
+      badge.style.display = 'inline-block';
+      badge.textContent = count > 9 ? '9+' : String(count);
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch { badge.style.display = 'none'; }
+}
+
 // VIDEODREH ANFRAGEN – LAMOR AGENCY
 // =============================================
 const _VD_KEY = 'zam_videodreh_requests';
