@@ -4239,3 +4239,186 @@ body.perf-mode .bx-matrix::before, body.perf-mode .bx-matrix::after,
 body.perf-mode .bx-admin-gold::before, body.perf-mode .bx-admin-gold::after,
 body.perf-mode .bx-developer::before, body.perf-mode .bx-developer::after,
 body.perf-mode .bx-center::before, body.perf-mode .bx-center::after { animation: none !important; }
+
+/* ═══════════════════════════════════════
+   BANNER ERWEITERUNG v2 — Thematische Banner
+   Alle nahtlos, keine sichtbaren Kanten
+   ═══════════════════════════════════════ */
+
+/* ── Galaxy Journey — Planeten + Sterne orbital ── */
+.bx-galaxy-j::before {
+  content:''; position:absolute; inset:-20%; z-index:2; pointer-events:none;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.95) 1.5px, transparent 1.5px),
+    radial-gradient(circle, rgba(200,210,255,0.75) 1px, transparent 1px),
+    radial-gradient(circle, rgba(180,190,255,0.55) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px);
+  background-size: 130px 130px, 80px 80px, 180px 180px, 55px 55px;
+  background-position: 18px 22px, 52px 62px, 30px 88px, 70px 35px;
+  animation: bx-orb-float 28s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.bx-galaxy-j::after {
+  content:''; position:absolute; inset:-40%; z-index:3; pointer-events:none;
+  border-radius: 50%;
+  background: conic-gradient(from 30deg at 50% 50%,
+    transparent 0deg, rgba(139,92,246,0.12) 60deg, rgba(99,102,241,0.1) 110deg,
+    transparent 160deg, rgba(167,139,250,0.1) 230deg, transparent 360deg);
+  animation: bx-spin-orb 35s linear infinite;
+  will-change: transform;
+}
+
+/* ── Sweet Tooth — Macaron/Süßigkeiten ── */
+.bx-sweet::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ctext x='45' y='58' text-anchor='middle' font-size='34' opacity='0.2'%3E%F0%9F%A7%81%3C/text%3E%3C/svg%3E");
+  background-size: 90px 90px;
+  animation: bx-tile-d90 24s linear infinite;
+  will-change: background-position;
+}
+.bx-sweet::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 40% 50%, rgba(244,114,182,0.28) 0%, transparent 52%),
+              radial-gradient(ellipse at 75% 30%, rgba(251,207,232,0.2) 0%, transparent 45%);
+  animation: bx-orb-drift 8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ── Legend Crown — goldene Krone + Prestige ── */
+.bx-legend-king::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Ctext x='50' y='65' text-anchor='middle' font-size='38' opacity='0.2'%3E%F0%9F%91%91%3C/text%3E%3C/svg%3E");
+  background-size: 100px 100px;
+  animation: bx-tile-d90 30s linear infinite;
+  will-change: background-position;
+}
+.bx-legend-king::after {
+  content:''; position:absolute; inset:-15%; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 30% 55%, rgba(247,171,0,0.42) 0%, transparent 50%),
+              radial-gradient(ellipse at 78% 32%, rgba(254,240,138,0.28) 0%, transparent 44%);
+  animation: bx-orb-bounce 6s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ── Photo Hero — Kamera + Studio-Feeling ── */
+.bx-photo-hero::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ctext x='45' y='58' text-anchor='middle' font-size='34' opacity='0.16'%3E%F0%9F%93%B7%3C/text%3E%3C/svg%3E");
+  background-size: 90px 90px;
+  animation: bx-tile-d80 22s linear infinite;
+  will-change: background-position;
+}
+.bx-photo-hero::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 30%, rgba(233,69,96,0.12) 32%, transparent 34%),
+    radial-gradient(ellipse at 50% 50%, rgba(233,69,96,0.18) 0%, transparent 55%);
+  animation: bx-breathe 7s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── Sport Mode — Sport Icons + Energie ── */
+.bx-sport::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ctext x='40' y='52' text-anchor='middle' font-size='30' opacity='0.18'%3E%E2%9A%BD%3C/text%3E%3C/svg%3E");
+  background-size: 80px 80px;
+  animation: bx-tile-d80 20s linear infinite;
+  will-change: background-position;
+}
+.bx-sport::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 50%, rgba(74,222,128,0.22) 0%, transparent 55%);
+  animation: bx-breathe 6s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── Adventure Time — Flugzeuge + Wolken (verbessert) ── */
+.bx-adventure::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='65'%3E%3Ctext x='32' y='38' text-anchor='middle' font-size='24' opacity='0.2'%3E%E2%9C%88%3C/text%3E%3Ctext x='95' y='26' text-anchor='middle' font-size='20' opacity='0.14'%3E%E2%98%81%3C/text%3E%3Ctext x='110' y='54' text-anchor='middle' font-size='16' opacity='0.1'%3E%E2%98%81%3C/text%3E%3C/svg%3E");
+  background-size: 130px 65px;
+  animation: bx-tile-r90 28s linear infinite;
+  will-change: background-position;
+}
+.bx-adventure::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 42%, rgba(125,211,252,0.22) 0%, transparent 55%);
+  animation: bx-breathe 9s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── Creator Mode — Medien Icons ── */
+.bx-creator-v::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ctext x='45' y='58' text-anchor='middle' font-size='34' opacity='0.18'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E");
+  background-size: 90px 90px;
+  animation: bx-tile-d90 22s linear infinite;
+  will-change: background-position;
+}
+.bx-creator-v::after {
+  content:''; position:absolute; inset:-40%; z-index:3; pointer-events:none;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg at 50% 50%,
+    transparent 0deg, rgba(192,132,252,0.14) 80deg, rgba(168,85,247,0.12) 140deg,
+    transparent 190deg, rgba(216,180,254,0.1) 260deg, transparent 360deg);
+  animation: bx-spin-orb 26s linear infinite;
+  will-change: transform;
+}
+
+/* ── Event Hunter — Tickets ── */
+.bx-ticket::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ctext x='45' y='58' text-anchor='middle' font-size='34' opacity='0.2'%3E%F0%9F%8E%9F%3C/text%3E%3C/svg%3E");
+  background-size: 90px 90px;
+  animation: bx-tile-d90 20s linear infinite;
+  will-change: background-position;
+}
+.bx-ticket::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(105deg, transparent 0%, transparent 26%, rgba(251,146,60,0.22) 50%, transparent 74%, transparent 100%);
+  animation: bx-shimmer 4.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ── Ice Cream Vibes ── */
+.bx-icecream::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='85' height='85'%3E%3Ctext x='42' y='54' text-anchor='middle' font-size='32' opacity='0.22'%3E%F0%9F%8D%A6%3C/text%3E%3C/svg%3E");
+  background-size: 85px 85px;
+  animation: bx-tile-d90 22s linear infinite;
+  will-change: background-position;
+}
+.bx-icecream::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 45% 48%, rgba(249,168,212,0.28) 0%, transparent 52%),
+              radial-gradient(ellipse at 72% 65%, rgba(167,139,250,0.2) 0%, transparent 44%);
+  animation: bx-orb-drift 9s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ── Baker's Choice — Croissants ── */
+.bx-baker::before {
+  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Ctext x='45' y='58' text-anchor='middle' font-size='34' opacity='0.2'%3E%F0%9F%A5%90%3C/text%3E%3C/svg%3E");
+  background-size: 90px 90px;
+  animation: bx-tile-d90 26s linear infinite;
+  will-change: background-position;
+}
+.bx-baker::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 40% 52%, rgba(249,115,22,0.22) 0%, transparent 50%);
+  animation: bx-breathe 8s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* ── Perf-mode für neue Banner ── */
+body.perf-mode .bx-galaxy-j::before, body.perf-mode .bx-galaxy-j::after,
+body.perf-mode .bx-sweet::before, body.perf-mode .bx-sweet::after,
+body.perf-mode .bx-legend-king::before, body.perf-mode .bx-legend-king::after,
+body.perf-mode .bx-photo-hero::before, body.perf-mode .bx-photo-hero::after,
+body.perf-mode .bx-sport::before, body.perf-mode .bx-sport::after,
+body.perf-mode .bx-adventure::before, body.perf-mode .bx-adventure::after,
+body.perf-mode .bx-creator-v::before, body.perf-mode .bx-creator-v::after,
+body.perf-mode .bx-ticket::before, body.perf-mode .bx-ticket::after,
+body.perf-mode .bx-icecream::before, body.perf-mode .bx-icecream::after,
+body.perf-mode .bx-baker::before, body.perf-mode .bx-baker::after { animation: none !important; }
