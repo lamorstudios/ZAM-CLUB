@@ -4977,6 +4977,8 @@ function renderMerchantDashboard() {
   _renderPartnerDeals(me);
   _renderMerchantVideoDrehSection(me);
   _renderMerchantNewsfeed(me);
+  // Detailed stats section (features.js)
+  if (typeof renderMerchantStatsSection === 'function') renderMerchantStatsSection(me.id);
 }
 
 // =============================================

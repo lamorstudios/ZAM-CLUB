@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" /></noscript>
 
-  <link rel="stylesheet" href="style.css?v=20260618m" />
+  <link rel="stylesheet" href="style.css?v=20260619a" />
   <link rel="manifest" href="manifest.json"/>
   <link rel="apple-touch-icon" href="assets/icon.svg"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -422,6 +422,9 @@
     <!-- Profile Banner -->
     <div class="profile-banner" id="profile-banner">
       <button class="profile-banner-edit" onclick="openBannerPicker()">🖼️ Banner</button>
+      <button onclick="openPushPanel()" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;color:#fff;position:absolute;backdrop-filter:blur(8px)">
+        🔔<span class="notif-push-badge" style="position:absolute;top:-4px;right:-4px;background:#FA4615;color:#fff;font-size:0.55rem;font-weight:800;border-radius:9px;min-width:16px;height:16px;padding:0 3px;display:none;align-items:center;justify-content:center"></span>
+      </button>
     </div>
 
     <!-- Hero -->
@@ -487,6 +490,20 @@
       <div class="badges-section" style="margin-top:4px">
         <div class="badges-section-title">🏅 Achievements</div>
         <div id="profile-achievements-container"></div>
+      </div>
+
+      <!-- Saison-Historie & Freunde -->
+      <div style="padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;margin-bottom:4px">
+        <button onclick="openSeasonHistory()" style="background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.2);border-radius:14px;padding:14px 12px;text-align:left;cursor:pointer;font-family:var(--font);color:#fff">
+          <div style="font-size:1.1rem;margin-bottom:5px">🏅</div>
+          <div style="font-size:0.78rem;font-weight:800;color:#F7AB00">Saison-Historie</div>
+          <div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-top:2px">Deine Quartalsbilanz</div>
+        </button>
+        <button onclick="openFriendsPanel()" style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:14px;padding:14px 12px;text-align:left;cursor:pointer;font-family:var(--font);color:#fff">
+          <div style="font-size:1.1rem;margin-bottom:5px">👥</div>
+          <div style="font-size:0.78rem;font-weight:800;color:#60a5fa">Freunde</div>
+          <div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-top:2px">Hinzufügen & verwalten</div>
+        </button>
       </div>
 
       <!-- Challenges -->
@@ -1120,8 +1137,14 @@
   <div class="dash-section">
     <h3 class="dash-section-title">🎟️ Gutscheine</h3>
     <div id="merchant-vouchers" class="dash-table-wrap"></div>
-    <button class="btn-dash-action" onclick="openVoucherRedeemer()">QR-Code einlösen</button>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn-dash-action" style="flex:1" onclick="openVoucherRedeemer()">QR-Code einlösen</button>
+      <button class="btn-dash-action" style="flex:1;background:rgba(247,171,0,0.12);border-color:rgba(247,171,0,0.3);color:#F7AB00" onclick="openSecureRewardScanner()">🎁 Belohnung prüfen</button>
+    </div>
   </div>
+
+  <!-- Händler-Statistiken (rendered by features.js) -->
+  <div id="merchant-detailed-stats"></div>
   <div style="display:flex;gap:8px;padding:0 16px 16px">
     <button class="btn-dash-action" style="flex:1" onclick="navigateTo('merchant-contracts')">📄 Verträge</button>
     <button class="btn-dash-action" style="flex:1" onclick="navigateTo('merchant-billing')">🧾 Rechnungen</button>
@@ -1263,6 +1286,20 @@
   <div class="dash-section">
     <h3 class="dash-section-title">👥 Ausstehende Einladungsboni</h3>
     <div id="admin-referral-list"></div>
+  </div>
+
+  <!-- Admin Quick Access: Management Dashboard + Moderation -->
+  <div style="padding:0 16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button onclick="openManagementDashboard()" style="background:linear-gradient(135deg,rgba(247,171,0,0.15),rgba(247,171,0,0.06));border:1px solid rgba(247,171,0,0.3);border-radius:16px;padding:16px 12px;text-align:left;cursor:pointer;font-family:var(--font);color:#fff">
+      <div style="font-size:1.3rem;margin-bottom:6px">🏢</div>
+      <div style="font-size:0.8rem;font-weight:800;color:#F7AB00">Management</div>
+      <div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-top:3px">Center Dashboard</div>
+    </button>
+    <button onclick="openModerationPanel()" style="background:linear-gradient(135deg,rgba(239,68,68,0.15),rgba(239,68,68,0.06));border:1px solid rgba(239,68,68,0.3);border-radius:16px;padding:16px 12px;text-align:left;cursor:pointer;font-family:var(--font);color:#fff">
+      <div style="font-size:1.3rem;margin-bottom:6px">🛡</div>
+      <div style="font-size:0.8rem;font-weight:800;color:#f87171">Moderation</div>
+      <div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-top:3px">Meldungen & Sperren</div>
+    </button>
   </div>
 </div>
 
@@ -1773,9 +1810,10 @@
 
 <!-- Scripts (load data first, then app logic) -->
 <script src="data.js?v=20260618n"></script>
-<script src="security.js?v=20260618n"></script>
-<script src="api.js?v=20260618n"></script>
-<script src="app.js?v=20260618n"></script>
+<script src="security.js?v=20260619a"></script>
+<script src="api.js?v=20260619a"></script>
+<script src="app.js?v=20260619a"></script>
+<script src="features.js?v=20260619a"></script>
 
 <!-- QR Code Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
