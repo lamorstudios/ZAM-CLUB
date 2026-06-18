@@ -415,37 +415,43 @@ function showTierInfoPopup(name, pts, anchorEl) {
 // =============================================
 
 const _PROFILE_BANNERS = [
-  // ── Points-unlocked (free → high) ──
-  { key: 'classic',        name: 'ZAM Club Classic',  gradient: 'linear-gradient(135deg,#1a1a1a 0%,#FA4615 55%,#c43510 100%)',                                   req_pts: 0,     demo: true },
-  { key: 'freiham_sunset', name: 'Freiham Sunset',    gradient: 'linear-gradient(135deg,#7f1d1d 0%,#dc2626 25%,#f97316 55%,#fbbf24 80%,#fef3c7 100%)',             req_pts: 1000 },
-  { key: 'orange_glow',    name: 'Orange Glow',       gradient: 'linear-gradient(135deg,#c43510 0%,#FA4615 40%,#ff8c42 70%,#ffd200 100%)',                         req_pts: 2000,  demo: true },
-  { key: 'dark_premium',   name: 'Dark Premium',      gradient: 'linear-gradient(135deg,#0f0f1a 0%,#1e1b4b 40%,#312e81 70%,#1e1b4b 100%)',                         req_pts: 2500 },
-  { key: 'silver_clean',   name: 'Silber Clean',      gradient: 'linear-gradient(135deg,#374151 0%,#6b7280 35%,#9ca3af 65%,#f3f4f6 100%)',                         req_pts: 3000,  demo: true },
-  { key: 'food_lover',     name: 'Food Lover',        gradient: 'linear-gradient(135deg,#7c2d12 0%,#ea580c 35%,#fbbf24 70%,#fef08a 100%)',                         req_pts: 3500,  demo: true },
-  { key: 'gold_champion',  name: 'Gold Champion',     gradient: 'linear-gradient(135deg,#78350f 0%,#b45309 20%,#d97706 45%,#fef08a 70%,#d97706 100%)',             req_pts: 6000 },
-  { key: 'fitness_energy', name: 'Fitness Energy',    gradient: 'linear-gradient(135deg,#052e16 0%,#064e3b 30%,#059669 60%,#34d399 100%)',                         req_pts: 9000 },
-  { key: 'platin_light',   name: 'Platin Light',      gradient: 'linear-gradient(135deg,#1e293b 0%,#475569 30%,#94a3b8 60%,#e2e8f0 100%)',                         req_pts: 13000 },
-  { key: 'diamond_spark',  name: 'Diamond Sparkle',   gradient: 'linear-gradient(135deg,#1e3a8a 0%,#2563eb 30%,#60a5fa 60%,#bfdbfe 85%,#93c5fd 100%)',             req_pts: 15000 },
-  { key: 'event_vibes',    name: 'Event Vibes',       gradient: 'linear-gradient(135deg,#500724 0%,#9d174d 30%,#db2777 60%,#f9a8d4 90%,#fce7f3 100%)',             req_pts: 20000 },
-  { key: 'legend_crown',   name: 'Legend Crown',      gradient: 'linear-gradient(135deg,#78350f 0%,#b45309 15%,#F7AB00 40%,#fef08a 60%,#F7AB00 80%,#b45309 100%)',req_pts: 25000 },
-  { key: 'neon_map',       name: 'Neon Map',          gradient: 'linear-gradient(135deg,#042f2e 0%,#0d9488 30%,#22d3ee 60%,#a78bfa 85%,#6d28d9 100%)',             req_pts: 30000 },
-  { key: 'shopping_night', name: 'Shopping Night',    gradient: 'linear-gradient(135deg,#1e1b4b 0%,#4c1d95 25%,#7c3aed 50%,#ec4899 80%,#fda4af 100%)',             req_pts: 35000 },
-  { key: 'community_hero', name: 'Community Hero',    gradient: 'linear-gradient(135deg,#0c1445 0%,#1d4ed8 35%,#0ea5e9 60%,#38bdf8 85%,#bae6fd 100%)',             req_pts: 40000 },
-  { key: 'secret_rare',    name: 'Secret Rare',       gradient: 'linear-gradient(135deg,#0f0c29 0%,#302b63 20%,#7c3aed 45%,#ec4899 70%,#f472b6 90%,#fce7f3 100%)',req_pts: 50000, rare: true },
+  // ── Free ──
+  { key: 'classic',        name: 'ZAM Classic',       gradient: 'linear-gradient(135deg,#1a1a1a 0%,#FA4615 55%,#c43510 100%)',                                    req_pts: 0 },
+  { key: 'orange_glow',    name: 'Orange Glow',        gradient: 'linear-gradient(135deg,#c43510 0%,#FA4615 40%,#ff8c42 70%,#ffd200 100%)',                        req_pts: 0 },
+  { key: 'dark_premium',   name: 'Dark Premium',       gradient: 'linear-gradient(135deg,#0f0f1a 0%,#1e1b4b 40%,#312e81 70%,#1e1b4b 100%)',                        req_pts: 0 },
+  // ── Points-unlocked ──
+  { key: 'silver_clean',   name: 'Silber Clean',       gradient: 'linear-gradient(135deg,#374151 0%,#6b7280 35%,#9ca3af 65%,#f3f4f6 100%)',                        req_pts: 2000 },
+  { key: 'gold_champion',  name: 'Gold Champion',      gradient: 'linear-gradient(135deg,#78350f 0%,#b45309 20%,#d97706 45%,#fef08a 70%,#d97706 100%)',            req_pts: 3000 },
+  { key: 'food_lover',     name: 'Food Lover',         gradient: 'linear-gradient(135deg,#7c2d12 0%,#ea580c 35%,#fbbf24 70%,#fef08a 100%)',                        req_pts: 3500 },
+  { key: 'fitness_energy', name: 'Fitness Energy',     gradient: 'linear-gradient(135deg,#052e16 0%,#064e3b 30%,#059669 60%,#34d399 100%)',                        req_pts: 6000 },
+  { key: 'shopping_night', name: 'Shopping Night',     gradient: 'linear-gradient(135deg,#1e1b4b 0%,#4c1d95 25%,#7c3aed 50%,#ec4899 80%,#fda4af 100%)',           req_pts: 9000 },
+  { key: 'platin_light',   name: 'Platin Light',       gradient: 'linear-gradient(135deg,#1e293b 0%,#475569 30%,#94a3b8 60%,#e2e8f0 100%)',                        req_pts: 13000 },
+  { key: 'diamond_spark',  name: 'Diamond Sparkle',    gradient: 'linear-gradient(135deg,#1e3a8a 0%,#2563eb 30%,#60a5fa 60%,#bfdbfe 85%,#93c5fd 100%)',           req_pts: 15000 },
+  { key: 'event_vibes',    name: 'Event Vibes',        gradient: 'linear-gradient(135deg,#500724 0%,#9d174d 30%,#db2777 60%,#f9a8d4 90%,#fce7f3 100%)',           req_pts: 20000 },
+  { key: 'legend_crown',   name: 'Legend Crown',       gradient: 'linear-gradient(135deg,#78350f 0%,#b45309 15%,#F7AB00 40%,#fef08a 60%,#F7AB00 80%,#b45309 100%)',req_pts: 25000 },
+  { key: 'neon_map',       name: 'Neon Map',           gradient: 'linear-gradient(135deg,#042f2e 0%,#0d9488 30%,#22d3ee 60%,#a78bfa 85%,#6d28d9 100%)',           req_pts: 30000 },
+  { key: 'community_hero', name: 'Community Hero',     gradient: 'linear-gradient(135deg,#0c1445 0%,#1d4ed8 35%,#0ea5e9 60%,#38bdf8 85%,#bae6fd 100%)',           req_pts: 40000 },
+  { key: 'secret_rare',    name: 'Secret Rare',        gradient: 'linear-gradient(135deg,#0f0c29 0%,#302b63 20%,#7c3aed 45%,#ec4899 70%,#f472b6 90%,#fce7f3 100%)',req_pts: 50000, rare: true },
   // ── Achievement-unlocked ──
-  { key: 'challenge_pro',  name: 'Challenge Pro',     gradient: 'linear-gradient(135deg,#1c1917 0%,#92400e 25%,#d97706 55%,#fbbf24 75%,#dc2626 100%)',             req_achievement: 'challenge_master', req_label: '10 Challenges abgeschlossen',   req_progress_key: 'challenges',  req_progress_max: 10 },
-  { key: 'lucky_spin',     name: 'Lucky Spin',        gradient: 'linear-gradient(135deg,#052e16 0%,#166534 25%,#16a34a 50%,#4ade80 75%,#fef08a 100%)',             req_achievement: 'glueckspilz',      req_label: '3× Daily Spin gewonnen',       req_progress_key: 'spins',       req_progress_max: 3  },
-  { key: 'qr_master',      name: 'QR Master',         gradient: 'linear-gradient(135deg,#0c0a09 0%,#064e3b 30%,#0284c7 60%,#38bdf8 90%,#e0f2fe 100%)',             req_achievement: 'event_hunter',     req_label: '5 Events besucht',             req_progress_key: 'events',      req_progress_max: 5  },
-  { key: 'daily_spinner',  name: 'Daily Spinner',     gradient: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 30%,#0f3460 55%,#533483 80%,#e94560 100%)',             req_achievement: 'glueckspilz',      req_label: '3× Daily Spin gewonnen',       req_progress_key: 'spins',       req_progress_max: 3  },
+  { key: 'challenge_pro',  name: 'Challenge Pro',      gradient: 'linear-gradient(135deg,#1c1917 0%,#92400e 25%,#d97706 55%,#fbbf24 75%,#dc2626 100%)',           req_achievement: 'challenge_master', req_label: '100 Foto-Challenge-Fotos',   req_progress_key: 'photo_challenges', req_progress_max: 100 },
+  { key: 'lucky_spin',     name: 'Lucky Spin',         gradient: 'linear-gradient(135deg,#052e16 0%,#166534 25%,#16a34a 50%,#4ade80 75%,#fef08a 100%)',           req_achievement: 'glueckspilz',      req_label: '50 Daily Spins',            req_progress_key: 'spins',            req_progress_max: 50 },
+  { key: 'qr_master',      name: 'QR Master',          gradient: 'linear-gradient(135deg,#0c0a09 0%,#064e3b 30%,#0284c7 60%,#38bdf8 90%,#e0f2fe 100%)',           req_achievement: 'shopping_king',    req_label: '100 Händler-Check-ins',     req_progress_key: 'checkins',         req_progress_max: 100 },
+  { key: 'food_explorer',  name: 'Food Explorer',      gradient: 'linear-gradient(135deg,#431407 0%,#9a3412 25%,#ea580c 55%,#fbbf24 80%,#fef9c3 100%)',           req_achievement: 'food_explorer',    req_label: '20 Food-Deals eingelöst',   req_progress_key: 'food_deals',       req_progress_max: 20 },
+  { key: 'event_hunter',   name: 'Event Hunter',       gradient: 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 30%,#7c3aed 60%,#c084fc 85%,#fae8ff 100%)',          req_achievement: 'event_hunter',     req_label: '10 Events besucht',         req_progress_key: 'events',           req_progress_max: 10 },
 ];
 
 const _PROFILE_TITLES = [
-  { key: 'event_hunter',    label: '🏃 Event Hunter',   req: 'event_hunter',    desc: '5 Events besucht' },
-  { key: 'foto_profi',      label: '📸 Foto-Profi',     req: 'foto_profi',      desc: '5 Fotos geteilt' },
-  { key: 'shopping_king',   label: '🛍️ Shopping King',  req: 'shopping_king',   desc: '10 Deals eingelöst' },
-  { key: 'food_explorer',   label: '🍔 Food Explorer',  req: 'food_explorer',   desc: '3 Food-Händler besucht' },
-  { key: 'glueckspilz',     label: '🎰 Glückspilz',     req: 'glueckspilz',     desc: '3× Daily Spin gewonnen' },
-  { key: 'zam_legend',      label: '👑 ZAM Legend',     req: 'zam_legend',      desc: 'Legend-Status erreicht' },
+  { key: 'starter',           label: '⭐ Starter',            req: null,              req_pts: 0,     desc: 'Immer freigeschaltet' },
+  { key: 'food_explorer',     label: '🍔 Food Explorer',      req: 'food_explorer',   desc: '3 Food-Händler besucht' },
+  { key: 'event_hunter',      label: '🏃 Event Hunter',       req: 'event_hunter',    desc: '5 Events besucht' },
+  { key: 'foto_profi',        label: '📸 Foto-Profi',         req: 'foto_profi',      desc: '5 Fotos geteilt' },
+  { key: 'shopping_king',     label: '🛍️ Shopping King',      req: 'shopping_king',   desc: '10 Deals eingelöst' },
+  { key: 'glueckspilz',       label: '🎰 Glückspilz',         req: 'glueckspilz',     desc: '3× Daily Spin gewonnen' },
+  { key: 'challenge_master',  label: '🔥 Challenge Master',   req: 'challenge_master',desc: '10 Challenges abgeschlossen' },
+  { key: 'zam_legend',        label: '👑 ZAM Legend',         req: 'zam_legend',      desc: 'Legend-Status erreicht' },
+  { key: 'diamond_veteran',   label: '💎 Diamond Veteran',    req: null,              req_pts: 15000, desc: '15.000 Punkte erreichen' },
+  { key: 'legend_veteran',    label: '🌟 Legend Veteran',     req: null,              req_pts: 25000, desc: '25.000 Punkte erreichen' },
+  { key: 'quarter_champion',  label: '🏆 Quartals-Champion',  req: 'quarter_champion',desc: 'Platz 1 im Quartal erreichen' },
 ];
 
 const _VITRINE_ITEMS = [
@@ -473,15 +479,12 @@ function _getVitrine() { try { return JSON.parse(localStorage.getItem('zam_vitri
 
 // ── Banner unlock logic ──
 function _isBannerUnlocked(banner, pts) {
-  // Always unlocked (demo banners or 0-pts)
-  if (!banner.req_pts && !banner.req_achievement) return true;
-  // Points requirement met
-  if (banner.req_pts !== undefined && pts >= banner.req_pts) return true;
-  // Achievement requirement met
-  if (banner.req_achievement && _getAchievements().includes(banner.req_achievement)) return true;
-  // Demo unlock flag
-  if (banner.demo && pts >= 0) return banner.req_pts <= pts;
-  return false;
+  if (!banner.req_achievement) {
+    // Points-based (req_pts: 0 = always free)
+    return pts >= (banner.req_pts || 0);
+  }
+  // Achievement-based
+  return _getAchievements().includes(banner.req_achievement);
 }
 
 function _bannerProgress(banner, pts) {
@@ -573,11 +576,11 @@ function openBannerPicker() {
 
     let lockText = '';
     if (!unlocked) {
-      if (b.req_pts !== undefined && !b.req_achievement) {
+      if (!b.req_achievement) {
         const diff = b.req_pts - pts;
-        lockText = `🔒 Noch ${diff.toLocaleString('de-DE')} Punkte fehlen`;
-      } else if (b.req_achievement) {
-        lockText = `🔒 ${b.req_label}`;
+        lockText = `Noch ${diff.toLocaleString('de-DE')} Pkt.`;
+      } else {
+        lockText = b.req_label;
       }
     }
 
@@ -589,7 +592,7 @@ function openBannerPicker() {
 
     return `
       <div class="banner-picker-card ${isActive ? 'active-banner' : ''} ${unlocked ? '' : 'locked-banner'}"
-           onclick="${unlocked ? `selectBanner('${b.key}')` : ''}">
+           onclick="${unlocked ? `selectBanner('${b.key}')` : `showToast('🔒 Dieser Banner ist noch gesperrt.','error')`}">
         <div class="banner-picker-preview ${b.rare ? 'rare-preview' : ''}" style="background:${b.gradient}">
           ${b.rare ? '<span class="banner-rare-tag">✨ Selten</span>' : ''}
           ${!unlocked ? `
@@ -602,13 +605,6 @@ function openBannerPicker() {
           <span class="banner-picker-name">${b.name}</span>
           ${statusHtml}
         </div>
-        ${!unlocked && progress && progress.max > 0 ? `
-        <div class="banner-picker-progress">
-          <div class="banner-picker-progress-bar-track">
-            <div class="banner-picker-progress-bar-fill" style="width:${pct}%"></div>
-          </div>
-          <div class="banner-picker-progress-label">Fortschritt: <strong>${progress.label}</strong></div>
-        </div>` : ''}
       </div>`;
   }).join('');
 
@@ -676,14 +672,16 @@ function openTitlePicker() {
   if (!list || !modal) return;
   const earned = _getAchievements();
   const current = _getProfileTitle();
+  const pts = ZAMApi.auth.currentUser()?.points || ZAMData?.currentUser?.points || 0;
   list.innerHTML = _PROFILE_TITLES.map(t => {
-    const isEarned = earned.includes(t.req);
+    const isEarned = (t.req === null && pts >= (t.req_pts || 0))
+      || (t.req !== null && t.req !== undefined && earned.includes(t.req));
     const isActive = current === t.key;
     return `
       <div class="title-picker-item ${isActive ? 'active' : ''} ${!isEarned ? 'locked' : ''}"
-           onclick="${isEarned ? `selectTitle('${t.key}')` : ''}">
+           onclick="${isEarned ? `selectTitle('${t.key}')` : `showToast('🔒 Noch nicht freigeschaltet','error')`}">
         <span class="tpi-label">${t.label}</span>
-        <span class="tpi-req">${isEarned ? (isActive ? '✅ Aktiv' : 'Freigeschaltet') : '🔒 ' + t.desc}</span>
+        <span class="tpi-req">${isEarned ? (isActive ? '✅ Aktiv' : '✓ Freigeschaltet') : '🔒 ' + t.desc}</span>
       </div>`;
   }).join('');
   modal.style.display = 'flex';

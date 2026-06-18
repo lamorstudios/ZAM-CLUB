@@ -3189,7 +3189,7 @@ body.perf-mode .streak-fire { animation: none !important; }
   background: rgba(250,70,21,0.1);
   border-color: rgba(250,70,21,0.35);
 }
-.title-picker-item.locked { opacity: 0.35; cursor: default; }
+.title-picker-item.locked { opacity: 0.5; cursor: pointer; }
 .title-picker-item .tpi-label { font-size: 0.82rem; font-weight: 700; color: #e2e8f0; flex: 1; }
 .title-picker-item .tpi-req { font-size: 0.6rem; color: rgba(255,255,255,0.35); }
 .title-picker-item.active .tpi-req { color: #FA4615; }
@@ -3297,22 +3297,18 @@ body.perf-mode .streak-fire { animation: none !important; }
 
 /* ── Hero overlaps banner — Facebook style ── */
 .profile-hero {
-  background: none !important;
+  background: linear-gradient(160deg, #a02d0a 0%, #FA4615 60%, #ff6b3d 100%) !important;
   overflow: visible !important;
   margin-top: -54px !important;
-  padding-top: 0 !important;
+  padding-top: 62px !important;
   padding-bottom: 52px !important;
   position: relative;
   z-index: 2;
 }
-.profile-hero::before,
-.profile-hero::after {
-  display: none !important;
-}
-/* Stronger avatar border to separate from banner */
+/* Avatar border to separate from banner */
 .profile-hero .profile-avatar {
-  border: 3.5px solid #1a1a1a !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08) !important;
+  border: 3px solid rgba(255,255,255,0.3) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.12) !important;
 }
 
 /* ── Banner Picker — full redesign ── */
@@ -3322,13 +3318,13 @@ body.perf-mode .streak-fire { animation: none !important; }
   padding-bottom: max(28px, env(safe-area-inset-bottom, 28px));
 }
 .banner-picker-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  padding: 0 16px 8px;
+  padding: 4px 14px 16px;
 }
 .banner-picker-card {
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
   position: relative;
   cursor: pointer;
@@ -3340,12 +3336,13 @@ body.perf-mode .streak-fire { animation: none !important; }
   box-shadow: 0 0 0 1px rgba(250,70,21,0.4);
 }
 .banner-picker-card.locked-banner {
-  cursor: default;
+  cursor: pointer;
+  opacity: 0.82;
 }
-.banner-picker-card:not(.locked-banner):active { transform: scale(0.98); }
+.banner-picker-card:active { transform: scale(0.96); }
 
 .banner-picker-preview {
-  height: 72px;
+  height: 56px;
   position: relative;
   overflow: hidden;
 }
@@ -3358,26 +3355,25 @@ body.perf-mode .streak-fire { animation: none !important; }
   pointer-events: none;
 }
 .banner-picker-info {
-  padding: 9px 12px 10px;
+  padding: 6px 8px 7px;
   background: var(--surface-2);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
 }
 .banner-picker-name {
-  font-size: 0.78rem;
+  font-size: 0.66rem;
   font-weight: 700;
   color: var(--text);
   flex: 1;
 }
 .banner-picker-status {
-  font-size: 0.65rem;
+  font-size: 0.58rem;
   font-weight: 800;
-  padding: 3px 9px;
+  padding: 2px 6px;
   border-radius: 20px;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 .bps-active    { background: rgba(250,70,21,0.2); color: #FA4615; border: 1px solid rgba(250,70,21,0.4); }
 .bps-unlocked  { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
@@ -3386,18 +3382,19 @@ body.perf-mode .streak-fire { animation: none !important; }
 .banner-picker-lock-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.58);
+  background: rgba(0,0,0,0.6);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
   z-index: 2;
 }
-.banner-lock-icon { font-size: 1.4rem; }
-.banner-lock-req  { font-size: 0.62rem; font-weight: 700; color: rgba(255,255,255,0.7); text-align: center; line-height: 1.4; }
+.banner-lock-icon { font-size: 1rem; }
+.banner-lock-req  { font-size: 0.52rem; font-weight: 700; color: rgba(255,255,255,0.75); text-align: center; line-height: 1.3; padding: 0 4px; }
 
 .banner-picker-progress {
+  display: none; /* hidden in grid layout — lock overlay text is enough */
   padding: 6px 12px 8px;
   background: var(--surface-2);
   border-top: 1px solid rgba(255,255,255,0.05);
