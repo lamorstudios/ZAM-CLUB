@@ -7706,22 +7706,42 @@ function openRewardQRModal(challengeId) {
     document.body.appendChild(modal);
   }
   modal.innerHTML = `
-    <div style="background:#1e1e1e;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:0 0 40px;position:relative;overflow:hidden">
+    <!-- Back button: OUTSIDE the sheet so overflow:hidden cannot clip it -->
+    <button
+      onclick="closeRewardQRModal()"
+      aria-label="Zurück zur Challenge"
+      style="
+        position:absolute;
+        top:calc(env(safe-area-inset-top,0px) + 14px);
+        left:16px;
+        z-index:10001;
+        width:40px;height:40px;
+        border-radius:50%;
+        background:rgba(30,30,30,0.88);
+        border:1px solid rgba(255,255,255,0.18);
+        color:#fff;
+        font-size:1.15rem;
+        cursor:pointer;
+        font-family:var(--font);
+        display:flex;align-items:center;justify-content:center;
+        box-shadow:0 2px 12px rgba(0,0,0,0.5);
+        -webkit-backdrop-filter:blur(8px);
+        backdrop-filter:blur(8px);
+        flex-shrink:0;
+      ">←</button>
+    <!-- Sheet -->
+    <div style="background:#1e1e1e;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px 24px 40px;position:relative;overflow:hidden">
       <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(247,171,0,0.07) 0%,transparent 60%);pointer-events:none"></div>
-      <!-- Header with back button -->
-      <div style="display:flex;align-items:center;gap:10px;padding:16px 16px 0;position:relative;z-index:1">
-        <button onclick="closeRewardQRModal()" class="back-btn" aria-label="Zurück zur Challenge" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:1.1rem;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;flex-shrink:0">←</button>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#F7AB00">Belohnungs-QR-Code</div>
-          <div style="font-size:0.95rem;font-weight:900;color:#fff;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ch.title)}</div>
-          <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">${escHtml(ch.merchant_name)}</div>
+      <!-- Sheet header: title + close -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;position:relative">
+        <div>
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:#F7AB00;margin-bottom:4px">Belohnungs-QR-Code</div>
+          <div style="font-size:1.1rem;font-weight:900;color:#fff;line-height:1.2">${escHtml(ch.title)}</div>
+          <div style="font-size:0.74rem;color:rgba(255,255,255,0.45);margin-top:3px">${escHtml(ch.merchant_name)}</div>
         </div>
-        <button onclick="closeRewardQRModal()" aria-label="Schließen" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.5);font-size:1.1rem;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;flex-shrink:0">✕</button>
+        <button onclick="closeRewardQRModal()" aria-label="Schließen" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.5);font-size:1.1rem;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:10px">✕</button>
       </div>
-      <!-- Divider -->
-      <div style="height:1px;background:rgba(255,255,255,0.07);margin:14px 0 18px"></div>
       <!-- Reward info -->
-      <div style="padding:0 20px">
       <div style="background:rgba(16,185,129,0.09);border:1px solid rgba(52,211,153,0.22);border-radius:12px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;position:relative">
         <span style="font-size:1.6rem">🎁</span>
         <div>
@@ -7750,7 +7770,6 @@ function openRewardQRModal(challengeId) {
       <div style="text-align:center;margin-top:8px">
         <span style="font-size:0.65rem;color:rgba(255,255,255,0.2)">@${escHtml(userName)} · ZAM Club</span>
       </div>
-      </div>
     </div>`;
 
   modal.style.display = 'flex';
@@ -7763,6 +7782,8 @@ function closeRewardQRModal() {
   const modal = document.getElementById('modal-reward-qr');
   if (modal) modal.style.display = 'none';
   document.body.style.overflow = '';
+  // Return to challenges — the modal is always opened from there
+  if (typeof navigateTo === 'function') navigateTo('challenges');
 }
 
 function _triggerRewardConfetti() {
