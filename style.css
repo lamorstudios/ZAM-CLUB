@@ -2068,10 +2068,7 @@ a.nav-tab-map { text-decoration: none; }
   max-height: 80dvh; overflow-y: auto;
 }
 .user-profile-sheet.open { transform: translateX(-50%) translateY(0); pointer-events: auto; }
-.user-profile-sheet-handle {
-  width: 40px; height: 4px; border-radius: 2px;
-  background: rgba(255,255,255,0.12); margin: 12px auto 0;
-}
+.user-profile-sheet-handle { display: none; } /* replaced by .ups-drag-handle inside banner */
 .user-profile-sheet-header {
   display: flex; align-items: center; gap: 14px;
   padding: 18px 20px 14px;
@@ -2082,8 +2079,8 @@ a.nav-tab-map { text-decoration: none; }
   font-size: 1.2rem; font-weight: 700; color: #fff; flex-shrink: 0;
 }
 .user-profile-sheet-info { flex: 1; min-width: 0; }
-.user-profile-sheet-name { font-size: 1.05rem; font-weight: 700; }
-.user-profile-sheet-username { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+.user-profile-sheet-name { font-size: 1.1rem; font-weight: 800; text-align: center; margin-top: 8px; }
+.user-profile-sheet-username { font-size: 0.76rem; color: var(--muted); margin-top: 2px; text-align: center; }
 .user-profile-sheet-actions {
   display: flex; flex-direction: column; gap: 8px; padding: 0 16px 8px;
 }
@@ -3195,23 +3192,65 @@ body.perf-mode .streak-fire { animation: none !important; }
 .title-picker-item.active .tpi-req { color: #FA4615; }
 
 /* ── Enhanced User Profile Sheet ── */
+/* ── User Profile Sheet — Premium Banner Hero ── */
 .ups-banner {
   width: 100%;
-  height: 72px;
-  border-radius: 16px 16px 0 0;
+  height: 155px;
+  border-radius: 24px 24px 0 0;
   background: linear-gradient(135deg, #c43510, #FA4615);
-  margin-bottom: -20px;
+  position: relative;
+  overflow: hidden;
   flex-shrink: 0;
+  transition: background 0.4s ease;
 }
+/* Drag handle — lives inside banner, top center */
+.ups-drag-handle {
+  position: absolute;
+  top: 10px; left: 50%;
+  transform: translateX(-50%);
+  width: 40px; height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.3);
+}
+/* Banner inner depth/glow layer */
+.ups-banner-depth {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 40%, rgba(255,255,255,0.1) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 45%),
+    linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.3) 100%);
+  pointer-events: none;
+}
+/* Avatar area overlaps banner by 50% of avatar height */
 .ups-avatar-area {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 0;
-  margin-bottom: 10px;
+  margin-top: -38px;
+  position: relative;
+  z-index: 2;
+  padding: 0 16px;
+  margin-bottom: 8px;
+}
+/* Avatar — larger, dark border ring to separate from banner */
+.user-profile-sheet-avatar {
+  width: 76px !important;
+  height: 76px !important;
+  border-radius: 50% !important;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem !important;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  border: 3.5px solid var(--surface) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
 }
 .ups-tier-badge {
   margin-top: 6px;
+  text-align: center;
 }
 .ups-rank-row {
   display: flex;

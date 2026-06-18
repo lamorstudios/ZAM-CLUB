@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" /></noscript>
 
-  <link rel="stylesheet" href="style.css?v=20260618k" />
+  <link rel="stylesheet" href="style.css?v=20260618l" />
   <link rel="manifest" href="manifest.json"/>
   <link rel="apple-touch-icon" href="assets/icon.svg"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -767,12 +767,14 @@
   <!-- User Profile Sheet (enhanced) -->
   <div class="sheet-backdrop" id="profile-sheet-backdrop" onclick="closeUserProfileSheet()"></div>
   <div class="user-profile-sheet" id="user-profile-sheet" role="dialog" aria-label="Nutzerprofil" style="padding:0">
-    <div class="ups-banner" id="ups-banner"></div>
-    <div class="user-profile-sheet-handle" style="margin-top:12px"></div>
-    <div class="ups-avatar-area" style="padding:0 16px">
+    <div class="ups-banner" id="ups-banner">
+      <div class="ups-drag-handle"></div>
+      <div class="ups-banner-depth"></div>
+    </div>
+    <div class="ups-avatar-area">
       <div id="ups-avatar" class="user-profile-sheet-avatar">?</div>
-      <div id="ups-name" class="user-profile-sheet-name" style="margin-top:6px;text-align:center"></div>
-      <div id="ups-username" class="user-profile-sheet-username" style="text-align:center"></div>
+      <div id="ups-name" class="user-profile-sheet-name"></div>
+      <div id="ups-username" class="user-profile-sheet-username"></div>
       <div id="ups-title-display" style="margin-top:4px;text-align:center"></div>
       <div id="ups-tier-row" class="ups-tier-badge"></div>
     </div>
@@ -1695,9 +1697,9 @@
 </div>
 
 <!-- Scripts (load data first, then app logic) -->
-<script src="data.js?v=20260618k"></script>
-<script src="api.js?v=20260618k"></script>
-<script src="app.js?v=20260618k"></script>
+<script src="data.js?v=20260618l"></script>
+<script src="api.js?v=20260618l"></script>
+<script src="app.js?v=20260618l"></script>
 
 <!-- QR Code Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>

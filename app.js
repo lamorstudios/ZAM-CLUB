@@ -4081,13 +4081,15 @@ function openUserProfileSheet(userId, userName, initials, avatarUrl, userPts = n
   const userRankEntry = _RANKING_DEMO.find(u => u.name && userName && u.name.startsWith(userName.split(' ')[0]));
   const displayRank = userRankEntry?.rank || null;
 
-  // Banner
+  // Banner — own profile uses stored banner; others get tier-matched banner
   const bannerEl = document.getElementById('ups-banner');
   if (bannerEl) {
-    // Use the user's stored banner if own profile, else derive from tier
     const bannerKey = userId === (ZAMApi.auth.currentUser()?.id) ? _getBanner() : tier.key;
     const b = _PROFILE_BANNERS.find(x => x.key === bannerKey) || _PROFILE_BANNERS[0];
     bannerEl.style.background = b.gradient;
+    // Apply/remove animation class
+    _PROFILE_BANNERS.forEach(x => { if (x.anim_class) bannerEl.classList.remove(x.anim_class); });
+    if (b.anim_class) bannerEl.classList.add(b.anim_class);
   }
 
   // Avatar with tier ring
