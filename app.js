@@ -415,29 +415,29 @@ function showTierInfoPopup(name, pts, anchorEl) {
 // =============================================
 
 const _PROFILE_BANNERS = [
-  // ── Free ──
-  { key: 'classic',        name: 'ZAM Classic',       gradient: 'linear-gradient(135deg,#1a1a1a 0%,#FA4615 55%,#c43510 100%)',                                    req_pts: 0 },
-  { key: 'orange_glow',    name: 'Orange Glow',        gradient: 'linear-gradient(135deg,#c43510 0%,#FA4615 40%,#ff8c42 70%,#ffd200 100%)',                        req_pts: 0 },
-  { key: 'dark_premium',   name: 'Dark Premium',       gradient: 'linear-gradient(135deg,#0f0f1a 0%,#1e1b4b 40%,#312e81 70%,#1e1b4b 100%)',                        req_pts: 0 },
+  // ── Free (always unlocked) ──
+  { key: 'classic',        name: 'Orange Energy',     gradient: 'linear-gradient(135deg,#7c1d08 0%,#c43510 30%,#FA4615 60%,#ff8c42 85%,#ffd200 100%)',             req_pts: 0,     anim_class: 'bx-orange-energy' },
+  { key: 'orange_glow',    name: 'Aurora',             gradient: 'linear-gradient(135deg,#0a0a1a 0%,#0f3460 25%,#1a6b4a 50%,#16a34a 70%,#4ade80 90%,#22d3ee 100%)',req_pts: 0,     anim_class: 'bx-aurora' },
+  { key: 'dark_premium',   name: 'Carbon Black',       gradient: 'linear-gradient(135deg,#0a0a0a 0%,#1c1c1c 35%,#2a2a2a 65%,#111111 100%)',                        req_pts: 0,     anim_class: 'bx-carbon' },
   // ── Points-unlocked ──
-  { key: 'silver_clean',   name: 'Silber Clean',       gradient: 'linear-gradient(135deg,#374151 0%,#6b7280 35%,#9ca3af 65%,#f3f4f6 100%)',                        req_pts: 2000 },
-  { key: 'gold_champion',  name: 'Gold Champion',      gradient: 'linear-gradient(135deg,#78350f 0%,#b45309 20%,#d97706 45%,#fef08a 70%,#d97706 100%)',            req_pts: 3000 },
-  { key: 'food_lover',     name: 'Food Lover',         gradient: 'linear-gradient(135deg,#7c2d12 0%,#ea580c 35%,#fbbf24 70%,#fef08a 100%)',                        req_pts: 3500 },
-  { key: 'fitness_energy', name: 'Fitness Energy',     gradient: 'linear-gradient(135deg,#052e16 0%,#064e3b 30%,#059669 60%,#34d399 100%)',                        req_pts: 6000 },
-  { key: 'shopping_night', name: 'Shopping Night',     gradient: 'linear-gradient(135deg,#1e1b4b 0%,#4c1d95 25%,#7c3aed 50%,#ec4899 80%,#fda4af 100%)',           req_pts: 9000 },
-  { key: 'platin_light',   name: 'Platin Light',       gradient: 'linear-gradient(135deg,#1e293b 0%,#475569 30%,#94a3b8 60%,#e2e8f0 100%)',                        req_pts: 13000 },
-  { key: 'diamond_spark',  name: 'Diamond Sparkle',    gradient: 'linear-gradient(135deg,#1e3a8a 0%,#2563eb 30%,#60a5fa 60%,#bfdbfe 85%,#93c5fd 100%)',           req_pts: 15000 },
-  { key: 'event_vibes',    name: 'Event Vibes',        gradient: 'linear-gradient(135deg,#500724 0%,#9d174d 30%,#db2777 60%,#f9a8d4 90%,#fce7f3 100%)',           req_pts: 20000 },
-  { key: 'legend_crown',   name: 'Legend Crown',       gradient: 'linear-gradient(135deg,#78350f 0%,#b45309 15%,#F7AB00 40%,#fef08a 60%,#F7AB00 80%,#b45309 100%)',req_pts: 25000 },
-  { key: 'neon_map',       name: 'Neon Map',           gradient: 'linear-gradient(135deg,#042f2e 0%,#0d9488 30%,#22d3ee 60%,#a78bfa 85%,#6d28d9 100%)',           req_pts: 30000 },
-  { key: 'community_hero', name: 'Community Hero',     gradient: 'linear-gradient(135deg,#0c1445 0%,#1d4ed8 35%,#0ea5e9 60%,#38bdf8 85%,#bae6fd 100%)',           req_pts: 40000 },
-  { key: 'secret_rare',    name: 'Secret Rare',        gradient: 'linear-gradient(135deg,#0f0c29 0%,#302b63 20%,#7c3aed 45%,#ec4899 70%,#f472b6 90%,#fce7f3 100%)',req_pts: 50000, rare: true },
+  { key: 'silver_clean',   name: 'Platinum',           gradient: 'linear-gradient(135deg,#1e293b 0%,#475569 25%,#94a3b8 55%,#e2e8f0 80%,#f8fafc 100%)',            req_pts: 2000,  anim_class: 'bx-platinum' },
+  { key: 'gold_champion',  name: 'Gold Prestige',      gradient: 'linear-gradient(135deg,#451a03 0%,#92400e 20%,#d97706 45%,#fef08a 65%,#F7AB00 85%,#d97706 100%)',req_pts: 3000,  anim_class: 'bx-gold' },
+  { key: 'food_lover',     name: 'Creator',            gradient: 'linear-gradient(135deg,#18181b 0%,#27272a 30%,#3f3f46 55%,#7c3aed 80%,#a78bfa 100%)',            req_pts: 3500,  anim_class: 'bx-creator' },
+  { key: 'fitness_energy', name: 'Champion',           gradient: 'linear-gradient(135deg,#0c0c1a 0%,#1e1b4b 25%,#1d4ed8 55%,#0ea5e9 80%,#38bdf8 100%)',           req_pts: 6000,  anim_class: 'bx-champion' },
+  { key: 'shopping_night', name: 'Neon Grid',          gradient: 'linear-gradient(135deg,#030712 0%,#0a0a1f 30%,#0f172a 60%,#1e1b4b 80%,#312e81 100%)',           req_pts: 9000,  anim_class: 'bx-neon' },
+  { key: 'platin_light',   name: 'Tech',               gradient: 'linear-gradient(135deg,#020617 0%,#0c1445 25%,#1d4ed8 50%,#0ea5e9 75%,#22d3ee 100%)',           req_pts: 13000, anim_class: 'bx-tech' },
+  { key: 'diamond_spark',  name: 'Diamond',            gradient: 'linear-gradient(135deg,#0a1628 0%,#1e3a8a 25%,#2563eb 50%,#60a5fa 72%,#bfdbfe 88%,#e0f2fe 100%)',req_pts: 15000, anim_class: 'bx-diamond' },
+  { key: 'event_vibes',    name: 'Galaxy',             gradient: 'linear-gradient(135deg,#020409 0%,#0a0a1a 30%,#0f172a 55%,#1e1b4b 75%,#312e81 90%,#1e1b4b 100%)',req_pts: 20000, anim_class: 'bx-galaxy' },
+  { key: 'legend_crown',   name: 'Legend',             gradient: 'linear-gradient(135deg,#1c0a00 0%,#78350f 18%,#b45309 38%,#F7AB00 55%,#fef08a 70%,#F7AB00 85%,#92400e 100%)', req_pts: 25000, anim_class: 'bx-legend', rare: true },
+  { key: 'neon_map',       name: 'Freiham Elite',      gradient: 'linear-gradient(135deg,#0f0a1a 0%,#1a0a2e 25%,#2d1b69 50%,#7c3aed 75%,#a78bfa 90%,#c4b5fd 100%)',req_pts: 30000, anim_class: 'bx-freiham', rare: true },
+  { key: 'community_hero', name: 'Hall of Fame',       gradient: 'linear-gradient(135deg,#0c0a05 0%,#1c1400 20%,#713f12 40%,#b45309 60%,#F7AB00 78%,#fef3c7 92%,#fffbeb 100%)', req_pts: 40000, anim_class: 'bx-hall', rare: true },
+  { key: 'secret_rare',    name: 'Founder Edition',    gradient: 'linear-gradient(135deg,#0f0c29 0%,#1e1b4b 18%,#4c1d95 36%,#7c3aed 54%,#a855f7 72%,#ec4899 88%,#f472b6 100%)', req_pts: 50000, anim_class: 'bx-founder', rare: true },
   // ── Achievement-unlocked ──
-  { key: 'challenge_pro',  name: 'Challenge Pro',      gradient: 'linear-gradient(135deg,#1c1917 0%,#92400e 25%,#d97706 55%,#fbbf24 75%,#dc2626 100%)',           req_achievement: 'challenge_master', req_label: '100 Foto-Challenge-Fotos',   req_progress_key: 'photo_challenges', req_progress_max: 100 },
-  { key: 'lucky_spin',     name: 'Lucky Spin',         gradient: 'linear-gradient(135deg,#052e16 0%,#166534 25%,#16a34a 50%,#4ade80 75%,#fef08a 100%)',           req_achievement: 'glueckspilz',      req_label: '50 Daily Spins',            req_progress_key: 'spins',            req_progress_max: 50 },
-  { key: 'qr_master',      name: 'QR Master',          gradient: 'linear-gradient(135deg,#0c0a09 0%,#064e3b 30%,#0284c7 60%,#38bdf8 90%,#e0f2fe 100%)',           req_achievement: 'shopping_king',    req_label: '100 Händler-Check-ins',     req_progress_key: 'checkins',         req_progress_max: 100 },
-  { key: 'food_explorer',  name: 'Food Explorer',      gradient: 'linear-gradient(135deg,#431407 0%,#9a3412 25%,#ea580c 55%,#fbbf24 80%,#fef9c3 100%)',           req_achievement: 'food_explorer',    req_label: '20 Food-Deals eingelöst',   req_progress_key: 'food_deals',       req_progress_max: 20 },
-  { key: 'event_hunter',   name: 'Event Hunter',       gradient: 'linear-gradient(135deg,#1e1b4b 0%,#4338ca 30%,#7c3aed 60%,#c084fc 85%,#fae8ff 100%)',          req_achievement: 'event_hunter',     req_label: '10 Events besucht',         req_progress_key: 'events',           req_progress_max: 10 },
+  { key: 'challenge_pro',  name: 'Photo Hero',         gradient: 'linear-gradient(135deg,#0c0a09 0%,#1c0a00 25%,#7c2d12 50%,#ea580c 72%,#fb923c 88%,#fed7aa 100%)', req_achievement: 'challenge_master', req_label: '100 Foto-Challenge-Fotos', req_progress_key: 'photo_challenges', req_progress_max: 100, anim_class: 'bx-photo' },
+  { key: 'lucky_spin',     name: 'Deal Hunter',        gradient: 'linear-gradient(135deg,#052e16 0%,#064e3b 22%,#065f46 44%,#059669 66%,#34d399 84%,#a7f3d0 100%)', req_achievement: 'shopping_king',    req_label: '25 Deals eingelöst',      req_progress_key: 'deals',           req_progress_max: 25,  anim_class: 'bx-deal' },
+  { key: 'qr_master',      name: 'Explorer',           gradient: 'linear-gradient(135deg,#012d22 0%,#064e3b 22%,#0284c7 50%,#0ea5e9 72%,#38bdf8 88%,#bae6fd 100%)', req_achievement: 'event_hunter',     req_label: '10 Events besucht',       req_progress_key: 'events',          req_progress_max: 10,  anim_class: 'bx-explorer' },
+  { key: 'food_explorer',  name: 'Event Master',       gradient: 'linear-gradient(135deg,#1a0533 0%,#4c0d9f 22%,#7c3aed 44%,#a855f7 66%,#e879f9 84%,#fdf4ff 100%)', req_achievement: 'food_explorer',    req_label: '20 Food-Deals eingelöst', req_progress_key: 'food_deals',      req_progress_max: 20,  anim_class: 'bx-event' },
+  { key: 'event_hunter',   name: 'Diamond Club',       gradient: 'linear-gradient(135deg,#020d1f 0%,#0c2461 22%,#1a56db 44%,#60a5fa 66%,#bfdbfe 84%,#dbeafe 100%)', req_achievement: 'zam_legend',       req_label: 'Legend-Status erreichen', req_progress_key: 'events',          req_progress_max: 5,   anim_class: 'bx-dclub' },
 ];
 
 const _PROFILE_TITLES = [
@@ -511,6 +511,9 @@ function _applyProfileBanner(containerId = 'profile-banner') {
   const banner = _PROFILE_BANNERS.find(b => b.key === key) || _PROFILE_BANNERS[0];
   el.style.background = banner.gradient;
   el.classList.toggle('banner-rare', !!banner.rare);
+  // Apply/remove animation class
+  _PROFILE_BANNERS.forEach(b => { if (b.anim_class) el.classList.remove(b.anim_class); });
+  if (banner.anim_class) el.classList.add(banner.anim_class);
 }
 
 // ── Render top badges in hero ──
@@ -593,7 +596,7 @@ function openBannerPicker() {
     return `
       <div class="banner-picker-card ${isActive ? 'active-banner' : ''} ${unlocked ? '' : 'locked-banner'}"
            onclick="${unlocked ? `selectBanner('${b.key}')` : `showToast('🔒 Dieser Banner ist noch gesperrt.','error')`}">
-        <div class="banner-picker-preview ${b.rare ? 'rare-preview' : ''}" style="background:${b.gradient}">
+        <div class="banner-picker-preview ${b.rare ? 'rare-preview' : ''} ${b.anim_class || ''}" style="background:${b.gradient}">
           ${b.rare ? '<span class="banner-rare-tag">✨ Selten</span>' : ''}
           ${!unlocked ? `
             <div class="banner-picker-lock-overlay">
@@ -630,7 +633,7 @@ function selectBanner(key) {
       const lockText = !unlocked ? (!b.req_achievement ? `Noch ${(b.req_pts - pts).toLocaleString('de-DE')} Pkt.` : b.req_label) : '';
       const statusHtml = isActive ? `<span class="banner-picker-status bps-active">✓ Aktiv</span>` : unlocked ? `<span class="banner-picker-status bps-unlocked">Auswählen</span>` : `<span class="banner-picker-status bps-locked">Gesperrt</span>`;
       return `<div class="banner-picker-card ${isActive ? 'active-banner' : ''} ${unlocked ? '' : 'locked-banner'}" onclick="${unlocked ? `selectBanner('${b.key}')` : `showToast('🔒 Dieser Banner ist noch gesperrt.','error')`}">
-        <div class="banner-picker-preview ${b.rare ? 'rare-preview' : ''}" style="background:${b.gradient}">
+        <div class="banner-picker-preview ${b.rare ? 'rare-preview' : ''} ${b.anim_class || ''}" style="background:${b.gradient}">
           ${b.rare ? '<span class="banner-rare-tag">✨ Selten</span>' : ''}
           ${!unlocked ? `<div class="banner-picker-lock-overlay"><span class="banner-lock-icon">🔒</span><span class="banner-lock-req">${lockText}</span></div>` : ''}
         </div>
