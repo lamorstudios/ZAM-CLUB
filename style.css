@@ -3620,284 +3620,321 @@ body.perf-mode .streak-fire { animation: none !important; }
 
 /* ═══════════════════════════════════════
    PREMIUM BANNER ANIMATIONS
-   All GPU-safe: transform + opacity only
+   GPU-safe: transform + opacity only
+   No edge artifacts: oversized layers + border-radius on rotators
    ═══════════════════════════════════════ */
 
-/* ── Shared animation keyframes ── */
-@keyframes bx-glow-pulse   { 0%,100% { opacity:0.5; transform:scale(1) translateX(-4%); } 50% { opacity:1; transform:scale(1.08) translateX(4%); } }
-@keyframes bx-sweep-lr     { 0%   { transform:translateX(-110%); } 100% { transform:translateX(210%); } }
-@keyframes bx-sweep-tb     { 0%   { transform:translateY(-110%); } 100% { transform:translateY(210%); } }
-@keyframes bx-rotate-slow  { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
-@keyframes bx-float-y      { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
-@keyframes bx-float-xy     { 0%,100% { transform:translate(0,0); } 50% { transform:translate(6px,-8px); } }
-@keyframes bx-scan-lr      { 0%   { transform:translateX(-100%) skewX(-15deg); opacity:0; } 40%,60% { opacity:1; } 100% { transform:translateX(200%) skewX(-15deg); opacity:0; } }
-@keyframes bx-shimmer-d    { 0%,100% { opacity:0.3; transform:scale(0.95); } 50% { opacity:0.8; transform:scale(1.05); } }
+/* ── Shared keyframes ── */
+@keyframes bx-orb-pulse  { 0%,100% { opacity:0.45; transform:scale(1); }    50% { opacity:0.95; transform:scale(1.14); } }
+@keyframes bx-orb-float  { 0%,100% { transform:translate(0,0); opacity:0.55; } 50% { transform:translate(9px,-11px); opacity:1; } }
+@keyframes bx-orb-drift  { 0%,100% { transform:translate(-8px,5px); opacity:0.5; } 50% { transform:translate(7px,-7px); opacity:0.9; } }
+@keyframes bx-orb-bounce { 0%,100% { transform:translate(0,0) scale(1); opacity:0.5; } 33% { transform:translate(7px,-10px) scale(1.07); opacity:0.9; } 66% { transform:translate(-5px,7px) scale(0.96); opacity:0.65; } }
+@keyframes bx-shimmer    { 0% { transform:translateX(-260%); } 100% { transform:translateX(360%); } }
+@keyframes bx-spin-orb   { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+@keyframes bx-breathe    { 0%,100% { opacity:0.35; transform:scale(0.92); } 50% { opacity:0.88; transform:scale(1.08); } }
+@keyframes bx-scan-beam  { 0% { transform:translateX(-280%); opacity:0; } 30%,70% { opacity:1; } 100% { transform:translateX(380%); opacity:0; } }
+
+/* Ensure all banner containers clip their animated layers cleanly */
+.profile-banner, .ups-banner, .banner-picker-preview { overflow: hidden; }
 
 /* ── Orange Energy ── */
 .bx-orange-energy::before {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: radial-gradient(ellipse at 35% 55%, rgba(255,200,50,0.3) 0%, transparent 58%),
-              radial-gradient(ellipse at 75% 30%, rgba(255,130,20,0.2) 0%, transparent 50%);
-  animation: bx-glow-pulse 5s ease-in-out infinite;
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background: radial-gradient(ellipse at 35% 58%, rgba(255,200,50,0.38) 0%, transparent 52%),
+              radial-gradient(ellipse at 72% 30%, rgba(255,130,20,0.26) 0%, transparent 46%);
+  animation: bx-orb-drift 6s ease-in-out infinite;
   will-change: transform, opacity;
 }
-.bx-orange-energy.banner-picker-preview::before { animation-duration: 3s; }
+.bx-orange-energy.banner-picker-preview::before { animation-duration: 4s; }
 
-/* ── Aurora ── */
+/* ── Aurora — rotating circle (border-radius:50% = no corners) ── */
 .bx-aurora::before {
-  content:''; position:absolute; inset:-100%; z-index:2; pointer-events:none;
-  background: conic-gradient(from 180deg at 50% 50%,
-    transparent 0deg,
-    rgba(52,211,153,0.12) 60deg,
-    rgba(56,189,248,0.14) 120deg,
-    rgba(167,139,250,0.1) 180deg,
-    transparent 240deg,
-    rgba(52,211,153,0.08) 300deg,
-    transparent 360deg);
-  animation: bx-rotate-slow 22s linear infinite;
+  content:''; position:absolute; inset:-40%; z-index:2; pointer-events:none;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg at 50% 50%,
+    transparent 0deg, rgba(52,211,153,0.2) 60deg, rgba(56,189,248,0.22) 120deg,
+    transparent 165deg, rgba(167,139,250,0.16) 220deg, rgba(52,211,153,0.14) 280deg,
+    transparent 330deg);
+  animation: bx-spin-orb 24s linear infinite;
   will-change: transform;
 }
+.bx-aurora.banner-picker-preview::before { animation-duration: 14s; }
 
-/* ── Carbon Black ── */
+/* ── Carbon Black — static texture + breathing glow ── */
 .bx-carbon::before {
   content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
   background:
-    repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.025) 3px, rgba(255,255,255,0.025) 4px),
-    repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(255,255,255,0.015) 3px, rgba(255,255,255,0.015) 4px);
-  animation: bx-float-y 14s ease-in-out infinite;
-  will-change: transform;
+    repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.03) 3px, rgba(255,255,255,0.03) 4px),
+    repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(255,255,255,0.02) 3px, rgba(255,255,255,0.02) 4px);
+}
+.bx-carbon::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 42% 52%, rgba(180,180,210,0.18) 0%, transparent 55%);
+  animation: bx-breathe 8s ease-in-out infinite;
+  will-change: opacity, transform;
 }
 
-/* ── Platinum ── */
+/* ── Platinum — shimmer sweep + soft glow ── */
 .bx-platinum::before {
   content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%);
-  animation: bx-sweep-lr 5s ease-in-out infinite;
+  background: linear-gradient(105deg, transparent 0%, transparent 28%, rgba(255,255,255,0.24) 50%, transparent 72%, transparent 100%);
+  animation: bx-shimmer 5s ease-in-out infinite;
   will-change: transform;
 }
+.bx-platinum::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 65% 42%, rgba(226,232,240,0.2) 0%, transparent 50%);
+  animation: bx-breathe 7s ease-in-out infinite;
+  will-change: opacity, transform;
+}
 
-/* ── Gold Prestige ── */
+/* ── Gold Prestige — floating orbs + shimmer ── */
 .bx-gold::before {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: radial-gradient(ellipse at 30% 60%, rgba(255,240,100,0.22) 0%, transparent 55%),
-              linear-gradient(105deg, transparent 35%, rgba(255,230,80,0.15) 50%, transparent 65%);
-  animation: bx-glow-pulse 6s ease-in-out infinite;
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background: radial-gradient(ellipse at 28% 58%, rgba(255,240,100,0.36) 0%, transparent 50%),
+              radial-gradient(ellipse at 78% 32%, rgba(251,191,36,0.26) 0%, transparent 46%);
+  animation: bx-orb-drift 7s ease-in-out infinite;
   will-change: transform, opacity;
 }
 .bx-gold::after {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: linear-gradient(105deg, transparent 35%, rgba(255,240,100,0.12) 50%, transparent 65%);
-  animation: bx-sweep-lr 4s 1.5s ease-in-out infinite;
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(105deg, transparent 0%, transparent 30%, rgba(255,230,80,0.2) 50%, transparent 70%, transparent 100%);
+  animation: bx-shimmer 4.5s 1.2s ease-in-out infinite;
   will-change: transform;
 }
 
-/* ── Creator ── */
+/* ── Creator — floating color orbs ── */
 .bx-creator::before {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: radial-gradient(ellipse at 70% 40%, rgba(167,139,250,0.25) 0%, transparent 55%),
-              radial-gradient(ellipse at 20% 70%, rgba(139,92,246,0.2) 0%, transparent 50%);
-  animation: bx-float-xy 11s ease-in-out infinite;
-  will-change: transform;
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background: radial-gradient(ellipse at 62% 36%, rgba(167,139,250,0.32) 0%, transparent 50%),
+              radial-gradient(ellipse at 24% 72%, rgba(139,92,246,0.24) 0%, transparent 46%);
+  animation: bx-orb-float 12s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
-/* ── Champion ── */
+/* ── Champion — glow pulse + shimmer ── */
 .bx-champion::before {
   content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: linear-gradient(105deg, transparent 30%, rgba(56,189,248,0.2) 50%, transparent 70%);
-  animation: bx-sweep-lr 3.5s ease-in-out infinite;
+  background: radial-gradient(ellipse at 50% 50%, rgba(56,189,248,0.22) 0%, transparent 56%);
+  animation: bx-breathe 5s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+.bx-champion::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(105deg, transparent 0%, transparent 26%, rgba(186,230,253,0.24) 50%, transparent 74%, transparent 100%);
+  animation: bx-shimmer 4s ease-in-out infinite;
   will-change: transform;
 }
 
-/* ── Neon Grid ── */
+/* ── Neon Grid — static grid + animated center glow ── */
 .bx-neon::before {
   content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
   background:
-    repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(129,140,248,0.08) 28px, rgba(129,140,248,0.08) 29px),
-    repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(129,140,248,0.06) 28px, rgba(129,140,248,0.06) 29px);
-  animation: bx-scan-lr 8s 0s ease-in-out infinite;
-  will-change: transform, opacity;
+    repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(129,140,248,0.1) 28px, rgba(129,140,248,0.1) 29px),
+    repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(129,140,248,0.07) 28px, rgba(129,140,248,0.07) 29px);
 }
 .bx-neon::after {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: radial-gradient(ellipse at 50% 50%, rgba(99,102,241,0.18) 0%, transparent 65%);
-  animation: bx-glow-pulse 7s ease-in-out infinite;
-  will-change: transform, opacity;
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 50%, rgba(99,102,241,0.28) 0%, transparent 58%);
+  animation: bx-breathe 6s ease-in-out infinite;
+  will-change: opacity, transform;
 }
 
-/* ── Tech ── */
+/* ── Tech — orb bounce + scan beam ── */
 .bx-tech::before {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: linear-gradient(90deg, transparent 30%, rgba(34,211,238,0.18) 50%, transparent 70%);
-  animation: bx-scan-lr 4s ease-in-out infinite;
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 50%, rgba(34,211,238,0.24) 0%, transparent 50%),
+              radial-gradient(ellipse at 20% 28%, rgba(6,182,212,0.16) 0%, transparent 40%);
+  animation: bx-orb-bounce 10s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.bx-tech::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(90deg, transparent 0%, transparent 22%, rgba(34,211,238,0.22) 50%, transparent 78%, transparent 100%);
+  animation: bx-scan-beam 5.5s ease-in-out infinite;
   will-change: transform, opacity;
 }
 
-/* ── Diamond ── */
+/* ── Diamond — floating orbs + shimmer ── */
 .bx-diamond::before {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: radial-gradient(ellipse at 40% 45%, rgba(191,219,254,0.28) 0%, transparent 52%),
-              radial-gradient(ellipse at 75% 60%, rgba(96,165,250,0.18) 0%, transparent 45%);
-  animation: bx-shimmer-d 4s ease-in-out infinite;
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background: radial-gradient(ellipse at 42% 48%, rgba(191,219,254,0.38) 0%, transparent 46%),
+              radial-gradient(ellipse at 76% 62%, rgba(96,165,250,0.24) 0%, transparent 40%);
+  animation: bx-orb-float 9s ease-in-out infinite;
   will-change: transform, opacity;
 }
 .bx-diamond::after {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: linear-gradient(105deg, transparent 35%, rgba(224,242,254,0.2) 50%, transparent 65%);
-  animation: bx-sweep-lr 5s 1s ease-in-out infinite;
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(110deg, transparent 0%, transparent 28%, rgba(224,242,254,0.28) 50%, transparent 72%, transparent 100%);
+  animation: bx-shimmer 5.5s 1s ease-in-out infinite;
   will-change: transform;
 }
 
-/* ── Galaxy ── */
+/* ── Galaxy — stars float (oversized, no edge visible) + glow ── */
 .bx-galaxy::before {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
+  content:''; position:absolute; inset:-20%; z-index:2; pointer-events:none;
   background-image:
-    radial-gradient(circle, rgba(255,255,255,0.85) 1px, transparent 1px),
-    radial-gradient(circle, rgba(255,255,255,0.55) 1px, transparent 1px),
-    radial-gradient(circle, rgba(200,210,255,0.4) 1px, transparent 1px);
-  background-size: 100px 100px, 60px 60px, 140px 140px;
-  background-position: 15px 20px, 45px 55px, 25px 80px;
-  animation: bx-float-y 18s ease-in-out infinite;
-  will-change: transform;
-}
-.bx-galaxy::after {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: radial-gradient(ellipse at 50% 50%, rgba(99,102,241,0.15) 0%, transparent 65%);
-  animation: bx-glow-pulse 9s ease-in-out infinite;
+    radial-gradient(circle, rgba(255,255,255,0.9) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px),
+    radial-gradient(circle, rgba(200,210,255,0.5) 1px, transparent 1px);
+  background-size: 120px 120px, 72px 72px, 165px 165px;
+  background-position: 18px 24px, 52px 62px, 30px 90px;
+  animation: bx-orb-float 22s ease-in-out infinite;
   will-change: transform, opacity;
 }
+.bx-galaxy::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 50%, rgba(99,102,241,0.22) 0%, transparent 60%);
+  animation: bx-breathe 10s ease-in-out infinite;
+  will-change: opacity, transform;
+}
 
-/* ── Legend ── */
+/* ── Legend — gold orbs drift + shimmer ── */
 .bx-legend::before {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: radial-gradient(ellipse at 30% 55%, rgba(247,171,0,0.32) 0%, transparent 55%),
-              radial-gradient(ellipse at 75% 35%, rgba(251,191,36,0.22) 0%, transparent 50%);
-  animation: bx-glow-pulse 4s ease-in-out infinite;
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background: radial-gradient(ellipse at 28% 54%, rgba(247,171,0,0.4) 0%, transparent 50%),
+              radial-gradient(ellipse at 78% 32%, rgba(251,191,36,0.3) 0%, transparent 46%);
+  animation: bx-orb-drift 5s ease-in-out infinite;
   will-change: transform, opacity;
 }
 .bx-legend::after {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: linear-gradient(105deg, transparent 32%, rgba(254,240,138,0.22) 50%, transparent 68%);
-  animation: bx-sweep-lr 3s ease-in-out infinite;
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(105deg, transparent 0%, transparent 28%, rgba(254,240,138,0.28) 50%, transparent 72%, transparent 100%);
+  animation: bx-shimmer 3.5s ease-in-out infinite;
   will-change: transform;
 }
 
-/* ── Freiham Elite ── */
+/* ── Freiham Elite — rotating circle (no corners) ── */
 .bx-freiham::before {
-  content:''; position:absolute; inset:-50%; z-index:2; pointer-events:none;
+  content:''; position:absolute; inset:-40%; z-index:2; pointer-events:none;
+  border-radius: 50%;
   background: conic-gradient(from 90deg at 50% 50%,
-    transparent 0deg,
-    rgba(167,139,250,0.14) 80deg,
-    rgba(196,181,253,0.1) 140deg,
-    transparent 200deg,
-    rgba(139,92,246,0.1) 280deg,
-    transparent 360deg);
-  animation: bx-rotate-slow 20s linear infinite;
+    transparent 0deg, rgba(167,139,250,0.22) 80deg, rgba(196,181,253,0.17) 140deg,
+    transparent 186deg, rgba(139,92,246,0.16) 268deg, transparent 360deg);
+  animation: bx-spin-orb 22s linear infinite;
   will-change: transform;
 }
 .bx-freiham::after {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: linear-gradient(105deg, transparent 35%, rgba(196,181,253,0.18) 50%, transparent 65%);
-  animation: bx-sweep-lr 4.5s 2s ease-in-out infinite;
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(105deg, transparent 0%, transparent 30%, rgba(196,181,253,0.22) 50%, transparent 70%, transparent 100%);
+  animation: bx-shimmer 5s 2s ease-in-out infinite;
   will-change: transform;
 }
 
-/* ── Hall of Fame ── */
+/* ── Hall of Fame — orb bounce + shimmer ── */
 .bx-hall::before {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: radial-gradient(ellipse at 25% 50%, rgba(247,171,0,0.28) 0%, transparent 52%),
-              radial-gradient(ellipse at 80% 30%, rgba(254,240,138,0.18) 0%, transparent 48%);
-  animation: bx-shimmer-d 5s ease-in-out infinite;
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background: radial-gradient(ellipse at 22% 52%, rgba(247,171,0,0.36) 0%, transparent 50%),
+              radial-gradient(ellipse at 82% 28%, rgba(254,240,138,0.24) 0%, transparent 44%);
+  animation: bx-orb-bounce 9s ease-in-out infinite;
   will-change: transform, opacity;
 }
 .bx-hall::after {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: linear-gradient(105deg, transparent 30%, rgba(255,248,150,0.18) 50%, transparent 70%);
-  animation: bx-sweep-lr 3.5s ease-in-out infinite;
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(105deg, transparent 0%, transparent 26%, rgba(255,248,150,0.24) 50%, transparent 74%, transparent 100%);
+  animation: bx-shimmer 4s ease-in-out infinite;
   will-change: transform;
 }
 
-/* ── Founder Edition ── */
+/* ── Founder Edition — rotating circle (no corners) ── */
 .bx-founder::before {
-  content:''; position:absolute; inset:-50%; z-index:2; pointer-events:none;
+  content:''; position:absolute; inset:-40%; z-index:2; pointer-events:none;
+  border-radius: 50%;
   background: conic-gradient(from 45deg at 50% 50%,
-    transparent 0deg,
-    rgba(168,85,247,0.18) 60deg,
-    rgba(236,72,153,0.14) 120deg,
-    transparent 180deg,
-    rgba(139,92,246,0.14) 240deg,
-    rgba(244,114,182,0.1) 300deg,
+    transparent 0deg, rgba(168,85,247,0.24) 60deg, rgba(236,72,153,0.2) 120deg,
+    transparent 168deg, rgba(139,92,246,0.2) 238deg, rgba(244,114,182,0.15) 298deg,
     transparent 360deg);
-  animation: bx-rotate-slow 16s linear infinite;
+  animation: bx-spin-orb 18s linear infinite;
   will-change: transform;
 }
 .bx-founder::after {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: linear-gradient(105deg, transparent 30%, rgba(244,114,182,0.2) 50%, transparent 70%);
-  animation: bx-sweep-lr 3s ease-in-out infinite;
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(105deg, transparent 0%, transparent 26%, rgba(244,114,182,0.26) 50%, transparent 74%, transparent 100%);
+  animation: bx-shimmer 3.5s ease-in-out infinite;
   will-change: transform;
 }
 
-/* ── Photo Hero ── */
+/* ── Photo Hero — warm orb float ── */
 .bx-photo::before {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: radial-gradient(ellipse at 40% 50%, rgba(251,146,60,0.25) 0%, transparent 55%),
-              linear-gradient(105deg, transparent 35%, rgba(253,186,116,0.18) 50%, transparent 65%);
-  animation: bx-glow-pulse 5s ease-in-out infinite;
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background: radial-gradient(ellipse at 42% 54%, rgba(251,146,60,0.32) 0%, transparent 50%),
+              radial-gradient(ellipse at 76% 36%, rgba(253,186,116,0.22) 0%, transparent 44%);
+  animation: bx-orb-float 7s ease-in-out infinite;
   will-change: transform, opacity;
 }
 
-/* ── Deal Hunter ── */
+/* ── Deal Hunter — emerald orb drift ── */
 .bx-deal::before {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: radial-gradient(ellipse at 35% 55%, rgba(52,211,153,0.25) 0%, transparent 55%),
-              linear-gradient(105deg, transparent 35%, rgba(167,243,208,0.15) 50%, transparent 65%);
-  animation: bx-glow-pulse 6s ease-in-out infinite;
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background: radial-gradient(ellipse at 35% 57%, rgba(52,211,153,0.34) 0%, transparent 50%),
+              radial-gradient(ellipse at 72% 36%, rgba(167,243,208,0.22) 0%, transparent 44%);
+  animation: bx-orb-drift 8s ease-in-out infinite;
   will-change: transform, opacity;
 }
 
-/* ── Explorer ── */
+/* ── Explorer — glow breathe + scan beam ── */
 .bx-explorer::before {
   content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: radial-gradient(ellipse at 45% 50%, rgba(56,189,248,0.22) 0%, transparent 55%),
-              linear-gradient(105deg, transparent 35%, rgba(186,230,253,0.15) 50%, transparent 65%);
-  animation: bx-scan-lr 5s ease-in-out infinite;
+  background: radial-gradient(ellipse at 50% 50%, rgba(56,189,248,0.26) 0%, transparent 54%);
+  animation: bx-breathe 6s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+.bx-explorer::after {
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(90deg, transparent 0%, transparent 23%, rgba(186,230,253,0.24) 50%, transparent 77%, transparent 100%);
+  animation: bx-scan-beam 6.5s ease-in-out infinite;
   will-change: transform, opacity;
 }
 
-/* ── Event Master ── */
+/* ── Event Master — purple orb bounce ── */
 .bx-event::before {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: radial-gradient(ellipse at 40% 50%, rgba(232,121,249,0.22) 0%, transparent 55%),
-              linear-gradient(105deg, transparent 35%, rgba(253,224,255,0.15) 50%, transparent 65%);
-  animation: bx-float-xy 10s ease-in-out infinite;
-  will-change: transform;
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background: radial-gradient(ellipse at 40% 54%, rgba(232,121,249,0.3) 0%, transparent 50%),
+              radial-gradient(ellipse at 72% 34%, rgba(253,224,255,0.2) 0%, transparent 44%);
+  animation: bx-orb-bounce 11s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
-/* ── Diamond Club ── */
+/* ── Diamond Club — blue orb drift + shimmer ── */
 .bx-dclub::before {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: radial-gradient(ellipse at 35% 50%, rgba(96,165,250,0.28) 0%, transparent 55%),
-              radial-gradient(ellipse at 75% 35%, rgba(191,219,254,0.18) 0%, transparent 48%);
-  animation: bx-shimmer-d 4.5s ease-in-out infinite;
+  content:''; position:absolute; inset:-15%; z-index:2; pointer-events:none;
+  background: radial-gradient(ellipse at 35% 54%, rgba(96,165,250,0.34) 0%, transparent 50%),
+              radial-gradient(ellipse at 76% 34%, rgba(191,219,254,0.24) 0%, transparent 44%);
+  animation: bx-orb-drift 6s ease-in-out infinite;
   will-change: transform, opacity;
 }
 .bx-dclub::after {
-  content:''; position:absolute; inset:0; z-index:2; pointer-events:none;
-  background: linear-gradient(105deg, transparent 35%, rgba(224,242,254,0.18) 50%, transparent 65%);
-  animation: bx-sweep-lr 4s ease-in-out infinite;
+  content:''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  background: linear-gradient(110deg, transparent 0%, transparent 28%, rgba(224,242,254,0.24) 50%, transparent 72%, transparent 100%);
+  animation: bx-shimmer 4.5s ease-in-out infinite;
   will-change: transform;
 }
 
-/* ── Picker preview: smaller/faster animations ── */
-.banner-picker-preview.bx-aurora::before  { animation-duration: 14s; }
-.banner-picker-preview.bx-galaxy::before  { background-size: 40px 40px, 25px 25px, 55px 55px; }
-.banner-picker-preview.bx-neon::before    { background-size: auto; }
+/* ── Picker preview tweaks ── */
+.banner-picker-preview.bx-freiham::before  { animation-duration: 13s; }
+.banner-picker-preview.bx-founder::before  { animation-duration: 11s; }
+.banner-picker-preview.bx-galaxy::before   { background-size: 48px 48px, 30px 30px, 66px 66px; }
 
-/* perf-mode: freeze all profile + admin animations */
-body.perf-mode .profile-banner.banner-rare::before,
-body.perf-mode .banner-picker-preview.rare-preview::before,
-body.perf-mode .profile-hero::before,
-body.perf-mode .profile-hero::after,
+/* perf-mode: freeze all banner + admin animations */
+body.perf-mode .bx-orange-energy::before,
+body.perf-mode .bx-aurora::before,
+body.perf-mode .bx-carbon::after,
+body.perf-mode .bx-platinum::before, body.perf-mode .bx-platinum::after,
+body.perf-mode .bx-gold::before, body.perf-mode .bx-gold::after,
+body.perf-mode .bx-creator::before,
+body.perf-mode .bx-champion::before, body.perf-mode .bx-champion::after,
+body.perf-mode .bx-neon::after,
+body.perf-mode .bx-tech::before, body.perf-mode .bx-tech::after,
+body.perf-mode .bx-diamond::before, body.perf-mode .bx-diamond::after,
+body.perf-mode .bx-galaxy::before, body.perf-mode .bx-galaxy::after,
+body.perf-mode .bx-legend::before, body.perf-mode .bx-legend::after,
+body.perf-mode .bx-freiham::before, body.perf-mode .bx-freiham::after,
+body.perf-mode .bx-hall::before, body.perf-mode .bx-hall::after,
+body.perf-mode .bx-founder::before, body.perf-mode .bx-founder::after,
+body.perf-mode .bx-photo::before,
+body.perf-mode .bx-deal::before,
+body.perf-mode .bx-explorer::before, body.perf-mode .bx-explorer::after,
+body.perf-mode .bx-event::before,
+body.perf-mode .bx-dclub::before, body.perf-mode .bx-dclub::after,
 body.perf-mode .tier-ring--admin::after,
-body.perf-mode .admin-badge,
-body.perf-mode .tier-badge--admin { animation: none !important; }
+body.perf-mode .admin-badge { animation: none !important; }
