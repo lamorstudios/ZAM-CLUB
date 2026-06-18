@@ -4449,8 +4449,7 @@ body.perf-mode .bx-baker::before, body.perf-mode .bx-baker::after { animation: n
 
 /* Trophy background */
 .mc-trophy {
-  animation: mc-trophy-float 9s ease-in-out infinite;
-  will-change: transform, opacity;
+  will-change: transform, filter;
 }
 
 /* Medal swing — different delays for natural feel */
@@ -4459,9 +4458,7 @@ body.perf-mode .bx-baker::before, body.perf-mode .bx-baker::after { animation: n
   transform-origin: 50% 0;
   will-change: transform;
 }
-.mc-medal-1 { animation: mc-medal-swing 5s ease-in-out infinite; }
-.mc-medal-2 { animation: mc-medal-swing 5s 0.9s ease-in-out infinite; }
-.mc-medal-3 { animation: mc-medal-swing 5s 1.8s ease-in-out infinite; }
+/* medal swing + glow set in enhanced block below */
 
 /* Top-3 tier rings — gentle opacity pulse on their ::after glow ring */
 .mc-ring-gold::after   { animation: mc-ring-pulse 3.5s ease-in-out infinite !important; }
@@ -4481,25 +4478,39 @@ body.perf-mode .bx-baker::before, body.perf-mode .bx-baker::after { animation: n
   will-change: transform, opacity;
 }
 
-/* Pause all when card off-screen (set by IntersectionObserver) */
+/* MC animations use only GPU-safe transform/opacity — keep them in perf-mode */
+
+/* Medal glow — drop-shadow color cycles per tier */
+@keyframes mc-glow-gold   { 0%,100%{ filter:drop-shadow(0 0 4px rgba(247,171,0,0.55)) } 50%{ filter:drop-shadow(0 0 10px rgba(247,171,0,0.95)) } }
+@keyframes mc-glow-silver { 0%,100%{ filter:drop-shadow(0 0 4px rgba(192,192,192,0.45)) } 50%{ filter:drop-shadow(0 0 9px rgba(220,220,220,0.85)) } }
+@keyframes mc-glow-bronze { 0%,100%{ filter:drop-shadow(0 0 4px rgba(176,141,87,0.45)) } 50%{ filter:drop-shadow(0 0 9px rgba(205,161,90,0.85)) } }
+
+.mc-medal-1 { animation: mc-medal-swing 5s ease-in-out infinite, mc-glow-gold   4s 0.3s ease-in-out infinite; }
+.mc-medal-2 { animation: mc-medal-swing 5s 0.9s ease-in-out infinite, mc-glow-silver 4.5s 1.1s ease-in-out infinite; }
+.mc-medal-3 { animation: mc-medal-swing 5s 1.8s ease-in-out infinite, mc-glow-bronze 5s 2s ease-in-out infinite; }
+
+/* Trophy glow */
+@keyframes mc-trophy-glow { 0%,100%{ filter:drop-shadow(0 0 6px rgba(247,171,0,0.5)) } 50%{ filter:drop-shadow(0 0 16px rgba(247,171,0,1)) } }
+.mc-trophy { animation: mc-trophy-float 4s ease-in-out infinite, mc-trophy-glow 4s ease-in-out infinite; }
+
+/* Sparkle particles on medals via pseudo-elements */
+.mc-medal-1, .mc-medal-2, .mc-medal-3 { position: relative; }
+@keyframes mc-spark-a { 0%{ opacity:0;transform:translate(0,0) scale(0) } 40%{ opacity:1;transform:translate(var(--sx,8px),var(--sy,-12px)) scale(1) } 100%{ opacity:0;transform:translate(var(--sx2,14px),var(--sy2,-22px)) scale(0.3) } }
+@keyframes mc-spark-b { 0%{ opacity:0;transform:translate(0,0) scale(0) } 50%{ opacity:0.8;transform:translate(var(--sx,-10px),var(--sy,-8px)) scale(1) } 100%{ opacity:0;transform:translate(var(--sx2,-18px),var(--sy2,-20px)) scale(0.2) } }
+.mc-medal-1::before { content:'✦'; position:absolute; top:-4px; left:50%; font-size:8px; color:rgba(247,171,0,0.9); pointer-events:none; --sx:10px;--sy:-14px;--sx2:18px;--sy2:-26px; animation:mc-spark-a 2.4s 0.5s ease-out infinite; }
+.mc-medal-1::after  { content:'✦'; position:absolute; top:2px; right:-6px; font-size:6px; color:rgba(247,200,50,0.7); pointer-events:none; --sx:-8px;--sy:-10px;--sx2:-14px;--sy2:-20px; animation:mc-spark-b 2.8s 1.2s ease-out infinite; }
+.mc-medal-2::before { content:'✦'; position:absolute; top:-4px; left:50%; font-size:7px; color:rgba(200,200,210,0.85); pointer-events:none; --sx:9px;--sy:-12px;--sx2:16px;--sy2:-22px; animation:mc-spark-a 2.6s 1.4s ease-out infinite; }
+.mc-medal-3::before { content:'✦'; position:absolute; top:-4px; left:50%; font-size:7px; color:rgba(180,145,90,0.85); pointer-events:none; --sx:8px;--sy:-11px;--sx2:15px;--sy2:-20px; animation:mc-spark-a 2.8s 2.2s ease-out infinite; }
+
+/* Pause all when card off-screen — include new animations */
 .mc-paused .mc-trophy,
 .mc-paused .mc-medal-1,
 .mc-paused .mc-medal-2,
 .mc-paused .mc-medal-3,
-.mc-paused .mc-ring-gold::after,
-.mc-paused .mc-ring-silver::after,
-.mc-paused .mc-ring-bronze::after,
-.mc-paused .mc-card-inner::before { animation-play-state: paused !important; }
-
-/* Perf mode */
-body.perf-mode .mc-trophy,
-body.perf-mode .mc-medal-1,
-body.perf-mode .mc-medal-2,
-body.perf-mode .mc-medal-3,
-body.perf-mode .mc-ring-gold::after,
-body.perf-mode .mc-ring-silver::after,
-body.perf-mode .mc-ring-bronze::after,
-body.perf-mode .mc-card-inner::before { animation: none !important; }
+.mc-paused .mc-medal-1::before,
+.mc-paused .mc-medal-1::after,
+.mc-paused .mc-medal-2::before,
+.mc-paused .mc-medal-3::before { animation-play-state: paused !important; }
 
 /* ── Reward QR Confetti ── */
 .reward-confetti-wrap {

@@ -110,6 +110,7 @@ function _countdownBadge(expiryStr) {
 }
 
 let _countdownInterval = null;
+let _mcObserver = null;
 function _startCountdownTicker() {
   if (_countdownInterval) return;
   let _tickFast = true;
@@ -1294,13 +1295,15 @@ function _renderHomeRankingCard() {
       </div>
     </div>`;
 
-  // Pause animations when card scrolls out of view
+  // Pause animations when card scrolls out of view (disconnect old observer first)
   if (window.IntersectionObserver) {
     const mcCard = el.querySelector('.mc-card-inner');
     if (mcCard) {
-      new IntersectionObserver(entries => {
+      if (_mcObserver) { _mcObserver.disconnect(); _mcObserver = null; }
+      _mcObserver = new IntersectionObserver(entries => {
         entries.forEach(e => el.classList.toggle('mc-paused', !e.isIntersecting));
-      }, { threshold: 0.1 }).observe(mcCard);
+      }, { threshold: 0.1 });
+      _mcObserver.observe(mcCard);
     }
   }
 }
