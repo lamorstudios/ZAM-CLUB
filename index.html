@@ -1288,7 +1288,7 @@
     <div id="admin-referral-list"></div>
   </div>
 
-  <!-- Admin Quick Access: Management Dashboard + Moderation -->
+  <!-- Admin Quick Access: Management Dashboard + Moderation + Partner Deals -->
   <div style="padding:0 16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
     <button onclick="openManagementDashboard()" style="background:linear-gradient(135deg,rgba(247,171,0,0.15),rgba(247,171,0,0.06));border:1px solid rgba(247,171,0,0.3);border-radius:16px;padding:16px 12px;text-align:left;cursor:pointer;font-family:var(--font);color:#fff">
       <div style="font-size:1.3rem;margin-bottom:6px">🏢</div>
@@ -1299,6 +1299,11 @@
       <div style="font-size:1.3rem;margin-bottom:6px">🛡</div>
       <div style="font-size:0.8rem;font-weight:800;color:#f87171">Moderation</div>
       <div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-top:3px">Meldungen & Sperren</div>
+    </button>
+    <button onclick="openAdminPartnerDeals()" style="grid-column:1/-1;background:linear-gradient(135deg,rgba(250,70,21,0.12),rgba(247,171,0,0.07));border:1px solid rgba(250,70,21,0.25);border-radius:16px;padding:16px 12px;text-align:left;cursor:pointer;font-family:var(--font);color:#fff">
+      <div style="font-size:1.3rem;margin-bottom:6px">🤝</div>
+      <div style="font-size:0.8rem;font-weight:800;color:#ffb399">Partnerdeal-Anfragen</div>
+      <div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-top:3px">Freigabe, Status, Verlauf aller Händler</div>
     </button>
   </div>
 </div>
@@ -1814,6 +1819,7 @@
 <script src="api.js?v=20260619a"></script>
 <script src="app.js?v=20260619a"></script>
 <script src="features.js?v=20260619a"></script>
+<script src="partnerdeal-workflow.js?v=20260619a"></script>
 
 <!-- QR Code Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
