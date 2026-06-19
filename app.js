@@ -1191,11 +1191,11 @@ async function renderHomeDeals() {
     card.innerHTML = `
       <div style="margin:-12px -12px 10px;height:60px;border-radius:10px 10px 0 0;background:linear-gradient(135deg,${deal.category_color||'#FA4615'}44,${deal.category_color||'#FA4615'}11);display:flex;align-items:center;padding:0 12px;gap:10px;overflow:hidden;position:relative">
         <div style="font-size:1.6rem">${deal.store_icon || '🏪'}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:0.6rem;font-weight:700;color:${deal.category_color||'#FA4615'};text-transform:uppercase;letter-spacing:0.05em">${deal.store_name || ''}</div>
-          <div style="font-size:1rem;font-weight:900;color:#fff">${deal.discount}</div>
+        <div style="flex:1;min-width:0;${deal.is_hot ? 'padding-right:42px' : ''}">
+          <div style="font-size:0.6rem;font-weight:700;color:${deal.category_color||'#FA4615'};text-transform:uppercase;letter-spacing:0.05em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${deal.store_name || ''}</div>
+          <div style="font-size:1rem;font-weight:900;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${deal.discount}</div>
         </div>
-        ${deal.is_hot ? '<div class="hot-badge" style="position:absolute;top:6px;right:6px;font-size:0.55rem">🔥 Hot</div>' : ''}
+        ${deal.is_hot ? '<div class="hot-badge" style="position:absolute;top:50%;right:8px;transform:translateY(-50%);font-size:0.55rem;z-index:2">🔥 Hot</div>' : ''}
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
         <div class="deal-title" style="flex:1;min-width:0">${deal.title}</div>
@@ -2415,12 +2415,12 @@ function renderDealCard(deal, idx) {
     <!-- Merchant Logo Banner -->
     <div style="margin:-16px -16px 14px;height:72px;border-radius:${_mediaHtml ? '0' : '14px 14px'} 0 0;background:linear-gradient(135deg,${deal.category_color}33,${deal.category_color}11);display:flex;align-items:center;padding:0 16px;gap:14px;position:relative;overflow:hidden">
       <div style="width:52px;height:52px;border-radius:14px;background:${deal.category_color}22;border:1px solid ${deal.category_color}33;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0">${deal.store_icon}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:0.72rem;font-weight:800;color:${deal.category_color};text-transform:uppercase;letter-spacing:0.06em">${deal.store_name}</div>
-        <div style="font-size:1.2rem;font-weight:900;color:#fff;line-height:1.1">${deal.discount}</div>
+      <div style="flex:1;min-width:0;${deal.is_hot ? 'padding-right:52px' : 'padding-right:36px'}">
+        <div style="font-size:0.72rem;font-weight:800;color:${deal.category_color};text-transform:uppercase;letter-spacing:0.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${deal.store_name}</div>
+        <div style="font-size:1.2rem;font-weight:900;color:#fff;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${deal.discount}</div>
       </div>
-      ${deal.is_hot ? '<div class="hot-badge" style="position:absolute;top:10px;right:10px">🔥 Hot</div>' : ''}
-      <button class="bookmark-btn ${deal.is_saved ? 'saved' : ''}" data-type="deal" data-id="${deal.id}" aria-label="Merken" style="position:absolute;bottom:10px;right:10px;width:28px;height:28px;border-radius:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:0.8rem;cursor:pointer">
+      ${deal.is_hot ? '<div class="hot-badge" style="position:absolute;top:8px;right:44px;z-index:2">🔥 Hot</div>' : ''}
+      <button class="bookmark-btn ${deal.is_saved ? 'saved' : ''}" data-type="deal" data-id="${deal.id}" aria-label="Merken" style="position:absolute;top:50%;right:10px;transform:translateY(-50%);width:28px;height:28px;border-radius:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:0.8rem;cursor:pointer">
         ${deal.is_saved ? '🔖' : '🏷️'}
       </button>
     </div>
