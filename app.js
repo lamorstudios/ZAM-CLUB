@@ -1064,16 +1064,11 @@ function renderHome() {
   if (recsLabel) recsLabel.style.display = 'none';
   if (recsScroll) recsScroll.style.display = 'none';
 
+  // Referral CTA widget — visible for all regular users, hidden for merchant/admin
   if (!isPerfMode) {
-    // Referral CTA widget
     const refCode = _getReferralCode(user);
     const refCodeEl = document.getElementById('home-referral-code');
     if (refCodeEl && refCode) refCodeEl.textContent = refCode;
-    const { unlocked, pending, totalPts } = _getReferralSummary(user?.id || 'guest');
-    const refCountEl = document.getElementById('home-referral-count');
-    const refPtsEl   = document.getElementById('home-referral-pts');
-    if (refCountEl) refCountEl.textContent = unlocked.length + pending.length;
-    if (refPtsEl)   refPtsEl.textContent   = totalPts;
   } else {
     const refEl = document.getElementById('home-referral-cta');
     if (refEl) refEl.style.display = 'none';
@@ -9207,63 +9202,81 @@ function openReferralSheet() {
   const user = ZAMApi.auth.currentUser();
   const code = _getReferralCode(user);
   _checkReferralBonuses();
-  const { unlocked, pending, totalPts } = _getReferralSummary(user?.id || 'guest');
+  const { unlocked, pending } = _getReferralSummary(user?.id || 'guest');
 
-  const pendingRows = pending.map(r => `
-    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:0.78rem;font-weight:700;color:#e2e8f0">${r.invited_name || 'Freund'}</div>
-        <div style="font-size:0.67rem;color:rgba(255,255,255,0.35);margin-top:2px">
-          ${r.invited_points.toLocaleString('de-DE')} / 2.000 Pkt · ${r.invited_days}d · ${r.invited_merchants} Händler
-        </div>
-        <div style="margin-top:5px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">
-          <div style="height:100%;width:${Math.min(100,r.invited_points/20)}%;background:linear-gradient(90deg,#FA4615,#F7AB00);border-radius:2px"></div>
-        </div>
-      </div>
-      <div style="font-size:0.68rem;font-weight:700;color:#F7AB00;background:rgba(247,171,0,0.12);border:1px solid rgba(247,171,0,0.2);border-radius:8px;padding:3px 8px;white-space:nowrap">⏳ Ausstehend</div>
-    </div>`).join('');
+  // Scan-bonus totals
+  const scanLog   = _refScanLog().filter(e => e.referrer_id === (user?.id || ''));
+  const scanTotal = scanLog.reduce((s,e)=>s+e.pts, 0);
+  const totalPts  = (unlocked.length * 250) + scanTotal;
 
-  const unlockedRows = unlocked.map(r => `
-    <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.15);border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:0.78rem;font-weight:700;color:#e2e8f0">${r.invited_name || 'Freund'}</div>
-        <div style="font-size:0.67rem;color:rgba(255,255,255,0.35);margin-top:2px">${r.invited_points.toLocaleString('de-DE')} Pkt · +250 Pkt für dich</div>
+  const makeRow = (r, isUnlocked) => {
+    const pct = Math.min(100, (r.invited_points / 2000) * 100).toFixed(0);
+    const remaining = Math.max(0, 2000 - r.invited_points);
+    const scanBonuses = scanLog.filter(e => e.invited_id === r.invited_id).reduce((s,e)=>s+e.pts, 0);
+    if (isUnlocked) {
+      return `<div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:12px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+          <div style="font-size:0.8rem;font-weight:700;color:#e2e8f0">${escHtml(r.invited_name || 'Freund')}</div>
+          <span style="font-size:0.67rem;font-weight:700;color:#34d399;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.25);border-radius:7px;padding:2px 8px">✅ +250 Pkt. erhalten</span>
+        </div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.35)">${r.invited_points.toLocaleString('de-DE')} Pkt. erreicht${scanBonuses > 0 ? ` · +${scanBonuses} Scan-Boni` : ''}</div>
+      </div>`;
+    }
+    return `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+        <div style="font-size:0.8rem;font-weight:700;color:#e2e8f0">${escHtml(r.invited_name || 'Freund')}</div>
+        <span style="font-size:0.65rem;font-weight:700;color:#F7AB00;white-space:nowrap">⏳ ${r.invited_points.toLocaleString('de-DE')} / 2.000 Pkt.</span>
       </div>
-      <div style="font-size:0.68rem;font-weight:700;color:#34d399;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:3px 8px;white-space:nowrap">✅ Freigeschaltet</div>
-    </div>`).join('');
+      <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;margin-bottom:5px">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#FA4615,#F7AB00);border-radius:3px;transition:width 0.4s"></div>
+      </div>
+      <div style="font-size:0.63rem;color:rgba(255,255,255,0.3)">Noch ${remaining.toLocaleString('de-DE')} Pkt. bis zum +250-Bonus${scanBonuses > 0 ? ` · +${scanBonuses} Scan-Boni bereits verdient` : ''}</div>
+    </div>`;
+  };
+
+  const friendRows = [
+    ...unlocked.map(r => makeRow(r, true)),
+    ...pending.map(r => makeRow(r, false)),
+  ].join('');
 
   body.innerHTML = `
-    <h2 style="font-size:1.2rem;font-weight:900;color:#fff;margin-bottom:6px">👥 Freunde einladen</h2>
-    <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:16px;line-height:1.6">Dein Freund muss <strong style="color:#fff">2.000 Punkte</strong> sammeln und mindestens <strong style="color:#fff">14 Tage</strong> aktiv sein oder <strong style="color:#fff">3 Händler</strong> besucht haben. Dann erhältst du <strong style="color:#F7AB00">+250 Punkte</strong>, dein Freund <strong style="color:#F7AB00">+100 Bonuspunkte</strong>.</p>
-    <div style="background:rgba(250,70,21,0.1);border:2px dashed rgba(250,70,21,0.35);border-radius:14px;padding:18px;text-align:center;margin-bottom:14px">
-      <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(250,70,21,0.7);margin-bottom:8px">Dein Einladungs-Code</div>
-      <div style="font-size:2rem;font-weight:900;letter-spacing:0.12em;color:#ffb399;font-family:monospace">${code}</div>
-      <button onclick="navigator.clipboard?.writeText('${code}').then(()=>showToast('✓ Code kopiert!'))" style="margin-top:12px;padding:8px 20px;background:rgba(250,70,21,0.2);border:1px solid rgba(250,70,21,0.3);color:#ffb399;border-radius:10px;font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer">📋 Code kopieren</button>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;text-align:center">
-        <div style="font-size:1.6rem;font-weight:900;color:#ffb399">${unlocked.length + pending.length}</div>
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Eingeladene Freunde</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;text-align:center">
-        <div style="font-size:1.6rem;font-weight:900;color:#F7AB00">${totalPts}</div>
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Punkte verdient</div>
+    <h2 style="font-size:1.15rem;font-weight:900;color:#fff;margin-bottom:5px">👥 Freunde einladen</h2>
+    <p style="font-size:0.73rem;color:rgba(255,255,255,0.45);margin-bottom:14px;line-height:1.6">🎁 <strong style="color:#F7AB00">+250 Pkt.</strong> wenn Freund 2.000 Pkt. erreicht &nbsp;·&nbsp; 💰 <strong style="color:#34d399">+5 Pkt.</strong> pro echter Deal-Einlösung</p>
+    <div style="background:rgba(250,70,21,0.1);border:2px dashed rgba(250,70,21,0.35);border-radius:14px;padding:16px;text-align:center;margin-bottom:12px">
+      <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(250,70,21,0.7);margin-bottom:6px">Dein Code</div>
+      <div style="font-size:1.9rem;font-weight:900;letter-spacing:0.12em;color:#ffb399;font-family:monospace">${escHtml(code || '---')}</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+        <button onclick="navigator.clipboard?.writeText('${escHtml(code||'')}').then(()=>showToast('✓ Code kopiert!'))" style="padding:7px 16px;background:rgba(250,70,21,0.2);border:1px solid rgba(250,70,21,0.3);color:#ffb399;border-radius:10px;font-family:var(--font);font-size:0.74rem;font-weight:700;cursor:pointer">📋 Code kopieren</button>
+        <button onclick="closeReferralSheet();openShareDialog()" style="padding:7px 16px;background:rgba(247,171,0,0.15);border:1px solid rgba(247,171,0,0.3);color:#F7AB00;border-radius:10px;font-family:var(--font);font-size:0.74rem;font-weight:700;cursor:pointer">📤 Einladungslink teilen</button>
       </div>
     </div>
-    ${(pendingRows || unlockedRows) ? `
-    <div style="margin-bottom:14px">
-      <div style="font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Meine Einladungen</div>
-      ${pendingRows}${unlockedRows}
-    </div>` : ''}
-    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px;margin-bottom:14px">
-      <div style="font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em">Bedingungen</div>
-      ${[['✅ Registriert','Freund hat einen ZAM-Account erstellt'],['✅ E-Mail bestätigt','Registrierung abgeschlossen'],['📊 2.000 Punkte','Freund muss 2.000 Punkte sammeln'],['⏱ 14 Tage aktiv ODER','Mindestens 14 Tage seit Registrierung'],['🏪 3 Händler besucht','Check-in bei 3 verschiedenen Händlern']].map(([icon,d]) => `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px;text-align:center">
+        <div style="font-size:1.4rem;font-weight:900;color:#ffb399">${unlocked.length + pending.length}</div>
+        <div style="font-size:0.62rem;color:rgba(255,255,255,0.4)">Eingeladen</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px;text-align:center">
+        <div style="font-size:1.4rem;font-weight:900;color:#34d399">${scanLog.length}</div>
+        <div style="font-size:0.62rem;color:rgba(255,255,255,0.4)">Einlösungen</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px;text-align:center">
+        <div style="font-size:1.4rem;font-weight:900;color:#F7AB00">${totalPts}</div>
+        <div style="font-size:0.62rem;color:rgba(255,255,255,0.4)">Pkt. verdient</div>
+      </div>
+    </div>
+    ${friendRows ? `<div style="margin-bottom:12px">
+      <div style="font-size:0.68rem;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Meine Einladungen</div>
+      ${friendRows}
+    </div>` : `<div style="font-size:0.75rem;color:rgba(255,255,255,0.3);text-align:center;padding:14px 0;margin-bottom:8px">Noch keine Freunde eingeladen</div>`}
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:13px;margin-bottom:14px">
+      <div style="font-size:0.68rem;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:9px;text-transform:uppercase;letter-spacing:0.06em">So funktioniert's</div>
+      ${[['🎁 +250 Pkt.','Freund sammelt 2.000 eigene Punkte (kein Spin, kein Referral)'],['💰 +5 Pkt./Scan','Jede echte Deal-Einlösung beim Händler bringt dir dauerhaft Punkte'],['🔒 Einmalig','Jeder Nutzer hat nur einen Referrer — nach Registrierung nicht änderbar'],['📅 Tageslimit','Max. 100 Pkt./Tag und 3.000 Pkt./Monat aus Scan-Boni']].map(([lbl,d])=>`
       <div style="display:flex;gap:10px;margin-bottom:7px;align-items:flex-start">
-        <div style="font-size:0.72rem;font-weight:800;color:#ffb399;flex-shrink:0;width:130px">${icon}</div>
-        <div style="font-size:0.68rem;color:rgba(255,255,255,0.35)">${d}</div>
+        <div style="font-size:0.7rem;font-weight:800;color:#ffb399;flex-shrink:0;min-width:90px">${lbl}</div>
+        <div style="font-size:0.67rem;color:rgba(255,255,255,0.35)">${d}</div>
       </div>`).join('')}
     </div>
-    <button onclick="closeReferralSheet()" style="width:100%;padding:13px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.84rem;font-weight:700;font-family:var(--font);cursor:pointer">Schließen</button>`;
+    <button onclick="closeReferralSheet()" style="width:100%;padding:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">Schließen</button>`;
   sheet.style.display = 'block';
   document.body.style.overflow = 'hidden';
 }
@@ -9278,12 +9291,18 @@ function closeReferralSheet() {
 // SHARE / INVITE DIALOG
 // ═══════════════════════════════════════════════
 
-function openShareDialog() {
+function _shareGetLink() {
   const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
   const code = _getReferralCode(user) || 'DEMO250';
-  const link = `https://zamclub.de/invite/${code}`;
-  const refKey = 'zam_referrals_' + (user?.id || 'guest');
-  const refCount = JSON.parse(localStorage.getItem(refKey) || '[]').length;
+  return { code, link: `https://zamclub.de/invite?ref=${code}` };
+}
+
+function openShareDialog() {
+  const { code, link } = _shareGetLink();
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const { unlocked, pending } = _getReferralSummary(user?.id || 'guest');
+  const scanLog   = _refScanLog().filter(e => e.referrer_id === (user?.id || ''));
+  const totalPts  = (unlocked.length * 250) + scanLog.reduce((s,e)=>s+e.pts, 0);
 
   const linkEl = document.getElementById('share-invite-link');
   const codeEl = document.getElementById('share-invite-code');
@@ -9291,8 +9310,8 @@ function openShareDialog() {
   const ptsEl   = document.getElementById('share-ref-pts');
   if (linkEl) linkEl.textContent = link;
   if (codeEl) codeEl.textContent = code;
-  if (countEl) countEl.textContent = refCount;
-  if (ptsEl)   ptsEl.textContent  = refCount * 250;
+  if (countEl) countEl.textContent = unlocked.length + pending.length;
+  if (ptsEl)   ptsEl.textContent  = totalPts;
 
   const d = document.getElementById('share-dialog');
   if (d) d.style.display = 'block';
@@ -9306,9 +9325,7 @@ function closeShareDialog() {
 }
 
 function copyShareLink() {
-  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
-  const code = _getReferralCode(user) || 'DEMO250';
-  const link = `https://zamclub.de/invite/${code}`;
+  const { link } = _shareGetLink();
   if (navigator.clipboard) {
     navigator.clipboard.writeText(link).then(() => showToast('✓ Link kopiert!'));
   } else {
@@ -9316,11 +9333,41 @@ function copyShareLink() {
   }
 }
 
+function _shareMsg(code, link) {
+  return `Hey! Ich bin im ZAM Club Freiham und lade dich ein. Meld dich mit meinem Code ${code} an und sammle Punkte! 🎉\n${link}`;
+}
+
 function shareWhatsApp() {
-  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
-  const code = _getReferralCode(user) || 'DEMO250';
-  const msg = encodeURIComponent(`Hey! Ich nutze die ZAM Club App und lade dich ein. Meld dich mit meinem Code ${code} an und wir bekommen beide Punkte! 🎉\nhttps://zamclub.de/invite/${code}`);
-  window.open(`https://wa.me/?text=${msg}`, '_blank');
+  const { code, link } = _shareGetLink();
+  window.open(`https://wa.me/?text=${encodeURIComponent(_shareMsg(code, link))}`, '_blank');
+}
+
+function shareTelegram() {
+  const { code, link } = _shareGetLink();
+  window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(_shareMsg(code, link))}`, '_blank');
+}
+
+function shareInstagram() {
+  // Instagram has no direct share URL — copy link and prompt user
+  const { link } = _shareGetLink();
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link).then(() => showToast('📋 Link kopiert — füge ihn in deine Instagram-Story ein'));
+  } else {
+    showToast('📋 ' + link);
+  }
+}
+
+function shareSMS() {
+  const { code, link } = _shareGetLink();
+  const body = encodeURIComponent(_shareMsg(code, link));
+  window.open(`sms:?body=${body}`, '_self');
+}
+
+function shareEmail() {
+  const { code, link } = _shareGetLink();
+  const sub  = encodeURIComponent('ZAM Club Einladung — komm dazu!');
+  const body = encodeURIComponent(`Hey,\n\n${_shareMsg(code, link)}\n\nBis bald im ZAM!`);
+  window.open(`mailto:?subject=${sub}&body=${body}`, '_self');
 }
 
 // ═══════════════════════════════════════════════
