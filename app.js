@@ -1026,7 +1026,8 @@ function initNavigation() {
 // =============================================
 function renderHome() {
   const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
-  document.body.classList.toggle('perf-mode', user.role === 'merchant' || user.role === 'admin');
+  const _er = _getEffectiveRole();
+  document.body.classList.toggle('perf-mode', _er === 'merchant' || _er === 'admin');
   const hour = new Date().getHours();
   let greeting = 'Guten Tag';
   if (hour < 12) greeting = 'Guten Morgen';
@@ -1039,7 +1040,7 @@ function renderHome() {
   const firstName = (user.display_name || 'Gast').split(' ')[0];
   if (nameEl) nameEl.textContent = firstName + '! 👋';
 
-  const isPerfMode = user.role === 'merchant' || user.role === 'admin';
+  const isPerfMode = _er === 'merchant' || _er === 'admin';
   updatePointsDisplay();
   _renderHomeRankStats(user);
 
@@ -1067,16 +1068,18 @@ function renderHome() {
   // Referral CTA — always visible, fill in dynamic data
   _renderHomeReferralCard(user);
 
-  // Händler Tools card — collapsed by default, expand on click
+  // Händler Tools card — fully removed for regular users, rendered only for merchant/admin
   const toolsCard = document.getElementById('home-merchant-tools');
   if (toolsCard) {
-    const isMerchant = user.role === 'merchant' || user.role === 'admin';
+    const effectiveRoleHome = _getEffectiveRole();
+    const isMerchant = effectiveRoleHome === 'merchant' || effectiveRoleHome === 'admin';
     if (!isMerchant) {
       toolsCard.style.display = 'none';
+      toolsCard.innerHTML = ''; // fully clear — no merchant content in DOM for regular users
     } else {
-      const shopLabel = user.role === 'admin' ? 'Admin-Vorschau aktiv' : (user.display_name || user.name || 'Demo Händler');
+      const shopLabel = effectiveRoleHome === 'admin' ? 'Admin-Vorschau aktiv' : (user.display_name || user.name || 'Demo Händler');
       toolsCard.style.display = 'block';
-      const isAdmin = user.role === 'admin';
+      const isAdmin = effectiveRoleHome === 'admin';
       toolsCard.innerHTML = `
         <div style="border:1px solid rgba(250,70,21,0.3);border-radius:16px;overflow:hidden">
           <button id="ht-toggle" style="width:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(196,53,16,0.18);border:none;cursor:pointer;font-family:var(--font);text-align:left">
@@ -1142,8 +1145,7 @@ async function renderHomeEvents() {
   const container = $('#home-events-scroll');
   if (!container) return;
   container.innerHTML = '';
-  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
-  const isPerfMode = user.role === 'merchant' || user.role === 'admin';
+  const isPerfMode = _getEffectiveRole() === 'merchant' || _getEffectiveRole() === 'admin';
   const events = await ZAMApi.events.list();
   events.slice(0, isPerfMode ? 2 : 5).forEach(evt => {
     const saved = ZAMApi.events.isSaved(evt.id);
@@ -1182,8 +1184,7 @@ async function renderHomeDeals() {
   const container = $('#home-deals-scroll');
   if (!container) return;
   container.innerHTML = '';
-  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
-  const isPerfMode = user.role === 'merchant' || user.role === 'admin';
+  const isPerfMode = _getEffectiveRole() === 'merchant' || _getEffectiveRole() === 'admin';
   const deals = _shuffleDeals(await ZAMApi.deals.list());
   deals.slice(0, isPerfMode ? 2 : 5).forEach(deal => {
     const saved = ZAMApi.deals.isSaved(deal.id);
@@ -2760,10 +2761,11 @@ function renderRoleActions() {
   const container = $('#profile-role-actions');
   if (!container || !user) return;
 
-  // Show Mitarbeiter button for merchant and admin roles
+  // Show Mitarbeiter button — only for merchant and admin, fully removed for users
   const staffBtnWrap = document.getElementById('profile-staff-btn-wrap');
   if (staffBtnWrap) {
-    if (user.role === 'merchant' || user.role === 'admin') {
+    const role = _getEffectiveRole();
+    if (role === 'merchant' || role === 'admin') {
       staffBtnWrap.style.display = 'block';
       staffBtnWrap.innerHTML = `
         <button onclick="openStaffModal()" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,rgba(100,180,255,0.12),rgba(100,180,255,0.05));border:1px solid rgba(100,180,255,0.3);border-radius:14px;cursor:pointer;font-family:var(--font);color:#fff;text-align:left">
@@ -2775,10 +2777,13 @@ function renderRoleActions() {
         </button>`;
     } else {
       staffBtnWrap.style.display = 'none';
+      staffBtnWrap.innerHTML = ''; // fully remove content, not just CSS-hide
     }
   }
 
-  if (user.role === 'admin') {
+  const effectiveRole = _getEffectiveRole();
+
+  if (effectiveRole === 'admin') {
     container.innerHTML = `
       <a href="admin.html" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;padding:13px">
         🛡️ Admin-Dashboard
@@ -2808,14 +2813,14 @@ function renderRoleActions() {
         <button class="btn btn-ghost btn-full" onclick="openMerchantStatsOverlay()" style="margin-bottom:6px">📊 Händler-Statistiken</button>
         <button class="btn btn-ghost btn-full" onclick="openMerchantDealModal()">🏷️ Demo Deal einreichen</button>
       </div>`;
-  } else if (user.role === 'merchant' && user.merchant_status === 'pending') {
+  } else if (effectiveRole === 'merchant' && user.merchant_status === 'pending') {
     container.innerHTML = `
       <div style="background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.25);border-radius:12px;padding:14px 16px;text-align:center;margin-bottom:8px">
         <div style="font-size:1.4rem;margin-bottom:6px">⏳</div>
         <div style="font-size:0.8rem;font-weight:700;color:#F7AB00;margin-bottom:4px">Zugang wird geprüft</div>
         <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);line-height:1.6">Das ZAM Center Management prüft deinen Händlerzugang. Du wirst benachrichtigt.</div>
       </div>`;
-  } else if (user.role === 'merchant') {
+  } else if (effectiveRole === 'merchant') {
     container.innerHTML = `
       <div style="background:linear-gradient(135deg,rgba(196,53,16,0.2),rgba(250,70,21,0.1));border:1px solid rgba(250,70,21,0.3);border-radius:14px;padding:14px 16px;margin-bottom:12px">
         <div style="font-size:0.78rem;font-weight:800;color:#ffb399;margin-bottom:12px">🏪 Händler Tools</div>
@@ -8942,6 +8947,13 @@ const _DEMO_ROLE_ACTIONS = {
   user: '',
 };
 
+// Central role resolver — always use this for role-based visibility checks.
+// Reads the current effective role from the live user object (already patched by switchDemoRole).
+function _getEffectiveRole() {
+  const u = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  return u?.role || 'user';
+}
+
 function switchDemoRole(role) {
   const user = ZAMApi.auth.currentUser();
   if (!user) { showToast('Bitte zuerst einloggen'); return; }
@@ -9008,6 +9020,14 @@ function switchDemoRole(role) {
   // Show role-specific quick actions
   const actionsEl = document.getElementById('demo-role-actions');
   if (actionsEl) actionsEl.innerHTML = _DEMO_ROLE_ACTIONS[role] || '';
+
+  // Immediately clear merchant-only DOM elements before re-render (prevents flash)
+  const _toolsCard = document.getElementById('home-merchant-tools');
+  if (_toolsCard && role === 'user') { _toolsCard.style.display = 'none'; _toolsCard.innerHTML = ''; }
+  const _staffWrap = document.getElementById('profile-staff-btn-wrap');
+  if (_staffWrap && role === 'user') { _staffWrap.style.display = 'none'; _staffWrap.innerHTML = ''; }
+  const _roleContainer = document.getElementById('profile-role-actions');
+  if (_roleContainer && role === 'user') { _roleContainer.innerHTML = ''; }
 
   // Re-render home (merchant tools card) and profile (role buttons)
   renderHome();
