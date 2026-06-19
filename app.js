@@ -2808,6 +2808,13 @@ function renderRoleActions() {
         <button class="btn btn-ghost btn-full" onclick="openMerchantStatsOverlay()" style="margin-bottom:6px">📊 Händler-Statistiken</button>
         <button class="btn btn-ghost btn-full" onclick="openMerchantDealModal()">🏷️ Demo Deal einreichen</button>
       </div>`;
+  } else if (user.role === 'merchant' && user.merchant_status === 'pending') {
+    container.innerHTML = `
+      <div style="background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.25);border-radius:12px;padding:14px 16px;text-align:center;margin-bottom:8px">
+        <div style="font-size:1.4rem;margin-bottom:6px">⏳</div>
+        <div style="font-size:0.8rem;font-weight:700;color:#F7AB00;margin-bottom:4px">Zugang wird geprüft</div>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);line-height:1.6">Das ZAM Center Management prüft deinen Händlerzugang. Du wirst benachrichtigt.</div>
+      </div>`;
   } else if (user.role === 'merchant') {
     container.innerHTML = `
       <div style="background:linear-gradient(135deg,rgba(196,53,16,0.2),rgba(250,70,21,0.1));border:1px solid rgba(250,70,21,0.3);border-radius:14px;padding:14px 16px;margin-bottom:12px">
@@ -2828,18 +2835,9 @@ function renderRoleActions() {
           ⚙️ Vollständiges Dashboard
         </button>
       </div>`;
-  } else if (user.role === 'merchant' && user.merchant_status === 'pending') {
-    container.innerHTML = `
-      <div style="background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.25);border-radius:12px;padding:14px 16px;text-align:center;margin-bottom:8px">
-        <div style="font-size:1.4rem;margin-bottom:6px">⏳</div>
-        <div style="font-size:0.8rem;font-weight:700;color:#F7AB00;margin-bottom:4px">Zugang wird geprüft</div>
-        <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);line-height:1.6">Das ZAM Center Management prüft deinen Händlerzugang. Du wirst benachrichtigt.</div>
-      </div>`;
   } else {
-    container.innerHTML = `
-      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;text-align:center;margin-bottom:8px">
-        <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.6">Händlerzugang ist nur auf Einladung<br>durch das ZAM Center Management möglich.</div>
-      </div>`;
+    // Regular user — no merchant/admin tools shown
+    container.innerHTML = '';
   }
 }
 
