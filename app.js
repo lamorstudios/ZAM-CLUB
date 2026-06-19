@@ -2505,10 +2505,38 @@ function _renderPartnerDealCard(pd) {
       </div>
     </div>
     <div style="font-size:0.68rem;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:14px">${escHtml(pd.description||'')}</div>
-    <div style="display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
       <div style="font-size:0.6rem;color:rgba(255,255,255,0.3)">📅 Bis ${expiryStr} · ${pd.participants||0} Teilnehmer</div>
-      <button onclick="securePartnerVoucher('${escHtml(pd.id)}')" style="background:#FA4615;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">Gutschein sichern</button>
+      <div id="pd-btn-wrap-${escHtml(pd.id)}" style="display:flex;gap:8px;align-items:center"></div>
     </div>`;
+
+  // Attach buttons — check if already saved
+  const btnWrap = div.querySelector(`#pd-btn-wrap-${pd.id}`);
+  if (btnWrap) {
+    const alreadySaved = _getMyVouchers().find(v => v.deal_id === pd.id && !v.redeemed);
+    if (alreadySaved) {
+      btnWrap.innerHTML = `
+        <span style="font-size:0.72rem;font-weight:700;color:#34d399">✓ Gesichert · +10 Pkt.</span>
+        <button style="background:#FA4615;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer" onclick="_showPartnerVoucherQR('${pd.id}')">🎟 Einlösen</button>`;
+    } else {
+      const saveBtn = document.createElement('button');
+      saveBtn.textContent = 'Gutschein sichern';
+      saveBtn.style.cssText = 'background:#FA4615;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer';
+      saveBtn.addEventListener('click', () => {
+        const storeName = 'Partner Deal: ' + pd.a.name + ' + ' + pd.b.name;
+        secureVoucherFromDeal(pd.id, pd.title, '🤝', storeName, 'Partner Deal', pd.points_reward || 0);
+        saveBtn.textContent = '✓ Gesichert · +10 Pkt.';
+        saveBtn.style.cssText = 'background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);border-radius:10px;padding:8px 14px;color:#34d399;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:default';
+        saveBtn.disabled = true;
+        const redeemBtn = document.createElement('button');
+        redeemBtn.textContent = '🎟 Einlösen';
+        redeemBtn.style.cssText = 'background:#FA4615;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer';
+        redeemBtn.addEventListener('click', () => _showPartnerVoucherQR(pd.id));
+        btnWrap.appendChild(redeemBtn);
+      });
+      btnWrap.appendChild(saveBtn);
+    }
+  }
   return div;
 }
 
@@ -10559,31 +10587,61 @@ function _getMyVouchers() {
 }
 function _saveMyVouchers(v) { localStorage.setItem(_MY_VOUCHER_KEY, JSON.stringify(v)); }
 
-function secureVoucherFromDeal(dealId, dealTitle, storeIcon, storeName, discount) {
+function secureVoucherFromDeal(dealId, dealTitle, storeIcon, storeName, discount, points_reward) {
   const vouchers = _getMyVouchers();
   const existing = vouchers.find(v => v.deal_id === dealId && !v.redeemed);
-  if (existing) { showMyVoucherQR(existing.id); return; }
+  if (existing) {
+    // Already saved — show toast but do NOT open QR again
+    showToast('✓ Bereits gesichert · Jetzt beim Händler einlösen', 'info');
+    return;
+  }
   const code = 'ZAM-' + dealId.replace('_','').toUpperCase().slice(-4) + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
   const expDate = new Date(); expDate.setDate(expDate.getDate() + 14);
   const voucher = {
     id: 'mv_' + Date.now(),
     deal_id: dealId, title: dealTitle, store_icon: storeIcon,
     store_name: storeName, discount, code,
+    points_reward: points_reward || 0,
     created_at: new Date().toISOString(),
     expiry: expDate.toISOString().slice(0,10),
     redeemed: false,
   };
   vouchers.unshift(voucher);
   _saveMyVouchers(vouchers);
-  showToast('🎟 Gutschein gesichert! +10 Punkte', 'success');
-  showMyVoucherQR(voucher.id);
+  // Award +10 points for saving
+  if (typeof addPoints === 'function') addPoints(10, 'Gutschein gesichert: ' + dealTitle);
+  showToast('✅ Gutschein gesichert · +10 Punkte', 'success');
+  if (typeof checkBadgesAfterAction === 'function') checkBadgesAfterAction();
+  // Do NOT open QR automatically — user taps "Einlösen" themselves
 }
 
 function securePartnerVoucher(dealId) {
   const pd = _getPD2ActiveDeals().find(d => d.id === dealId);
   if (!pd) { showToast('Partner-Deal nicht gefunden', 'error'); return; }
   const storeName = 'Partner Deal: ' + pd.a.name + ' + ' + pd.b.name;
-  secureVoucherFromDeal(dealId, pd.title, '🤝', storeName, 'Partner Deal');
+  secureVoucherFromDeal(dealId, pd.title, '🤝', storeName, 'Partner Deal', pd.points_reward || 0);
+  // Update button state on the card
+  const btn = document.querySelector(`button[onclick="securePartnerVoucher('${CSS.escape ? CSS.escape(dealId) : dealId}')"]`);
+  if (!btn) return;
+  btn.textContent = '✓ Gesichert · +10 Pkt.';
+  btn.style.cssText = 'background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);border-radius:10px;padding:8px 14px;color:#34d399;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:default';
+  btn.disabled = true;
+  // Add "Einlösen" button next to it
+  const redeemBtn = document.createElement('button');
+  redeemBtn.textContent = '🎟 Einlösen';
+  redeemBtn.style.cssText = 'background:#FA4615;border:none;border-radius:10px;padding:8px 14px;color:#fff;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-left:8px';
+  redeemBtn.onclick = () => {
+    const vouchers = _getMyVouchers();
+    const v = vouchers.find(x => x.deal_id === dealId && !x.redeemed);
+    if (v) showMyVoucherQR(v.id);
+  };
+  btn.parentNode.appendChild(redeemBtn);
+}
+
+function _showPartnerVoucherQR(dealId) {
+  const v = _getMyVouchers().find(x => x.deal_id === dealId && !x.redeemed);
+  if (v) showMyVoucherQR(v.id);
+  else showToast('Kein gesicherter Gutschein gefunden', 'error');
 }
 
 function showMyVoucherQR(voucherId) {
@@ -10611,10 +10669,7 @@ function showMyVoucherQR(voucherId) {
       <div style="font-size:1.05rem;font-weight:900;color:#F7AB00;letter-spacing:0.1em">${v.code}</div>
       <div style="font-size:0.6rem;color:rgba(255,255,255,0.3);margin-top:4px">Gültig bis ${new Date(v.expiry+'T23:59:59').toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'})}</div>
     </div>
-    <div style="display:flex;gap:8px">
-      <button onclick="document.getElementById('qr-voucher-modal').style.display='none'" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:var(--font);cursor:pointer">Schließen</button>
-      <button onclick="document.getElementById('qr-voucher-modal').style.display='none';navigateTo('my-vouchers')" style="flex:1;background:#FA4615;border:none;border-radius:12px;padding:11px;color:#fff;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">Alle Gutscheine →</button>
-    </div>`;
+    <button onclick="document.getElementById('qr-voucher-modal').style.display='none'" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px;color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600;font-family:var(--font);cursor:pointer">Schließen</button>`;
   modal.style.display = 'flex';
   if (!v.redeemed && window.QRCode) {
     setTimeout(() => {
