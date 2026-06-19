@@ -231,30 +231,18 @@
 
     <!-- Freunde einladen — always visible -->
     <div id="home-referral-cta" style="margin:6px 16px 0">
-      <div class="referral-cta-card" style="padding:10px 12px">
+      <div class="referral-cta-card" style="padding:11px 13px">
         <div class="referral-cta-glow"></div>
-        <div style="position:relative;z-index:1">
-          <!-- Header + code in one row -->
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            <span style="font-size:1rem;flex-shrink:0">👥</span>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:0.82rem;font-weight:900;color:#fff;line-height:1.2">Freunde einladen</div>
-              <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🎁 +250 Pkt. ab 2.000 Freund-Pkt. &nbsp;·&nbsp; 💰 +5 Pkt. pro Deal-Einlösung</div>
-            </div>
-            <div style="text-align:right;flex-shrink:0">
-              <div style="font-size:0.55rem;color:rgba(255,255,255,0.3);line-height:1">Code</div>
-              <div id="home-referral-code" style="font-size:0.7rem;font-family:monospace;font-weight:800;color:#ffb399;line-height:1.2">ZAM---</div>
-            </div>
+        <div style="position:relative;z-index:1;display:flex;align-items:center;gap:10px">
+          <span style="font-size:1.1rem;flex-shrink:0">👥</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.82rem;font-weight:900;color:#fff;line-height:1.2">Freunde einladen</div>
+            <div style="font-size:0.62rem;color:rgba(255,255,255,0.4);margin-top:1px">Lade Freunde ein und sichere dir bis zu +250 Punkte.</div>
           </div>
-          <!-- Buttons -->
-          <div style="display:flex;gap:7px">
-            <button onclick="event.stopPropagation();shareWhatsApp()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 10px;background:linear-gradient(135deg,#075e54,#128c7e);border:none;color:#fff;border-radius:10px;font-size:0.76rem;font-weight:800;font-family:var(--font);cursor:pointer">📲 WhatsApp</button>
-            <button onclick="event.stopPropagation();copyShareLink()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);color:rgba(255,255,255,0.75);border-radius:10px;font-size:0.76rem;font-weight:700;font-family:var(--font);cursor:pointer">🔗 Link kopieren</button>
-            <button onclick="event.stopPropagation();openShareDialog()" style="flex-shrink:0;padding:8px 10px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);border-radius:10px;font-size:0.72rem;font-family:var(--font);cursor:pointer" title="Weitere Apps">📤</button>
-          </div>
-          <!-- Progress (only shown when friends exist) -->
-          <div id="home-referral-progress"></div>
+          <button onclick="event.stopPropagation();openReferralSheet()" style="flex-shrink:0;padding:8px 14px;background:linear-gradient(135deg,rgba(250,70,21,0.85),rgba(247,171,0,0.75));border:none;border-radius:10px;color:#fff;font-size:0.76rem;font-weight:800;font-family:var(--font);cursor:pointer;box-shadow:0 0 12px rgba(250,100,21,0.35)">✨ Einladen</button>
         </div>
+        <div id="home-referral-progress"></div>
+        <div id="home-referral-code" style="display:none">ZAM---</div>
         <div id="home-referral-pts" style="display:none">0</div>
         <div id="home-referral-count" style="display:none">0</div>
       </div>

@@ -9278,42 +9278,67 @@ function openReferralSheet() {
 
   body.innerHTML = `
     <h2 style="font-size:1.15rem;font-weight:900;color:#fff;margin-bottom:5px">👥 Freunde einladen</h2>
-    <p style="font-size:0.73rem;color:rgba(255,255,255,0.45);margin-bottom:14px;line-height:1.6">🎁 <strong style="color:#F7AB00">+250 Pkt.</strong> wenn Freund 2.000 Pkt. erreicht &nbsp;·&nbsp; 💰 <strong style="color:#34d399">+5 Pkt.</strong> pro echter Deal-Einlösung</p>
-    <div style="background:rgba(250,70,21,0.1);border:2px dashed rgba(250,70,21,0.35);border-radius:14px;padding:16px;text-align:center;margin-bottom:12px">
-      <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:800;color:rgba(250,70,21,0.7);margin-bottom:6px">Dein Code</div>
-      <div style="font-size:1.9rem;font-weight:900;letter-spacing:0.12em;color:#ffb399;font-family:monospace">${escHtml(code || '---')}</div>
-      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
-        <button onclick="navigator.clipboard?.writeText('${escHtml(code||'')}').then(()=>showToast('✓ Code kopiert!'))" style="padding:7px 16px;background:rgba(250,70,21,0.2);border:1px solid rgba(250,70,21,0.3);color:#ffb399;border-radius:10px;font-family:var(--font);font-size:0.74rem;font-weight:700;cursor:pointer">📋 Code kopieren</button>
-        <button onclick="closeReferralSheet();openShareDialog()" style="padding:7px 16px;background:rgba(247,171,0,0.15);border:1px solid rgba(247,171,0,0.3);color:#F7AB00;border-radius:10px;font-family:var(--font);font-size:0.74rem;font-weight:700;cursor:pointer">📤 Einladungslink teilen</button>
+    <p style="font-size:0.74rem;color:rgba(255,255,255,0.45);margin-bottom:16px;line-height:1.6">Lade Freunde in den ZAM Club ein und sammle Bonuspunkte.</p>
+
+    <!-- Share buttons — primary CTA -->
+    <button onclick="shareWhatsApp()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:linear-gradient(135deg,#075e54,#128c7e);border:none;color:#fff;border-radius:13px;font-size:0.85rem;font-weight:800;font-family:var(--font);cursor:pointer;margin-bottom:8px">📲 Über WhatsApp einladen</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <button onclick="shareEmail()" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#e2e8f0;border-radius:12px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">✉️ Per E-Mail</button>
+      <button onclick="copyShareLink()" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#e2e8f0;border-radius:12px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">🔗 Link kopieren</button>
+    </div>
+    <button onclick="openShareDialog()" style="width:100%;padding:9px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);border-radius:10px;font-size:0.72rem;font-weight:600;font-family:var(--font);cursor:pointer;margin-bottom:14px">📤 Weitere Apps (Telegram · SMS)</button>
+
+    <!-- Code -->
+    <div style="background:rgba(250,70,21,0.08);border:1px dashed rgba(250,70,21,0.3);border-radius:12px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:800;color:rgba(250,70,21,0.6);margin-bottom:3px">Dein Einladungscode</div>
+        <div style="font-size:1.15rem;font-weight:900;letter-spacing:0.1em;color:#ffb399;font-family:monospace">${escHtml(code || '---')}</div>
+      </div>
+      <button onclick="navigator.clipboard?.writeText('${escHtml(code||'')}').then(()=>showToast('✓ Code kopiert!'))" style="padding:7px 12px;background:rgba(250,70,21,0.15);border:1px solid rgba(250,70,21,0.3);color:#ffb399;border-radius:9px;font-family:var(--font);font-size:0.72rem;font-weight:700;cursor:pointer">Kopieren</button>
+    </div>
+
+    <!-- Bonus explanation -->
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:13px 14px;margin-bottom:12px">
+      <div style="font-size:0.68rem;font-weight:800;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Bonussystem</div>
+      <div style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start">
+        <div style="font-size:0.85rem;flex-shrink:0;width:22px">🎁</div>
+        <div>
+          <div style="font-size:0.76rem;font-weight:800;color:#F7AB00;margin-bottom:1px">+250 Punkte</div>
+          <div style="font-size:0.67rem;color:rgba(255,255,255,0.4);line-height:1.4">Sobald dein eingeladener Freund 2.000 Punkte erreicht.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start">
+        <div style="font-size:0.85rem;flex-shrink:0;width:22px">💰</div>
+        <div>
+          <div style="font-size:0.76rem;font-weight:800;color:#34d399;margin-bottom:1px">+5 Punkte pro echter Deal-Einlösung</div>
+          <div style="font-size:0.67rem;color:rgba(255,255,255,0.4);line-height:1.4">Bei jeder bestätigten Deal-Einlösung deines Freundes beim Händler.</div>
+        </div>
+      </div>
+      <div style="font-size:0.63rem;color:rgba(255,255,255,0.25);padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;line-height:1.5">ℹ️ Nur echte Händler-Scans zählen. Check-ins, Daily Spin und reine Registrierungen zählen nicht.</div>
+    </div>
+
+    <!-- Stats + friend progress -->
+    ${(unlocked.length + pending.length) > 0 ? `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px">
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:1.2rem;font-weight:900;color:#ffb399">${unlocked.length + pending.length}</div>
+        <div style="font-size:0.58rem;color:rgba(255,255,255,0.35)">Eingeladen</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:1.2rem;font-weight:900;color:#34d399">${scanLog.length}</div>
+        <div style="font-size:0.58rem;color:rgba(255,255,255,0.35)">Einlösungen</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:1.2rem;font-weight:900;color:#F7AB00">${totalPts}</div>
+        <div style="font-size:0.58rem;color:rgba(255,255,255,0.35)">Pkt. verdient</div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px;text-align:center">
-        <div style="font-size:1.4rem;font-weight:900;color:#ffb399">${unlocked.length + pending.length}</div>
-        <div style="font-size:0.62rem;color:rgba(255,255,255,0.4)">Eingeladen</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px;text-align:center">
-        <div style="font-size:1.4rem;font-weight:900;color:#34d399">${scanLog.length}</div>
-        <div style="font-size:0.62rem;color:rgba(255,255,255,0.4)">Einlösungen</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px;text-align:center">
-        <div style="font-size:1.4rem;font-weight:900;color:#F7AB00">${totalPts}</div>
-        <div style="font-size:0.62rem;color:rgba(255,255,255,0.4)">Pkt. verdient</div>
-      </div>
-    </div>
-    ${friendRows ? `<div style="margin-bottom:12px">
-      <div style="font-size:0.68rem;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Meine Einladungen</div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Meine Einladungen</div>
       ${friendRows}
-    </div>` : `<div style="font-size:0.75rem;color:rgba(255,255,255,0.3);text-align:center;padding:14px 0;margin-bottom:8px">Noch keine Freunde eingeladen</div>`}
-    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:13px;margin-bottom:14px">
-      <div style="font-size:0.68rem;font-weight:700;color:rgba(255,255,255,0.35);margin-bottom:9px;text-transform:uppercase;letter-spacing:0.06em">So funktioniert's</div>
-      ${[['🎁 +250 Pkt.','Freund sammelt 2.000 eigene Punkte (kein Spin, kein Referral)'],['💰 +5 Pkt./Scan','Jede echte Deal-Einlösung beim Händler bringt dir dauerhaft Punkte'],['🔒 Einmalig','Jeder Nutzer hat nur einen Referrer — nach Registrierung nicht änderbar'],['📅 Tageslimit','Max. 100 Pkt./Tag und 3.000 Pkt./Monat aus Scan-Boni']].map(([lbl,d])=>`
-      <div style="display:flex;gap:10px;margin-bottom:7px;align-items:flex-start">
-        <div style="font-size:0.7rem;font-weight:800;color:#ffb399;flex-shrink:0;min-width:90px">${lbl}</div>
-        <div style="font-size:0.67rem;color:rgba(255,255,255,0.35)">${d}</div>
-      </div>`).join('')}
-    </div>
-    <button onclick="closeReferralSheet()" style="width:100%;padding:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);border-radius:12px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">Schließen</button>`;
+    </div>` : ''}
+
+    <button onclick="closeReferralSheet()" style="width:100%;padding:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.55);border-radius:12px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">Schließen</button>`;
   sheet.style.display = 'block';
   document.body.style.overflow = 'hidden';
 }
