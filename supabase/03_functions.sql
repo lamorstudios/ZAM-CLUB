@@ -1,386 +1,544 @@
 -- ============================================================
--- ZAM CLUB — Datenbankfunktionen & Trigger
+-- ZAM CLUB — PostgreSQL Functions & Triggers
 -- File: 03_functions.sql
--- Reihenfolge: nach 01_schema.sql und 02_rls.sql ausführen
 -- ============================================================
 
--- ── Hilfsfunktion: Rolle des aktuellen Auth-Users ────────────
-CREATE OR REPLACE FUNCTION get_user_role()
-RETURNS text AS $$
-  SELECT role FROM users WHERE id = auth.uid()
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
-
--- ── Hilfsfunktion: Initials aus Display Name ─────────────────
-CREATE OR REPLACE FUNCTION make_initials(display_name text)
-RETURNS text AS $$
-DECLARE
-  parts text[];
-BEGIN
-  parts := string_to_array(trim(display_name), ' ');
-  IF array_length(parts, 1) >= 2 THEN
-    RETURN upper(left(parts[1], 1) || left(parts[2], 1));
-  ELSE
-    RETURN upper(left(display_name, 2));
-  END IF;
-END;
-$$ LANGUAGE plpgsql IMMUTABLE;
-
 -- ============================================================
--- TRIGGER: Neuer Auth-User → Profil in public.users anlegen
+-- 1. fn_handle_new_user()
+--    Trigger function: fires AFTER INSERT ON auth.users
+--    Creates a corresponding row in public.users with defaults,
+--    assigns a welcome points bonus, and generates a referral code.
 -- ============================================================
 CREATE OR REPLACE FUNCTION fn_handle_new_user()
 RETURNS trigger AS $$
 DECLARE
-  v_display_name   text;
-  v_username       text;
-  v_initials       text;
-  v_referral_code  text;
+  v_display_name  text;
+  v_username      text;
+  v_username_base text;
+  v_initials      text;
+  v_referral_code text;
+  v_words         text[];
+  v_initial_a     text;
+  v_initial_b     text;
 BEGIN
-  -- Display Name aus Metadata oder E-Mail
+  -- Derive display_name from metadata or email prefix
   v_display_name := COALESCE(
     NEW.raw_user_meta_data->>'display_name',
     split_part(NEW.email, '@', 1)
   );
 
-  -- Username bereinigen
-  v_username := '@' || lower(regexp_replace(
-    COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1)),
-    '[^a-z0-9_]', '', 'g'
-  ));
-  -- Username einmalig machen falls belegt
-  WHILE EXISTS (SELECT 1 FROM users WHERE username = v_username) LOOP
-    v_username := v_username || floor(random() * 100)::text;
-  END LOOP;
-
-  -- Initialen
-  v_initials := COALESCE(
-    NEW.raw_user_meta_data->>'initials',
-    make_initials(v_display_name)
+  -- Derive username base from metadata or email prefix, then sanitize
+  v_username_base := lower(
+    regexp_replace(
+      COALESCE(
+        NEW.raw_user_meta_data->>'username',
+        split_part(NEW.email, '@', 1)
+      ),
+      '[^a-z0-9_]',
+      '',
+      'g'
+    )
   );
 
-  -- Referral-Code: 'ZAM' + erste 6 Zeichen der UUID ohne Bindestriche
-  v_referral_code := 'ZAM' || upper(substring(replace(NEW.id::text, '-', ''), 1, 6));
+  -- Ensure username is not empty after sanitization
+  IF v_username_base = '' OR v_username_base IS NULL THEN
+    v_username_base := 'user' || lower(substring(NEW.id::text, 1, 6));
+  END IF;
 
-  -- User-Profil anlegen
-  INSERT INTO users (
-    id, email, email_verified, display_name, username, initials,
-    role, points, tier, referral_code, created_at
+  v_username := '@' || v_username_base;
+
+  -- If username already exists, append short uid suffix
+  IF EXISTS (SELECT 1 FROM public.users WHERE username = v_username) THEN
+    v_username := '@' || v_username_base || lower(substring(NEW.id::text, 1, 4));
+  END IF;
+
+  -- Derive initials from first two words of display_name
+  v_words     := string_to_array(trim(v_display_name), ' ');
+  v_initial_a := upper(substring(v_words[1], 1, 1));
+  IF array_length(v_words, 1) >= 2 THEN
+    v_initial_b := upper(substring(v_words[2], 1, 1));
+  ELSE
+    v_initial_b := '';
+  END IF;
+  v_initials := v_initial_a || v_initial_b;
+
+  -- Generate referral code: 'ZAM' + first 6 chars of UUID (uppercased)
+  v_referral_code := 'ZAM' || upper(substring(NEW.id::text, 1, 6));
+
+  -- Insert into public.users
+  INSERT INTO public.users (
+    id,
+    email,
+    email_verified,
+    display_name,
+    username,
+    initials,
+    role,
+    points,
+    tier,
+    referral_code,
+    created_at
   ) VALUES (
-    NEW.id, NEW.email, NEW.email_confirmed_at IS NOT NULL,
-    v_display_name, v_username, v_initials,
-    'user', 50, 'bronze', v_referral_code, now()
-  )
-  ON CONFLICT (id) DO NOTHING;
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.email_confirmed_at IS NOT NULL, false),
+    v_display_name,
+    v_username,
+    v_initials,
+    'user',
+    50,
+    'bronze',
+    v_referral_code,
+    now()
+  );
 
-  -- Willkommens-Bonus Transaction
-  INSERT INTO points_transactions (user_id, amount, balance_after, type, label, created_by)
-  VALUES (NEW.id, 50, 50, 'welcome_bonus', '🎉 Willkommen im ZAM Club!', NEW.id);
+  -- Insert welcome points transaction
+  INSERT INTO public.points_transactions (
+    user_id,
+    amount,
+    balance_after,
+    type,
+    label,
+    created_at
+  ) VALUES (
+    NEW.id,
+    50,
+    50,
+    'welcome_bonus',
+    'Willkommen im ZAM Club!',
+    now()
+  );
 
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger auf auth.users
+-- Attach trigger to auth.users
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION fn_handle_new_user();
+  FOR EACH ROW
+  EXECUTE FUNCTION fn_handle_new_user();
 
 -- ============================================================
--- FUNKTION: Punkte vergeben (serverseitig, mit Limits)
+-- 2. add_points(p_user_id, p_amount, p_type, p_label, p_reference_id)
+--    Atomically adds points, updates tier, enforces daily cap,
+--    logs fraud for large single grants, records transaction.
+--    Returns new balance as integer.
 -- ============================================================
 CREATE OR REPLACE FUNCTION add_points(
-  p_user_id      uuid,
-  p_amount       integer,
-  p_type         text,
-  p_label        text,
-  p_reference_id uuid DEFAULT NULL
+  p_user_id       uuid,
+  p_amount        integer,
+  p_type          text,
+  p_label         text,
+  p_reference_id  uuid DEFAULT NULL
 )
-RETURNS integer
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+RETURNS integer AS $$
 DECLARE
-  v_current_pts   integer;
-  v_new_pts       integer;
-  v_new_tier      text;
-  v_daily_total   integer;
-  v_daily_limit   integer := 500;
+  v_current_balance  integer;
+  v_new_balance      integer;
+  v_daily_total      integer;
+  v_new_tier         text;
 BEGIN
-  -- Tageslimit prüfen (Admin-Anpassungen ausgenommen)
-  IF p_type NOT IN ('admin_adjustment', 'welcome_bonus') THEN
-    SELECT COALESCE(SUM(amount), 0)
-    INTO v_daily_total
-    FROM points_transactions
-    WHERE user_id = p_user_id
-      AND created_at >= date_trunc('day', now())
-      AND amount > 0
-      AND type NOT IN ('admin_adjustment');
-
-    IF v_daily_total + p_amount > v_daily_limit THEN
-      -- Tageslimit erreicht: nur noch den Rest vergeben
-      p_amount := GREATEST(0, v_daily_limit - v_daily_total);
-      IF p_amount = 0 THEN
-        SELECT points INTO v_current_pts FROM users WHERE id = p_user_id;
-        RETURN COALESCE(v_current_pts, 0);
-      END IF;
-    END IF;
-  END IF;
-
-  -- Einzelbetrag-Fraud-Check: Beträge über 250 Punkte loggen
-  IF p_amount > 250 AND p_type NOT IN ('admin_adjustment', 'challenge_reward', 'season_reward') THEN
-    INSERT INTO fraud_flags (user_id, flag_type, details)
-    VALUES (p_user_id, 'large_points_award', jsonb_build_object(
-      'amount', p_amount, 'type', p_type, 'label', p_label
-    ));
-  END IF;
-
-  -- Punkte atomar aktualisieren
-  UPDATE users
-  SET
-    points = points + p_amount,
-    tier = CASE
-      WHEN points + p_amount >= 3000 THEN 'platin'
-      WHEN points + p_amount >= 1500 THEN 'gold'
-      WHEN points + p_amount >= 500  THEN 'silver'
-      ELSE 'bronze'
-    END
+  -- Get current balance with row lock
+  SELECT points INTO v_current_balance
+  FROM public.users
   WHERE id = p_user_id
-  RETURNING points, tier INTO v_new_pts, v_new_tier;
+  FOR UPDATE;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'User % nicht gefunden', p_user_id;
+    RAISE EXCEPTION 'User % not found', p_user_id;
   END IF;
 
-  -- Transaktion loggen
-  INSERT INTO points_transactions (user_id, amount, balance_after, type, label, reference_id, created_by)
-  VALUES (p_user_id, p_amount, v_new_pts, p_type, p_label, p_reference_id, p_user_id);
+  -- Daily limit check: sum of points earned today
+  SELECT COALESCE(SUM(amount), 0) INTO v_daily_total
+  FROM public.points_transactions
+  WHERE user_id   = p_user_id
+    AND created_at >= date_trunc('day', now())
+    AND amount     > 0;
 
-  RETURN v_new_pts;
+  IF v_daily_total >= 500 THEN
+    -- Daily cap reached; return current balance without adding
+    RETURN v_current_balance;
+  END IF;
+
+  -- Fraud check: single grant over 250 points
+  IF p_amount > 250 THEN
+    INSERT INTO public.fraud_flags (
+      user_id,
+      flag_type,
+      details,
+      created_at
+    ) VALUES (
+      p_user_id,
+      'large_single_grant',
+      jsonb_build_object(
+        'amount',       p_amount,
+        'type',         p_type,
+        'reference_id', p_reference_id,
+        'label',        p_label
+      ),
+      now()
+    );
+  END IF;
+
+  -- Calculate new balance
+  v_new_balance := v_current_balance + p_amount;
+
+  -- Determine new tier
+  v_new_tier := CASE
+    WHEN v_new_balance >= 3000 THEN 'platin'
+    WHEN v_new_balance >= 1500 THEN 'gold'
+    WHEN v_new_balance >= 500  THEN 'silver'
+    ELSE 'bronze'
+  END;
+
+  -- Atomic update of points and tier
+  UPDATE public.users
+  SET
+    points = v_new_balance,
+    tier   = v_new_tier
+  WHERE id = p_user_id;
+
+  -- Record the points transaction
+  INSERT INTO public.points_transactions (
+    user_id,
+    amount,
+    balance_after,
+    type,
+    reference_id,
+    label,
+    created_at
+  ) VALUES (
+    p_user_id,
+    p_amount,
+    v_new_balance,
+    p_type,
+    p_reference_id,
+    p_label,
+    now()
+  );
+
+  RETURN v_new_balance;
 END;
-$$;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================================
--- FUNKTION: Voucher einlösen (ATOMAR — Race-Condition-sicher)
+-- 3. redeem_voucher(p_token, p_scanner_id)
+--    Validates a voucher by QR token, checks scanner authorization,
+--    updates voucher status, inserts redemption record, awards points,
+--    updates merchant analytics.
+--    Returns jsonb result object.
 -- ============================================================
 CREATE OR REPLACE FUNCTION redeem_voucher(
   p_token      uuid,
   p_scanner_id uuid
 )
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+RETURNS jsonb AS $$
 DECLARE
-  v_voucher      vouchers%ROWTYPE;
-  v_deal         deals%ROWTYPE;
-  v_merchant_id  uuid;
-  v_staff_id     uuid;
-  v_pts          integer;
-  v_user_name    text;
-  v_new_pts      integer;
+  v_voucher   public.vouchers%ROWTYPE;
+  v_deal      public.deals%ROWTYPE;
+  v_merchant  public.merchants%ROWTYPE;
+  v_staff     public.merchant_staff%ROWTYPE;
+  v_user      public.users%ROWTYPE;
+  v_is_owner  boolean := false;
+  v_is_staff  boolean := false;
+  v_new_balance integer;
+  v_staff_id  uuid    := NULL;
 BEGIN
-  -- Voucher atomar sperren und validieren
+  -- Fetch voucher by token with row lock (skip if already locked)
   SELECT * INTO v_voucher
-  FROM vouchers
-  WHERE token = p_token
-    AND status = 'active'
+  FROM public.vouchers
+  WHERE token     = p_token
+    AND status    = 'active'
     AND expires_at > now()
   FOR UPDATE SKIP LOCKED;
 
   IF NOT FOUND THEN
-    -- Prüfen ob bereits eingelöst (ohne Lock)
-    IF EXISTS (SELECT 1 FROM vouchers WHERE token = p_token AND status = 'redeemed') THEN
-      RETURN '{"ok":false,"error":"Dieser Gutschein wurde bereits eingelöst."}'::jsonb;
-    END IF;
-    IF EXISTS (SELECT 1 FROM vouchers WHERE token = p_token AND status = 'expired') THEN
-      RETURN '{"ok":false,"error":"Dieser Gutschein ist abgelaufen."}'::jsonb;
-    END IF;
-    RETURN '{"ok":false,"error":"Ungültiger Gutschein."}'::jsonb;
+    RETURN jsonb_build_object(
+      'ok',    false,
+      'error', 'Ungültiger oder bereits eingelöster Gutschein'
+    );
   END IF;
 
-  -- Deal laden
-  SELECT * INTO v_deal FROM deals WHERE id = v_voucher.deal_id;
+  -- Get the deal associated with this voucher
+  SELECT * INTO v_deal
+  FROM public.deals
+  WHERE id = v_voucher.deal_id;
+
   IF NOT FOUND THEN
-    RETURN '{"ok":false,"error":"Deal nicht gefunden."}'::jsonb;
+    RETURN jsonb_build_object(
+      'ok',    false,
+      'error', 'Deal nicht gefunden'
+    );
   END IF;
 
-  -- Scanner-Berechtigung prüfen
-  -- Option A: Scanner ist Händler-Owner
-  SELECT m.id INTO v_merchant_id
-  FROM merchants m
-  WHERE m.user_id = p_scanner_id AND m.id = v_deal.merchant_id AND m.status = 'approved';
+  -- Get the merchant for this deal
+  SELECT * INTO v_merchant
+  FROM public.merchants
+  WHERE id = v_deal.merchant_id;
 
-  -- Option B: Scanner ist aktiver Mitarbeiter dieses Händlers
-  IF v_merchant_id IS NULL THEN
-    SELECT ms.id, ms.merchant_id INTO v_staff_id, v_merchant_id
-    FROM merchant_staff ms
-    WHERE ms.user_id = p_scanner_id
-      AND ms.merchant_id = v_deal.merchant_id
-      AND ms.status = 'active';
+  IF NOT FOUND THEN
+    RETURN jsonb_build_object(
+      'ok',    false,
+      'error', 'Merchant nicht gefunden'
+    );
   END IF;
 
-  -- Option C: Scanner ist Admin
-  IF v_merchant_id IS NULL AND EXISTS (SELECT 1 FROM users WHERE id = p_scanner_id AND role = 'admin') THEN
-    v_merchant_id := v_deal.merchant_id;
+  -- Check if scanner is the merchant owner
+  IF v_merchant.user_id = p_scanner_id THEN
+    v_is_owner := true;
   END IF;
 
-  IF v_merchant_id IS NULL THEN
-    -- Falscher Händler — loggen aber nicht entwerten
-    INSERT INTO redemptions (voucher_id, deal_id, merchant_id, user_id, scanned_by, staff_id, points_awarded, status)
-    VALUES (v_voucher.id, v_deal.id, v_deal.merchant_id, v_voucher.user_id, p_scanner_id, v_staff_id, 0, 'wrong_merchant');
-    RETURN '{"ok":false,"error":"Dieser Gutschein gehört nicht zu deinem Händler."}'::jsonb;
+  -- Check if scanner is an active staff member of this merchant
+  IF NOT v_is_owner THEN
+    SELECT * INTO v_staff
+    FROM public.merchant_staff
+    WHERE user_id    = p_scanner_id
+      AND merchant_id = v_merchant.id
+      AND status      = 'active';
+
+    IF FOUND THEN
+      v_is_staff := true;
+      v_staff_id := v_staff.id;
+    END IF;
   END IF;
 
-  -- Voucher entwerten
-  UPDATE vouchers
-  SET status = 'redeemed', redeemed_at = now(), redeemed_by = p_scanner_id, staff_id = v_staff_id
+  -- If neither owner nor authorized staff, reject
+  IF NOT v_is_owner AND NOT v_is_staff THEN
+    RETURN jsonb_build_object(
+      'ok',    false,
+      'error', 'Falscher Merchant oder keine Berechtigung zum Scannen'
+    );
+  END IF;
+
+  -- Get the voucher owner (customer) for display name
+  SELECT * INTO v_user
+  FROM public.users
+  WHERE id = v_voucher.user_id;
+
+  -- Mark voucher as redeemed
+  UPDATE public.vouchers
+  SET
+    status      = 'redeemed',
+    redeemed_at = now(),
+    redeemed_by = p_scanner_id,
+    staff_id    = v_staff_id
   WHERE id = v_voucher.id;
 
-  -- Punkte für den Kunden gutschreiben
-  v_pts := COALESCE(v_deal.points_reward, 10);
-  v_new_pts := add_points(v_voucher.user_id, v_pts, 'deal_redemption',
-    '🎉 Deal eingelöst: ' || v_deal.title, v_voucher.id);
+  -- Insert redemption record
+  INSERT INTO public.redemptions (
+    voucher_id,
+    deal_id,
+    merchant_id,
+    user_id,
+    scanned_by,
+    staff_id,
+    points_awarded,
+    status,
+    redeemed_at
+  ) VALUES (
+    v_voucher.id,
+    v_deal.id,
+    v_merchant.id,
+    v_voucher.user_id,
+    p_scanner_id,
+    v_staff_id,
+    v_deal.points_reward,
+    'ok',
+    now()
+  );
 
-  -- Redemption loggen
-  INSERT INTO redemptions (voucher_id, deal_id, merchant_id, user_id, scanned_by, staff_id, points_awarded, status)
-  VALUES (v_voucher.id, v_deal.id, v_merchant_id, v_voucher.user_id, p_scanner_id, v_staff_id, v_pts, 'ok');
+  -- Increment deal redemption counter
+  UPDATE public.deals
+  SET redemption_count = redemption_count + 1
+  WHERE id = v_deal.id;
 
-  -- Händler-Analytics aktualisieren (UPSERT)
-  INSERT INTO merchant_analytics (merchant_id, date, deal_redemptions, points_generated)
-  VALUES (v_merchant_id, current_date, 1, v_pts)
-  ON CONFLICT (merchant_id, date)
-  DO UPDATE SET
-    deal_redemptions = merchant_analytics.deal_redemptions + 1,
-    points_generated = merchant_analytics.points_generated + v_pts;
-
-  -- Mitarbeiter-Scan zählen
+  -- Update staff scan stats if applicable
   IF v_staff_id IS NOT NULL THEN
-    UPDATE merchant_staff
-    SET total_scans = total_scans + 1, last_scan_at = now()
+    UPDATE public.merchant_staff
+    SET
+      last_scan_at = now(),
+      total_scans  = total_scans + 1
     WHERE id = v_staff_id;
   END IF;
 
-  -- User-Name für Response
-  SELECT display_name INTO v_user_name FROM users WHERE id = v_voucher.user_id;
-
-  RETURN jsonb_build_object(
-    'ok', true,
-    'points_awarded', v_pts,
-    'new_balance', v_new_pts,
-    'deal_title', v_deal.title,
-    'user_display_name', COALESCE(v_user_name, 'Nutzer')
+  -- Award points to the customer (voucher owner)
+  v_new_balance := add_points(
+    v_voucher.user_id,
+    v_deal.points_reward,
+    'deal_redemption',
+    'Deal eingelöst: ' || v_deal.title,
+    v_deal.id
   );
+
+  -- Update merchant analytics via UPSERT
+  INSERT INTO public.merchant_analytics (
+    merchant_id,
+    date,
+    deal_redemptions,
+    points_generated
+  ) VALUES (
+    v_merchant.id,
+    current_date,
+    1,
+    v_deal.points_reward
+  )
+  ON CONFLICT (merchant_id, date) DO UPDATE
+  SET
+    deal_redemptions = merchant_analytics.deal_redemptions + 1,
+    points_generated = merchant_analytics.points_generated + v_deal.points_reward;
+
+  -- Return success response
+  RETURN jsonb_build_object(
+    'ok',                true,
+    'points_awarded',    v_deal.points_reward,
+    'deal_title',        v_deal.title,
+    'user_display_name', v_user.display_name
+  );
+
+EXCEPTION
+  WHEN OTHERS THEN
+    RETURN jsonb_build_object(
+      'ok',    false,
+      'error', SQLERRM
+    );
 END;
-$$;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================================
--- FUNKTION: Voucher generieren (Deal sichern)
+-- 4. generate_voucher(p_deal_id, p_user_id)
+--    Validates eligibility, generates a unique voucher code,
+--    and inserts it with a 30-day expiry.
+--    Returns voucher record as jsonb.
 -- ============================================================
 CREATE OR REPLACE FUNCTION generate_voucher(
-  p_deal_id  uuid,
-  p_user_id  uuid
+  p_deal_id uuid,
+  p_user_id uuid
 )
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+RETURNS jsonb AS $$
 DECLARE
-  v_deal       deals%ROWTYPE;
+  v_deal       public.deals%ROWTYPE;
   v_code       text;
-  v_voucher    vouchers%ROWTYPE;
+  v_voucher_id uuid;
+  v_token      uuid;
+  v_expires_at timestamptz;
 BEGIN
-  -- Deal validieren
-  SELECT * INTO v_deal FROM deals WHERE id = p_deal_id AND is_active = true;
+  -- Fetch and validate deal
+  SELECT * INTO v_deal
+  FROM public.deals
+  WHERE id = p_deal_id;
+
   IF NOT FOUND THEN
-    RETURN '{"ok":false,"error":"Deal nicht verfügbar."}'::jsonb;
+    RETURN jsonb_build_object(
+      'ok',    false,
+      'error', 'Deal nicht gefunden'
+    );
   END IF;
 
-  -- Ablaufdatum prüfen
+  -- Check deal is active
+  IF v_deal.is_active = false THEN
+    RETURN jsonb_build_object(
+      'ok',    false,
+      'error', 'Dieser Deal ist nicht mehr verfügbar'
+    );
+  END IF;
+
+  -- Check deal has not expired
   IF v_deal.valid_until IS NOT NULL AND v_deal.valid_until < now() THEN
-    RETURN '{"ok":false,"error":"Dieser Deal ist abgelaufen."}'::jsonb;
+    RETURN jsonb_build_object(
+      'ok',    false,
+      'error', 'Dieser Deal ist abgelaufen'
+    );
   END IF;
 
-  -- Max-Redemptions prüfen
-  IF v_deal.max_redemptions IS NOT NULL AND v_deal.redemption_count >= v_deal.max_redemptions THEN
-    RETURN '{"ok":false,"error":"Deal ist ausgebucht."}'::jsonb;
+  -- Check max_redemptions not exceeded
+  IF v_deal.max_redemptions IS NOT NULL
+     AND v_deal.redemption_count >= v_deal.max_redemptions THEN
+    RETURN jsonb_build_object(
+      'ok',    false,
+      'error', 'Maximale Einlösungen für diesen Deal erreicht'
+    );
   END IF;
 
-  -- Prüfen ob User diesen Deal schon gesichert hat
+  -- Check user does not already have an active or redeemed voucher for this deal
   IF EXISTS (
-    SELECT 1 FROM vouchers
-    WHERE deal_id = p_deal_id AND user_id = p_user_id AND status IN ('active', 'redeemed')
+    SELECT 1 FROM public.vouchers
+    WHERE deal_id = p_deal_id
+      AND user_id = p_user_id
+      AND status IN ('active', 'redeemed')
   ) THEN
-    -- Bestehenden Voucher zurückgeben
-    SELECT * INTO v_voucher FROM vouchers
-    WHERE deal_id = p_deal_id AND user_id = p_user_id AND status IN ('active', 'redeemed')
-    LIMIT 1;
-    RETURN jsonb_build_object('ok', true, 'already_exists', true,
-      'id', v_voucher.id, 'code', v_voucher.code, 'token', v_voucher.token,
-      'status', v_voucher.status, 'expires_at', v_voucher.expires_at);
+    RETURN jsonb_build_object(
+      'ok',    false,
+      'error', 'Du hast diesen Deal bereits gesichert oder eingelöst'
+    );
   END IF;
 
-  -- Einmaliger Code generieren
-  LOOP
-    v_code := 'ZAM-' ||
-      upper(substring(md5(random()::text), 1, 4)) || '-' ||
-      upper(substring(md5(random()::text), 1, 4));
-    EXIT WHEN NOT EXISTS (SELECT 1 FROM vouchers WHERE code = v_code);
-  END LOOP;
+  -- Generate unique voucher code: 'ZAM-XXXX-XXXX'
+  v_code := 'ZAM-'
+    || upper(substring(md5(random()::text), 1, 4))
+    || '-'
+    || upper(substring(md5(random()::text), 1, 4));
 
-  -- Voucher anlegen
-  INSERT INTO vouchers (deal_id, user_id, code, expires_at)
-  VALUES (p_deal_id, p_user_id, v_code, now() + interval '30 days')
-  RETURNING * INTO v_voucher;
+  -- Ensure code uniqueness (retry once on collision)
+  IF EXISTS (SELECT 1 FROM public.vouchers WHERE code = v_code) THEN
+    v_code := 'ZAM-'
+      || upper(substring(md5(random()::text), 1, 4))
+      || '-'
+      || upper(substring(md5(random()::text), 1, 4));
+  END IF;
 
-  RETURN jsonb_build_object(
-    'ok', true, 'already_exists', false,
-    'id', v_voucher.id, 'code', v_voucher.code,
-    'token', v_voucher.token, 'status', v_voucher.status,
-    'expires_at', v_voucher.expires_at
+  v_expires_at := now() + interval '30 days';
+  v_voucher_id := uuid_generate_v4();
+  v_token      := uuid_generate_v4();
+
+  -- Insert the voucher
+  INSERT INTO public.vouchers (
+    id,
+    deal_id,
+    user_id,
+    code,
+    token,
+    status,
+    secured_at,
+    expires_at
+  ) VALUES (
+    v_voucher_id,
+    p_deal_id,
+    p_user_id,
+    v_code,
+    v_token,
+    'active',
+    now(),
+    v_expires_at
   );
+
+  -- Return voucher as jsonb
+  RETURN jsonb_build_object(
+    'ok',         true,
+    'voucher_id', v_voucher_id,
+    'deal_id',    p_deal_id,
+    'user_id',    p_user_id,
+    'code',       v_code,
+    'token',      v_token,
+    'status',     'active',
+    'secured_at', now(),
+    'expires_at', v_expires_at
+  );
+
+EXCEPTION
+  WHEN OTHERS THEN
+    RETURN jsonb_build_object(
+      'ok',    false,
+      'error', SQLERRM
+    );
 END;
-$$;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================================
--- FUNKTION: Center-Leaderboard
--- ============================================================
-CREATE OR REPLACE FUNCTION get_leaderboard(p_period text DEFAULT 'weekly')
-RETURNS TABLE (
-  merchant_id   uuid,
-  shop_name     text,
-  logo_url      text,
-  points_total  bigint,
-  redemptions   bigint,
-  rank          bigint
-)
-LANGUAGE sql
-SECURITY DEFINER
-STABLE
-AS $$
-  SELECT
-    ma.merchant_id,
-    m.shop_name,
-    m.logo_url,
-    SUM(ma.points_generated) AS points_total,
-    SUM(ma.deal_redemptions) AS redemptions,
-    ROW_NUMBER() OVER (ORDER BY SUM(ma.points_generated) DESC) AS rank
-  FROM merchant_analytics ma
-  JOIN merchants m ON m.id = ma.merchant_id
-  WHERE
-    CASE p_period
-      WHEN 'daily'   THEN ma.date = current_date
-      WHEN 'weekly'  THEN ma.date >= date_trunc('week', current_date)
-      WHEN 'monthly' THEN ma.date >= date_trunc('month', current_date)
-      ELSE ma.date >= date_trunc('week', current_date)
-    END
-  GROUP BY ma.merchant_id, m.shop_name, m.logo_url
-  ORDER BY points_total DESC
-  LIMIT 10;
-$$;
-
--- ============================================================
--- TRIGGER: Tier automatisch aktualisieren bei Punkte-Änderung
+-- 5. fn_update_tier()
+--    Trigger function: fires BEFORE UPDATE OF points ON users.
+--    Recalculates and sets tier based on the incoming new points value.
 -- ============================================================
 CREATE OR REPLACE FUNCTION fn_update_tier()
 RETURNS trigger AS $$
@@ -395,40 +553,59 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_update_tier ON users;
+-- Attach tier update trigger to users table
+DROP TRIGGER IF EXISTS trg_update_tier ON public.users;
 CREATE TRIGGER trg_update_tier
-  BEFORE UPDATE OF points ON users
-  FOR EACH ROW EXECUTE FUNCTION fn_update_tier();
+  BEFORE UPDATE OF points ON public.users
+  FOR EACH ROW
+  EXECUTE FUNCTION fn_update_tier();
 
 -- ============================================================
--- FUNKTION: Täglicher Spin (1x pro Tag)
+-- 6. get_leaderboard(p_period)
+--    Returns top 10 merchants by points_generated in the given
+--    period: 'today', 'weekly', or 'monthly'.
+--    Joins merchant_analytics with merchants for shop_name.
 -- ============================================================
-CREATE OR REPLACE FUNCTION record_spin(
-  p_user_id   uuid,
-  p_result    text,
-  p_points    integer
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+CREATE OR REPLACE FUNCTION get_leaderboard(p_period text DEFAULT 'weekly')
+RETURNS TABLE (
+  rank             bigint,
+  merchant_id      uuid,
+  shop_name        text,
+  logo_url         text,
+  category         text,
+  points_generated bigint,
+  deal_redemptions bigint
+) AS $$
 DECLARE
-  v_new_pts integer;
+  v_from_date date;
 BEGIN
-  -- Prüfen ob heute schon gespin
-  IF EXISTS (
-    SELECT 1 FROM spin_history
-    WHERE user_id = p_user_id AND date_trunc('day', spun_at) = date_trunc('day', now())
-  ) THEN
-    RETURN '{"ok":false,"error":"Heute bereits gedreht."}'::jsonb;
-  END IF;
+  -- Determine date range based on period
+  CASE p_period
+    WHEN 'today' THEN
+      v_from_date := current_date;
+    WHEN 'weekly' THEN
+      v_from_date := date_trunc('week', current_date)::date;
+    WHEN 'monthly' THEN
+      v_from_date := date_trunc('month', current_date)::date;
+    ELSE
+      v_from_date := date_trunc('week', current_date)::date;
+  END CASE;
 
-  INSERT INTO spin_history (user_id, result, points_won) VALUES (p_user_id, p_result, p_points);
-
-  IF p_points > 0 THEN
-    v_new_pts := add_points(p_user_id, p_points, 'spin', '🎰 Glücksrad: ' || p_result);
-  END IF;
-
-  RETURN jsonb_build_object('ok', true, 'points_won', p_points, 'new_balance', COALESCE(v_new_pts, 0));
+  RETURN QUERY
+  SELECT
+    ROW_NUMBER() OVER (ORDER BY SUM(ma.points_generated) DESC) AS rank,
+    m.id                                                        AS merchant_id,
+    m.shop_name,
+    m.logo_url,
+    m.category,
+    SUM(ma.points_generated)::bigint                            AS points_generated,
+    SUM(ma.deal_redemptions)::bigint                            AS deal_redemptions
+  FROM public.merchant_analytics ma
+  JOIN public.merchants m ON m.id = ma.merchant_id
+  WHERE ma.date   >= v_from_date
+    AND m.status   = 'approved'
+  GROUP BY m.id, m.shop_name, m.logo_url, m.category
+  ORDER BY points_generated DESC
+  LIMIT 10;
 END;
-$$;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
