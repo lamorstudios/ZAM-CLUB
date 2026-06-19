@@ -9817,6 +9817,191 @@ function openMerchantEventModal() {
   );
 }
 
+// ─── KI-Deal-Vorschläge ───────────────────────────────────────────────────────
+
+function _zamAiDealSuggestions(merchant) {
+  const cat = ((merchant?.category || '') + ' ' + (merchant?.name || '')).toLowerCase();
+
+  const isFood    = /food|restaurant|café|cafe|burger|pizza|sushi|döner|kebab|küche|kitchen|eis|bäck|brot|lunch|snack|gastro|bar|bistro|levante|freiham café/.test(cat);
+  const isFashion = /fashion|mode|kleid|style|boutique|accessoire|schmuck|schuhe|cloth|odeya/.test(cat);
+  const isFitness = /fitness|gym|sport|training|yoga|wellness|pilates|westside|crossfit/.test(cat);
+  const isBeauty  = /beauty|kosmetik|friseur|hair|nail|nägel|massage|spa|pflege/.test(cat);
+  const isCafe    = /café|cafe|coffee|kaffee|bäck|konditor/.test(cat);
+  const isBook    = /buch|bücher|buch|book|welt der/.test(cat);
+  const isHealth  = /apotheke|pharma|gesundheit|health|arzt|medizin/.test(cat);
+
+  const name = merchant?.name || 'Dein Shop';
+  const icon = merchant?.icon || '🏪';
+
+  const pools = {
+    food: [
+      { emoji:'👥', title:'Freunde-Menü', offer:'Kommt zu zweit und erhaltet ein Gratis-Getränk zum Menü.', type:'Community', disc:'Gratis Getränk', cond:'Gilt zu zweit, vor Ort', days:14, pts:60 },
+      { emoji:'🍽️', title:'3er-Tisch-Deal', offer:'Kommt mit 3 Personen und erhaltet ein Gratis Beilage.', type:'Community', disc:'Gratis Beilage', cond:'Ab 3 Personen', days:21, pts:80 },
+      { emoji:'🎁', title:'Lunch-Goodie', offer:'Gratis Beilage ab 12 € Bestellwert.', type:'Goodie', disc:'Gratis Beilage', cond:'Ab 12 € Einkauf', days:30, pts:40 },
+      { emoji:'📍', title:'Treue Check-in', offer:'3 Check-ins im Monat = 1 Gratis Dip oder Topping.', type:'Check-in', disc:'Gratis Topping', cond:'3 Check-ins im Monat', days:30, pts:50 },
+      { emoji:'🤝', title:'Partnerdeal-Idee', offer:'Food + Fitness: Nach dem Training hier ein Gratis-Getränk sichern.', type:'Partnerdeal', disc:'Gratis Getränk', cond:'Mit Fitness-Partner QR', days:30, pts:70 },
+    ],
+    cafe: [
+      { emoji:'☕', title:'Kaffee & Goodie', offer:'Gratis Gebäck zum Heißgetränk ab 3 €.', type:'Goodie', disc:'Gratis Gebäck', cond:'Ab 3 € Bestellung', days:14, pts:35 },
+      { emoji:'👥', title:'Komm zu zweit', offer:'Zu zweit kaufen – ein Getränk kostet nur 1 €.', type:'Community', disc:'2. für 1 €', cond:'Gilt zu zweit', days:21, pts:50 },
+      { emoji:'📍', title:'Morgen-Check-in', offer:'5 Morgen-Check-ins = 1 Gratis Kaffee.', type:'Check-in', disc:'Gratis Kaffee', cond:'5 Check-ins bis 10 Uhr', days:30, pts:60 },
+      { emoji:'📸', title:'Foto-Challenge', offer:'Poste ein Foto mit deinem Kaffee und erhalte Bonuspunkte.', type:'Challenge', disc:'+50 Bonuspunkte', cond:'Foto mit Hashtag #ZAMClub', days:14, pts:50 },
+    ],
+    fashion: [
+      { emoji:'🛍️', title:'Friends Shopping', offer:'Kommt zu zweit und erhaltet 15% auf ausgewählte Artikel.', type:'Community', disc:'15% Rabatt', cond:'Ab 2 Personen, ausgewählte Artikel', days:21, pts:80 },
+      { emoji:'🎁', title:'Style-Bonus', offer:'Ab 50 € Einkauf gibt es ein kleines Accessoire gratis.', type:'Goodie', disc:'Gratis Accessoire', cond:'Ab 50 € Einkauf', days:30, pts:100 },
+      { emoji:'📸', title:'Outfit-Challenge', offer:'Poste dein Outfit aus unserem Shop und erhalte Bonuspunkte.', type:'Challenge', disc:'+75 Bonuspunkte', cond:'Foto mit Hashtag #ZAMStyle', days:14, pts:75 },
+      { emoji:'🏷️', title:'Wochenend-Special', offer:'20% Rabatt auf ausgewählte Neuheiten – nur Sa & So.', type:'Rabatt', disc:'20% Rabatt', cond:'Sa & So, nur Neuheiten', days:14, pts:90 },
+      { emoji:'🤝', title:'Shopping + Café', offer:'Einkauf ab 40 € → Gratis Kaffee beim Partner-Café.', type:'Partnerdeal', disc:'Gratis Kaffee beim Partner', cond:'Ab 40 € Bon vorzeigen', days:30, pts:80 },
+    ],
+    fitness: [
+      { emoji:'💪', title:'Bring-a-Friend', offer:'Bring einen Freund mit und beide erhalten 7 Tage Probetraining.', type:'Community', disc:'7 Tage gratis', cond:'Für Neueinsteiger, 1x pro Person', days:30, pts:150 },
+      { emoji:'🏆', title:'Challenge-Bonus', offer:'Schließe die Fitness-Challenge ab und erhalte 200 Punkte.', type:'Challenge', disc:'+200 Punkte', cond:'Challenge abschließen', days:30, pts:200 },
+      { emoji:'🤝', title:'Training + Food', offer:'Training absolvieren und beim Food-Partner einen Vorteil sichern.', type:'Partnerdeal', disc:'Deal beim Food-Partner', cond:'Mit Partner-QR', days:30, pts:100 },
+      { emoji:'📍', title:'Monats-Treue', offer:'5 Check-ins im Monat = Gratis Trainingseinheit oder Goodie.', type:'Check-in', disc:'Gratis Session', cond:'5 Check-ins im Monat', days:30, pts:120 },
+    ],
+    beauty: [
+      { emoji:'🎁', title:'Beauty-Goodie', offer:'Gratis Pflegeprodukt-Sample bei jedem Besuch.', type:'Goodie', disc:'Gratis Sample', cond:'Einmal pro Besuch', days:30, pts:40 },
+      { emoji:'👥', title:'Friends & Beauty', offer:'Zu zweit buchen und 20% auf die Behandlung sparen.', type:'Community', disc:'20% Rabatt', cond:'Zu zweit, gleiche Behandlung', days:21, pts:90 },
+      { emoji:'📸', title:'Glow-Challenge', offer:'Zeig deinen Look und erhalte Punkte als Beauty-Bonus.', type:'Challenge', disc:'+60 Punkte', cond:'Foto mit Hashtag', days:14, pts:60 },
+      { emoji:'🏷️', title:'Montags-Rabatt', offer:'Mo–Di: 15% auf alle Behandlungen.', type:'Rabatt', disc:'15% Rabatt', cond:'Mo–Di', days:30, pts:70 },
+    ],
+    health: [
+      { emoji:'🎁', title:'Gesundheits-Goodie', offer:'Gratis Vitamin-C-Sample ab 15 € Einkauf.', type:'Goodie', disc:'Gratis Sample', cond:'Ab 15 € Einkauf', days:21, pts:35 },
+      { emoji:'👥', title:'Familien-Rabatt', offer:'3 Produkte aus der gleichen Serie kaufen und 1 gratis erhalten.', type:'Community', disc:'3 für 2', cond:'Gleiche Produktserie', days:30, pts:50 },
+      { emoji:'📍', title:'Stamm-Apotheke', offer:'5 Besuche im Monat = Gratis Gesundheits-Tipp-Beratung.', type:'Check-in', disc:'Gratis Beratung', cond:'5 Besuche im Monat', days:30, pts:60 },
+    ],
+    book: [
+      { emoji:'📚', title:'Leser-Goodie', offer:'Gratis Lesezeichen-Set ab 20 € Einkauf.', type:'Goodie', disc:'Gratis Lesezeichen-Set', cond:'Ab 20 € Einkauf', days:30, pts:30 },
+      { emoji:'👥', title:'Lesezirkel-Deal', offer:'Kommt zu dritt und erhaltet 15% auf Neuerscheinungen.', type:'Community', disc:'15% Rabatt', cond:'Ab 3 Personen, Neuerscheinungen', days:21, pts:60 },
+      { emoji:'🏷️', title:'Wochenend-Lesen', offer:'Sa & So: 10% auf alle Titel.', type:'Rabatt', disc:'10% Rabatt', cond:'Sa & So', days:14, pts:40 },
+    ],
+    generic: [
+      { emoji:'👥', title:'Freunde-Bonus', offer:'Kommt zu zweit und erhaltet 10% Rabatt auf das Gesamte.', type:'Community', disc:'10% Rabatt', cond:'Zu zweit, vor Ort', days:21, pts:60 },
+      { emoji:'🎁', title:'Willkommens-Goodie', offer:'Erstkunden erhalten ein kleines Überraschungs-Goodie.', type:'Goodie', disc:'Gratis Goodie', cond:'Für Erstkunden', days:30, pts:50 },
+      { emoji:'📍', title:'Treue-Check-in', offer:'3 Check-ins = ein exklusiver Bonus für Stammkunden.', type:'Check-in', disc:'Exklusiv-Bonus', cond:'3 Check-ins im Monat', days:30, pts:70 },
+      { emoji:'🏷️', title:'Wochen-Rabatt', offer:'10% Rabatt auf ausgewählte Produkte – nur diese Woche.', type:'Rabatt', disc:'10% Rabatt', cond:'Nur diese Woche', days:7, pts:40 },
+      { emoji:'🤝', title:'Partnerdeal starten', offer:'Kooperiere mit einem anderen ZAM-Händler und verbindet eure Zielgruppen.', type:'Partnerdeal', disc:'Gemeinschafts-Deal', cond:'Mit Partnerbestätigung', days:30, pts:80 },
+    ],
+  };
+
+  let pool;
+  if (isFood && !isCafe)   pool = pools.food;
+  else if (isCafe)         pool = pools.cafe;
+  else if (isFashion)      pool = pools.fashion;
+  else if (isFitness)      pool = pools.fitness;
+  else if (isBeauty)       pool = pools.beauty;
+  else if (isHealth)       pool = pools.health;
+  else if (isBook)         pool = pools.book;
+  else                     pool = pools.generic;
+
+  // Pick 4 suggestions, randomise order a bit via merchant name seed
+  const seed = (merchant?.id || '').split('').reduce((a,c)=>a+c.charCodeAt(0),0) % pool.length;
+  const shuffled = [...pool.slice(seed), ...pool.slice(0, seed)];
+  return shuffled.slice(0, 4).map(s => ({ ...s, merchantName: name, merchantIcon: icon }));
+}
+
+function _zamApplyAiSuggestion(idx) {
+  const store = window._zamAiSuggestCache;
+  if (!store || !store[idx]) return;
+  const s = store[idx];
+  const set = (id, val) => { const el = document.getElementById(id); if (el) { el.value = val; el.dispatchEvent(new Event('input')); } };
+  set('_dl_title', s.merchantIcon + ' ' + s.title);
+  set('_dl_offer', s.offer);
+  set('_dl_disc',  s.disc);
+  set('_dl_cond',  s.cond);
+  // Set expiry date to now + days
+  const exp = new Date(); exp.setDate(exp.getDate() + s.days);
+  set('_dl_exp', exp.toISOString().slice(0,10));
+  // Auto-trigger partner toggle if type is Partnerdeal
+  if (s.type === 'Partnerdeal') {
+    const tog = document.getElementById('_dl_partner_toggle');
+    if (tog && !tog.checked) { tog.checked = true; togglePartnerDealFields(); }
+  }
+  // Collapse the AI panel
+  const panel = document.getElementById('_zam_ai_panel');
+  if (panel) { panel.style.display = 'none'; document.getElementById('_zam_ai_toggle')?.setAttribute('data-open','0'); }
+  showToast('✨ Vorschlag übernommen – Felder angepasst', 'success');
+  document.getElementById('_dl_title')?.focus();
+}
+
+function _zamRenderAiSuggestions(merchant) {
+  const suggs = _zamAiDealSuggestions(merchant);
+  window._zamAiSuggestCache = suggs;
+
+  const typeColors = {
+    'Community':  ['rgba(99,179,237,0.15)','rgba(99,179,237,0.35)','#93c5fd'],
+    'Goodie':     ['rgba(134,239,172,0.12)','rgba(134,239,172,0.3)','#6ee7b7'],
+    'Rabatt':     ['rgba(250,140,30,0.12)','rgba(250,140,30,0.3)','#ffb060'],
+    'Check-in':   ['rgba(167,139,250,0.12)','rgba(167,139,250,0.3)','#c4b5fd'],
+    'Challenge':  ['rgba(247,171,0,0.12)','rgba(247,171,0,0.3)','#fbbf24'],
+    'Partnerdeal':['rgba(250,70,21,0.12)','rgba(250,70,21,0.3)','#fb923c'],
+  };
+
+  const cards = suggs.map((s, i) => {
+    const [bg, bdr, clr] = typeColors[s.type] || typeColors['Rabatt'];
+    const daysLabel = s.days === 7 ? '1 Woche' : s.days === 14 ? '2 Wochen' : s.days === 21 ? '3 Wochen' : '1 Monat';
+    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:13px 14px;margin-bottom:10px;animation:_zamFeedIn 0.3s ease both;animation-delay:${i*0.07}s">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px">
+        <div style="font-size:0.88rem;font-weight:700;color:#fff;line-height:1.3">${escHtml(s.emoji + ' ' + s.title)}</div>
+        <span style="flex-shrink:0;font-size:0.62rem;font-weight:800;padding:2px 8px;border-radius:20px;background:${bg};border:1px solid ${bdr};color:${clr};text-transform:uppercase;letter-spacing:0.04em">${escHtml(s.type)}</span>
+      </div>
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.55);margin-bottom:10px;line-height:1.45">${escHtml(s.offer)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:5px 8px;text-align:center">
+          <div style="font-size:0.58rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px">Laufzeit</div>
+          <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.7)">${escHtml(daysLabel)}</div>
+        </div>
+        <div style="background:rgba(247,171,0,0.07);border-radius:8px;padding:5px 8px;text-align:center">
+          <div style="font-size:0.58rem;color:rgba(247,171,0,0.5);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px">Punkte</div>
+          <div style="font-size:0.72rem;font-weight:700;color:#fbbf24">~${s.pts} Pkt.</div>
+        </div>
+        <div style="background:rgba(52,211,153,0.07);border-radius:8px;padding:5px 8px;text-align:center">
+          <div style="font-size:0.58rem;color:rgba(52,211,153,0.45);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px">Anreiz</div>
+          <div style="font-size:0.72rem;font-weight:700;color:#6ee7b7">${s.type === 'Community' ? 'Hoch' : s.type === 'Challenge' ? 'Mittel' : s.type === 'Partnerdeal' ? 'Hoch' : 'Mittel'}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="_zamApplyAiSuggestion(${i})" style="flex:1;background:rgba(250,70,21,0.15);border:1px solid rgba(250,70,21,0.4);border-radius:10px;padding:9px;color:#FA4615;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">✓ Übernehmen</button>
+        <button onclick="_zamApplyAiSuggestion(${i});setTimeout(()=>document.getElementById('_dl_title')?.select(),100)" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:9px;color:rgba(255,255,255,0.6);font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer">✏️ Anpassen</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const wrap = document.getElementById('_zam_ai_panel');
+  if (!wrap) return;
+  wrap.innerHTML = `<div style="padding:2px 0 4px">${cards}</div>`;
+}
+
+function _zamToggleAiPanel() {
+  const panel = document.getElementById('_zam_ai_panel');
+  const btn   = document.getElementById('_zam_ai_toggle');
+  if (!panel || !btn) return;
+  const isOpen = btn.getAttribute('data-open') === '1';
+  if (!isOpen) {
+    btn.setAttribute('data-open','1');
+    btn.innerHTML = '⏳ Generiere…';
+    btn.disabled = true;
+    // slight delay for perceived "thinking"
+    setTimeout(() => {
+      const me = ZAMApi.auth.currentUser();
+      const merchants = window.ZAMData?.merchants || [];
+      const merchant  = merchants.find(m => m.id === me?.id) || me;
+      _zamRenderAiSuggestions(merchant);
+      panel.style.display = 'block';
+      btn.innerHTML = '▲ Vorschläge verbergen';
+      btn.disabled = false;
+      btn.setAttribute('data-open','1');
+    }, 600);
+  } else {
+    btn.setAttribute('data-open','0');
+    panel.style.display = 'none';
+    btn.innerHTML = '✨ Vorschläge generieren';
+  }
+}
+
+// ─── Deal-Formular ────────────────────────────────────────────────────────────
+
 function openMerchantDealModal() {
   const merchants = (window.ZAMData?.merchants || []);
   const me = ZAMApi.auth.currentUser();
@@ -9827,6 +10012,21 @@ function openMerchantDealModal() {
   }).join('');
 
   _buildMerchantModal('_dyn_deal_modal', '🏷️ Deal einreichen',
+    // ── KI-Deal-Vorschläge ──────────────────────────────────────────────────
+    '<div style="margin-bottom:16px;background:rgba(250,70,21,0.06);border:1px solid rgba(250,70,21,0.22);border-radius:14px;overflow:hidden">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px">' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+          '<span style="font-size:1rem">✨</span>' +
+          '<div>' +
+            '<div style="font-size:0.78rem;font-weight:800;color:#fff">KI-Deal-Vorschläge</div>' +
+            '<div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-top:1px">Passende Ideen für deinen Shop generieren</div>' +
+          '</div>' +
+        '</div>' +
+        '<button id="_zam_ai_toggle" data-open="0" onclick="_zamToggleAiPanel()" style="background:rgba(250,70,21,0.18);border:1px solid rgba(250,70,21,0.4);border-radius:10px;padding:7px 12px;color:#FA4615;font-size:0.73rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">✨ Vorschläge generieren</button>' +
+      '</div>' +
+      '<div id="_zam_ai_panel" style="display:none;padding:0 10px 10px"></div>' +
+    '</div>' +
+    // ────────────────────────────────────────────────────────────────────────
     _inp('Deal-Titel', '_dl_title', 'text', 'z.B. Fitness + Burger Aktion', true) +
     _ta('Beschreibung', '_dl_desc', 'Was beinhaltet der Deal?') +
     _inp('Dein Angebot / Beitrag', '_dl_offer', 'text', 'z.B. 20% Rabatt auf Monatsbeitrag für Neukunden') +
