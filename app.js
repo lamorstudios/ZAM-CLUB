@@ -2760,6 +2760,24 @@ function renderRoleActions() {
   const container = $('#profile-role-actions');
   if (!container || !user) return;
 
+  // Show Mitarbeiter button for merchant and admin roles
+  const staffBtnWrap = document.getElementById('profile-staff-btn-wrap');
+  if (staffBtnWrap) {
+    if (user.role === 'merchant' || user.role === 'admin') {
+      staffBtnWrap.style.display = 'block';
+      staffBtnWrap.innerHTML = `
+        <button onclick="openStaffModal()" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,rgba(100,180,255,0.12),rgba(100,180,255,0.05));border:1px solid rgba(100,180,255,0.3);border-radius:14px;cursor:pointer;font-family:var(--font);color:#fff;text-align:left">
+          <span style="font-size:1.3rem;flex-shrink:0">👥</span>
+          <span>
+            <div style="font-size:0.78rem;font-weight:800;color:#7dd3fc">Mitarbeiter hinzufügen</div>
+            <div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-top:2px">Einladen, verwalten & Scans verfolgen</div>
+          </span>
+        </button>`;
+    } else {
+      staffBtnWrap.style.display = 'none';
+    }
+  }
+
   if (user.role === 'admin') {
     container.innerHTML = `
       <a href="admin.html" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;padding:13px">
@@ -5196,7 +5214,7 @@ function _logStaffScan(staffId, staffName, merchantId, userId, voucherId, dealTi
 
 function openStaffModal() {
   const user = ZAMApi.auth.currentUser();
-  if (!user || user.role !== 'merchant') return;
+  if (!user || (user.role !== 'merchant' && user.role !== 'admin')) return;
   let sheet = document.getElementById('staff-sheet');
   if (!sheet) {
     sheet = document.createElement('div');
