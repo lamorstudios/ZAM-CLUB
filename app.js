@@ -963,7 +963,9 @@ function navigateTo(pageId) {
   }
 
   // Render page-specific content on navigate
-  if (pageId === 'notifications') {
+  if (pageId === 'home') {
+    try { renderHome(); } catch(e) { console.warn('[ZAM] renderHome failed', e); }
+  } else if (pageId === 'notifications') {
     renderNotifications();
   } else if (pageId === 'notif-settings') {
     renderNotifSettings();
@@ -1025,7 +1027,7 @@ function initNavigation() {
 // Home Page
 // =============================================
 function renderHome() {
-  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser || {};
   const _er = _getEffectiveRole();
   document.body.classList.toggle('perf-mode', _er === 'merchant' || _er === 'admin');
   const hour = new Date().getHours();
@@ -1053,21 +1055,20 @@ function renderHome() {
     if (spinEl) spinEl.style.display = 'none';
   }
 
-  renderHomeEvents();
-  renderHomeDeals();
+  try { renderHomeEvents(); } catch {}
+  try { renderHomeDeals(); } catch {}
 
   // Ranking always visible — core motivation element
-  _renderHomeRankingCard();
-  _renderHomeMerchantChallenge();
-  _renderHomeActivityFeed();
+  try { _renderHomeRankingCard(); } catch {}
+  try { _renderHomeMerchantChallenge(); } catch {}
+  try { _renderHomeActivityFeed(); } catch {}
+  try { _renderHomeReferralCard(user); } catch {}
+
   // Recs DOM nodes kept hidden (removed from home UI)
   const recsLabel = document.getElementById('home-rec-label');
   const recsScroll = document.getElementById('home-recs-scroll');
   if (recsLabel) recsLabel.style.display = 'none';
   if (recsScroll) recsScroll.style.display = 'none';
-
-  // Referral CTA — always visible, fill in dynamic data
-  _renderHomeReferralCard(user);
 
   // Händler Tools card — fully removed for regular users, rendered only for merchant/admin
   const toolsCard = document.getElementById('home-merchant-tools');
@@ -3456,8 +3457,12 @@ function showApp() {
     } catch {}
   }
 
-  renderAll();
+  try { renderAll(); } catch(e) { console.warn('[ZAM] renderAll crashed', e); }
   state.currentPage = '';
+
+  // Guarantee home page is visible even if renderAll partially failed
+  const _homeEl = document.getElementById('page-home');
+  if (_homeEl && !_homeEl.classList.contains('active')) _homeEl.classList.add('active');
 
   // Check if map.html redirected us to open a private chat
   const pendingChat = sessionStorage.getItem('open_chat_room');
@@ -3856,14 +3861,15 @@ function getEventCheckinQRData(event) {
 }
 
 function renderAll() {
-  renderHome();
-  renderCommunity();
-  renderEvents();
-  renderDeals();
-  renderMerchants();
-  renderProfile();
-  renderChallenges();
-  generateQRGrid();
+  const _safeRender = (fn, name) => { try { fn(); } catch(e) { console.warn('[ZAM] renderAll: ' + name + ' failed', e); } };
+  _safeRender(renderHome, 'renderHome');
+  _safeRender(renderCommunity, 'renderCommunity');
+  _safeRender(renderEvents, 'renderEvents');
+  _safeRender(renderDeals, 'renderDeals');
+  _safeRender(renderMerchants, 'renderMerchants');
+  _safeRender(renderProfile, 'renderProfile');
+  _safeRender(renderChallenges, 'renderChallenges');
+  _safeRender(generateQRGrid, 'generateQRGrid');
 }
 
 // =============================================
