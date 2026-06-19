@@ -1259,12 +1259,24 @@ function _renderHomeRankStats(user) {
 
 // ── HEUTE IM ZAM – Live Activity Feed ──────────────────────────────────────
 
+// Icons that get a subtle CSS glow class
+const _ZAM_GLOW_ICONS = { '🏆':'zam-feed-glow-gold', '🎰':'zam-feed-glow-gold', '🎁':'zam-feed-glow-warm', '🤝':'zam-feed-glow-warm', '🎯':'zam-feed-glow-warm', '🎉':'zam-feed-glow-warm' };
+
+// Action map: icon → onclick string for klickbare Einträge
+function _zamFeedAction(it) {
+  const icon = it.icon;
+  if (icon === '🏆' || icon === '⭐') return "navigateTo('profile')";
+  if (icon === '🍕' || icon === '🏷️') return "navigateTo('deals')";
+  if (icon === '📅' || icon === '☕') return "navigateTo('events')";
+  if (icon === '🤝') return "typeof openPartnerDealWorkflow==='function'?openPartnerDealWorkflow():navigateTo('merchant-dashboard')";
+  if (icon === '🎁' || icon === '🎰') return "navigateTo('challenges')";
+  return '';
+}
+
 function _zamActivityItems() {
-  // Build activity list from real local data + plausible demo items
   const items = [];
   const now = Date.now();
 
-  // From merchant submissions (deals/events recently submitted)
   try {
     const subs = JSON.parse(localStorage.getItem('zam_merchant_submissions') || '[]');
     subs.slice(0, 3).forEach(s => {
@@ -1274,41 +1286,39 @@ function _zamActivityItems() {
         text: s.type === 'event'
           ? escHtml(s.merchantName || 'Ein Händler') + ' hat ein neues Event eingereicht'
           : escHtml(s.merchantName || 'Ein Händler') + ' hat einen neuen Deal veröffentlicht',
-        ts
+        ts, real: true
       });
     });
   } catch {}
 
-  // From in-app notifications
   try {
     const notifs = JSON.parse(localStorage.getItem('zam_inapp_notifs') || '[]');
     notifs.slice(0, 3).forEach(n => {
       const ts = n.ts ? new Date(n.ts).getTime() : now - 900000;
-      items.push({ icon: n.icon || '🔔', text: escHtml(n.body || n.title || ''), ts });
+      items.push({ icon: n.icon || '🔔', text: escHtml(n.body || n.title || ''), ts, real: true });
     });
   } catch {}
 
-  // Plausible demo seed — deterministic relative to today so feed feels fresh
   const day = new Date();
   const seed = day.getFullYear() * 10000 + (day.getMonth() + 1) * 100 + day.getDate();
   const pool = [
-    { icon: '🎉', text: 'Sarah hat einen Gratis-Donut eingelöst',         offset: 3  },
-    { icon: '📸', text: 'Tom hat die Burger-Challenge abgeschlossen',      offset: 8  },
-    { icon: '🍕', text: "L'Osteria hat einen neuen Deal veröffentlicht",   offset: 15 },
-    { icon: '🏆', text: 'Emma hat 500 Punkte gesammelt',                   offset: 22 },
-    { icon: '🎰', text: 'Lena hat beim Spin 100 Punkte gewonnen',          offset: 31 },
-    { icon: '🤝', text: 'Zwei Händler haben einen Partnerdeal gestartet',  offset: 44 },
-    { icon: '🏋️', text: 'Alex hat die Fitness-Challenge gestartet',        offset: 57 },
-    { icon: '☕', text: 'Kaffeehaus Freiham hat ein Event eingereicht',    offset: 68 },
+    { icon: '🎉', text: 'Sarah hat einen Gratis-Donut eingelöst',        offset: 3  },
+    { icon: '📸', text: 'Tom hat die Burger-Challenge abgeschlossen',     offset: 8  },
+    { icon: '🍕', text: "L'Osteria hat einen neuen Deal veröffentlicht",  offset: 15 },
+    { icon: '🏆', text: 'Emma hat 500 Punkte gesammelt',                  offset: 22 },
+    { icon: '🎰', text: 'Lena hat beim Spin 100 Punkte gewonnen',         offset: 31 },
+    { icon: '🤝', text: 'Zwei Händler haben einen Partnerdeal gestartet', offset: 44 },
+    { icon: '🏋️', text: 'Alex hat die Fitness-Challenge gestartet',       offset: 57 },
+    { icon: '☕', text: 'Kaffeehaus Freiham hat ein Event eingereicht',   offset: 68 },
+    { icon: '🎯', text: 'Max hat eine neue Challenge angenommen',         offset: 12 },
+    { icon: '🎁', text: 'Lisa hat eine Belohnung eingelöst',              offset: 19 },
   ];
-  // Pick 5 items pseudo-randomly based on seed
-  const pick = (seed % pool.length);
+  const pick = seed % pool.length;
   for (let i = 0; i < 5; i++) {
     const p = pool[(pick + i) % pool.length];
     items.push({ icon: p.icon, text: p.text, ts: now - p.offset * 60000 });
   }
 
-  // Sort newest first, deduplicate loosely, cap at 5
   items.sort((a, b) => b.ts - a.ts);
   const seen = new Set();
   return items.filter(it => {
@@ -1327,6 +1337,36 @@ function _zamActivityRelTime(ts) {
   return h === 1 ? 'vor 1 Std' : 'vor ' + h + ' Std';
 }
 
+function _zamFeedRow(it, idx) {
+  const isNew = (Date.now() - it.ts) < 5 * 60000; // < 5 min → "Neu"
+  const isFirst = idx === 0;
+  const glowClass = _ZAM_GLOW_ICONS[it.icon] || '';
+  const action = _zamFeedAction(it);
+  const cursor = action ? 'cursor:pointer' : '';
+  const onclick = action ? `onclick="${action}"` : '';
+  const newBadge = isNew
+    ? `<span style="display:inline-block;margin-left:6px;font-size:0.55rem;font-weight:800;background:rgba(250,70,21,0.9);color:#fff;border-radius:5px;padding:1px 5px;vertical-align:middle;letter-spacing:0.03em">NEU</span>`
+    : '';
+  const firstStyle = isFirst
+    ? 'border:1px solid rgba(250,120,30,0.22);border-radius:10px;padding:8px 8px 8px 0;margin-bottom:2px;background:rgba(250,100,20,0.06);'
+    : 'padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);';
+  const timeColor = (Date.now() - it.ts) < 10 * 60000 ? 'rgba(52,211,153,0.8)' : 'rgba(255,255,255,0.32)';
+  const liveDot = (Date.now() - it.ts) < 10 * 60000
+    ? `<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#34d399;margin-right:4px;vertical-align:middle"></span>`
+    : '';
+
+  return `
+    <div class="zam-feed-row${isFirst?' zam-feed-row--new':''}" ${onclick} style="display:flex;align-items:flex-start;gap:10px;${firstStyle}${cursor};animation:_zamFeedRowIn 0.35s ${idx * 60}ms ease both">
+      <span class="zam-feed-icon${glowClass?' '+glowClass:''}" style="font-size:1.1rem;flex-shrink:0;margin-top:${isFirst?'8':'1'}px${isFirst?';margin-left:8px':''}">
+        ${it.icon}
+      </span>
+      <div style="flex:1;min-width:0;padding-top:${isFirst?'1':'0'}px">
+        <div style="font-size:0.79rem;font-weight:600;color:rgba(255,255,255,${isFirst?'0.95':'0.85'});line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.text}${newBadge}</div>
+        <div style="font-size:0.64rem;color:${timeColor};margin-top:2px">${liveDot}${_zamActivityRelTime(it.ts)}</div>
+      </div>
+    </div>`;
+}
+
 function _renderHomeActivityFeed() {
   const el = document.getElementById('home-activity-feed');
   if (!el) return;
@@ -1334,19 +1374,15 @@ function _renderHomeActivityFeed() {
   const items = _zamActivityItems();
   if (!items.length) { el.innerHTML = ''; return; }
 
-  const rows = items.map(it => `
-    <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-      <span style="font-size:1.1rem;flex-shrink:0;margin-top:1px">${it.icon}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:0.79rem;font-weight:600;color:rgba(255,255,255,0.88);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.text}</div>
-        <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-top:2px">${_zamActivityRelTime(it.ts)}</div>
-      </div>
-    </div>`).join('');
+  const rows = items.map((it, i) => _zamFeedRow(it, i)).join('');
 
   el.innerHTML = `
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:14px 14px 6px;animation:_zamFeedIn 0.4s ease both">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div style="font-size:0.72rem;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.45)">🔥 Heute im ZAM</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:0.72rem;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.45)">🔥 Heute im ZAM</span>
+          <span class="zam-live-dot" title="Live"></span>
+        </div>
         <button onclick="openActivityFeedModal()" style="background:none;border:none;color:rgba(255,255,255,0.35);font-size:0.68rem;font-weight:700;cursor:pointer;font-family:var(--font);padding:0">Alle →</button>
       </div>
       ${rows}
@@ -1363,24 +1399,33 @@ function openActivityFeedModal() {
     modal.addEventListener('click', e => { if (e.target === modal) closeModal('modal-activity-feed'); });
   }
 
-  const allItems = _zamActivityItems().concat(_zamActivityItems().map(it => ({
-    ...it, ts: it.ts - 3600000 * (1 + Math.random())
-  }))).sort((a, b) => b.ts - a.ts).slice(0, 20);
+  const allItems = _zamActivityItems().concat(_zamActivityItems().map((it, i) => ({
+    ...it, ts: it.ts - 3600000 * (1 + i * 0.3), text: it.text
+  }))).sort((a, b) => b.ts - a.ts).filter((it, i, arr) => arr.findIndex(x => x.text === it.text) === i).slice(0, 20);
 
-  const rows = allItems.map(it => `
-    <div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
-      <span style="font-size:1.2rem;flex-shrink:0;margin-top:1px">${it.icon}</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:0.82rem;font-weight:600;color:rgba(255,255,255,0.88);line-height:1.4">${it.text}</div>
-        <div style="font-size:0.67rem;color:rgba(255,255,255,0.35);margin-top:3px">${_zamActivityRelTime(it.ts)}</div>
-      </div>
-    </div>`).join('');
+  const rows = allItems.map((it, i) => {
+    const action = _zamFeedAction(it);
+    const onclick = action ? `onclick="${action};closeModal('modal-activity-feed')"` : '';
+    const glowClass = _ZAM_GLOW_ICONS[it.icon] || '';
+    const timeColor = (Date.now() - it.ts) < 10 * 60000 ? 'rgba(52,211,153,0.8)' : 'rgba(255,255,255,0.32)';
+    const liveDot = (Date.now() - it.ts) < 10 * 60000
+      ? `<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#34d399;margin-right:4px;vertical-align:middle"></span>` : '';
+    return `
+      <div ${onclick} style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.06);${action?'cursor:pointer':''}">
+        <span class="${glowClass}" style="font-size:1.2rem;flex-shrink:0;margin-top:1px">${it.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.82rem;font-weight:600;color:rgba(255,255,255,0.88);line-height:1.4">${it.text}</div>
+          <div style="font-size:0.67rem;color:${timeColor};margin-top:3px">${liveDot}${_zamActivityRelTime(it.ts)}</div>
+        </div>
+      </div>`;
+  }).join('');
 
   modal.innerHTML = `
     <div class="modal-sheet" style="max-height:92vh;overflow-y:auto;padding:0">
       <div style="display:flex;align-items:center;gap:10px;padding:18px 18px 0;margin-bottom:4px">
         <button onclick="closeModal('modal-activity-feed')" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">←</button>
         <div style="flex:1;font-size:0.95rem;font-weight:900;color:#fff">🔥 Heute im ZAM</div>
+        <span class="zam-live-dot" style="margin-right:4px"></span>
       </div>
       <div style="padding:0 18px 24px">${rows}</div>
     </div>`;

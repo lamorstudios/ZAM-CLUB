@@ -4610,8 +4610,56 @@ body.perf-mode .reward-confetti-piece { animation: none !important; }
   right: -4px;
 }
 
-/* Heute im ZAM — Feed card fade-in */
+/* ── Heute im ZAM — Feed enhancements ─────────────────────────────────── */
+
 @keyframes _zamFeedIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes _zamFeedRowIn {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Live green dot — very slow pulse, GPU-only */
+@keyframes _zamLivePulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.75); }
+}
+.zam-live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 5px rgba(52, 211, 153, 0.6);
+  animation: _zamLivePulse 3s ease-in-out infinite;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* Icon glow classes — slow, GPU-safe filter animation */
+@keyframes _zamGlowGold {
+  0%, 100% { filter: drop-shadow(0 0 0px rgba(247,171,0,0)); }
+  50%       { filter: drop-shadow(0 0 6px rgba(247,171,0,0.75)); }
+}
+@keyframes _zamGlowWarm {
+  0%, 100% { filter: drop-shadow(0 0 0px rgba(250,100,30,0)); }
+  50%       { filter: drop-shadow(0 0 5px rgba(250,100,30,0.65)); }
+}
+
+.zam-feed-glow-gold {
+  animation: _zamGlowGold 4s 1.5s ease-in-out infinite;
+}
+.zam-feed-glow-warm {
+  animation: _zamGlowWarm 5s 2s ease-in-out infinite;
+}
+
+/* Tap feedback on clickable rows */
+.zam-feed-row {
+  transition: background 0.15s ease;
+}
+.zam-feed-row:active {
+  background: rgba(255, 255, 255, 0.06) !important;
 }
