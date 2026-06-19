@@ -1209,7 +1209,10 @@ async function renderHomeDeals() {
         </div>
         ${deal.is_hot ? '<div class="hot-badge" style="position:absolute;top:6px;right:6px;font-size:0.55rem">🔥 Hot</div>' : ''}
       </div>
-      <div class="deal-title">${deal.title}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <div class="deal-title" style="flex:1;min-width:0">${deal.title}</div>
+        ${deal.points_reward ? `<div class="event-points-badge" style="flex-shrink:0;white-space:nowrap">+${deal.points_reward} Pkt.</div>` : ''}
+      </div>
       <div style="margin-top:6px">${_countdownBadge(deal.expiry_date)}</div>
       <button class="btn btn-primary" style="margin-top:10px;padding:6px 12px;font-size:0.72rem;width:100%" onclick="openVoucherQR('${deal.id}','${esc(deal.title)}','${deal.merchant_id||''}');event.stopPropagation()">🎟 Einlösen</button>
     `;
@@ -2435,6 +2438,7 @@ function renderDealCard(deal, idx) {
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <div class="category-tag tag" style="background:${deal.category_color}22;color:${deal.category_color}">${deal.category}</div>
+      ${deal.points_reward ? `<div class="event-points-badge" style="margin-left:auto">+${deal.points_reward} Pkt.</div>` : ''}
     </div>
     <div class="deal-title">${deal.title}</div>
     <p class="deal-description">${deal.description}</p>
@@ -2447,8 +2451,8 @@ function renderDealCard(deal, idx) {
         <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn deal-action-social">👥 Gemeinsam</button>
         <button id="di_btn_${deal.id}" onclick="_toggleDealInterestUI('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn" style="background:${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.2)' : 'rgba(255,255,255,0.07)'};border:1px solid ${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.4)' : 'rgba(255,255,255,0.12)'};color:${_isInterestedInDeal(deal.id) ? '#F7AB00' : 'rgba(255,255,255,0.55)'};border-radius:10px;padding:0 10px;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">${_isInterestedInDeal(deal.id) ? '⭐ Interessiert' : '⭐ Interessiert?'}</button>
         <button onclick="openVoucherQR('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}','${deal.merchant_id||''}');event.stopPropagation()" class="deal-action-btn deal-action-redeem">🎟 Einlösen</button>
-        <button class="${deal.is_claimed ? 'btn btn-sm claimed save-voucher-button' : 'btn btn-primary btn-sm save-voucher-button'}" data-idx="${idx}">
-          ${deal.is_claimed ? '✓ Eingelöst' : 'Gutschein sichern'}
+        <button class="${deal.is_redeemed ? 'btn btn-sm claimed save-voucher-button' : deal.is_claimed ? 'btn btn-sm save-voucher-button' : 'btn btn-primary btn-sm save-voucher-button'}" data-idx="${idx}" style="${deal.is_claimed && !deal.is_redeemed ? 'background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);color:#34d399' : ''}">
+          ${deal.is_redeemed ? '✓ Eingelöst' : deal.is_claimed ? '✓ Gesichert · +10 Pkt.' : 'Gutschein sichern'}
         </button>
       </div>
     </div>
@@ -2461,7 +2465,7 @@ function renderDealCard(deal, idx) {
   });
 
   const claimBtn = div.querySelector('.btn');
-  if (!deal.is_claimed) {
+  if (!deal.is_claimed && !deal.is_redeemed) {
     claimBtn.addEventListener('click', () => claimDeal(idx, div, deal));
   }
 
@@ -2509,40 +2513,25 @@ function _renderPartnerDealCard(pd) {
 }
 
 async function claimDeal(idx, cardEl, deal) {
-  const overlay = $('#modal-barcode');
-  if (!overlay) return;
+  // Guard: already saved or redeemed
+  if (deal.is_claimed || deal.is_redeemed) return;
 
-  const title = $('#modal-barcode-title');
-  const subtitle = $('#modal-barcode-subtitle');
-  const barcodeNum = $('#barcode-number');
-  if (title) title.textContent = deal.title;
-  if (subtitle) subtitle.textContent = (deal.store_name || '') + ' · ' + (deal.expiry_formatted || '');
-  if (barcodeNum) barcodeNum.textContent = deal.barcode || '0000-0000-0000';
-
-  generateBarcode();
-  overlay.classList.add('open');
-
-  await ZAMApi.deals.redeem(deal.id);
-
-  // Update stats
+  // Mark as saved (not yet redeemed) — only +10 pts now, full pts after merchant scan
+  const savedKey = `zam_deal_saved_${deal.id}`;
   const user = ZAMApi.auth.currentUser();
-  if (user) {
-    try {
-      const d = JSON.parse(localStorage.getItem(`zamclub_u_${user.id}`) || '{}');
-      d.stats = d.stats || {};
-      d.stats.deals_used = (d.stats.deals_used || 0) + 1;
-      localStorage.setItem(`zamclub_u_${user.id}`, JSON.stringify(d));
-      ZAMData.currentUser.stats = d.stats;
-    } catch {}
-  }
+  if (user) localStorage.setItem(savedKey, JSON.stringify({ userId: user.id, dealId: deal.id, dealTitle: deal.title, merchantId: deal.merchant_id || '', points_reward: deal.points_reward || 0, savedAt: Date.now() }));
 
   state.deals[idx].is_claimed = true;
   const btn = cardEl.querySelector('[data-idx]') || cardEl.querySelector('.btn');
-  if (btn) { btn.className = 'btn btn-sm claimed'; btn.textContent = '✓ Eingelöst'; btn.disabled = true; }
+  if (btn) {
+    btn.className = 'btn btn-sm save-voucher-button';
+    btn.style.cssText = 'background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);color:#34d399';
+    btn.textContent = '✓ Gesichert · +10 Pkt.';
+    btn.disabled = true;
+  }
 
-  await addPoints(deal.points_reward || 0, deal.store_name || 'Deal');
-  const dealsEl = $('#profile-stat-deals');
-  if (dealsEl) dealsEl.textContent = ZAMData.currentUser.stats?.deals_used || 0;
+  await addPoints(10, 'Gutschein gesichert: ' + (deal.store_name || deal.title || 'Deal'));
+  showToast('✅ Gutschein gesichert · +10 Punkte', 'success');
   await checkBadgesAfterAction();
   renderChallenges();
 }
@@ -3336,9 +3325,22 @@ function openVoucherQR(dealId, dealTitle, merchantId) {
   const code6 = _genToken(6);
   const expires = Date.now() + 15 * 60 * 1000; // 15 min
 
+  // Fetch points_reward from saved voucher info if available
+  let points_reward = 0;
+  try {
+    const savedInfo = JSON.parse(localStorage.getItem(`zam_deal_saved_${dealId}`) || 'null');
+    if (savedInfo?.points_reward) points_reward = savedInfo.points_reward;
+    else {
+      // Fall back to deals list
+      const deal = (state.deals || []).find(d => d.id === dealId);
+      if (deal?.points_reward) points_reward = deal.points_reward;
+    }
+  } catch {}
+
   const tokenData = {
     rid, code6, dealId, dealTitle, merchantId,
     userId: user.id, userName: user.display_name,
+    points_reward,
     expires, redeemed: false, createdAt: Date.now()
   };
 
@@ -3407,13 +3409,41 @@ function validateVoucherToken(rid, merchantId) {
 // Redeem a voucher token
 function redeemVoucherToken(rid) {
   const tokens = _getQRTokens();
-  if (tokens[rid]) {
-    tokens[rid].redeemed = true;
-    tokens[rid].redeemedAt = Date.now();
-    _saveQRTokens(tokens);
-    return true;
-  }
-  return false;
+  const token = tokens[rid];
+  if (!token) return false;
+
+  token.redeemed = true;
+  token.redeemedAt = Date.now();
+  _saveQRTokens(tokens);
+
+  // Credit full deal points to user (single-device: current user or token.userId match)
+  try {
+    const savedKey = `zam_deal_saved_${token.dealId}`;
+    const savedInfo = JSON.parse(localStorage.getItem(savedKey) || 'null');
+    const fullPts = savedInfo?.points_reward || token.points_reward || 0;
+    if (fullPts > 0) {
+      const currentUser = ZAMApi.auth.currentUser();
+      // Only credit if this is the user's own device (userId matches)
+      if (!currentUser || currentUser.id === token.userId || currentUser.role === 'merchant' || currentUser.role === 'admin') {
+        // On merchant device: update user data by userId in localStorage
+        const uKey = `zamclub_u_${token.userId}`;
+        const uData = JSON.parse(localStorage.getItem(uKey) || '{}');
+        uData.points = (uData.points || 0) + fullPts;
+        uData.stats = uData.stats || {};
+        uData.stats.deals_used = (uData.stats.deals_used || 0) + 1;
+        uData.history = uData.history || [];
+        uData.history.unshift({ type: 'deal', pts: fullPts, label: token.dealTitle || 'Deal eingelöst', ts: Date.now() });
+        localStorage.setItem(uKey, JSON.stringify(uData));
+        // Also update global session_user if it's the same user
+        if (currentUser && currentUser.id === token.userId) {
+          addPoints(fullPts, token.dealTitle || 'Deal eingelöst');
+        }
+      }
+      localStorage.removeItem(savedKey);
+    }
+  } catch {}
+
+  return true;
 }
 
 // Manual code redemption (merchant types 6-char code)
@@ -9591,6 +9621,56 @@ function _buildMerchantModal(id, title, bodyHtml) {
   requestAnimationFrame(() => { overlay.style.opacity = '1'; sheet.style.transform = 'translateY(0)'; });
 }
 
+// ── Deal Points Calculator ──────────────────────────────────────────────────
+
+function _zamCalcDealPoints(discount, offer, condition) {
+  const s = ((discount || '') + ' ' + (offer || '') + ' ' + (condition || '')).toLowerCase();
+  // Keywords → point tiers
+  if (/gratis|kostenlos|free|umsonst|schenken/.test(s)) {
+    if (/menü|mahlzeit|fitness|gym|kurs|monat|woche|training/.test(s)) return 500;
+    if (/donut|kaffee|tee|snack|getränk|drink/.test(s)) return 40;
+    return 80;
+  }
+  // Percentage discount
+  const pctMatch = s.match(/(\d+)\s*%/);
+  if (pctMatch) {
+    const pct = parseInt(pctMatch[1]);
+    if (pct >= 50) return 300;
+    if (pct >= 30) return 150;
+    if (pct >= 20) return 100;
+    if (pct >= 10) return 60;
+    return 30;
+  }
+  // Euro value
+  const eurMatch = s.match(/(\d+)\s*(€|euro|eur)/);
+  if (eurMatch) {
+    const eur = parseInt(eurMatch[1]);
+    if (eur >= 100) return 1000;
+    if (eur >= 50)  return 500;
+    if (eur >= 20)  return 200;
+    if (eur >= 10)  return 100;
+    return 50;
+  }
+  // Special patterns
+  if (/2\s*f.r\s*1|2for1|zwei für/.test(s)) return 120;
+  if (/3\s*f.r\s*2|3for2/.test(s)) return 80;
+  if (/upgrade|premium|vip/.test(s)) return 200;
+  return 50; // default
+}
+
+function _zamUpdateDealPointsSuggestion() {
+  const disc  = document.getElementById('_dl_disc')?.value || '';
+  const offer = document.getElementById('_dl_offer')?.value || '';
+  const cond  = document.getElementById('_dl_cond')?.value || '';
+  const pts = _zamCalcDealPoints(disc, offer, cond);
+  const el = document.getElementById('_dl_points_suggest');
+  const inp = document.getElementById('_dl_points');
+  if (el) el.textContent = 'Vorschlag: +' + pts + ' Pkt.';
+  if (inp && !inp.dataset.userEdited) inp.value = pts;
+}
+
+// ── END Deal Points Calculator ─────────────────────────────────────────────
+
 function _inp(label, id, type, placeholder, required) {
   return `<div style="margin-bottom:14px"><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">${label}${required?' *':''}</label><input type="${type}" id="${id}" placeholder="${placeholder||''}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:inherit;font-size:0.85rem;outline:none" ${required?'required':''}></div>`;
 }
@@ -9636,6 +9716,15 @@ function openMerchantDealModal() {
     _inp('Dein Angebot / Beitrag', '_dl_offer', 'text', 'z.B. 20% Rabatt auf Monatsbeitrag für Neukunden') +
     _inp('Bedingung (optional)', '_dl_cond', 'text', 'z.B. Nur für Neukunden, min. 3 Monate') +
     _inp('Gewünschter Rabatt / Prämie', '_dl_disc', 'text', 'z.B. 15% Rabatt, 1 Gratis-Menü, …') +
+    '<div style="margin-bottom:14px">' +
+      '<label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Punkte bei Einlösung</label>' +
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        '<input type="number" id="_dl_points" min="10" max="5000" step="10" placeholder="z.B. 80" oninput="this.dataset.userEdited=\'1\'" style="width:110px;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 13px;color:#fff;font-family:inherit;font-size:0.85rem;outline:none">' +
+        '<button type="button" onclick="_zamUpdateDealPointsSuggestion()" style="flex:1;background:rgba(247,171,0,0.1);border:1px solid rgba(247,171,0,0.25);border-radius:10px;padding:10px 12px;color:#F7AB00;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer;text-align:left">🔮 Automatisch berechnen</button>' +
+      '</div>' +
+      '<div id="_dl_points_suggest" style="font-size:0.68rem;color:rgba(247,171,0,0.65);margin-top:5px;padding-left:2px"></div>' +
+      '<div style="font-size:0.65rem;color:rgba(255,255,255,0.3);margin-top:3px;padding-left:2px">+10 Pkt. beim Sichern · volle Punkte erst bei Händler-Scan</div>' +
+    '</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">' +
       '<div><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Zeitraum von</label><input id="_dl_start" type="date" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:inherit;font-size:0.82rem;outline:none"></div>' +
       '<div><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Zeitraum bis *</label><input id="_dl_exp" type="date" required style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:inherit;font-size:0.82rem;outline:none"></div>' +
@@ -9782,7 +9871,10 @@ function submitNewDeal() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird eingereicht…'; }
   const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
   const list = getMerchantSubmissions();
-  const dealEntry = { id:'deal_'+Date.now(), type:'deal', status:'pending', title, description:desc, offer, condition:cond, discount:disc, period_start:start, expiry:exp, merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() };
+  const rawPts = parseInt(document.getElementById('_dl_points')?.value || '0');
+  const suggestPts = _zamCalcDealPoints(disc, offer, cond);
+  const points_reward = rawPts > 0 ? rawPts : suggestPts;
+  const dealEntry = { id:'deal_'+Date.now(), type:'deal', status:'pending', title, description:desc, offer, condition:cond, discount:disc, period_start:start, expiry:exp, points_reward, merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() };
   if (mediaType && mediaType !== 'text' && mediaUrl) { dealEntry.media_type = mediaType; dealEntry.media_url = mediaUrl; }
   list.unshift(dealEntry);
   saveMerchantSubmissions(list);
