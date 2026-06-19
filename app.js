@@ -9206,7 +9206,7 @@ function _renderHomeReferralCard(user) {
   const all = [...unlocked, ...pending];
   if (!all.length) return;
 
-  progressEl.innerHTML = `<div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;margin-top:4px">
+  progressEl.innerHTML = `<div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:8px;margin-top:8px">
     <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:7px">Aktive Einladungen</div>
     ${all.map(r => {
       const isUnlocked = r.bonus_unlocked;
