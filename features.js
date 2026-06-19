@@ -595,9 +595,9 @@ function openFriendsPanel() {
         <div style="font-size:1rem;font-weight:800">👥 Freunde</div>
         <button onclick="closeModal('modal-friends-panel')" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.4rem;cursor:pointer;padding:0">×</button>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input id="friend-search-input" type="text" placeholder="Nutzer suchen…" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 14px;color:#fff;font-size:0.82rem;font-family:var(--font)" />
-        <button onclick="_friendSearchAndRequest()" style="background:linear-gradient(135deg,#c43510,#FA4615);border:none;color:#fff;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">Anfrage</button>
+      <div style="display:flex;gap:8px;margin-bottom:16px;width:100%;box-sizing:border-box">
+        <input id="friend-search-input" type="text" placeholder="Nutzer suchen…" style="flex:1;min-width:0;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 12px;color:#fff;font-size:0.82rem;font-family:var(--font);box-sizing:border-box" />
+        <button onclick="_friendSearchAndRequest()" style="flex-shrink:0;background:linear-gradient(135deg,#c43510,#FA4615);border:none;color:#fff;border-radius:10px;padding:10px 14px;font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">Anfrage</button>
       </div>
       <div id="friends-panel-body"></div>
     </div>`;
