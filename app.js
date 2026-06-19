@@ -3517,11 +3517,24 @@ function redeemVoucherToken(rid) {
   // Award referral scan bonus to the user's referrer (fraud-safe, limit-checked)
   _awardReferralScanBonus(token.userId, token.userName || '', token.dealTitle || '', rid);
 
-  // Log scan in staff scan log for dashboard audit trail
+  // Staff scan validation and logging
   try {
     const scanner = ZAMApi.auth.currentUser();
     if (scanner && (scanner.role === 'merchant' || scanner.role === 'admin')) {
-      _logStaffScan(scanner.id, scanner.name || 'Händler', scanner.id, token.userId, rid, token.dealTitle || '', 'ok');
+      const staffRec = _getStaffByUserId(scanner.id);
+      if (staffRec) {
+        // Staff merchant validation — voucher must belong to their merchant
+        const deal = _gLoad('deals', []).find(d => d.id === token.dealId);
+        if (deal && deal.merchantId && deal.merchantId !== staffRec.merchantId) {
+          showToast('Dieser Gutschein gehört nicht zu deinem Händler.', 'error');
+          _logStaffScan(staffRec.id, staffRec.name, staffRec.merchantId, token.userId, rid, token.dealTitle || '', 'wrong_merchant');
+          return false;
+        }
+        _logStaffScan(staffRec.id, staffRec.name, staffRec.merchantId, token.userId, rid, token.dealTitle || '', 'ok');
+      } else {
+        // Regular merchant scan — log as merchant scan
+        _logStaffScan(scanner.id, scanner.name || 'Händler', scanner.id, token.userId, rid, token.dealTitle || '', 'ok');
+      }
     }
   } catch {}
 
@@ -5238,14 +5251,25 @@ function _renderStaffList(user) {
   }
   el.innerHTML = members.map(m => {
     const active = m.status === 'active';
-    const lastScanStr = m.lastScan ? new Date(m.lastScan).toLocaleDateString('de-DE') : 'Noch kein Scan';
+    const allScans = _staffScansLoad().filter(s => s.staffId === m.id);
+    const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+    const scansToday = allScans.filter(s => s.ts >= todayStart.getTime()).length;
+    const scansMonth = allScans.filter(s => s.ts >= monthStart.getTime()).length;
+    const invalidCount = allScans.filter(s => s.status !== 'ok').length;
+    const lastActivity = m.lastScan ? _timeAgo(m.lastScan) : 'Noch kein Scan';
     return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px">
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(250,70,21,0.4),rgba(247,171,0,0.3));display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">👤</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:0.84rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(m.name)}</div>
           <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(m.email)}</div>
-          <div style="font-size:0.65rem;color:rgba(255,255,255,0.3);margin-top:2px">${m.totalScans || 0} Scans · Zuletzt: ${lastScanStr}</div>
+          <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-top:3px;display:flex;gap:10px">
+            <span>Heute: <b style="color:rgba(255,255,255,0.6)">${scansToday}</b></span>
+            <span>Monat: <b style="color:rgba(255,255,255,0.6)">${scansMonth}</b></span>
+            ${invalidCount > 0 ? `<span style="color:#f87171">Ungültig: <b>${invalidCount}</b></span>` : ''}
+            <span>Zuletzt: ${lastActivity}</span>
+          </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;align-items:flex-end">
           <span style="font-size:0.6rem;padding:3px 7px;border-radius:6px;background:${active ? 'rgba(52,211,153,0.2)' : 'rgba(239,68,68,0.2)'};color:${active ? '#34d399' : '#f87171'};font-weight:700">${active ? '● Aktiv' : '● Inaktiv'}</span>
@@ -5258,6 +5282,7 @@ function _renderStaffList(user) {
       <div style="margin-top:8px;padding:6px 8px;background:rgba(250,70,21,0.06);border-radius:8px;display:flex;align-items:center;justify-content:space-between">
         <span style="font-size:0.65rem;color:rgba(255,255,255,0.4)">Einlade-Code: <span style="font-family:monospace;color:rgba(255,255,255,0.7);letter-spacing:0.05em">${m.inviteCode}</span></span>
         <button onclick="navigator.clipboard&&navigator.clipboard.writeText('${m.inviteCode}').then(()=>showToast('Code kopiert','success'))" style="font-size:0.6rem;padding:3px 7px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.5);cursor:pointer;font-family:var(--font)">Kopieren</button>
+        <button onclick="shareStaffInvite('${m.inviteCode}')" style="font-size:0.6rem;padding:3px 7px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);border-radius:6px;color:#4ade80;cursor:pointer;font-family:var(--font)">WhatsApp</button>
       </div>
     </div>`;
   }).join('');
@@ -5276,6 +5301,104 @@ function _staffRemoveConfirm(staffId, name) {
   const user = ZAMApi.auth.currentUser();
   if (user) _renderStaffList(user);
   showToast(name + ' wurde entfernt', 'info');
+}
+
+function _timeAgo(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return 'gerade eben';
+  if (diff < 3600000) return Math.floor(diff/60000) + ' Min. ago';
+  if (diff < 86400000) return Math.floor(diff/3600000) + ' Std. ago';
+  return new Date(ts).toLocaleDateString('de-DE');
+}
+
+function _staffAcceptInvite(inviteCode, userId, userName) {
+  const staff = _staffLoad();
+  const idx = staff.findIndex(s => s.inviteCode === inviteCode && s.status === 'active');
+  if (idx === -1) return { ok: false, msg: 'Ungültiger oder abgelaufener Einlade-Code.' };
+  staff[idx].linkedUserId = userId;
+  staff[idx].linkedUserName = userName;
+  _staffSave(staff);
+  return { ok: true, member: staff[idx] };
+}
+
+function _getStaffByUserId(userId) {
+  return _staffLoad().find(s => s.linkedUserId === userId && s.status === 'active') || null;
+}
+
+function shareStaffInvite(code) {
+  const msg = encodeURIComponent('Du wurdest als Mitarbeiter im ZAM Club eingeladen. Dein Einlade-Code: ' + code + '\n\nZAM Club: https://lamorstudios.github.io/ZAM-CLUB/');
+  window.open('https://wa.me/?text=' + msg, '_blank');
+}
+
+function renderStaffDashboard(staffMember) {
+  const kpiGridEl = document.getElementById('merchant-kpi-grid');
+  if (!kpiGridEl) return;
+  const parent = kpiGridEl.closest('.view') || kpiGridEl.parentNode;
+
+  // Remove existing merchant quick-actions wrap if present
+  const existingWrap = document.getElementById('merchant-qr-scanner-wrap');
+  if (existingWrap) existingWrap.remove();
+
+  const myScans = _staffScansLoad().filter(s => s.staffId === staffMember.id);
+  const now = Date.now();
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay()); weekStart.setHours(0,0,0,0);
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+
+  const scansToday = myScans.filter(s => s.ts >= todayStart.getTime()).length;
+  const scansWeek = myScans.filter(s => s.ts >= weekStart.getTime()).length;
+  const scansMonth = myScans.filter(s => s.ts >= monthStart.getTime()).length;
+  const invalidScans = myScans.filter(s => s.status !== 'ok').length;
+
+  kpiGridEl.innerHTML = `
+    <div style="grid-column:1/-1">
+      <div style="text-align:center;padding:20px 16px 8px">
+        <div style="font-size:1.6rem;margin-bottom:4px">👨‍💼</div>
+        <div style="font-size:1rem;font-weight:800;color:#fff">Mitarbeiter-Modus</div>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px">${escHtml(staffMember.merchantName || 'Händler')}</div>
+      </div>
+
+      <div style="padding:0 16px 16px">
+        <button onclick="openQRScanner()" style="width:100%;padding:20px;background:linear-gradient(135deg,#FA4615,#F7AB00);border:none;border-radius:16px;color:#fff;font-size:1.1rem;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:0 4px 20px rgba(250,70,21,0.4);letter-spacing:0.01em">
+          📷 QR-Code scannen
+        </button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 16px">
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:1.4rem;font-weight:800;color:#FA4615">${scansToday}</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">Heute</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:1.4rem;font-weight:800;color:#F7AB00">${scansWeek}</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">Woche</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:1.4rem;font-weight:800;color:#7dd3fc">${scansMonth}</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.4);margin-top:2px">Monat</div>
+        </div>
+      </div>
+
+      ${invalidScans > 0 ? `<div style="margin:0 16px 12px;padding:10px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:10px;font-size:0.72rem;color:#f87171">⚠️ ${invalidScans} ungültige Scans</div>` : ''}
+
+      <div style="padding:0 16px">
+        <div style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:10px">🧾 Letzte Einlösungen</div>
+        <div id="staff-recent-scans">
+          ${myScans.slice(0,10).map(s => {
+            const dt = new Date(s.ts);
+            const dtStr = dt.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) + ' · ' + dt.toLocaleDateString('de-DE');
+            return `<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px;border:1px solid rgba(255,255,255,0.06)">
+              <span>${s.status==='ok'?'✅':'❌'}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:0.75rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.dealTitle||'Scan')}</div>
+                <div style="font-size:0.62rem;color:rgba(255,255,255,0.35)">${dtStr}</div>
+              </div>
+            </div>`;
+          }).join('') || '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.25);font-size:0.75rem">Noch keine Scans</div>'}
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function _renderStaffScanLog(merchantId) {
@@ -5316,6 +5439,13 @@ function renderMerchantDashboard() {
     if (banner && !banner.classList.contains('visible')) banner.classList.add('visible');
     if (nameEl) nameEl.textContent = previewMerchant.shopname || 'Händler';
   } else if (!me || me.role !== 'merchant') {
+    return;
+  }
+
+  // Staff member check — show reduced staff dashboard instead
+  const staffRecord = !previewMerchant ? _getStaffByUserId(me.id) : null;
+  if (staffRecord) {
+    renderStaffDashboard(staffRecord);
     return;
   }
 
