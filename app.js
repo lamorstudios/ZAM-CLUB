@@ -2659,8 +2659,28 @@ function renderMerchantCard(merchant, idx) {
           🎁 ${merchant.current_promo}
         </div>
       </div>
+
+      <!-- Staff daily goal -->
+      <div style="margin:0 16px 16px;padding:12px 14px;background:rgba(250,70,21,0.06);border:1px solid rgba(250,70,21,0.18);border-radius:12px">
+        <div style="font-size:0.68rem;font-weight:700;color:#FA4615;margin-bottom:8px">🎯 Mein Tages-Ziel</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:0.64rem;color:rgba(255,255,255,0.45)">Scans heute</span>
+          <span style="font-size:0.7rem;font-weight:700">${scansToday} / 20</span>
+        </div>
+        <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden"><div style="height:100%;width:${Math.min(100,Math.round(scansToday/20*100))}%;background:linear-gradient(90deg,#FA4615,#F7AB00);border-radius:3px"></div></div>
+        ${scansToday >= 20
+          ? '<div style="font-size:0.62rem;color:#34d399;margin-top:5px">✅ Tagesziel erreicht!</div>'
+          : `<div style="font-size:0.6rem;color:rgba(255,255,255,0.28);margin-top:4px">Noch ${20 - scansToday} Scans bis zum Ziel</div>`}
+      </div>
+
+      <!-- Center leaderboard for staff -->
+      <div style="padding:0 16px 4px"><div style="font-size:0.8rem;font-weight:800;margin-bottom:0">📊 Center Performance</div></div>
+      <div id="staff-leaderboard-inner" style="padding:0 16px 16px"></div>
+
     </div>
   `;
+
+  renderCenterLeaderboard('staff-leaderboard-inner');
 
   div.querySelector('.merchant-card-header').addEventListener('click', () => {
     openMerchantDetail(merchant.id);
@@ -3537,6 +3557,14 @@ function redeemVoucherToken(rid) {
 
   // Award referral scan bonus to the user's referrer (fraud-safe, limit-checked)
   _awardReferralScanBonus(token.userId, token.userName || '', token.dealTitle || '', rid);
+
+  // Record scan in center leaderboard (only real merchant scans count)
+  try {
+    const _scanPts = (() => { try { const _s = JSON.parse(localStorage.getItem(`zam_deal_saved_${token.dealId}`) || 'null'); return _s?.points_reward || token.points_reward || 0; } catch { return token.points_reward || 0; } })();
+    const _mId = (() => { try { return _gLoad('deals',[]).find(d => d.id === token.dealId)?.merchantId || token.merchantId || ''; } catch { return ''; } })();
+    const _mName = (() => { try { const _accs = _gLoad('accounts',[]); return _accs.find(a => a.id === _mId)?.shopname || _accs.find(a => a.id === _mId)?.name || ''; } catch { return ''; } })();
+    if (_mId) _recordCenterScan(_mId, _mName, _scanPts || 10, token.dealTitle || '');
+  } catch {}
 
   // Staff scan validation and logging
   try {
@@ -5149,6 +5177,127 @@ function seedDemoNotifications() {
 }
 
 // =============================================
+// Center Leaderboard & Live Points
+// =============================================
+const ZAM_CENTER_STATS_KEY = 'zam_center_stats_v1';
+function _centerStatsLoad() { try { return JSON.parse(localStorage.getItem(ZAM_CENTER_STATS_KEY) || '{}'); } catch { return {}; } }
+function _centerStatsSave(d) { localStorage.setItem(ZAM_CENTER_STATS_KEY, JSON.stringify(d)); }
+
+function _recordCenterScan(merchantId, merchantName, points, dealTitle) {
+  try {
+    const stats = _centerStatsLoad();
+    const now = Date.now();
+    stats.merchants = stats.merchants || {};
+    const m = stats.merchants[merchantId] || { name: merchantName, points: 0, redemptions: 0, lastScan: 0 };
+    m.name = merchantName || m.name;
+    m.points += (points || 0);
+    m.redemptions += 1;
+    m.lastScan = now;
+    stats.merchants[merchantId] = m;
+    const today = new Date().toDateString();
+    stats.dailyPoints = stats.dailyPoints || {};
+    stats.dailyPoints[today] = (stats.dailyPoints[today] || 0) + (points || 0);
+    stats.weeklyPoints = Object.entries(stats.dailyPoints)
+      .filter(([d]) => Date.now() - new Date(d).getTime() < 7 * 86400000)
+      .reduce((s, [, v]) => s + v, 0);
+    stats.totalPoints = (stats.totalPoints || 0) + (points || 0);
+    stats.totalRedemptions = (stats.totalRedemptions || 0) + 1;
+    stats.feed = stats.feed || [];
+    stats.feed.unshift({ ts: now, merchantName: merchantName || 'Händler', dealTitle: dealTitle || 'Deal', points: points || 0 });
+    if (stats.feed.length > 20) stats.feed.length = 20;
+    _centerStatsSave(stats);
+  } catch {}
+}
+
+function _seedCenterStatsDemo() {
+  const stats = _centerStatsLoad();
+  if (stats._seeded) return;
+  const demoMerchants = [
+    { id: 'demo_m1', name: "Pit's Stop Burger", points: 4820, redemptions: 48 },
+    { id: 'demo_m2', name: 'Dunkin Donuts', points: 4210, redemptions: 42 },
+    { id: 'demo_m3', name: 'Asia Street Food', points: 3950, redemptions: 39 },
+    { id: 'demo_m4', name: 'Fashion Store MK2', points: 3100, redemptions: 31 },
+    { id: 'demo_m5', name: 'ZAM Café', points: 2750, redemptions: 27 },
+  ];
+  stats.merchants = stats.merchants || {};
+  demoMerchants.forEach(m => { if (!stats.merchants[m.id]) stats.merchants[m.id] = { name: m.name, points: m.points, redemptions: m.redemptions, lastScan: Date.now() - Math.random() * 3600000 }; });
+  const today = new Date().toDateString();
+  stats.dailyPoints = stats.dailyPoints || {};
+  if (!stats.dailyPoints[today]) stats.dailyPoints[today] = 12450;
+  if (!stats.weeklyPoints) stats.weeklyPoints = 68300;
+  if (!stats.totalPoints) stats.totalPoints = 68300;
+  if (!stats.totalRedemptions) stats.totalRedemptions = 683;
+  if (!stats.feed || !stats.feed.length) stats.feed = [
+    { ts: Date.now() - 120000, merchantName: "Pit's Stop Burger", dealTitle: '2 Burger zum Preis von 1', points: 120 },
+    { ts: Date.now() - 480000, merchantName: 'Dunkin Donuts', dealTitle: '15% auf alle Donuts', points: 80 },
+    { ts: Date.now() - 900000, merchantName: 'Asia Street Food', dealTitle: 'Bowl-Deal', points: 100 },
+    { ts: Date.now() - 1800000, merchantName: 'ZAM Café', dealTitle: 'Kaffee + Muffin', points: 60 },
+  ];
+  stats._seeded = true;
+  _centerStatsSave(stats);
+}
+
+function renderCenterLeaderboard(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (_getEffectiveRole() === 'user') { container.innerHTML = ''; return; }
+  _seedCenterStatsDemo();
+  const stats = _centerStatsLoad();
+  const today = new Date().toDateString();
+  const todayPts = stats.dailyPoints?.[today] || 0;
+  const weeklyPts = stats.weeklyPoints || 0;
+  const weeklyGoal = 25000;
+  const pct = Math.min(100, Math.round((weeklyPts / weeklyGoal) * 100));
+  const ranked = Object.entries(stats.merchants || {})
+    .map(([id, m]) => ({ id, ...m }))
+    .sort((a, b) => b.points - a.points)
+    .slice(0, 5);
+  const milestones = [];
+  if ((stats.totalRedemptions || 0) >= 100) milestones.push('🔥 100 Gutscheine eingelöst');
+  if ((stats.totalPoints || 0) >= 5000) milestones.push('🎯 5.000 Punkte erreicht');
+  if ((stats.totalPoints || 0) >= 50000) milestones.push('🏆 50.000 Punkte Meilenstein');
+  const rankEmojis = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+  container.innerHTML = `
+    <div style="background:rgba(250,70,21,0.07);border:1px solid rgba(250,70,21,0.2);border-radius:14px;padding:14px 16px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:0.75rem;font-weight:800;color:#FA4615">🔴 Live · Heute im Center</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">${weeklyPts.toLocaleString('de-DE')} Pkt. diese Woche</div>
+      </div>
+      <div style="font-size:1.4rem;font-weight:900;color:#fff;margin-bottom:8px">${todayPts.toLocaleString('de-DE')} <span style="font-size:0.7rem;font-weight:500;color:rgba(255,255,255,0.35)">Punkte eingelöst heute</span></div>
+      <div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-bottom:5px">Wochenziel: ${weeklyPts.toLocaleString('de-DE')} / ${weeklyGoal.toLocaleString('de-DE')} Pkt. · ${pct}%</div>
+      <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#FA4615,#F7AB00);border-radius:3px"></div></div>
+    </div>
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px;margin-bottom:12px">
+      <div style="font-size:0.75rem;font-weight:800;color:rgba(255,255,255,0.6);margin-bottom:12px">🏆 Händler-Rangliste · Diese Woche</div>
+      ${ranked.length ? ranked.map((m, i) => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;${i < ranked.length - 1 ? 'border-bottom:1px solid rgba(255,255,255,0.05)' : ''}">
+          <span style="font-size:1rem;flex-shrink:0;width:22px;text-align:center">${rankEmojis[i]}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.76rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(m.name)}</div>
+            <div style="font-size:0.6rem;color:rgba(255,255,255,0.35)">${m.redemptions} Einlösungen</div>
+          </div>
+          <div style="font-size:0.78rem;font-weight:800;color:${i===0?'#F7AB00':i===1?'#9ca3af':i===2?'#b45309':'rgba(255,255,255,0.45)'};flex-shrink:0">${m.points.toLocaleString('de-DE')} Pkt.</div>
+        </div>`).join('') : '<div style="text-align:center;padding:12px;color:rgba(255,255,255,0.25);font-size:0.72rem">Noch keine Scan-Daten</div>'}
+    </div>
+    ${milestones.length ? `<div style="background:rgba(247,171,0,0.06);border:1px solid rgba(247,171,0,0.2);border-radius:14px;padding:12px 16px;margin-bottom:12px">
+      <div style="font-size:0.7rem;font-weight:800;color:#F7AB00;margin-bottom:8px">🎯 Meilensteine</div>
+      ${milestones.map(ms => `<div style="font-size:0.7rem;color:rgba(255,255,255,0.55);margin-bottom:3px">${ms}</div>`).join('')}
+    </div>` : ''}
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:12px 16px">
+      <div style="font-size:0.7rem;font-weight:800;color:rgba(255,255,255,0.45);margin-bottom:8px">📡 Live Feed</div>
+      ${(stats.feed || []).slice(0,5).map(f => {
+        const diff = Date.now() - f.ts;
+        const ago = diff < 60000 ? 'gerade eben' : diff < 3600000 ? Math.floor(diff/60000) + ' Min.' : Math.floor(diff/3600000) + ' Std.';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+          <span style="font-size:0.75rem">✅</span>
+          <div style="flex:1;min-width:0;font-size:0.68rem;color:rgba(255,255,255,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(f.merchantName)} · <span style="color:rgba(255,255,255,0.3)">${escHtml(f.dealTitle)}</span></div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.25);flex-shrink:0">${ago}</div>
+        </div>`;
+      }).join('') || '<div style="font-size:0.7rem;color:rgba(255,255,255,0.22);text-align:center;padding:8px 0">Noch keine Aktivität</div>'}
+    </div>`;
+}
+
+// =============================================
 // Händler Mitarbeiter (Staff Management)
 // =============================================
 const ZAM_STAFF_KEY = 'zam_staff_v1';
@@ -5626,6 +5775,19 @@ function renderMerchantDashboard() {
   }
   _renderMerchantStats2(stats);
   _renderPartnerDeals(me);
+
+  // Center leaderboard section
+  let _lbWrap = document.getElementById('merchant-leaderboard-wrap');
+  if (!_lbWrap) {
+    _lbWrap = document.createElement('div');
+    _lbWrap.id = 'merchant-leaderboard-wrap';
+    const _dc = kpiGridEl ? kpiGridEl.closest('.view') || kpiGridEl.parentNode : null;
+    if (_dc) _dc.appendChild(_lbWrap);
+  }
+  if (_lbWrap) {
+    _lbWrap.innerHTML = '<div style="padding:0 16px 8px"><div style="font-size:0.88rem;font-weight:800">📊 Center Performance</div></div><div id="center-leaderboard-inner" style="padding:0 16px 16px"></div>';
+    renderCenterLeaderboard('center-leaderboard-inner');
+  }
   _renderMerchantVideoDrehSection(me);
   _renderMerchantNewsfeed(me);
   // Detailed stats section (features.js)
