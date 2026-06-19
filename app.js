@@ -3517,6 +3517,14 @@ function redeemVoucherToken(rid) {
   // Award referral scan bonus to the user's referrer (fraud-safe, limit-checked)
   _awardReferralScanBonus(token.userId, token.userName || '', token.dealTitle || '', rid);
 
+  // Log scan in staff scan log for dashboard audit trail
+  try {
+    const scanner = ZAMApi.auth.currentUser();
+    if (scanner && (scanner.role === 'merchant' || scanner.role === 'admin')) {
+      _logStaffScan(scanner.id, scanner.name || 'Händler', scanner.id, token.userId, rid, token.dealTitle || '', 'ok');
+    }
+  } catch {}
+
   return true;
 }
 
@@ -5107,6 +5115,192 @@ function seedDemoNotifications() {
 }
 
 // =============================================
+// Händler Mitarbeiter (Staff Management)
+// =============================================
+const ZAM_STAFF_KEY = 'zam_staff_v1';
+const ZAM_STAFF_SCANS_KEY = 'zam_staff_scans';
+
+function _staffLoad() { try { return JSON.parse(localStorage.getItem(ZAM_STAFF_KEY) || '[]'); } catch { return []; } }
+function _staffSave(arr) { localStorage.setItem(ZAM_STAFF_KEY, JSON.stringify(arr)); }
+function _staffScansLoad() { try { return JSON.parse(localStorage.getItem(ZAM_STAFF_SCANS_KEY) || '[]'); } catch { return []; } }
+function _staffScansSave(arr) { localStorage.setItem(ZAM_STAFF_SCANS_KEY, JSON.stringify(arr)); }
+
+// Get staff for a specific merchant
+function _getStaff(merchantId) { return _staffLoad().filter(s => s.merchantId === merchantId); }
+
+// Generate a staff invite code
+function _genStaffInviteCode() { return 'ST' + Math.random().toString(36).substring(2,8).toUpperCase(); }
+
+// Add staff member
+function _addStaffMember(merchantId, merchantName, name, email) {
+  const staff = _staffLoad();
+  // Check duplicate
+  if (staff.find(s => s.merchantId === merchantId && s.email === email && s.status !== 'removed')) {
+    return { ok: false, msg: 'Diese E-Mail ist bereits als Mitarbeiter eingetragen.' };
+  }
+  const member = {
+    id: 'stf_' + Date.now() + '_' + Math.random().toString(36).substring(2,6),
+    merchantId,
+    merchantName,
+    name: name.trim(),
+    email: email.trim().toLowerCase(),
+    inviteCode: _genStaffInviteCode(),
+    status: 'active', // active | inactive | removed
+    addedAt: Date.now(),
+    lastScan: null,
+    totalScans: 0
+  };
+  staff.push(member);
+  _staffSave(staff);
+  return { ok: true, member };
+}
+
+// Update staff status
+function _setStaffStatus(staffId, status) {
+  const staff = _staffLoad();
+  const idx = staff.findIndex(s => s.id === staffId);
+  if (idx === -1) return;
+  staff[idx].status = status;
+  _staffSave(staff);
+}
+
+// Remove staff member
+function _removeStaff(staffId) { _setStaffStatus(staffId, 'removed'); }
+
+// Log a staff scan
+function _logStaffScan(staffId, staffName, merchantId, userId, voucherId, dealTitle, status) {
+  const scans = _staffScansLoad();
+  scans.unshift({ id: 'sc_' + Date.now(), staffId, staffName, merchantId, userId, voucherId, dealTitle: dealTitle || '', status, ts: Date.now() });
+  // Keep last 500
+  if (scans.length > 500) scans.length = 500;
+  _staffScansSave(scans);
+  // Update staff last scan + count
+  const staff = _staffLoad();
+  const idx = staff.findIndex(s => s.id === staffId);
+  if (idx !== -1) { staff[idx].lastScan = Date.now(); staff[idx].totalScans = (staff[idx].totalScans || 0) + 1; _staffSave(staff); }
+}
+
+function openStaffModal() {
+  const user = ZAMApi.auth.currentUser();
+  if (!user || user.role !== 'merchant') return;
+  let sheet = document.getElementById('staff-sheet');
+  if (!sheet) {
+    sheet = document.createElement('div');
+    sheet.id = 'staff-sheet';
+    sheet.style.cssText = 'position:fixed;inset:0;z-index:9800;display:flex;flex-direction:column;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px)';
+    document.body.appendChild(sheet);
+  }
+  sheet.innerHTML = `
+    <div style="flex:1" onclick="document.getElementById('staff-sheet').remove()"></div>
+    <div style="background:#1a1a1a;border-radius:20px 20px 0 0;max-height:85vh;overflow-y:auto;padding:20px 16px 32px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <h2 style="font-size:1rem;font-weight:800;margin:0">👥 Mitarbeiter</h2>
+        <button onclick="document.getElementById('staff-sheet').remove()" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;padding:6px 12px;color:#fff;font-size:0.8rem;cursor:pointer">✕ Schließen</button>
+      </div>
+      <div style="background:rgba(250,70,21,0.07);border:1px solid rgba(250,70,21,0.2);border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="font-size:0.78rem;font-weight:700;margin-bottom:10px;color:#FA4615">➕ Mitarbeiter hinzufügen</div>
+        <input id="staff-name-inp" type="text" placeholder="Name" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 11px;color:#fff;font-size:0.82rem;margin-bottom:8px;font-family:var(--font)">
+        <input id="staff-email-inp" type="email" placeholder="E-Mail-Adresse" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 11px;color:#fff;font-size:0.82rem;margin-bottom:10px;font-family:var(--font)">
+        <button onclick="_staffAdd()" style="width:100%;padding:11px;background:linear-gradient(135deg,#FA4615,#F7AB00);border:none;border-radius:10px;color:#fff;font-size:0.82rem;font-weight:800;cursor:pointer;font-family:var(--font)">Einladen</button>
+      </div>
+      <div id="staff-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div style="margin-top:16px">
+        <div style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:10px">📋 Letzte Scan-Aktivität</div>
+        <div id="staff-scan-log" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>`;
+  _renderStaffList(user);
+  _renderStaffScanLog(user.id);
+}
+
+function _staffAdd() {
+  const user = ZAMApi.auth.currentUser();
+  if (!user) return;
+  const name = document.getElementById('staff-name-inp')?.value?.trim();
+  const email = document.getElementById('staff-email-inp')?.value?.trim();
+  if (!name) { showToast('Bitte Name eingeben', 'error'); return; }
+  if (!email || !email.includes('@')) { showToast('Bitte gültige E-Mail eingeben', 'error'); return; }
+  const result = _addStaffMember(user.id, user.name || 'Händler', name, email);
+  if (!result.ok) { showToast(result.msg, 'error'); return; }
+  document.getElementById('staff-name-inp').value = '';
+  document.getElementById('staff-email-inp').value = '';
+  showToast('✓ ' + name + ' wurde eingeladen · Code: ' + result.member.inviteCode, 'success');
+  _renderStaffList(user);
+}
+
+function _renderStaffList(user) {
+  const el = document.getElementById('staff-list');
+  if (!el) return;
+  const members = _getStaff(user.id).filter(s => s.status !== 'removed');
+  if (!members.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.78rem">Noch keine Mitarbeiter eingeladen</div>';
+    return;
+  }
+  el.innerHTML = members.map(m => {
+    const active = m.status === 'active';
+    const lastScanStr = m.lastScan ? new Date(m.lastScan).toLocaleDateString('de-DE') : 'Noch kein Scan';
+    return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(250,70,21,0.4),rgba(247,171,0,0.3));display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">👤</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.84rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(m.name)}</div>
+          <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(m.email)}</div>
+          <div style="font-size:0.65rem;color:rgba(255,255,255,0.3);margin-top:2px">${m.totalScans || 0} Scans · Zuletzt: ${lastScanStr}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;align-items:flex-end">
+          <span style="font-size:0.6rem;padding:3px 7px;border-radius:6px;background:${active ? 'rgba(52,211,153,0.2)' : 'rgba(239,68,68,0.2)'};color:${active ? '#34d399' : '#f87171'};font-weight:700">${active ? '● Aktiv' : '● Inaktiv'}</span>
+          ${active
+            ? `<button onclick="_staffToggle('${m.id}','inactive')" style="font-size:0.63rem;padding:4px 8px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:7px;color:#f87171;cursor:pointer;font-family:var(--font)">Deaktivieren</button>`
+            : `<button onclick="_staffToggle('${m.id}','active')" style="font-size:0.63rem;padding:4px 8px;background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);border-radius:7px;color:#34d399;cursor:pointer;font-family:var(--font)">Aktivieren</button>`}
+          <button onclick="_staffRemoveConfirm('${m.id}','${escHtml(m.name)}')" style="font-size:0.63rem;padding:4px 8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:rgba(255,255,255,0.4);cursor:pointer;font-family:var(--font)">Entfernen</button>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding:6px 8px;background:rgba(250,70,21,0.06);border-radius:8px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:0.65rem;color:rgba(255,255,255,0.4)">Einlade-Code: <span style="font-family:monospace;color:rgba(255,255,255,0.7);letter-spacing:0.05em">${m.inviteCode}</span></span>
+        <button onclick="navigator.clipboard&&navigator.clipboard.writeText('${m.inviteCode}').then(()=>showToast('Code kopiert','success'))" style="font-size:0.6rem;padding:3px 7px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.5);cursor:pointer;font-family:var(--font)">Kopieren</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function _staffToggle(staffId, newStatus) {
+  _setStaffStatus(staffId, newStatus);
+  const user = ZAMApi.auth.currentUser();
+  if (user) _renderStaffList(user);
+  showToast(newStatus === 'active' ? '✓ Mitarbeiter aktiviert' : 'Mitarbeiter deaktiviert', 'success');
+}
+
+function _staffRemoveConfirm(staffId, name) {
+  if (!confirm('Möchtest du ' + name + ' wirklich entfernen?')) return;
+  _removeStaff(staffId);
+  const user = ZAMApi.auth.currentUser();
+  if (user) _renderStaffList(user);
+  showToast(name + ' wurde entfernt', 'info');
+}
+
+function _renderStaffScanLog(merchantId) {
+  const el = document.getElementById('staff-scan-log');
+  if (!el) return;
+  const scans = _staffScansLoad().filter(s => s.merchantId === merchantId).slice(0, 15);
+  if (!scans.length) {
+    el.innerHTML = '<div style="text-align:center;padding:12px;color:rgba(255,255,255,0.25);font-size:0.72rem">Noch keine Scan-Aktivität</div>';
+    return;
+  }
+  el.innerHTML = scans.map(s => {
+    const dt = new Date(s.ts);
+    const dtStr = dt.toLocaleDateString('de-DE') + ' ' + dt.toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+    const ok = s.status === 'ok';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
+      <span style="font-size:0.9rem">${ok ? '✅' : '❌'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.72rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.dealTitle || 'Scan')}</div>
+        <div style="font-size:0.62rem;color:rgba(255,255,255,0.35)">${escHtml(s.staffName)} · ${dtStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// =============================================
 // Phase 12 — Merchant Dashboard
 // =============================================
 function renderMerchantDashboard() {
@@ -5157,6 +5351,7 @@ function renderMerchantDashboard() {
           <span>🤝</span><span style="color:#ffb060">Anfragen</span>
           <span id="merchant-anfragen-badge" style="display:none;position:absolute;top:6px;right:6px;min-width:16px;height:16px;border-radius:8px;background:#FA4615;color:#fff;font-size:0.55rem;font-weight:800;line-height:16px;text-align:center;padding:0 3px;font-family:var(--font)"></span>
         </button>
+        <button class="merchant-quick-btn" onclick="openStaffModal()" style="background:linear-gradient(135deg,rgba(100,180,255,0.2),rgba(100,180,255,0.07));border:1px solid rgba(100,180,255,0.3)"><span>👥</span><span style="color:#7dd3fc">Mitarbeiter</span></button>
       </div>
     `;
     kpiGridEl.parentNode.insertBefore(scannerBtnWrap, kpiGridEl);
