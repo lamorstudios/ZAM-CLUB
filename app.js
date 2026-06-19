@@ -2464,9 +2464,9 @@ function renderDealCard(deal, idx) {
     deal.is_saved = isSaved('deal', deal.id);
   });
 
-  const claimBtn = div.querySelector('.btn');
-  if (!deal.is_claimed && !deal.is_redeemed) {
-    claimBtn.addEventListener('click', () => claimDeal(idx, div, deal));
+  const claimBtn = div.querySelector('.save-voucher-button');
+  if (claimBtn && !deal.is_claimed && !deal.is_redeemed) {
+    claimBtn.addEventListener('click', e => { e.stopPropagation(); saveDeal(deal.id, claimBtn); });
   }
 
   return div;
@@ -2540,28 +2540,82 @@ function _renderPartnerDealCard(pd) {
   return div;
 }
 
-async function claimDeal(idx, cardEl, deal) {
-  // Guard: already saved or redeemed
-  if (deal.is_claimed || deal.is_redeemed) return;
+// Central save function for ALL deal types (regular, partner, media, hot, etc.)
+async function saveDeal(dealId, btnEl) {
+  // Find deal in state by ID — never use idx from mixed arrays
+  const deal = (state.deals || []).find(d => d.id === dealId);
 
-  // Mark as saved (not yet redeemed) — only +10 pts now, full pts after merchant scan
-  const savedKey = `zam_deal_saved_${deal.id}`;
-  const user = ZAMApi.auth.currentUser();
-  if (user) localStorage.setItem(savedKey, JSON.stringify({ userId: user.id, dealId: deal.id, dealTitle: deal.title, merchantId: deal.merchant_id || '', points_reward: deal.points_reward || 0, savedAt: Date.now() }));
-
-  state.deals[idx].is_claimed = true;
-  const btn = cardEl.querySelector('[data-idx]') || cardEl.querySelector('.btn');
-  if (btn) {
-    btn.className = 'btn btn-sm save-voucher-button';
-    btn.style.cssText = 'background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);color:#34d399';
-    btn.textContent = '✓ Gesichert · +10 Pkt.';
-    btn.disabled = true;
+  // Check my-vouchers for already-saved state (source of truth)
+  const already = _getMyVouchers().find(v => v.deal_id === dealId && !v.redeemed);
+  if (already) {
+    showToast('✓ Bereits gesichert · Jetzt beim Händler einlösen', 'info');
+    _setSavedBtnState(btnEl);
+    return;
   }
 
-  await addPoints(10, 'Gutschein gesichert: ' + (deal.store_name || deal.title || 'Deal'));
+  const user = ZAMApi.auth.currentUser();
+  if (!user) { showToast('Bitte zuerst anmelden', 'error'); return; }
+
+  // Gather deal metadata
+  const dealTitle    = deal?.title    || '';
+  const storeIcon    = deal?.store_icon || deal?.store_icon || '🏪';
+  const storeName    = deal?.store_name || deal?.merchant_name || '';
+  const discount     = deal?.discount || '';
+  const points_rew   = deal?.points_reward || 0;
+  const merchantId   = deal?.merchant_id || '';
+
+  // Save to my-vouchers (shared storage, works for all types)
+  try {
+    const code = 'ZAM-' + dealId.replace(/[^A-Z0-9]/gi,'').toUpperCase().slice(-4) + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
+    const expDate = new Date(); expDate.setDate(expDate.getDate() + 14);
+    const vouchers = _getMyVouchers();
+    vouchers.unshift({
+      id: 'mv_' + Date.now(),
+      deal_id: dealId, title: dealTitle, store_icon: storeIcon,
+      store_name: storeName, discount, code,
+      points_reward: points_rew,
+      created_at: new Date().toISOString(),
+      expiry: expDate.toISOString().slice(0, 10),
+      redeemed: false,
+    });
+    _saveMyVouchers(vouchers);
+  } catch(e) {
+    showToast('Gutschein konnte nicht gespeichert werden. Bitte erneut versuchen.', 'error');
+    return;
+  }
+
+  // Persist saved metadata for QR/merchant redemption
+  try {
+    localStorage.setItem(`zam_deal_saved_${dealId}`, JSON.stringify({
+      userId: user.id, dealId, dealTitle, merchantId, points_reward: points_rew, savedAt: Date.now()
+    }));
+  } catch {}
+
+  // Mark in state so the card reflects the correct status if re-rendered
+  if (deal) deal.is_claimed = true;
+
+  // Update button immediately
+  _setSavedBtnState(btnEl);
+
+  // Award +10 pts once
+  await addPoints(10, 'Gutschein gesichert: ' + (storeName || dealTitle || 'Deal'));
   showToast('✅ Gutschein gesichert · +10 Punkte', 'success');
   await checkBadgesAfterAction();
   renderChallenges();
+}
+
+function _setSavedBtnState(btn) {
+  if (!btn) return;
+  btn.textContent = '✓ Gesichert · +10 Pkt.';
+  btn.className = 'btn btn-sm save-voucher-button';
+  btn.style.cssText = 'background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);color:#34d399';
+  btn.disabled = true;
+}
+
+// Legacy alias — kept so any residual callsites don't break
+async function claimDeal(idx, cardEl, deal) {
+  const btn = cardEl?.querySelector('.save-voucher-button');
+  await saveDeal(deal?.id, btn);
 }
 
 function generateBarcode() {
