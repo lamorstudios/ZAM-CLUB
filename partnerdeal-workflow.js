@@ -18,19 +18,21 @@ const PDW = (() => {
     CHANGE_PROPOSED:      'change_proposed',
     AWAITING_CONFIRM:     'awaiting_confirmation',
     BOTH_CONFIRMED:       'both_confirmed',
+    AWAITING_ADMIN:       'awaiting_admin',
     PUBLISHED:            'published',
     REJECTED:             'rejected',
   };
 
   const STATUS_LABEL = {
-    draft:                 { text: 'Entwurf',                color: '#94a3b8' },
-    sent:                  { text: 'Anfrage gesendet',        color: '#60a5fa' },
-    awaiting_partner:      { text: 'Wartet auf Partner',      color: '#f59e0b' },
-    change_proposed:       { text: 'Änderung vorgeschlagen',  color: '#a78bfa' },
-    awaiting_confirmation: { text: 'Wartet auf Bestätigung',  color: '#f59e0b' },
-    both_confirmed:        { text: 'Von beiden bestätigt',    color: '#34d399' },
-    published:             { text: 'Veröffentlicht',          color: '#34d399' },
-    rejected:              { text: 'Abgelehnt',               color: '#f87171' },
+    draft:                 { text: 'Entwurf',                    color: '#94a3b8' },
+    sent:                  { text: 'Anfrage gesendet',            color: '#60a5fa' },
+    awaiting_partner:      { text: 'Wartet auf Partner',          color: '#f59e0b' },
+    change_proposed:       { text: 'Änderung vorgeschlagen',      color: '#a78bfa' },
+    awaiting_confirmation: { text: 'Wartet auf Bestätigung',      color: '#f59e0b' },
+    both_confirmed:        { text: 'Von beiden bestätigt',        color: '#34d399' },
+    awaiting_admin:        { text: 'Wartet auf Admin-Freigabe',   color: '#fb923c' },
+    published:             { text: 'Veröffentlicht ✓',            color: '#34d399' },
+    rejected:              { text: 'Abgelehnt',                   color: '#f87171' },
   };
 
   function _load() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } }
@@ -103,22 +105,45 @@ const PDW = (() => {
     const iConfirmed = isInitiator ? true  : deal.initiatorConfirmed;
     const pConfirmed = isInitiator ? deal.partnerConfirmed : true;
     const bothDone   = iConfirmed && pConfirmed;
-    const newStatus  = bothDone ? STATUS.BOTH_CONFIRMED : deal.status;
+
+    let newStatus = deal.status;
+    let points_reward = deal.points_reward;
+    let needsAdmin = false;
+
+    if (bothDone) {
+      // Auto-calculate points from deal content
+      const c = deal.current;
+      if (typeof _zamEvalDealPoints === 'function') {
+        const eval_ = _zamEvalDealPoints(c.initiatorOffer + ' ' + (c.partnerOffer || ''), c.discount || '', c.initiatorCondition || '', c.title);
+        points_reward = eval_.points;
+        needsAdmin = eval_.needsAdminApproval;
+      } else if (typeof _zamCalcDealPoints === 'function') {
+        points_reward = _zamCalcDealPoints(c.initiatorOffer, c.discount, c.initiatorCondition, c.title);
+        needsAdmin = points_reward > 2500;
+      }
+      newStatus = needsAdmin ? STATUS.AWAITING_ADMIN : STATUS.BOTH_CONFIRMED;
+    }
+
     const all = _load();
     const idx = all.findIndex(d => d.id === id);
+    const comment = bothDone
+      ? (needsAdmin ? 'Bestätigt ✓ · Wartet auf Admin-Freigabe (' + (points_reward || '?') + ' Pkt.)' : 'Beide Händler bestätigt · wird veröffentlicht')
+      : 'Bestätigt ✓';
     all[idx] = {
       ...all[idx],
       initiatorConfirmed: iConfirmed,
       partnerConfirmed: pConfirmed,
+      points_reward: bothDone ? points_reward : all[idx].points_reward,
+      needsAdminApproval: bothDone ? needsAdmin : all[idx].needsAdminApproval,
       status: newStatus,
       updatedAt: _now(),
       versions: [...all[idx].versions, {
         by: byMerchantId, byName: isInitiator ? deal.initiator.name : deal.partner.name,
-        at: _now(), changes: {}, comment: 'Bestätigt ✓', status: newStatus,
+        at: _now(), changes: {}, comment, status: newStatus,
       }],
     };
     _save(all);
-    if (bothDone) _publishToActive(all[idx]);
+    if (bothDone && !needsAdmin) _publishToActive(all[idx]);
     return all[idx];
   }
 
@@ -137,7 +162,7 @@ const PDW = (() => {
   function adminPublish(id) {
     const deal = getById(id);
     if (!deal || deal.status === STATUS.REJECTED) return null;
-    const updated = _update(id, { status: STATUS.PUBLISHED, adminApproved: true });
+    const updated = _update(id, { status: STATUS.PUBLISHED, adminApproved: true, needsAdminApproval: false });
     _publishToActive(updated);
     return updated;
   }
@@ -156,6 +181,7 @@ const PDW = (() => {
       a: { id: deal.initiator.id, name: deal.initiator.name, icon: deal.initiator.icon, benefit: c.initiatorOffer, condition: c.initiatorCondition || '' },
       b: { id: deal.partner.id,   name: deal.partner.name,   icon: deal.partner.icon,   benefit: c.partnerOffer,   condition: c.partnerCondition   || '' },
       expires_at: c.periodEnd || new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10),
+      points_reward: deal.points_reward || 0,
       participants: 0,
       created_at: new Date().toISOString(),
     });
@@ -656,9 +682,12 @@ function _pdwConfirm(dealId) {
   if (!updated) return;
 
   const sl = PDW.STATUS_LABEL[updated.status] || {};
-  if (updated.status === PDW.STATUS.BOTH_CONFIRMED) {
-    if (typeof ZAMNotif !== 'undefined') ZAMNotif.push({ icon: '🎉', title: 'Partnerdeal bestätigt!', body: `"${updated.current.title}" ist von beiden Händlern bestätigt.`, type: 'success' });
-    if (typeof showToast === 'function') showToast('🎉 Beide Händler haben bestätigt — Deal wird veröffentlicht!', 'success');
+  if (updated.status === PDW.STATUS.AWAITING_ADMIN) {
+    if (typeof ZAMNotif !== 'undefined') ZAMNotif.push({ icon: '⚠️', title: 'Admin-Freigabe erforderlich', body: `"${updated.current.title}" wartet auf Admin-Prüfung (${updated.points_reward || '?'} Pkt.).`, type: 'warning' });
+    if (typeof showToast === 'function') showToast('⚠️ Beide Händler haben bestätigt — Deal wartet auf Admin-Freigabe.', 'info');
+  } else if (updated.status === PDW.STATUS.BOTH_CONFIRMED) {
+    if (typeof ZAMNotif !== 'undefined') ZAMNotif.push({ icon: '🎉', title: 'Partnerdeal veröffentlicht!', body: `"${updated.current.title}" ist jetzt live (+${updated.points_reward || '?'} Pkt.).`, type: 'success' });
+    if (typeof showToast === 'function') showToast('🎉 Beide Händler bestätigt — Deal wird veröffentlicht!', 'success');
   } else {
     if (typeof showToast === 'function') showToast('✅ Bestätigung gespeichert', 'success');
   }
@@ -792,22 +821,26 @@ function _renderAdminPDW() {
         <!-- Summary -->
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px">
           ${[
-            { label: 'Gesamt',           val: all.length,                                                   color: '#94a3b8' },
-            { label: 'In Abstimmung',    val: all.filter(d => [S.AWAITING_PARTNER,S.AWAITING_CONFIRM,S.CHANGE_PROPOSED].includes(d.status)).length, color: '#f59e0b' },
-            { label: 'Veröffentlicht',   val: all.filter(d => d.status === S.PUBLISHED).length,             color: '#34d399' },
+            { label: 'Gesamt',            val: all.length,                                                                                color: '#94a3b8' },
+            { label: 'Admin-Freigabe',    val: all.filter(d => d.status === S.AWAITING_ADMIN).length,                                    color: '#fb923c' },
+            { label: 'In Abstimmung',     val: all.filter(d => [S.AWAITING_PARTNER,S.AWAITING_CONFIRM,S.CHANGE_PROPOSED].includes(d.status)).length, color: '#f59e0b' },
+            { label: 'Veröffentlicht',    val: all.filter(d => d.status === S.PUBLISHED).length,                                         color: '#34d399' },
           ].map(k => `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px;text-align:center"><div style="font-size:1.3rem;font-weight:900;color:${k.color}">${k.val}</div><div style="font-size:0.6rem;color:rgba(255,255,255,0.35)">${k.label}</div></div>`).join('')}
         </div>
         ${all.length === 0 ? '<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.3);font-size:0.82rem">Noch keine Partnerdeal-Anfragen</div>' :
           all.map(d => {
             const sl = SL[d.status] || { text: d.status, color: '#94a3b8' };
-            const canPublish = d.status === S.BOTH_CONFIRMED && !d.adminApproved;
+            const canPublish = (d.status === S.BOTH_CONFIRMED || d.status === S.AWAITING_ADMIN) && !d.adminApproved;
+            const ptsLabel = d.points_reward ? `<span style="font-size:0.6rem;font-weight:800;color:#F7AB00;background:rgba(247,171,0,0.12);border:1px solid rgba(247,171,0,0.25);border-radius:6px;padding:1px 6px;margin-left:4px">+${d.points_reward} Pkt.</span>` : '';
+            const adminNote = d.status === S.AWAITING_ADMIN ? `<div style="margin-top:6px;font-size:0.65rem;color:#fb923c;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.2);border-radius:8px;padding:6px 8px">⚠️ ${d.needsAdminApproval ? 'Hoher Punktewert oder Risiko-Deal' : 'Admin-Prüfung erforderlich'} — bitte manuell freigeben</div>` : '';
             return `
-              <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px;margin-bottom:10px">
+              <div style="background:rgba(255,255,255,0.03);border:1px solid ${d.status===S.AWAITING_ADMIN?'rgba(251,146,60,0.25)':'rgba(255,255,255,0.07)'};border-radius:14px;padding:14px;margin-bottom:10px">
                 <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
                   <div style="flex:1;min-width:0">
-                    <div style="font-size:0.82rem;font-weight:800;color:#fff">${escHtml(d.current.title)}</div>
+                    <div style="font-size:0.82rem;font-weight:800;color:#fff">${escHtml(d.current.title)}${ptsLabel}</div>
                     <div style="font-size:0.64rem;color:rgba(255,255,255,0.4);margin-top:2px">${d.initiator.icon} ${escHtml(d.initiator.name)} + ${d.partner.icon} ${escHtml(d.partner.name)}</div>
                     <div style="margin-top:4px"><span style="padding:2px 8px;border-radius:20px;font-size:0.6rem;font-weight:800;background:${sl.color}18;color:${sl.color};border:1px solid ${sl.color}44">${sl.text}</span></div>
+                    ${adminNote}
                   </div>
                   <div style="font-size:0.6rem;color:rgba(255,255,255,0.25)">${new Date(d.createdAt).toLocaleDateString('de-DE')}</div>
                 </div>

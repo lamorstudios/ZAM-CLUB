@@ -9621,52 +9621,86 @@ function _buildMerchantModal(id, title, bodyHtml) {
   requestAnimationFrame(() => { overlay.style.opacity = '1'; sheet.style.transform = 'translateY(0)'; });
 }
 
-// ── Deal Points Calculator ──────────────────────────────────────────────────
+// ── Deal Points Calculator (conservative) ─────────────────────────────────
+// Merchants cannot set points. Points are calculated automatically.
+// Admin approval required only when calculated value > ZAM_POINTS_ADMIN_THRESHOLD.
 
-function _zamCalcDealPoints(discount, offer, condition) {
-  const s = ((discount || '') + ' ' + (offer || '') + ' ' + (condition || '')).toLowerCase();
-  // Keywords → point tiers
-  if (/gratis|kostenlos|free|umsonst|schenken/.test(s)) {
-    if (/menü|mahlzeit|fitness|gym|kurs|monat|woche|training/.test(s)) return 500;
-    if (/donut|kaffee|tee|snack|getränk|drink/.test(s)) return 40;
+const ZAM_POINTS_ADMIN_THRESHOLD = 2500;
+
+function _zamCalcDealPoints(discount, offer, condition, title) {
+  const s = ((discount||'') + ' ' + (offer||'') + ' ' + (condition||'') + ' ' + (title||'')).toLowerCase();
+
+  // Risk flags — these trigger admin review regardless of points
+  const isHighRisk = /jahresabo|jahreskarte|auto|fahrzeug|reise|urlaub|flug|hotel|elektronik|laptop|handy|smartphone|iphone|samsung/.test(s);
+
+  // Euro value — conservative cap
+  const eurMatch = s.match(/(\d+)\s*(€|euro|eur)/);
+  if (eurMatch) {
+    const eur = parseInt(eurMatch[1]);
+    if (eur >= 500) return 2000;
+    if (eur >= 200) return 1200;
+    if (eur >= 100) return 800;
+    if (eur >= 50)  return 400;
+    if (eur >= 20)  return 150;
+    if (eur >= 10)  return 80;
+    return 40;
+  }
+
+  // Gratis / kostenlos — conservative
+  if (/gratis|kostenlos|free|umsonst/.test(s)) {
+    if (/monat|jahres|abo|kurs|training|mitglied/.test(s)) return 500;
+    if (/menü|mahlzeit|hauptgericht|pizza|burger|meal/.test(s)) return 200;
+    if (/getränk|drink|kaffee|tee|smoothie/.test(s)) return 40;
+    if (/donut|snack|cookie|muffin|kleinigkeit/.test(s)) return 30;
     return 80;
   }
+
   // Percentage discount
   const pctMatch = s.match(/(\d+)\s*%/);
   if (pctMatch) {
     const pct = parseInt(pctMatch[1]);
-    if (pct >= 50) return 300;
-    if (pct >= 30) return 150;
-    if (pct >= 20) return 100;
-    if (pct >= 10) return 60;
+    if (pct >= 50) return 250;
+    if (pct >= 30) return 120;
+    if (pct >= 20) return 80;
+    if (pct >= 10) return 50;
     return 30;
   }
-  // Euro value
-  const eurMatch = s.match(/(\d+)\s*(€|euro|eur)/);
-  if (eurMatch) {
-    const eur = parseInt(eurMatch[1]);
-    if (eur >= 100) return 1000;
-    if (eur >= 50)  return 500;
-    if (eur >= 20)  return 200;
-    if (eur >= 10)  return 100;
-    return 50;
-  }
-  // Special patterns
-  if (/2\s*f.r\s*1|2for1|zwei für/.test(s)) return 120;
-  if (/3\s*f.r\s*2|3for2/.test(s)) return 80;
-  if (/upgrade|premium|vip/.test(s)) return 200;
-  return 50; // default
+
+  // 2-für-1 / 3-für-2
+  if (/2\s*f.r\s*1|2for1|zwei für/.test(s)) return 100;
+  if (/3\s*f.r\s*2|3for2/.test(s)) return 70;
+
+  // High-value keywords
+  if (isHighRisk) return 1500;
+  if (/premium|vip|upgrade|exklusiv/.test(s)) return 150;
+
+  return 40; // conservative default
+}
+
+// Returns { points, needsAdminApproval, reason }
+function _zamEvalDealPoints(discount, offer, condition, title) {
+  const pts = _zamCalcDealPoints(discount, offer, condition, title);
+  const s = ((discount||'') + ' ' + (offer||'') + ' ' + (condition||'') + ' ' + (title||'')).toLowerCase();
+  const isHighRisk = /jahresabo|jahreskarte|auto|fahrzeug|reise|urlaub|flug|hotel|elektronik|laptop|handy|smartphone|iphone|samsung/.test(s);
+  const needsAdmin = pts > ZAM_POINTS_ADMIN_THRESHOLD || isHighRisk;
+  let reason = '';
+  if (pts > ZAM_POINTS_ADMIN_THRESHOLD) reason = 'Punktewert über ' + ZAM_POINTS_ADMIN_THRESHOLD;
+  else if (isHighRisk) reason = 'Hochwertiger Deal — manuelle Prüfung erforderlich';
+  return { points: pts, needsAdminApproval: needsAdmin, reason };
 }
 
 function _zamUpdateDealPointsSuggestion() {
   const disc  = document.getElementById('_dl_disc')?.value || '';
   const offer = document.getElementById('_dl_offer')?.value || '';
   const cond  = document.getElementById('_dl_cond')?.value || '';
-  const pts = _zamCalcDealPoints(disc, offer, cond);
+  const title = document.getElementById('_dl_title')?.value || '';
+  const { points, needsAdminApproval, reason } = _zamEvalDealPoints(disc, offer, cond, title);
   const el = document.getElementById('_dl_points_suggest');
-  const inp = document.getElementById('_dl_points');
-  if (el) el.textContent = 'Vorschlag: +' + pts + ' Pkt.';
-  if (inp && !inp.dataset.userEdited) inp.value = pts;
+  if (el) {
+    el.innerHTML = needsAdminApproval
+      ? `<span style="color:#f87171">⚠️ ${reason} — Admin-Freigabe erforderlich · ${points} Pkt.</span>`
+      : `<span style="color:rgba(247,171,0,0.75)">Berechnete Punkte: +${points} Pkt.</span>`;
+  }
 }
 
 // ── END Deal Points Calculator ─────────────────────────────────────────────
@@ -9716,14 +9750,10 @@ function openMerchantDealModal() {
     _inp('Dein Angebot / Beitrag', '_dl_offer', 'text', 'z.B. 20% Rabatt auf Monatsbeitrag für Neukunden') +
     _inp('Bedingung (optional)', '_dl_cond', 'text', 'z.B. Nur für Neukunden, min. 3 Monate') +
     _inp('Gewünschter Rabatt / Prämie', '_dl_disc', 'text', 'z.B. 15% Rabatt, 1 Gratis-Menü, …') +
-    '<div style="margin-bottom:14px">' +
-      '<label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Punkte bei Einlösung</label>' +
-      '<div style="display:flex;align-items:center;gap:10px">' +
-        '<input type="number" id="_dl_points" min="10" max="5000" step="10" placeholder="z.B. 80" oninput="this.dataset.userEdited=\'1\'" style="width:110px;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 13px;color:#fff;font-family:inherit;font-size:0.85rem;outline:none">' +
-        '<button type="button" onclick="_zamUpdateDealPointsSuggestion()" style="flex:1;background:rgba(247,171,0,0.1);border:1px solid rgba(247,171,0,0.25);border-radius:10px;padding:10px 12px;color:#F7AB00;font-size:0.75rem;font-weight:700;font-family:var(--font);cursor:pointer;text-align:left">🔮 Automatisch berechnen</button>' +
-      '</div>' +
-      '<div id="_dl_points_suggest" style="font-size:0.68rem;color:rgba(247,171,0,0.65);margin-top:5px;padding-left:2px"></div>' +
-      '<div style="font-size:0.65rem;color:rgba(255,255,255,0.3);margin-top:3px;padding-left:2px">+10 Pkt. beim Sichern · volle Punkte erst bei Händler-Scan</div>' +
+    '<div style="margin-bottom:14px;padding:10px 12px;background:rgba(247,171,0,0.06);border:1px solid rgba(247,171,0,0.18);border-radius:12px">' +
+      '<div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:rgba(247,171,0,0.6);margin-bottom:4px">🔮 Punkte werden automatisch berechnet</div>' +
+      '<div id="_dl_points_suggest" style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.7)">Felder ausfüllen → Punkte erscheinen hier</div>' +
+      '<div style="font-size:0.62rem;color:rgba(255,255,255,0.28);margin-top:3px">+10 Pkt. beim Sichern · volle Punkte erst nach Händler-Scan</div>' +
     '</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">' +
       '<div><label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.04em">Zeitraum von</label><input id="_dl_start" type="date" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 13px;color:#fff;font-family:inherit;font-size:0.82rem;outline:none"></div>' +
@@ -9766,6 +9796,10 @@ function openMerchantDealModal() {
     _submitBtn('📤 Deal einreichen', 'submitNewDeal()') +
     '<button type="button" onclick="_merchantModalClose(\'_dyn_deal_modal\');openVideoDrehModal()" style="width:100%;box-sizing:border-box;background:rgba(250,70,21,0.08);border:1.5px solid rgba(250,70,21,0.35);border-radius:12px;padding:12px;color:#FA4615;font-size:0.8rem;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:8px">🎥 Passendes Reel produzieren lassen</button>'
   );
+  // Auto-update points preview as user types
+  ['_dl_title', '_dl_disc', '_dl_offer', '_dl_cond'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', _zamUpdateDealPointsSuggestion);
+  });
 }
 
 function togglePartnerDealFields() {
@@ -9871,10 +9905,8 @@ function submitNewDeal() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird eingereicht…'; }
   const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
   const list = getMerchantSubmissions();
-  const rawPts = parseInt(document.getElementById('_dl_points')?.value || '0');
-  const suggestPts = _zamCalcDealPoints(disc, offer, cond);
-  const points_reward = rawPts > 0 ? rawPts : suggestPts;
-  const dealEntry = { id:'deal_'+Date.now(), type:'deal', status:'pending', title, description:desc, offer, condition:cond, discount:disc, period_start:start, expiry:exp, points_reward, merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() };
+  const { points: points_reward, needsAdminApproval } = _zamEvalDealPoints(disc, offer, cond, title);
+  const dealEntry = { id:'deal_'+Date.now(), type:'deal', status: needsAdminApproval ? 'pending_admin' : 'pending', title, description:desc, offer, condition:cond, discount:disc, period_start:start, expiry:exp, points_reward, needsAdminApproval, merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() };
   if (mediaType && mediaType !== 'text' && mediaUrl) { dealEntry.media_type = mediaType; dealEntry.media_url = mediaUrl; }
   list.unshift(dealEntry);
   saveMerchantSubmissions(list);
