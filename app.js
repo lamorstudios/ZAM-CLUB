@@ -938,7 +938,7 @@ function navigateTo(pageId) {
   // Sub-pages live OUTSIDE #app-shell in the DOM. When active, app-shell's
   // min-height:100dvh would create 100dvh of black space before the sub-page.
   // Collapse app-shell to height:0 when on a sub-page.
-  const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings','merchant-preview','nearby-settings','my-events','my-vouchers']);
+  const MAIN_PAGES = new Set(['home','community','events','deals','merchants','profile','notifications','notif-settings','merchant-preview','nearby-settings']);
   document.body.classList.toggle('subpage-active', !MAIN_PAGES.has(pageId));
   document.body.classList.toggle('profile-active', pageId === 'profile');
 
