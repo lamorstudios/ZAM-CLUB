@@ -5461,8 +5461,10 @@ function _logStaffScan(staffId, staffName, merchantId, userId, voucherId, dealTi
 }
 
 function openStaffModal() {
-  const user = ZAMApi.auth.currentUser();
-  if (!user || (user.role !== 'merchant' && user.role !== 'admin')) return;
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  if (!user) return;
+  const role = _getEffectiveRole();
+  if (role !== 'merchant' && role !== 'admin' && role !== 'centerManagement') return;
   let sheet = document.getElementById('staff-sheet');
   if (!sheet) {
     sheet = document.createElement('div');
@@ -5498,7 +5500,7 @@ function openStaffModal() {
 }
 
 function _staffAdd() {
-  const user = ZAMApi.auth.currentUser();
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
   if (!user) return;
   const name = document.getElementById('staff-name-inp')?.value?.trim();
   const email = document.getElementById('staff-email-inp')?.value?.trim();
