@@ -1833,8 +1833,11 @@
 </div>
 
 <!-- Scripts (load data first, then app logic) -->
+<!-- Supabase SDK (lädt nur wenn konfiguriert, kein Fehler wenn nicht benötigt) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" onerror="console.info('[ZAM] Supabase SDK offline — Demo-Modus aktiv.')"></script>
 <script src="data.js?v=20260618n"></script>
 <script src="security.js?v=20260619a"></script>
+<script src="supabase.js?v=20260619a"></script>
 <script src="api.js?v=20260619a"></script>
 <script src="app.js?v=20260619a"></script>
 <script src="features.js?v=20260619a"></script>

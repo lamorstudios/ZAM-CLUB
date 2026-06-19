@@ -20,11 +20,9 @@ const BADGE_DEFS = [
   { id: 'badge_platin_star',   name: 'Platin-Star',        icon: '💎', color: '#c084fc', description: '3.000 Punkte gesammelt',        check: (s, pts) => pts >= 3000 },
 ];
 
-// ── Supabase Init (auskommentiert bis Zugangsdaten vorhanden) ──
-// import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-// const SUPABASE_URL      = 'https://DEIN-PROJEKT.supabase.co'
-// const SUPABASE_ANON_KEY = 'eyJ...'
-// const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+// ── Supabase: Client kommt aus supabase.js (window._sb) ──────
+// Dual-Mode: _sbActive() === true → Supabase | false → localStorage
+// Konfiguration: supabase.js → SUPABASE_URL und SUPABASE_ANON_KEY eintragen
 
 // ============================================================
 // Interne Helfer
@@ -95,14 +93,18 @@ const ZAMApi = {
   // ──────────────────────────────────────────────────────────
   auth: {
 
-    /** Session des aktuellen Nutzers
-     * Supabase: const { data: { user } } = await supabase.auth.getUser() */
+    /** Session des aktuellen Nutzers.
+     * Supabase: gecachte Session aus window._sbSession (synchron, via onAuthStateChange).
+     * Fallback: localStorage Demo-Session. */
     currentUser() {
+      // Supabase-Modus: gecachte Session verwenden
+      if (typeof _sbActive === 'function' && _sbActive()) {
+        return window._sbSession || null;
+      }
+      // localStorage Demo-Modus
       const user = _gLoad('session_user', null);
       if (!user) return null;
-      // Session-Integritätsprüfung — erkennt naives devtools-Editieren
       if (typeof ZAMSecurity !== 'undefined' && !ZAMSecurity.verifySession(user)) {
-        // Session kompromittiert — abmelden
         _gSet('session_user', null);
         console.warn('[ZAM Security] Session-Integritätsprüfung fehlgeschlagen. Abmeldung.');
         return null;
@@ -114,12 +116,22 @@ const ZAMApi = {
 
     /**
      * Einloggen mit E-Mail + Passwort.
-     * Supabase: const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+     * Supabase: supabase.auth.signInWithPassword({ email, password })
+     * Fallback: localStorage-Accounts (Demo-Modus)
      */
     async signIn(email, password) {
       if (!email || !password) throw new Error('E-Mail und Passwort erforderlich.');
 
-      // Rate-Limiting: max. 5 Versuche pro 15 Minuten pro E-Mail
+      // ── Supabase-Modus ────────────────────────────────────────
+      if (typeof _sbActive === 'function' && _sbActive()) {
+        const { data, error } = await window._sb.auth.signInWithPassword({ email, password });
+        if (error) throw _sbError(error);
+        // _sbSession wird automatisch via onAuthStateChange gesetzt
+        // Vollständiges Profil wird in _loadFullProfile nachgeladen
+        return { user: window._sbSession || data.user };
+      }
+
+      // ── localStorage Demo-Modus ───────────────────────────────
       if (typeof ZAMSecurity !== 'undefined') {
         const rl = ZAMSecurity.rateLimit.check('login_' + email.toLowerCase(), 5, 15 * 60 * 1000);
         if (!rl.allowed) throw new Error(rl.message);
@@ -138,14 +150,10 @@ const ZAMApi = {
       }
 
       if (!valid) {
-        if (typeof ZAMSecurity !== 'undefined') {
-          ZAMSecurity.auditLog.add('login_failed', { email });
-        }
-        // Generische Fehlermeldung (keine Info ob E-Mail existiert)
+        if (typeof ZAMSecurity !== 'undefined') ZAMSecurity.auditLog.add('login_failed', { email });
         throw new Error('E-Mail oder Passwort falsch.');
       }
 
-      // Rate-Limit zurücksetzen nach Erfolg
       if (typeof ZAMSecurity !== 'undefined') {
         ZAMSecurity.rateLimit.reset('login_' + email.toLowerCase());
         ZAMSecurity.auditLog.add('login_success', { userId: account.profile.id });
@@ -183,8 +191,8 @@ const ZAMApi = {
 
     /**
      * Registrieren — legt neuen Account an.
-     * Supabase: await supabase.auth.signUp({ email, password, options:{ data:{ display_name, username } } })
-     *           Trigger fn_handle_new_user() legt Profil automatisch an.
+     * Supabase: supabase.auth.signUp() → Trigger fn_handle_new_user() legt Profil an.
+     * Fallback: localStorage Demo-Modus.
      */
     async signUp(email, password, username, displayName) {
       if (!email || !password || !username || !displayName)
@@ -196,6 +204,31 @@ const ZAMApi = {
       if (cleanUsername.length < 3)
         throw new Error('Benutzername muss mindestens 3 Zeichen haben (nur Buchstaben, Zahlen, _ erlaubt).');
 
+      // ── Supabase-Modus ────────────────────────────────────────
+      if (typeof _sbActive === 'function' && _sbActive()) {
+        const parts    = displayName.trim().split(' ');
+        const initials = ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || displayName.slice(0, 2).toUpperCase();
+
+        const { data, error } = await window._sb.auth.signUp({
+          email, password,
+          options: {
+            data: {
+              display_name: displayName.trim(),
+              username:     '@' + cleanUsername,
+              initials,
+            },
+          },
+        });
+        if (error) throw _sbError(error);
+
+        // E-Mail-Verifizierung erforderlich — User noch nicht eingeloggt
+        if (data.user && !data.session) {
+          return { user: null, emailConfirmationRequired: true };
+        }
+        return { user: window._sbSession || data.user };
+      }
+
+      // ── localStorage Demo-Modus ───────────────────────────────
       const accounts = _gLoad('accounts', []);
       if (accounts.find(a => a.email.toLowerCase() === email.toLowerCase()))
         throw new Error('Diese E-Mail-Adresse ist bereits registriert.');
@@ -213,17 +246,15 @@ const ZAMApi = {
         avatar_url:             null,
         role:                   'user',
         level:                  'bronze',
-        points:                 50,    // Willkommens-Bonus
+        points:                 50,
         member_since_formatted: 'Mitglied seit ' + new Date().toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }),
         stats:                  { visits: 0, events_attended: 0, deals_used: 0 },
       };
 
-      // Passwort hashen (PBKDF2)
       let hashedPassword = password;
       if (typeof ZAMSecurity !== 'undefined') {
         hashedPassword = await ZAMSecurity.hashPassword(password);
       }
-
       accounts.push({ email, password: hashedPassword, profile });
       _gSet('accounts', accounts);
       _gSet('session_user', profile);
@@ -231,15 +262,9 @@ const ZAMApi = {
         ZAMSecurity.signSession(profile);
         ZAMSecurity.auditLog.add('signup', { userId: profile.id, email });
       }
-
-      // Willkommens-Bonus in Punkte-Log
       _uSet(profile.id, 'points', 50);
-      _uSet(profile.id, 'points_log', [{
-        id: _uuid(), points: 50, action: 'welcome_bonus',
-        description: '🎉 Willkommen im ZAM Club!', created_at: _now(),
-      }]);
+      _uSet(profile.id, 'points_log', [{ id: _uuid(), points: 50, action: 'welcome_bonus', description: '🎉 Willkommen im ZAM Club!', created_at: _now() }]);
       _uSet(profile.id, 'stats', profile.stats);
-
       ZAMData.currentUser = { ...ZAMData.currentUser, ...profile };
       return { user: profile };
     },
@@ -273,9 +298,15 @@ const ZAMApi = {
 
     /**
      * Ausloggen.
-     * Supabase: await supabase.auth.signOut()
+     * Supabase: supabase.auth.signOut()
      */
     async signOut() {
+      if (typeof _sbActive === 'function' && _sbActive()) {
+        await window._sb.auth.signOut();
+        window._sbSession = null;
+        ZAMData.currentUser = ZAMData.profiles[0];
+        return;
+      }
       if (typeof ZAMSecurity !== 'undefined') {
         const user = this.currentUser();
         if (user) ZAMSecurity.auditLog.add('logout', { userId: user.id });
@@ -287,47 +318,63 @@ const ZAMApi = {
 
     /**
      * Passwort-Reset-Mail senden.
-     * Supabase: await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+     * Supabase: supabase.auth.resetPasswordForEmail()
      */
     async resetPassword(email) {
       if (!email) throw new Error('E-Mail erforderlich.');
+
+      if (typeof _sbActive === 'function' && _sbActive()) {
+        const { error } = await window._sb.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/index.html#reset-password',
+        });
+        if (error) throw _sbError(error);
+        return { success: true };
+      }
+
       const accounts = _gLoad('accounts', []);
       if (!accounts.find(a => a.email.toLowerCase() === email.toLowerCase()))
-        throw new Error('Keine Konto mit dieser E-Mail gefunden.');
-      // Demo: zeige Erfolgsmeldung (in Supabase wird echte Mail versendet)
+        throw new Error('Kein Konto mit dieser E-Mail gefunden.');
       return { success: true };
     },
 
     /**
      * Profil aktualisieren.
-     * Supabase: await supabase.from('profiles').update(data).eq('id', userId)
+     * Supabase: supabase.from('users').update(data).eq('id', userId)
      */
     async updateProfile(data) {
       const user = this.currentUser();
       if (!user) throw new Error('Nicht eingeloggt.');
 
-      // Username-Eindeutigkeit prüfen
       if (data.username) {
         const clean = ('@' + data.username.replace(/^@/, '').replace(/[^a-zA-Z0-9_.]/g, ''));
-        const accounts = _gLoad('accounts', []);
-        if (accounts.find(a => a.profile.username.toLowerCase() === clean.toLowerCase() && a.profile.id !== user.id))
-          throw new Error('Dieser Benutzername ist bereits vergeben.');
         data.username = clean;
         data.initials = ((data.display_name || user.display_name).trim().split(' '))
           .slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
       }
 
+      if (typeof _sbActive === 'function' && _sbActive()) {
+        const { error } = await window._sb
+          .from('users')
+          .update({
+            display_name: data.display_name,
+            username:     data.username,
+            initials:     data.initials,
+            avatar_url:   data.avatar_url,
+          })
+          .eq('id', user.id);
+        if (error) throw _sbError(error);
+        const updated = { ...window._sbSession, ...data };
+        window._sbSession = updated;
+        ZAMData.currentUser = { ...ZAMData.currentUser, ...updated };
+        return updated;
+      }
+
       const updated = { ...user, ...data };
       _gSet('session_user', updated);
       ZAMData.currentUser = { ...ZAMData.currentUser, ...updated };
-
-      // In Accounts-Registry synchronisieren
       const accounts = _gLoad('accounts', []);
       const idx = accounts.findIndex(a => a.profile.id === user.id);
-      if (idx !== -1) {
-        accounts[idx].profile = updated;
-        _gSet('accounts', accounts);
-      }
+      if (idx !== -1) { accounts[idx].profile = updated; _gSet('accounts', accounts); }
       return updated;
     },
 
@@ -486,8 +533,26 @@ const ZAMApi = {
   // ──────────────────────────────────────────────────────────
   events: {
 
-    /** Supabase: await supabase.from('events').select('*').eq('status','approved').order('date_iso') */
     async list(filter = 'all') {
+      if (typeof _sbActive === 'function' && _sbActive()) {
+        try {
+          let q = window._sb.from('events')
+            .select('*, merchants(shop_name, logo_url)')
+            .eq('status', 'approved')
+            .eq('is_active', true)
+            .order('starts_at', { ascending: true });
+          if (filter === 'week') q = q.limit(10);
+          const { data, error } = await q;
+          if (error) throw error;
+          const userId = ZAMApi.auth.currentUser()?.id;
+          if (!userId || !data) return data || [];
+          const { data: parts } = await window._sb.from('event_participants').select('event_id, status').eq('user_id', userId);
+          const { data: saves } = await window._sb.from('saved_events').select('event_id').eq('user_id', userId);
+          const joinedSet = new Set((parts || []).map(p => p.event_id));
+          const savedSet  = new Set((saves  || []).map(s => s.event_id));
+          return data.map(e => ({ ...e, is_joined: joinedSet.has(e.id), is_saved: savedSet.has(e.id) }));
+        } catch { /* Fallback below */ }
+      }
       const adminData = JSON.parse(localStorage.getItem('zamclub_admin') || '{}');
       const adminEvts = (adminData.events || []).map(e => ({ ...e, status: 'approved' }));
       let all = [...ZAMData.events, ...adminEvts];
@@ -531,8 +596,21 @@ const ZAMApi = {
   // ──────────────────────────────────────────────────────────
   deals: {
 
-    /** Supabase: await supabase.from('deals').select('*,merchants(name,icon)').eq('status','approved') */
     async list() {
+      if (typeof _sbActive === 'function' && _sbActive()) {
+        try {
+          const { data, error } = await window._sb.from('deals')
+            .select('*, merchants(shop_name, logo_url, category)')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false });
+          if (error) throw error;
+          const userId = ZAMApi.auth.currentUser()?.id;
+          if (!userId || !data) return data || [];
+          const { data: saves } = await window._sb.from('saved_deals').select('deal_id').eq('user_id', userId);
+          const savedSet = new Set((saves || []).map(s => s.deal_id));
+          return data.map(d => ({ ...d, is_saved: savedSet.has(d.id) }));
+        } catch { /* Fallback below */ }
+      }
       const adminData  = JSON.parse(localStorage.getItem('zamclub_admin') || '{}');
       const adminDeals = (adminData.deals || []).map(d => ({ ...d, status: 'approved' }));
       const all        = [...ZAMData.deals, ...adminDeals];
@@ -695,17 +773,41 @@ const ZAMApi = {
 
     /**
      * Punkte gutschreiben + Log-Eintrag.
-     * Supabase: await supabase.from('points_transactions').insert({ user_id, points, action, description })
-     *   (Trigger sync_points aktualisiert profiles.points automatisch)
+     * Supabase: RPC add_points() — serverseitig validiert, Tageslimit geprüft.
+     * Fallback: localStorage mit Fraud-Detection.
      */
     async add(amount, action, description = '') {
-      // [BACKEND] Punkte niemals nur client-seitig vergeben!
-      // Supabase: RPC call_add_points(user_id, amount, action) — serverseitig validiert
+      const user   = ZAMApi.auth.currentUser();
+      const userId = user?.id;
 
-      const user    = ZAMApi.auth.currentUser();
-      const userId  = user?.id;
+      // ── Supabase-Modus: Punkte nur serverseitig vergeben ─────
+      if (typeof _sbActive === 'function' && _sbActive() && userId) {
+        try {
+          const { data, error } = await window._sb.rpc('add_points', {
+            p_user_id:    userId,
+            p_amount:     amount,
+            p_type:       action,
+            p_label:      description || action,
+          });
+          if (error) {
+            console.warn('[ZAM] Punkte-RPC Fehler:', error.message);
+            return window._sbSession?.points || 0;
+          }
+          // Gecachte Session aktualisieren
+          const newPts = data;
+          if (window._sbSession) {
+            window._sbSession.points = newPts;
+            window._sbSession.level  = newPts >= 3000 ? 'platin' : newPts >= 1500 ? 'gold' : newPts >= 500 ? 'silver' : 'bronze';
+          }
+          ZAMData.currentUser.points = newPts;
+          return newPts;
+        } catch (err) {
+          console.warn('[ZAM] Punkte-Vergabe fehlgeschlagen (Supabase):', err);
+          return window._sbSession?.points || 0;
+        }
+      }
 
-      // Betrugsschutz-Prüfung
+      // ── localStorage Demo-Modus ───────────────────────────────
       if (typeof ZAMSecurity !== 'undefined' && userId) {
         const check = ZAMSecurity.fraud.check(userId, 'points_add', amount);
         if (check.blocked) {
@@ -719,11 +821,9 @@ const ZAMApi = {
       _set('points', newPts);
       ZAMData.currentUser.points = newPts;
 
-      // Level aktualisieren
       const level = newPts >= 3000 ? 'platinum' : newPts >= 1500 ? 'gold' : newPts >= 500 ? 'silver' : 'bronze';
       if (user) { user.level = level; _gSet('session_user', user); ZAMData.currentUser.level = level; }
 
-      // Log-Eintrag mit Integritäts-Hash
       const log   = _s('points_log', []);
       const entry = { id: _uuid(), points: amount, action, description: description || action, created_at: _now() };
       if (typeof ZAMSecurity !== 'undefined') {
@@ -732,11 +832,9 @@ const ZAMApi = {
       log.unshift(entry);
       _set('points_log', log.slice(0, 100));
 
-      // Audit-Log
       if (typeof ZAMSecurity !== 'undefined' && userId) {
         ZAMSecurity.auditLog.add('points_add', { userId, amount, action, newTotal: newPts });
       }
-
       return newPts;
     },
 
@@ -1539,38 +1637,102 @@ const ZAMApi = {
   // VOUCHERS (Phase 12)
   // ──────────────────────────────────────────────────────────
   vouchers: {
-    generate(dealId, userId) {
+    /**
+     * Voucher generieren (Deal sichern).
+     * Supabase: RPC generate_voucher() — prüft Limits und erstellt serverseitig.
+     * Fallback: localStorage.
+     */
+    async generate(dealId, userId) {
+      // ── Supabase-Modus ────────────────────────────────────────
+      if (typeof _sbActive === 'function' && _sbActive()) {
+        try {
+          const { data, error } = await window._sb.rpc('generate_voucher', {
+            p_deal_id: dealId,
+            p_user_id: userId || ZAMApi.auth.currentUser()?.id,
+          });
+          if (error) {
+            console.warn('[ZAM] Voucher-Generierung fehlgeschlagen (Supabase):', error.message);
+            return null;
+          }
+          return data; // jsonb: { id, code, token, status, expires_at, ... }
+        } catch (err) {
+          console.warn('[ZAM] Voucher-Generierung fehlgeschlagen:', err);
+          return null;
+        }
+      }
+
+      // ── localStorage Demo-Modus ───────────────────────────────
       const code = 'ZAM-' + Math.random().toString(36).slice(2,6).toUpperCase() + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
       const vouchers = _gLoad('vouchers', []);
-      const v = {
-        id: Date.now().toString(36),
-        code,
-        dealId,
-        userId,
-        createdAt: Date.now(),
-        redeemedAt: null,
-        status: 'active',
-      };
+      const v = { id: Date.now().toString(36), code, dealId, userId, createdAt: Date.now(), redeemedAt: null, status: 'active' };
       vouchers.push(v);
       _gSet('vouchers', vouchers);
       return v;
     },
+
     getMyVouchers() {
+      if (typeof _sbActive === 'function' && _sbActive()) {
+        // Supabase: Wird async geladen via renderMyVouchers() direkt
+        // Synchroner Fallback: leeres Array (UI rendert async)
+        return [];
+      }
       const me = ZAMApi.auth.currentUser();
       if (!me) return [];
       return _gLoad('vouchers', []).filter(v => v.userId === me.id);
     },
-    redeem(code) {
+
+    async getMyVouchersAsync() {
+      const me = ZAMApi.auth.currentUser();
+      if (!me) return [];
+
+      if (typeof _sbActive === 'function' && _sbActive()) {
+        const { data, error } = await window._sb
+          .from('vouchers')
+          .select('*, deals(title, merchant_id, merchants(shop_name))')
+          .eq('user_id', me.id)
+          .order('secured_at', { ascending: false });
+        if (error) { console.warn('[ZAM] Voucher-Laden fehlgeschlagen:', error.message); return []; }
+        return data || [];
+      }
+      return _gLoad('vouchers', []).filter(v => v.userId === me.id);
+    },
+
+    /**
+     * Voucher einlösen — KRITISCH: muss atomar serverseitig passieren.
+     * Supabase: RPC redeem_voucher(token) — atomares UPDATE mit FOR UPDATE SKIP LOCKED.
+     * Fallback: localStorage (nur Demo, nicht produktionssicher).
+     */
+    async redeem(code) {
+      // ── Supabase-Modus: atomare serverseitige Entwertung ─────
+      if (typeof _sbActive === 'function' && _sbActive()) {
+        try {
+          const scanner = ZAMApi.auth.currentUser();
+          const { data, error } = await window._sb.rpc('redeem_voucher', {
+            p_token:      code, // kann Token (UUID) oder Code (ZAM-XXXX-XXXX) sein
+            p_scanner_id: scanner?.id,
+          });
+          if (error) return { ok: false, error: error.message };
+          return data; // { ok, points_awarded, deal_title, error }
+        } catch (err) {
+          return { ok: false, error: 'Verbindungsfehler. Bitte erneut versuchen.' };
+        }
+      }
+
+      // ── localStorage Demo-Modus (nicht produktionssicher!) ───
       const vouchers = _gLoad('vouchers', []);
       const v = vouchers.find(x => x.code === code && x.status === 'active');
-      if (!v) return {ok: false, error: 'Ungültiger oder bereits eingelöster Code'};
+      if (!v) return { ok: false, error: 'Ungültiger oder bereits eingelöster Code' };
       v.status = 'redeemed';
       v.redeemedAt = Date.now();
       _gSet('vouchers', vouchers);
       ZAMApi.analytics.trackDealRedeem(v.dealId, null);
-      return {ok: true, voucher: v};
+      return { ok: true, voucher: v };
     },
-    getAll() { return _gLoad('vouchers', []); },
+
+    getAll() {
+      if (typeof _sbActive === 'function' && _sbActive()) return []; // Async via getMyVouchersAsync()
+      return _gLoad('vouchers', []);
+    },
   },
 
   // ──────────────────────────────────────────────────────────
@@ -1593,6 +1755,35 @@ const ZAMApi = {
       try {
         const reg = await navigator.serviceWorker.register('/sw.js');
         await navigator.serviceWorker.ready;
+
+        // Push-Token in DB speichern (Supabase-Modus)
+        if (typeof _sbActive === 'function' && _sbActive() && 'PushManager' in window) {
+          try {
+            const sub = await reg.pushManager.getSubscription() ||
+              await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                // VAPID Public Key — in supabase.js konfigurieren:
+                // applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+              }).catch(() => null);
+
+            if (sub) {
+              const me = ZAMApi.auth.currentUser();
+              if (me) {
+                const token = JSON.stringify(sub);
+                await window._sb.from('push_tokens').upsert({
+                  user_id:  me.id,
+                  token,
+                  platform: 'web',
+                  is_active: true,
+                  last_used_at: new Date().toISOString(),
+                }, { onConflict: 'token' });
+              }
+            }
+          } catch (pushErr) {
+            console.warn('[ZAM] Push-Token-Registrierung fehlgeschlagen:', pushErr);
+          }
+        }
+
         return reg;
       } catch(e) { console.warn('SW register failed', e); return null; }
     },
