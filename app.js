@@ -1058,6 +1058,7 @@ function renderHome() {
 
   // Ranking always visible — core motivation element
   _renderHomeRankingCard();
+  _renderHomeMerchantChallenge();
   _renderHomeActivityFeed();
   // Recs DOM nodes kept hidden (removed from home UI)
   const recsLabel = document.getElementById('home-rec-label');
@@ -1356,6 +1357,101 @@ function _zamFeedRow(it, idx) {
         <div style="font-size:0.79rem;font-weight:600;color:rgba(255,255,255,${isFirst?'0.95':'0.85'});line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.text}${newBadge}</div>
         <div style="font-size:0.64rem;color:${timeColor};margin-top:2px">${liveDot}${_zamActivityRelTime(it.ts)}</div>
       </div>
+    </div>`;
+}
+
+function _renderHomeMerchantChallenge() {
+  const el = document.getElementById('home-merchant-challenge');
+  if (!el) return;
+  const role = _getEffectiveRole();
+  if (role === 'user') { el.style.display = 'none'; el.innerHTML = ''; return; }
+
+  el.style.display = 'block';
+  _seedCenterStatsDemo();
+  const stats = _centerStatsLoad();
+  const today = new Date().toDateString();
+  const todayPts = stats.dailyPoints?.[today] || 0;
+  const weeklyGoal = 25000;
+  const pct = Math.min(100, Math.round((todayPts / weeklyGoal) * 100));
+
+  const ranked = Object.entries(stats.merchants || {})
+    .map(([id, m]) => ({ id, ...m }))
+    .sort((a, b) => b.points - a.points)
+    .slice(0, 3);
+  const rankEmojis = ['🥇','🥈','🥉'];
+
+  const milestones = [];
+  if ((stats.totalRedemptions || 0) >= 100) milestones.push({ icon: '🔥', text: '100 Einlösungen erreicht' });
+  if ((stats.totalPoints || 0) >= 5000) milestones.push({ icon: '🎯', text: '5.000 Punkte generiert' });
+  const estValue = Math.round((stats.totalRedemptions || 0) * 2.7);
+
+  // Live feed — max 2 items
+  const feedItems = (stats.feed || []).slice(0, 2).map(f => {
+    const diff = Date.now() - f.ts;
+    const ago = diff < 60000 ? 'gerade eben' : diff < 3600000 ? 'vor ' + Math.floor(diff/60000) + ' Min.' : 'vor ' + Math.floor(diff/3600000) + ' Std.';
+    return `<div style="font-size:0.62rem;color:rgba(255,255,255,0.35);padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📡 ${escHtml(f.merchantName)} +${f.points} Pkt. · ${ago}</div>`;
+  }).join('');
+
+  // Staff personal section
+  let staffHtml = '';
+  if (role === 'employee' || role === 'staff') {
+    const staffUser = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+    const staffRec = staffUser ? _getStaffByUserId(staffUser.id) : null;
+    if (staffRec) {
+      const myScans = _staffScansLoad().filter(s => s.staffId === staffRec.id);
+      const tStart = new Date(); tStart.setHours(0,0,0,0);
+      const scansToday = myScans.filter(s => s.ts >= tStart.getTime()).length;
+      staffHtml = `
+        <div style="margin-top:10px;padding:8px 10px;background:rgba(100,180,255,0.07);border:1px solid rgba(100,180,255,0.2);border-radius:10px">
+          <div style="font-size:0.64rem;font-weight:700;color:#7dd3fc;margin-bottom:5px">👨‍💼 Mein Beitrag heute</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:0.62rem;color:rgba(255,255,255,0.4)">${scansToday} von 20 Scans</span>
+            <span style="font-size:0.62rem;font-weight:700;color:${scansToday>=20?'#34d399':'rgba(255,255,255,0.5)'}">${scansToday>=20?'✅ Ziel erreicht':'Noch '+(20-scansToday)+' bis Ziel'}</span>
+          </div>
+          <div style="height:4px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden"><div style="height:100%;width:${Math.min(100,Math.round(scansToday/20*100))}%;background:linear-gradient(90deg,#60a5fa,#7dd3fc);border-radius:2px"></div></div>
+        </div>`;
+    }
+  }
+
+  el.innerHTML = `
+    <div style="background:linear-gradient(135deg,rgba(250,70,21,0.09),rgba(247,171,0,0.05));border:1px solid rgba(250,70,21,0.22);border-radius:16px;padding:14px 16px;overflow:hidden">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+        <div>
+          <div style="font-size:0.8rem;font-weight:900;color:#fff">🏪 Händler-Challenge</div>
+          <div style="font-size:0.62rem;color:rgba(255,255,255,0.35);margin-top:2px">Gemeinsam mehr Einlösungen im Center schaffen.</div>
+        </div>
+        <div style="font-size:0.62rem;color:rgba(255,255,255,0.3);text-align:right;flex-shrink:0;margin-left:8px">Heute<br><span style="font-size:0.8rem;font-weight:800;color:#FA4615">${todayPts.toLocaleString('de-DE')}</span> Pkt.</div>
+      </div>
+
+      <!-- Progress bar -->
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:0.6rem;color:rgba(255,255,255,0.35)">Heute eingelöst</span>
+          <span style="font-size:0.6rem;color:rgba(255,255,255,0.4)">${todayPts.toLocaleString('de-DE')} / ${weeklyGoal.toLocaleString('de-DE')} · ${pct}%</span>
+        </div>
+        <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#FA4615,#F7AB00);border-radius:3px;transition:width 0.4s ease"></div></div>
+      </div>
+
+      <!-- Top 3 -->
+      ${ranked.length ? `<div style="margin-bottom:10px">
+        ${ranked.map((m, i) => `
+          <div style="display:flex;align-items:center;gap:8px;padding:4px 0;${i<ranked.length-1?'border-bottom:1px solid rgba(255,255,255,0.05)':''}">
+            <span style="font-size:0.85rem;width:18px;flex-shrink:0">${rankEmojis[i]}</span>
+            <div style="flex:1;min-width:0;font-size:0.7rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(m.name)}</div>
+            <div style="font-size:0.68rem;font-weight:800;color:${i===0?'#F7AB00':i===1?'#9ca3af':'#b45309'};flex-shrink:0">${m.points.toLocaleString('de-DE')} Pkt.</div>
+          </div>`).join('')}
+      </div>` : ''}
+
+      <!-- Milestones -->
+      ${milestones.length || estValue > 0 ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
+        ${milestones.map(ms => `<span style="font-size:0.58rem;padding:3px 8px;background:rgba(247,171,0,0.12);border:1px solid rgba(247,171,0,0.25);border-radius:20px;color:#F7AB00">${ms.icon} ${ms.text}</span>`).join('')}
+        ${estValue > 0 ? `<span style="font-size:0.58rem;padding:3px 8px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:20px;color:#34d399">💰 ~${estValue.toLocaleString('de-DE')} € Kundenwert</span>` : ''}
+      </div>` : ''}
+
+      <!-- Live feed -->
+      ${feedItems ? `<div>${feedItems}</div>` : ''}
+
+      ${staffHtml}
     </div>`;
 }
 
