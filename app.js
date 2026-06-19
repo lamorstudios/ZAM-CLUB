@@ -2737,6 +2737,7 @@ async function renderProfile() {
   const heroEl = document.querySelector('.profile-hero');
   if (heroEl) heroEl.dataset.tier = _isAdmin() ? 'admin' : _getTier(pts).key;
   renderProfileVitrine();
+  _renderReferralFriendsSection('profile-referral-section');
 
   // Update Nearby badge in profile
   const nearbyBadge = document.getElementById('nearby-profile-badge');
@@ -3524,6 +3525,9 @@ function redeemVoucherToken(rid) {
       localStorage.removeItem(savedKey);
     }
   } catch {}
+
+  // Award referral scan bonus to the user's referrer (fraud-safe, limit-checked)
+  _awardReferralScanBonus(token.userId, token.userName || '', token.dealTitle || '', rid);
 
   return true;
 }
@@ -5773,33 +5777,69 @@ function adminRejectMerchant(id) {
 function renderAdminReferrals(containerId) {
   const el = document.getElementById(containerId);
   if (!el) return;
-  const list = _loadReferrals();
-  if (!list.length) {
-    el.innerHTML = `<div style="font-size:0.74rem;color:rgba(255,255,255,0.3);text-align:center;padding:16px 0">Keine Einladungen vorhanden</div>`;
-    return;
-  }
-  el.innerHTML = list.map(r => {
+
+  // ── Scan-bonus log (new system) ──────────────────────────────────
+  const scanLog  = _refScanLog();
+  const refFlags = (() => { try { return JSON.parse(localStorage.getItem('zam_ref_flags') || '[]'); } catch { return []; } })();
+
+  // Group by referrer for summary
+  const byRef = {};
+  scanLog.forEach(e => {
+    if (!byRef[e.referrer_id]) byRef[e.referrer_id] = { name: e.referrer_name, count: 0, pts: 0 };
+    byRef[e.referrer_id].count++;
+    byRef[e.referrer_id].pts += e.pts;
+  });
+  const refSummaryRows = Object.entries(byRef).sort((a,b)=>b[1].pts-a[1].pts).map(([id, d]) => {
+    const flagged = refFlags.find(f => f.referrer_id === id);
+    return `<div style="background:${flagged ? 'rgba(239,68,68,0.08)' : 'rgba(255,255,255,0.03)'};border:1px solid ${flagged ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.08)'};border-radius:10px;padding:11px 13px;margin-bottom:6px;display:flex;align-items:center;gap:10px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.78rem;font-weight:700;color:#e2e8f0">${escHtml(d.name || id)}</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-top:2px">${d.count} Einlösungen · +${d.pts} Pkt. vergeben</div>
+      </div>
+      ${flagged ? `<span style="font-size:0.65rem;font-weight:800;color:#f87171;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:7px;padding:2px 8px">⚠️ ${flagged.reason}</span>` : `<span style="font-size:0.65rem;font-weight:700;color:#34d399">✓ OK</span>`}
+    </div>`;
+  }).join('');
+
+  // Recent scan events
+  const recentRows = scanLog.slice(0, 10).map(e => `
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.72rem">
+      <div style="flex:1;color:rgba(255,255,255,0.6)">${escHtml(e.referrer_name)} ← ${escHtml(e.invited_name)}</div>
+      <div style="color:#F7AB00;font-weight:700">+${e.pts} Pkt.</div>
+      <div style="color:rgba(255,255,255,0.3);font-size:0.65rem">${_zamTimeAgo(e.ts)}</div>
+    </div>`).join('');
+
+  // ── Legacy invite system ──────────────────────────────────────────
+  const legacyList = _loadReferrals();
+  const legacyRows = legacyList.map(r => {
     const statusHtml = r.bonus_unlocked
       ? `<span style="color:#34d399;font-weight:700;font-size:0.72rem">✅ Freigeschaltet</span>`
       : `<span style="color:#F7AB00;font-weight:700;font-size:0.72rem">⏳ Ausstehend</span>`;
     const progress = Math.min(100, (r.invited_points / 2000) * 100).toFixed(0);
-    return `
-    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;margin-bottom:8px">
+    return `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <div>
-          <div style="font-size:0.78rem;font-weight:700;color:#e2e8f0">${r.referrer_name} → ${r.invited_name || '(ausstehend)'}</div>
-          <div style="font-size:0.67rem;color:rgba(255,255,255,0.35);margin-top:2px">
-            ${r.invited_points.toLocaleString('de-DE')} / 2.000 Pkt · ${r.invited_days}d · ${r.invited_merchants} Händler
-          </div>
+          <div style="font-size:0.78rem;font-weight:700;color:#e2e8f0">${escHtml(r.referrer_name)} → ${escHtml(r.invited_name || '(ausstehend)')}</div>
+          <div style="font-size:0.67rem;color:rgba(255,255,255,0.35);margin-top:2px">${r.invited_points.toLocaleString('de-DE')} / 2.000 Pkt · ${r.invited_days}d · ${r.invited_merchants} Händler</div>
         </div>
         ${statusHtml}
       </div>
       <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">
-        <div style="height:100%;width:${progress}%;background:${r.bonus_unlocked ? '#34d399' : 'linear-gradient(90deg,#FA4615,#F7AB00)'};border-radius:2px;transition:width 0.4s"></div>
+        <div style="height:100%;width:${progress}%;background:${r.bonus_unlocked ? '#34d399' : 'linear-gradient(90deg,#FA4615,#F7AB00)'};border-radius:2px"></div>
       </div>
       ${r.unlocked_at ? `<div style="font-size:0.63rem;color:rgba(255,255,255,0.25);margin-top:4px">Freigeschaltet: ${new Date(r.unlocked_at).toLocaleDateString('de-DE')}</div>` : ''}
     </div>`;
   }).join('');
+
+  el.innerHTML = `
+    <div style="font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">🎟 Scan-Boni (Händler-Einlösungen)</div>
+    ${refSummaryRows || `<div style="font-size:0.74rem;color:rgba(255,255,255,0.3);text-align:center;padding:8px 0">Noch keine Scan-Boni vergeben</div>`}
+    ${recentRows ? `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.07)">${recentRows}</div>` : ''}
+    ${legacyList.length ? `<div style="font-size:0.7rem;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;margin:16px 0 8px">📋 Einladungs-Boni (Legacy)</div>${legacyRows}` : ''}
+    ${refFlags.length ? `
+      <div style="margin-top:14px;padding:12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:12px">
+        <div style="font-size:0.7rem;font-weight:800;color:#f87171;margin-bottom:8px">⚠️ Verdächtige Aktivitäten (${refFlags.length})</div>
+        ${refFlags.slice(0,5).map(f=>`<div style="font-size:0.68rem;color:rgba(255,255,255,0.45);margin-bottom:4px">${escHtml(f.referrer_id)} · ${escHtml(f.reason)} · ${_zamTimeAgo(f.ts)}</div>`).join('')}
+      </div>` : ''}`;
 }
 
 function renderAdminDashboard() {
@@ -8902,6 +8942,183 @@ function _awardChallengeReward(challengeId) {
 // ═══════════════════════════════════════════════
 // REFERRAL SYSTEM
 // ═══════════════════════════════════════════════
+
+// ─── Referral Scan-Bonus Engine ───────────────────────────────────────────────
+// Bonus (+5 pts) is awarded to a referrer ONLY when their invited friend
+// actually redeems a voucher via merchant QR scan. No other action triggers this.
+
+const ZAM_REF_BONUS_PER_SCAN  = 5;
+const ZAM_REF_DAILY_LIMIT_PTS = 100;
+const ZAM_REF_MONTHLY_LIMIT   = 3000;
+
+function _refLinkStore() {
+  try { return JSON.parse(localStorage.getItem('zam_ref_link_v2') || '{}'); } catch { return {}; }
+}
+function _refSaveLinks(obj) {
+  try { localStorage.setItem('zam_ref_link_v2', JSON.stringify(obj)); } catch {}
+}
+
+// Immutable: can only be set once per user (called at registration / first invite-code use)
+function _setReferralLink(invitedId, referrerId, referrerName) {
+  if (!invitedId || !referrerId || invitedId === referrerId) return false;
+  const store = _refLinkStore();
+  if (store[invitedId]) return false; // already set — immutable
+  store[invitedId] = { referrer_id: referrerId, referrer_name: referrerName, set_at: Date.now() };
+  _refSaveLinks(store);
+  return true;
+}
+
+function _getReferralLink(userId) {
+  if (!userId) return null;
+  return _refLinkStore()[userId] || null;
+}
+
+// Scan-bonus log
+function _refScanLog() {
+  try { return JSON.parse(localStorage.getItem('zam_ref_scan_log') || '[]'); } catch { return []; }
+}
+function _refSaveScanLog(log) {
+  try { localStorage.setItem('zam_ref_scan_log', JSON.stringify(log)); } catch {}
+}
+
+// Check daily/monthly spend for a referrer
+function _refBonusUsed(referrerId) {
+  const log = _refScanLog().filter(e => e.referrer_id === referrerId);
+  const today     = new Date().toISOString().slice(0, 10);
+  const thisMonth = today.slice(0, 7);
+  const daily   = log.filter(e => e.date === today).reduce((s,e)=>s+e.pts, 0);
+  const monthly = log.filter(e => e.month === thisMonth).reduce((s,e)=>s+e.pts, 0);
+  return { daily, monthly };
+}
+
+// Award +5 pts to referrer after a real merchant scan
+function _awardReferralScanBonus(invitedId, invitedName, dealTitle, voucherId) {
+  try {
+    const link = _getReferralLink(invitedId);
+    if (!link) return; // no referrer
+
+    const log = _refScanLog();
+    // Deduplicate: one bonus per voucher
+    if (log.find(e => e.voucher_id === voucherId)) return;
+
+    const { daily, monthly } = _refBonusUsed(link.referrer_id);
+    if (daily   >= ZAM_REF_DAILY_LIMIT_PTS) {
+      _refFlagSuspicious(link.referrer_id, 'daily_limit_hit', { invitedId, daily });
+      return;
+    }
+    if (monthly >= ZAM_REF_MONTHLY_LIMIT) {
+      _refFlagSuspicious(link.referrer_id, 'monthly_limit_hit', { invitedId, monthly });
+      return;
+    }
+
+    const today     = new Date().toISOString().slice(0, 10);
+    const thisMonth = today.slice(0, 7);
+    const pts = ZAM_REF_BONUS_PER_SCAN;
+
+    // Credit referrer in their local user store
+    const rKey  = `zamclub_u_${link.referrer_id}`;
+    const rData = JSON.parse(localStorage.getItem(rKey) || '{}');
+    rData.points = (rData.points || 0) + pts;
+    rData.history = rData.history || [];
+    rData.history.unshift({ type: 'referral_scan', pts, label: `Empfehlung: ${invitedName || 'Freund'} hat eingelöst`, ts: Date.now() });
+    localStorage.setItem(rKey, JSON.stringify(rData));
+
+    // If referrer is the current user on this device, also update live session
+    const currentUser = ZAMApi.auth.currentUser();
+    if (currentUser && currentUser.id === link.referrer_id) {
+      addPoints(pts, `Empfehlung: ${invitedName || 'Freund'} hat eingelöst`);
+      showToast(`🎉 +${pts} Empfehlungs-Punkte: ${invitedName || 'Freund'} hat eingelöst!`, 'success');
+    }
+
+    // Log the event
+    log.unshift({ referrer_id: link.referrer_id, referrer_name: link.referrer_name, invited_id: invitedId, invited_name: invitedName || '', deal_title: dealTitle || '', voucher_id: voucherId, pts, ts: Date.now(), date: today, month: thisMonth });
+    _refSaveScanLog(log);
+  } catch(e) {
+    // Silent — bonus failure must not break redemption
+  }
+}
+
+// Flag suspicious activity for admin
+function _refFlagSuspicious(referrerId, reason, meta) {
+  try {
+    const flags = JSON.parse(localStorage.getItem('zam_ref_flags') || '[]');
+    flags.unshift({ referrer_id: referrerId, reason, meta, ts: Date.now() });
+    localStorage.setItem('zam_ref_flags', JSON.stringify(flags.slice(0, 200)));
+  } catch {}
+}
+
+// Render "👥 Freunde & Empfehlungen" card in user profile
+function _renderReferralFriendsSection(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const user = ZAMApi.auth.currentUser();
+  if (!user || user.role === 'guest') { el.innerHTML = ''; return; }
+
+  const log = _refScanLog().filter(e => e.referrer_id === user.id);
+  const link = _getReferralLink(user.id); // who invited me
+
+  const totalPts  = log.reduce((s,e)=>s+e.pts, 0);
+  const today     = new Date().toISOString().slice(0, 10);
+  const thisMonth = today.slice(0, 7);
+  const todayPts  = log.filter(e=>e.date===today).reduce((s,e)=>s+e.pts, 0);
+
+  // Unique invited friends who've redeemed at least once
+  const friendIds = [...new Set(log.map(e=>e.invited_id))];
+  const friendCount = friendIds.length;
+
+  // Last 5 activity rows
+  const activityRows = log.slice(0, 5).map(e => {
+    const ago = _zamTimeAgo(e.ts);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.2);display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0">🎟</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.76rem;font-weight:700;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(e.invited_name || 'Freund')} hat einen Gutschein eingelöst</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-top:1px">${escHtml(e.deal_title || '')}</div>
+      </div>
+      <div style="font-size:0.75rem;font-weight:800;color:#34d399;white-space:nowrap">+${e.pts} Pkt.</div>
+      <div style="font-size:0.62rem;color:rgba(255,255,255,0.3);white-space:nowrap">${ago}</div>
+    </div>`;
+  }).join('');
+
+  const invitedByHtml = link
+    ? `<div style="margin-bottom:12px;padding:9px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:0.8rem">🤝</span>
+        <div style="font-size:0.73rem;color:rgba(255,255,255,0.45)">Eingeladen von <strong style="color:#ffb399">${escHtml(link.referrer_name)}</strong></div>
+      </div>`
+    : '';
+
+  el.innerHTML = `
+    <div style="margin:0 16px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:16px;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px 10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:1rem">👥</span>
+          <div style="font-size:0.85rem;font-weight:800;color:#fff">Freunde & Empfehlungen</div>
+        </div>
+        <button onclick="openReferralSheet()" style="background:rgba(250,70,21,0.15);border:1px solid rgba(250,70,21,0.35);border-radius:9px;padding:5px 11px;color:#FA4615;font-size:0.7rem;font-weight:700;font-family:var(--font);cursor:pointer">+ Freund einladen</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.07);border-top:1px solid rgba(255,255,255,0.07);border-bottom:1px solid rgba(255,255,255,0.07)">
+        <div style="padding:11px 10px;text-align:center;background:rgba(15,15,20,0.8)">
+          <div style="font-size:1.3rem;font-weight:900;color:#ffb399">${friendCount}</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.35);margin-top:1px;text-transform:uppercase;letter-spacing:0.04em">Freunde aktiv</div>
+        </div>
+        <div style="padding:11px 10px;text-align:center;background:rgba(15,15,20,0.8)">
+          <div style="font-size:1.3rem;font-weight:900;color:#F7AB00">${totalPts}</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.35);margin-top:1px;text-transform:uppercase;letter-spacing:0.04em">Pkt. verdient</div>
+        </div>
+        <div style="padding:11px 10px;text-align:center;background:rgba(15,15,20,0.8)">
+          <div style="font-size:1.3rem;font-weight:900;color:#34d399">${log.length}</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.35);margin-top:1px;text-transform:uppercase;letter-spacing:0.04em">Einlösungen</div>
+        </div>
+      </div>
+      <div style="padding:12px 14px">
+        ${invitedByHtml}
+        ${log.length ? activityRows : `<div style="font-size:0.75rem;color:rgba(255,255,255,0.28);text-align:center;padding:12px 0">Noch keine Einlösungen durch eingeladene Freunde</div>`}
+        ${todayPts > 0 ? `<div style="margin-top:10px;font-size:0.62rem;color:rgba(255,255,255,0.25);text-align:right">Heute: ${todayPts}/${ZAM_REF_DAILY_LIMIT_PTS} Pkt.</div>` : ''}
+      </div>
+    </div>`;
+}
+
+// ─── Existing referral helpers ────────────────────────────────────────────────
 
 // Storage helpers for fraud-safe referrals
 function _loadReferrals() {
