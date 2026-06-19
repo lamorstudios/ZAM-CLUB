@@ -1064,15 +1064,8 @@ function renderHome() {
   if (recsLabel) recsLabel.style.display = 'none';
   if (recsScroll) recsScroll.style.display = 'none';
 
-  // Referral CTA widget — visible for all regular users, hidden for merchant/admin
-  if (!isPerfMode) {
-    const refCode = _getReferralCode(user);
-    const refCodeEl = document.getElementById('home-referral-code');
-    if (refCodeEl && refCode) refCodeEl.textContent = refCode;
-  } else {
-    const refEl = document.getElementById('home-referral-cta');
-    if (refEl) refEl.style.display = 'none';
-  }
+  // Referral CTA — always visible, fill in dynamic data
+  _renderHomeReferralCard(user);
 
   // Händler Tools card — collapsed by default, expand on click
   const toolsCard = document.getElementById('home-merchant-tools');
@@ -9089,7 +9082,10 @@ function _renderReferralFriendsSection(containerId) {
           <span style="font-size:1rem">👥</span>
           <div style="font-size:0.85rem;font-weight:800;color:#fff">Freunde & Empfehlungen</div>
         </div>
-        <button onclick="openReferralSheet()" style="background:rgba(250,70,21,0.15);border:1px solid rgba(250,70,21,0.35);border-radius:9px;padding:5px 11px;color:#FA4615;font-size:0.7rem;font-weight:700;font-family:var(--font);cursor:pointer">+ Freund einladen</button>
+        <div style="display:flex;gap:6px">
+          <button onclick="shareWhatsApp()" style="background:linear-gradient(135deg,#075e54,#128c7e);border:none;border-radius:9px;padding:5px 10px;color:#fff;font-size:0.68rem;font-weight:700;font-family:var(--font);cursor:pointer">📲 WA</button>
+          <button onclick="copyShareLink()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:9px;padding:5px 10px;color:rgba(255,255,255,0.65);font-size:0.68rem;font-weight:700;font-family:var(--font);cursor:pointer">🔗 Link</button>
+        </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.07);border-top:1px solid rgba(255,255,255,0.07);border-bottom:1px solid rgba(255,255,255,0.07)">
         <div style="padding:11px 10px;text-align:center;background:rgba(15,15,20,0.8)">
@@ -9193,6 +9189,47 @@ function _getReferralCode(user) {
     localStorage.setItem(key, code);
   }
   return code;
+}
+
+function _renderHomeReferralCard(user) {
+  // Set referral code
+  const code = _getReferralCode(user);
+  const codeEl = document.getElementById('home-referral-code');
+  if (codeEl && code) codeEl.textContent = code;
+
+  // Render friend progress inside the card
+  const progressEl = document.getElementById('home-referral-progress');
+  if (!progressEl || !user?.id || user.id === 'guest') return;
+
+  _checkReferralBonuses();
+  const { unlocked, pending } = _getReferralSummary(user.id);
+  const all = [...unlocked, ...pending];
+  if (!all.length) return;
+
+  progressEl.innerHTML = `<div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;margin-top:4px">
+    <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:7px">Aktive Einladungen</div>
+    ${all.map(r => {
+      const isUnlocked = r.bonus_unlocked;
+      const pct = Math.min(100, ((r.invited_points || 0) / 2000) * 100).toFixed(0);
+      const remaining = Math.max(0, 2000 - (r.invited_points || 0));
+      if (isUnlocked) {
+        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px">
+          <div style="font-size:0.74rem;font-weight:700;color:#e2e8f0">${escHtml(r.invited_name || 'Freund')}</div>
+          <span style="font-size:0.65rem;font-weight:700;color:#34d399;white-space:nowrap">✅ +250 Pkt. erhalten</span>
+        </div>`;
+      }
+      return `<div style="margin-bottom:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div style="font-size:0.74rem;font-weight:700;color:#e2e8f0">${escHtml(r.invited_name || 'Freund')}</div>
+          <div style="font-size:0.65rem;color:rgba(255,255,255,0.4)">${(r.invited_points||0).toLocaleString('de-DE')} / 2.000 Pkt.</div>
+        </div>
+        <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-bottom:3px">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#FA4615,#F7AB00);border-radius:2px"></div>
+        </div>
+        <div style="font-size:0.6rem;color:rgba(255,255,255,0.28)">Noch ${remaining.toLocaleString('de-DE')} Pkt. bis zum +250-Bonus</div>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 function openReferralSheet() {

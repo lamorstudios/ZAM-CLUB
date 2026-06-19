@@ -229,6 +229,48 @@
       <div class="ai-home-banner-arrow">→</div>
     </div>
 
+    <!-- Freunde einladen — always visible -->
+    <div id="home-referral-cta" style="margin:6px 16px 0">
+      <div class="referral-cta-card" style="padding:14px">
+        <div class="referral-cta-glow"></div>
+        <div style="position:relative;z-index:1">
+          <!-- Header row -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div class="referral-cta-icon" style="width:36px;height:36px;font-size:1.1rem;flex-shrink:0">👥</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:0.88rem;font-weight:900;color:#fff;margin-bottom:2px">Freunde einladen</div>
+              <div style="font-size:0.63rem;color:rgba(255,255,255,0.45);line-height:1.5">Lade Freunde ins ZAM Club Netzwerk ein.</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:0.6rem;color:rgba(255,255,255,0.3)">Code</div>
+              <div id="home-referral-code" style="font-size:0.78rem;font-family:monospace;font-weight:800;color:#ffb399">ZAM---</div>
+            </div>
+          </div>
+          <!-- Bonus info row -->
+          <div style="display:flex;gap:6px;margin-bottom:12px">
+            <div style="flex:1;background:rgba(247,171,0,0.1);border:1px solid rgba(247,171,0,0.22);border-radius:9px;padding:7px 9px;text-align:center">
+              <div style="font-size:0.75rem;font-weight:900;color:#F7AB00">🎁 +250 Pkt.</div>
+              <div style="font-size:0.58rem;color:rgba(255,255,255,0.35);margin-top:1px;line-height:1.3">wenn Freund 2.000 Pkt. erreicht</div>
+            </div>
+            <div style="flex:1;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:9px;padding:7px 9px;text-align:center">
+              <div style="font-size:0.75rem;font-weight:900;color:#34d399">💰 +5 Pkt./Scan</div>
+              <div style="font-size:0.58rem;color:rgba(255,255,255,0.35);margin-top:1px;line-height:1.3">pro echter Deal-Einlösung</div>
+            </div>
+          </div>
+          <!-- Action buttons -->
+          <div style="display:flex;gap:8px;margin-bottom:6px">
+            <button onclick="event.stopPropagation();shareWhatsApp()" style="flex:2;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 10px;background:linear-gradient(135deg,#075e54,#128c7e);border:none;color:#fff;border-radius:12px;font-size:0.8rem;font-weight:800;font-family:var(--font);cursor:pointer">📲 WhatsApp einladen</button>
+            <button onclick="event.stopPropagation();copyShareLink()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 8px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);color:rgba(255,255,255,0.75);border-radius:12px;font-size:0.78rem;font-weight:700;font-family:var(--font);cursor:pointer">🔗 Link</button>
+          </div>
+          <button onclick="event.stopPropagation();openShareDialog()" style="width:100%;padding:7px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);border-radius:10px;font-size:0.68rem;font-weight:600;font-family:var(--font);cursor:pointer">📤 Weitere Apps (Telegram · SMS · E-Mail)</button>
+          <!-- Progress -->
+          <div id="home-referral-progress" style="margin-top:10px"></div>
+        </div>
+        <div id="home-referral-pts" style="display:none">0</div>
+        <div id="home-referral-count" style="display:none">0</div>
+      </div>
+    </div>
+
     <!-- Händler Tools Card — rendered dynamically by renderHome() -->
     <div id="home-merchant-tools" style="display:none;margin:0 16px 8px"></div>
 
@@ -237,26 +279,6 @@
 
     <!-- Heute im ZAM — Live Activity Feed -->
     <div id="home-activity-feed" style="margin:8px 16px 0"></div>
-
-    <!-- Referral CTA — compact -->
-    <div id="home-referral-cta" style="margin:6px 16px 0;cursor:pointer" onclick="openReferralSheet()">
-      <div class="referral-cta-card" style="padding:12px 14px">
-        <div class="referral-cta-glow"></div>
-        <div style="display:flex;align-items:center;gap:10px;position:relative;z-index:1">
-          <div class="referral-cta-icon" style="width:36px;height:36px;font-size:1.2rem">👥</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:0.85rem;font-weight:900;color:#fff;margin-bottom:2px">Freunde einladen</div>
-            <div style="font-size:0.65rem;color:rgba(255,255,255,0.45);line-height:1.4">🎁 +250 Pkt. wenn Freund 2.000 Pkt. erreicht<br>💰 +5 Pkt. pro echter Deal-Einlösung deines Freundes</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
-            <div style="font-size:0.7rem;font-weight:800;color:#fef3c7;background:rgba(247,171,0,0.2);border:1px solid rgba(247,171,0,0.35);border-radius:8px;padding:6px 10px;white-space:nowrap">Einladen →</div>
-            <div style="font-size:0.6rem;color:rgba(255,255,255,0.3)">Code: <span id="home-referral-code" style="color:#ffb399;font-family:monospace;font-weight:700">ZAM---</span></div>
-          </div>
-        </div>
-        <div id="home-referral-pts" style="display:none">0</div>
-        <div id="home-referral-count" style="display:none">0</div>
-      </div>
-    </div>
 
     <!-- Current Deals (horizontal scroll) -->
     <div class="section-label">
