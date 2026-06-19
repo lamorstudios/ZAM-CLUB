@@ -5145,7 +5145,7 @@ function _getStaff(merchantId) { return _staffLoad().filter(s => s.merchantId ==
 function _genStaffInviteCode() { return 'ST' + Math.random().toString(36).substring(2,8).toUpperCase(); }
 
 // Add staff member
-function _addStaffMember(merchantId, merchantName, name, email) {
+function _addStaffMember(merchantId, merchantName, name, email, role) {
   const staff = _staffLoad();
   // Check duplicate
   if (staff.find(s => s.merchantId === merchantId && s.email === email && s.status !== 'removed')) {
@@ -5158,6 +5158,7 @@ function _addStaffMember(merchantId, merchantName, name, email) {
     name: name.trim(),
     email: email.trim().toLowerCase(),
     inviteCode: _genStaffInviteCode(),
+    role: role || 'staff', // staff | shift_lead
     status: 'active', // active | inactive | removed
     addedAt: Date.now(),
     lastScan: null,
@@ -5213,7 +5214,11 @@ function openStaffModal() {
       <div style="background:rgba(250,70,21,0.07);border:1px solid rgba(250,70,21,0.2);border-radius:12px;padding:14px;margin-bottom:16px">
         <div style="font-size:0.78rem;font-weight:700;margin-bottom:10px;color:#FA4615">➕ Mitarbeiter hinzufügen</div>
         <input id="staff-name-inp" type="text" placeholder="Name" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 11px;color:#fff;font-size:0.82rem;margin-bottom:8px;font-family:var(--font)">
-        <input id="staff-email-inp" type="email" placeholder="E-Mail-Adresse" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 11px;color:#fff;font-size:0.82rem;margin-bottom:10px;font-family:var(--font)">
+        <input id="staff-email-inp" type="email" placeholder="E-Mail-Adresse" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 11px;color:#fff;font-size:0.82rem;margin-bottom:8px;font-family:var(--font)">
+        <select id="staff-role-inp" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 11px;color:#fff;font-size:0.82rem;margin-bottom:10px;font-family:var(--font);appearance:none;-webkit-appearance:none">
+          <option value="staff" style="background:#222">👤 Mitarbeiter</option>
+          <option value="shift_lead" style="background:#222">⭐ Schichtleiter</option>
+        </select>
         <button onclick="_staffAdd()" style="width:100%;padding:11px;background:linear-gradient(135deg,#FA4615,#F7AB00);border:none;border-radius:10px;color:#fff;font-size:0.82rem;font-weight:800;cursor:pointer;font-family:var(--font)">Einladen</button>
       </div>
       <div id="staff-list" style="display:flex;flex-direction:column;gap:8px"></div>
@@ -5231,9 +5236,10 @@ function _staffAdd() {
   if (!user) return;
   const name = document.getElementById('staff-name-inp')?.value?.trim();
   const email = document.getElementById('staff-email-inp')?.value?.trim();
+  const role = document.getElementById('staff-role-inp')?.value || 'staff';
   if (!name) { showToast('Bitte Name eingeben', 'error'); return; }
   if (!email || !email.includes('@')) { showToast('Bitte gültige E-Mail eingeben', 'error'); return; }
-  const result = _addStaffMember(user.id, user.name || 'Händler', name, email);
+  const result = _addStaffMember(user.id, user.name || 'Händler', name, email, role);
   if (!result.ok) { showToast(result.msg, 'error'); return; }
   document.getElementById('staff-name-inp').value = '';
   document.getElementById('staff-email-inp').value = '';
@@ -5262,7 +5268,10 @@ function _renderStaffList(user) {
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(250,70,21,0.4),rgba(247,171,0,0.3));display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">👤</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:0.84rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(m.name)}</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="font-size:0.84rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(m.name)}</div>
+            <span style="font-size:0.58rem;padding:2px 6px;border-radius:5px;background:${m.role==='shift_lead'?'rgba(247,171,0,0.2)':'rgba(255,255,255,0.08)'};color:${m.role==='shift_lead'?'#F7AB00':'rgba(255,255,255,0.5)'};font-weight:700;white-space:nowrap">${m.role==='shift_lead'?'⭐ Schichtleiter':'👤 Mitarbeiter'}</span>
+          </div>
           <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(m.email)}</div>
           <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-top:3px;display:flex;gap:10px">
             <span>Heute: <b style="color:rgba(255,255,255,0.6)">${scansToday}</b></span>
@@ -5481,7 +5490,11 @@ function renderMerchantDashboard() {
           <span>🤝</span><span style="color:#ffb060">Anfragen</span>
           <span id="merchant-anfragen-badge" style="display:none;position:absolute;top:6px;right:6px;min-width:16px;height:16px;border-radius:8px;background:#FA4615;color:#fff;font-size:0.55rem;font-weight:800;line-height:16px;text-align:center;padding:0 3px;font-family:var(--font)"></span>
         </button>
-        <button class="merchant-quick-btn" onclick="openStaffModal()" style="background:linear-gradient(135deg,rgba(100,180,255,0.2),rgba(100,180,255,0.07));border:1px solid rgba(100,180,255,0.3)"><span>👥</span><span style="color:#7dd3fc">Mitarbeiter</span></button>
+      </div>
+      <div style="margin:0 16px 20px">
+        <button onclick="openStaffModal()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 16px;background:linear-gradient(135deg,rgba(100,180,255,0.18),rgba(100,180,255,0.06));border:1px solid rgba(100,180,255,0.35);border-radius:12px;cursor:pointer;font-family:var(--font);font-size:0.8rem;font-weight:700;color:#7dd3fc">
+          <span style="font-size:1.2rem">👥</span><span>Mitarbeiter verwalten</span>
+        </button>
       </div>
     `;
     kpiGridEl.parentNode.insertBefore(scannerBtnWrap, kpiGridEl);
