@@ -1134,29 +1134,40 @@
     </div>
   </div>
   <div class="kpi-grid" id="merchant-kpi-grid"></div>
-  <div class="dash-section">
-    <h3 class="dash-section-title">🏷️ Deal Performance</h3>
-    <div id="merchant-deals-table" class="dash-table-wrap"></div>
+  <div class="dash-section dash-accordion" id="acc-deals">
+    <div class="dash-accordion-header" onclick="toggleDashAccordion('acc-deals')">
+      <h3 class="dash-section-title" style="margin:0">🏷️ Deal Performance</h3>
+      <span class="dash-accordion-chevron">▼</span>
+    </div>
+    <div class="dash-accordion-body">
+      <div id="merchant-deals-table" class="dash-table-wrap"></div>
+    </div>
   </div>
-  <div class="dash-section">
-    <h3 class="dash-section-title">🎉 Event Performance</h3>
-    <div id="merchant-events-table" class="dash-table-wrap"></div>
+  <div class="dash-section dash-accordion" id="acc-events">
+    <div class="dash-accordion-header" onclick="toggleDashAccordion('acc-events')">
+      <h3 class="dash-section-title" style="margin:0">🎉 Event Performance</h3>
+      <span class="dash-accordion-chevron">▼</span>
+    </div>
+    <div class="dash-accordion-body">
+      <div id="merchant-events-table" class="dash-table-wrap"></div>
+    </div>
   </div>
-  <div class="dash-section">
-    <h3 class="dash-section-title">🎟️ Gutscheine</h3>
-    <div id="merchant-vouchers" class="dash-table-wrap"></div>
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <button class="btn-dash-action" style="flex:1" onclick="openVoucherRedeemer()">QR-Code einlösen</button>
-      <button class="btn-dash-action" style="flex:1;background:rgba(247,171,0,0.12);border-color:rgba(247,171,0,0.3);color:#F7AB00" onclick="openSecureRewardScanner()">🎁 Belohnung prüfen</button>
+  <div class="dash-section dash-accordion" id="acc-vouchers">
+    <div class="dash-accordion-header" onclick="toggleDashAccordion('acc-vouchers')">
+      <h3 class="dash-section-title" style="margin:0">🎟️ Gutscheine</h3>
+      <span class="dash-accordion-chevron">▼</span>
+    </div>
+    <div class="dash-accordion-body">
+      <div id="merchant-vouchers" class="dash-table-wrap"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn-dash-action" style="flex:1" onclick="openVoucherRedeemer()">QR-Code einlösen</button>
+        <button class="btn-dash-action" style="flex:1;background:rgba(247,171,0,0.12);border-color:rgba(247,171,0,0.3);color:#F7AB00" onclick="openSecureRewardScanner()">🎁 Belohnung prüfen</button>
+      </div>
     </div>
   </div>
 
   <!-- Händler-Statistiken (rendered by features.js) -->
   <div id="merchant-detailed-stats"></div>
-  <div style="display:flex;gap:8px;padding:0 16px 16px">
-    <button class="btn-dash-action" style="flex:1" onclick="navigateTo('merchant-contracts')">📄 Verträge</button>
-    <button class="btn-dash-action" style="flex:1" onclick="navigateTo('merchant-billing')">🧾 Rechnungen</button>
-  </div>
   <!-- Videodreh Promo + Anfragen -->
   <div style="padding:0 16px 8px">
     <div onclick="openVideoDrehModal()" style="background:linear-gradient(135deg,rgba(250,70,21,0.18),rgba(180,40,10,0.12));border:1.5px solid rgba(250,70,21,0.45);border-radius:18px;padding:18px 16px;cursor:pointer;position:relative;overflow:hidden;margin-bottom:16px">

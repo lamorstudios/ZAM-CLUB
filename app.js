@@ -5706,6 +5706,12 @@ function _renderStaffScanLog(merchantId) {
   }).join('');
 }
 
+function toggleDashAccordion(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('open');
+}
+
 // =============================================
 // Phase 12 — Merchant Dashboard
 // =============================================

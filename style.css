@@ -2242,6 +2242,13 @@ a.nav-tab-map { text-decoration: none; }
 
 .dash-section{margin:0 16px 20px}
 .dash-section-title{font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.55);letter-spacing:0.04em;margin-bottom:10px;padding-left:2px}
+.dash-accordion{border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;padding:0;background:var(--surface)}
+.dash-accordion-header{display:flex;align-items:center;justify-content:space-between;padding:14px 14px;cursor:pointer;user-select:none}
+.dash-accordion-header:active{background:rgba(255,255,255,0.04)}
+.dash-accordion-chevron{font-size:0.65rem;color:rgba(255,255,255,0.35);transition:transform 0.2s}
+.dash-accordion.open .dash-accordion-chevron{transform:rotate(180deg)}
+.dash-accordion-body{display:none;padding:0 14px 14px}
+.dash-accordion.open .dash-accordion-body{display:block}
 
 .dash-table-wrap{background:var(--surface);border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.06)}
 .dash-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.04);gap:10px}
