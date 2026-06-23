@@ -48,6 +48,10 @@ const Storage = {
   },
 };
 
+const ZAM_POS_PURCHASES_KEY = 'zam_pos_purchases_v1';
+function _posLoad() { try { return JSON.parse(localStorage.getItem(ZAM_POS_PURCHASES_KEY)||'[]'); } catch { return []; } }
+function _posSave(a) { try { localStorage.setItem(ZAM_POS_PURCHASES_KEY, JSON.stringify(a)); } catch {} }
+
 // =============================================
 // State (loaded from localStorage on init)
 // =============================================
@@ -2504,6 +2508,76 @@ function _playDealVideo(container, src) {
   container.style.cursor = 'default';
 }
 
+function _dealRedemptionBadge(deal) {
+  if (!deal.redemption_type || deal.redemption_type === 'qr_voucher') {
+    return '<div style="font-size:0.58rem;font-weight:700;color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.07);border-radius:6px;padding:2px 7px;white-space:nowrap">QR-Gutschein</div>';
+  }
+  if (deal.redemption_type === 'pos_system') {
+    return '<div style="font-size:0.58rem;font-weight:700;color:#F7AB00;background:rgba(247,171,0,0.12);border:1px solid rgba(247,171,0,0.25);border-radius:6px;padding:2px 7px;white-space:nowrap">🏪 Einlösung an der Kasse</div>';
+  }
+  if (deal.redemption_type === 'info_only') {
+    return '<div style="font-size:0.58rem;font-weight:700;color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.07);border-radius:6px;padding:2px 7px;white-space:nowrap">ℹ️ Info</div>';
+  }
+  return '';
+}
+
+function _dealActionsHtml(deal, idx) {
+  const rt = deal.redemption_type || 'qr_voucher';
+  const safeTitle = (deal.title||'').replace(/'/g,"\\'");
+  const safeMid = deal.merchant_id||'';
+
+  if (rt === 'info_only') {
+    return `<button class="deal-action-btn" style="opacity:0.45;cursor:default;pointer-events:none" disabled>ℹ️ Nur Info</button>`;
+  }
+
+  if (rt === 'pos_system') {
+    return `
+      <button onclick="openCustomerQRDisplay();event.stopPropagation()" class="deal-action-btn deal-action-redeem" style="background:linear-gradient(135deg,rgba(247,171,0,0.25),rgba(247,171,0,0.15));border-color:rgba(247,171,0,0.4);color:#F7AB00">📱 Kunden-QR anzeigen</button>`;
+  }
+
+  // qr_voucher (default)
+  const safeId = deal.id||'';
+  return `
+    <button onclick="openVoucherQR('${safeId}','${safeTitle}','${safeMid}');event.stopPropagation()" class="deal-action-btn deal-action-redeem">🎟 Einlösen</button>
+    <button class="${deal.is_redeemed ? 'btn btn-sm claimed save-voucher-button' : deal.is_claimed ? 'btn btn-sm save-voucher-button' : 'btn btn-primary btn-sm save-voucher-button'}" data-idx="${idx}" style="${deal.is_claimed && !deal.is_redeemed ? 'background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);color:#34d399' : ''}">
+      ${deal.is_redeemed ? '✓ Eingelöst' : deal.is_claimed ? '✓ Gesichert · +10 Pkt.' : 'Gutschein sichern'}
+    </button>`;
+}
+
+function openCustomerQRDisplay() {
+  const user = ZAMApi.auth.currentUser() || ZAMData.currentUser;
+  if (!user) { showToast('Bitte zuerst einloggen', 'error'); return; }
+
+  const existing = document.getElementById('_cust_qr_modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = '_cust_qr_modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `
+    <div style="background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:28px 24px;max-width:320px;width:100%;text-align:center">
+      <div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#FA4615;margin-bottom:6px">Dein ZAM Club Kunden-QR</div>
+      <div style="font-size:1rem;font-weight:900;color:#fff;margin-bottom:4px">${escHtml(user.display_name||'Mitglied')}</div>
+      <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-bottom:20px">Zeige diesen QR dem Mitarbeiter nach deinem Einkauf</div>
+      <div id="_cust_qr_canvas" style="background:#fff;border-radius:16px;padding:16px;display:inline-block;margin-bottom:16px"></div>
+      <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-bottom:6px;font-family:monospace">${escHtml(user.id||'')}</div>
+      <div style="background:rgba(247,171,0,0.08);border:1px solid rgba(247,171,0,0.2);border-radius:12px;padding:10px 14px;margin-bottom:20px;font-size:0.72rem;color:rgba(255,255,255,0.55);line-height:1.5">
+        📱 Mitarbeiter scannt diesen QR nach deinem Einkauf<br>→ Punkte werden automatisch gutgeschrieben
+      </div>
+      <button onclick="document.getElementById('_cust_qr_modal').remove()" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:13px;color:#fff;font-size:0.85rem;font-weight:700;font-family:var(--font);cursor:pointer">Schließen</button>
+    </div>`;
+
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+  const qrPayload = JSON.stringify({ type: 'zam_customer', userId: user.id, name: user.display_name, ts: Date.now() });
+  const canvas = document.getElementById('_cust_qr_canvas');
+  if (canvas && window.QRCode) {
+    try { new QRCode(canvas, { text: qrPayload, width: 200, height: 200, colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.M }); }
+    catch(e) { canvas.innerHTML = '<div style="font-size:0.7rem;color:#333;padding:20px">QR nicht verfügbar</div>'; }
+  }
+}
+
 function renderDealCard(deal, idx) {
   const div = el('div', 'deal-card-full card-dark');
   div.style.cssText = 'border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.3);padding:16px';
@@ -2524,7 +2598,8 @@ function renderDealCard(deal, idx) {
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <div class="category-tag tag" style="background:${deal.category_color}22;color:${deal.category_color}">${deal.category}</div>
-      ${deal.points_reward ? `<div class="event-points-badge" style="margin-left:auto">+${deal.points_reward} Pkt.</div>` : ''}
+      ${_dealRedemptionBadge(deal)}
+      ${deal.points_reward && deal.redemption_type !== 'info_only' ? `<div class="event-points-badge" style="margin-left:${deal.redemption_type === 'pos_system' ? '0' : 'auto'}">+${deal.points_reward} Pkt. ${deal.redemption_type === 'pos_system' ? 'nach Einkauf' : ''}</div>` : ''}
     </div>
     <div class="deal-title">${deal.title}</div>
     <p class="deal-description">${deal.description}</p>
@@ -2536,10 +2611,7 @@ function renderDealCard(deal, idx) {
       <div class="deal-actions">
         <button onclick="openDealMatch('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn deal-action-social">👥 Gemeinsam</button>
         <button id="di_btn_${deal.id}" onclick="_toggleDealInterestUI('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}');event.stopPropagation()" class="deal-action-btn" style="background:${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.2)' : 'rgba(255,255,255,0.07)'};border:1px solid ${_isInterestedInDeal(deal.id) ? 'rgba(247,171,0,0.4)' : 'rgba(255,255,255,0.12)'};color:${_isInterestedInDeal(deal.id) ? '#F7AB00' : 'rgba(255,255,255,0.55)'};border-radius:10px;padding:0 10px;font-size:0.72rem;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap">${_isInterestedInDeal(deal.id) ? '⭐ Interessiert' : '⭐ Interessiert?'}</button>
-        <button onclick="openVoucherQR('${deal.id}','${(deal.title||'').replace(/'/g,"\\'")}','${deal.merchant_id||''}');event.stopPropagation()" class="deal-action-btn deal-action-redeem">🎟 Einlösen</button>
-        <button class="${deal.is_redeemed ? 'btn btn-sm claimed save-voucher-button' : deal.is_claimed ? 'btn btn-sm save-voucher-button' : 'btn btn-primary btn-sm save-voucher-button'}" data-idx="${idx}" style="${deal.is_claimed && !deal.is_redeemed ? 'background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.35);color:#34d399' : ''}">
-          ${deal.is_redeemed ? '✓ Eingelöst' : deal.is_claimed ? '✓ Gesichert · +10 Pkt.' : 'Gutschein sichern'}
-        </button>
+        ${_dealActionsHtml(deal, idx)}
       </div>
     </div>
   `;
@@ -3767,6 +3839,8 @@ function _startQRScanning() {
         }
       } else if (data.type === 'zam_checkin') {
         handleCheckinQR(data);
+      } else if (data.type === 'zam_customer') {
+        handleCustomerQR(data);
       } else {
         _showScanResult('❌ Unbekannter QR-Code', 'var(--red)');
       }
@@ -3839,6 +3913,126 @@ function handleCheckinQR(data) {
     _showScanResult(`✅ Check-in erfolgreich! +25 Punkte für ${data.eventName || 'Event'}`, 'var(--green)');
     updatePointsDisplay();
   }
+}
+
+// ── Kunden-QR Scan: Einkauf bestätigen (für POS-System Deals) ──
+function handleCustomerQR(data) {
+  const scanner = ZAMApi.auth.currentUser();
+  if (!scanner) { _showScanResult('❌ Nicht angemeldet', 'var(--red)'); return; }
+  const role = _getEffectiveRole();
+  if (role !== 'merchant' && role !== 'staff' && role !== 'admin') {
+    _showScanResult('❌ Nur für Händler und Mitarbeiter', 'var(--red)');
+    return;
+  }
+
+  const staffRecord = _getStaffByUserId(scanner.id);
+  const merchantId = staffRecord?.merchantId || scanner.id;
+  const merchantName = staffRecord?.merchantName || scanner.display_name || 'Händler';
+
+  // Fraud check: max 20 customer QR scans per merchant per day
+  const todayKey = new Date().toISOString().slice(0,10);
+  const fraudKey = 'zam_pos_fraud_' + merchantId + '_' + todayKey;
+  const scanCount = parseInt(localStorage.getItem(fraudKey)||'0');
+  if (scanCount >= 20) {
+    _showScanResult('⚠️ Tageslimit für Einkauf-Bestätigungen erreicht (20/Tag)', 'var(--yellow)');
+    return;
+  }
+
+  // Same user + same merchant within last 30 min check
+  const recent = _posLoad().filter(p =>
+    p.userId === data.userId && p.merchantId === merchantId &&
+    Date.now() - p.confirmedAt < 30 * 60 * 1000
+  );
+  if (recent.length >= 2) {
+    _showScanResult('⚠️ Auffällig: Mehrfach-Scans desselben Nutzers in kurzer Zeit', 'var(--yellow)');
+    return;
+  }
+
+  // Get POS deals for this merchant
+  const allDeals = _posLoad ? [] : [];
+  const storedDeals = (() => { try { return JSON.parse(localStorage.getItem('zamclub_global')||'{}').deals || []; } catch { return []; } })();
+  const posDeals = (storedDeals.concat(ZAMData?.deals || [])).filter(d =>
+    d.redemption_type === 'pos_system' &&
+    (d.merchant_id === merchantId || d.merchantId === merchantId || d.merchantName === merchantName)
+  );
+
+  _showScanResult('👤 Kunden-QR erkannt…', 'rgba(247,171,0,0.8)');
+
+  const existing = document.getElementById('_pos_confirm_modal');
+  if (existing) existing.remove();
+
+  const dealOptions = posDeals.length
+    ? '<select id="_pos_deal_sel" style="width:100%;background:#1e1e1e;border:1px solid rgba(255,255,255,0.12);color:#e2e8f0;border-radius:10px;padding:10px 12px;font-size:0.82rem;font-family:var(--font);outline:none;margin-bottom:12px"><option value="">— Allgemeiner Einkauf —</option>' +
+      posDeals.map(d => '<option value="' + escHtml(d.id) + '" data-pts="' + (d.points_reward||50) + '">' + escHtml(d.title||d.discount||'Deal') + ' (+' + (d.points_reward||50) + ' Pkt.)</option>').join('') +
+      '</select>'
+    : '<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:12px;padding:10px;background:rgba(255,255,255,0.04);border-radius:10px">Allgemeiner Einkauf (+50 Pkt.)</div>';
+
+  const modal = document.createElement('div');
+  modal.id = '_pos_confirm_modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:0';
+  modal.innerHTML = `
+    <div style="background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);border-radius:24px 24px 0 0;padding:24px;max-width:480px;width:100%">
+      <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:99px;margin:0 auto 20px"></div>
+      <div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#F7AB00;margin-bottom:10px">🏪 Einkauf bestätigen</div>
+      <div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;margin-bottom:16px">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(250,70,21,0.2);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">👤</div>
+        <div>
+          <div style="font-size:0.88rem;font-weight:800;color:#fff">${escHtml(data.name||'Nutzer')}</div>
+          <div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-top:2px">Einkauf bei ${escHtml(merchantName)}</div>
+        </div>
+      </div>
+      <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em">Welcher Deal wurde genutzt?</div>
+      ${dealOptions}
+      <button id="_pos_confirm_btn" onclick="_confirmPOSPurchase('${escHtml(data.userId)}','${escHtml(data.name||'')}','${escHtml(merchantId)}','${escHtml(merchantName)}')" style="width:100%;background:#FA4615;border:none;border-radius:14px;padding:15px;color:#fff;font-size:0.9rem;font-weight:800;font-family:var(--font);cursor:pointer;margin-bottom:10px">✅ Einkauf bestätigen</button>
+      <button onclick="document.getElementById('_pos_confirm_modal').remove()" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:12px;color:rgba(255,255,255,0.5);font-size:0.82rem;font-weight:700;font-family:var(--font);cursor:pointer">Abbrechen</button>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+function _confirmPOSPurchase(userId, userName, merchantId, merchantName) {
+  const btn = document.getElementById('_pos_confirm_btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Wird bestätigt…'; }
+
+  const dealSel = document.getElementById('_pos_deal_sel');
+  const dealId  = dealSel?.value || null;
+  const dealTitle = dealSel?.options[dealSel.selectedIndex]?.text?.split(' (+')?.[0] || 'Allgemeiner Einkauf';
+  const pts     = dealId ? parseInt(dealSel.options[dealSel.selectedIndex]?.dataset?.pts || '50') : 50;
+
+  const scanner = ZAMApi.auth.currentUser();
+  const staffRecord = _getStaffByUserId(scanner?.id);
+
+  // Fraud tracking
+  const todayKey = new Date().toISOString().slice(0,10);
+  const fraudKey = 'zam_pos_fraud_' + merchantId + '_' + todayKey;
+  localStorage.setItem(fraudKey, String(parseInt(localStorage.getItem(fraudKey)||'0') + 1));
+
+  // Save purchase record
+  const purchase = {
+    id: 'pos_' + Date.now(),
+    userId, userName, merchantId, merchantName,
+    dealId: dealId || null, dealTitle,
+    pointsAwarded: pts,
+    confirmedAt: Date.now(),
+    confirmedBy: scanner?.id,
+    confirmedByName: scanner?.display_name || 'Mitarbeiter',
+    staffId: staffRecord?.id || null,
+    staffName: staffRecord?.name || null,
+  };
+  const purchases = _posLoad();
+  purchases.unshift(purchase);
+  _posSave(purchases.slice(0, 500));
+
+  // Award points to the customer
+  const me = ZAMApi.auth.currentUser();
+  if (me && me.id === userId) {
+    ZAMApi.points.add(pts, 'pos_purchase', '🏪 Einkauf bestätigt: ' + dealTitle + ' bei ' + merchantName);
+    updatePointsDisplay();
+  }
+
+  document.getElementById('_pos_confirm_modal')?.remove();
+  _showScanResult('✅ Einkauf bestätigt! +' + pts + ' Pkt. für ' + (userName || 'Nutzer'), 'var(--green)');
+  showToast('✅ ' + pts + ' Punkte für ' + (userName || 'Nutzer') + ' gutgeschrieben', 'success');
 }
 
 // Generate static merchant check-in QR data
@@ -5682,6 +5876,19 @@ function renderStaffDashboard(staffMember) {
       </div>
     </div>
   `;
+
+  // POS purchase confirmations for this staff member
+  const posPurchases = _posLoad().filter(p => p.staffId === staffMember.id || p.merchantId === staffMember.merchantId).slice(0, 10);
+  if (posPurchases.length) {
+    let posHtml = '<div style="margin:16px 16px 0"><div style="font-size:0.78rem;font-weight:800;color:rgba(255,255,255,0.7);margin-bottom:10px">🏪 Bestätigte Einkäufe</div>';
+    posHtml += posPurchases.map(p => {
+      const ago = _timeAgo(p.confirmedAt);
+      return '<div class="dash-row" style="margin-bottom:8px"><div class="dash-row-icon">🏪</div><div class="dash-row-main"><div class="dash-row-name">' + escHtml(p.userName||'Nutzer') + '</div><div class="dash-row-sub">' + escHtml(p.dealTitle||'Allg. Einkauf') + ' · ' + ago + '</div></div><div class="dash-row-val" style="color:#34d399">+' + (p.pointsAwarded||50) + '</div></div>';
+    }).join('');
+    posHtml += '</div>';
+    const grid = document.getElementById('merchant-kpi-grid');
+    if (grid) grid.insertAdjacentHTML('beforeend', posHtml);
+  }
 }
 
 function _renderStaffScanLog(merchantId) {
@@ -11027,6 +11234,23 @@ function openMerchantDealModal() {
       '</div>' +
     '</div>' +
     '<div style="margin-bottom:14px">' +
+      '<label style="display:block;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em">📲 Wie wird der Deal eingelöst? *</label>' +
+      '<div style="display:flex;flex-direction:column;gap:8px">' +
+        '<label style="display:flex;align-items:flex-start;gap:12px;background:rgba(250,70,21,0.07);border:1.5px solid rgba(250,70,21,0.4);border-radius:12px;padding:12px;cursor:pointer">' +
+          '<input type="radio" name="_dl_redeem_type" value="qr_voucher" checked style="width:18px;height:18px;accent-color:#FA4615;margin-top:2px;flex-shrink:0">' +
+          '<div><div style="font-size:0.82rem;font-weight:700;color:#fff">📱 Über ZAM Club QR-Code</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">Nutzer sichert Gutschein, Händler/Mitarbeiter scannt QR → Punkte automatisch</div></div>' +
+        '</label>' +
+        '<label style="display:flex;align-items:flex-start;gap:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;cursor:pointer">' +
+          '<input type="radio" name="_dl_redeem_type" value="pos_system" style="width:18px;height:18px;accent-color:#FA4615;margin-top:2px;flex-shrink:0">' +
+          '<div><div style="font-size:0.82rem;font-weight:700;color:#fff">🏪 Über Kassensystem / Franchise</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">Rabatt läuft über Kasse. Mitarbeiter scannt Kunden-QR nach dem Kauf → Punkte</div></div>' +
+        '</label>' +
+        '<label style="display:flex;align-items:flex-start;gap:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;cursor:pointer">' +
+          '<input type="radio" name="_dl_redeem_type" value="info_only" style="width:18px;height:18px;accent-color:#FA4615;margin-top:2px;flex-shrink:0">' +
+          '<div><div style="font-size:0.82rem;font-weight:700;color:#fff">ℹ️ Nur Information</div><div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:2px">Deal wird nur angezeigt, keine QR-Einlösung, keine Punkte</div></div>' +
+        '</label>' +
+      '</div>' +
+    '</div>' +
+    '<div style="margin-bottom:14px">' +
       '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px;background:rgba(250,70,21,0.07);border:1px solid rgba(250,70,21,0.2);border-radius:12px">' +
         '<input type="checkbox" id="_dl_partner_toggle" onchange="togglePartnerDealFields()" style="width:18px;height:18px;accent-color:#FA4615;cursor:pointer">' +
         '<div>' +
@@ -11160,7 +11384,8 @@ function submitNewDeal() {
   const g = JSON.parse(localStorage.getItem('zamclub_global') || '{}');
   const list = getMerchantSubmissions();
   const { points: points_reward, needsAdminApproval } = _zamEvalDealPoints(disc, offer, cond, title);
-  const dealEntry = { id:'deal_'+Date.now(), type:'deal', status: needsAdminApproval ? 'pending_admin' : 'pending', title, description:desc, offer, condition:cond, discount:disc, period_start:start, expiry:exp, points_reward, needsAdminApproval, merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() };
+  const redeemType = document.querySelector('input[name="_dl_redeem_type"]:checked')?.value || 'qr_voucher';
+  const dealEntry = { id:'deal_'+Date.now(), type:'deal', status: needsAdminApproval ? 'pending_admin' : 'pending', title, description:desc, offer, condition:cond, discount:disc, period_start:start, expiry:exp, points_reward, needsAdminApproval, redemption_type: redeemType, merchantName:g.session_user?.display_name||'Demo Händler', submittedAt:new Date().toISOString() };
   if (mediaType && mediaType !== 'text' && mediaUrl) { dealEntry.media_type = mediaType; dealEntry.media_url = mediaUrl; }
   list.unshift(dealEntry);
   saveMerchantSubmissions(list);
